@@ -75,10 +75,13 @@
             justify-content: space-between;
             padding: 0 20px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
             width: calc(100vh - 40px);
             max-width: calc(100vw - 40px);
-            position: relative;
-            z-index: 10;
         }
 
         .website-info {
@@ -359,15 +362,20 @@
         /* Form & Editor Styles */
 
         .form-fieldset {
-
             border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+        }
 
-            border-radius: 0.75rem;
-
-            padding: 1.5rem;
-
-            background-color: rgba(255,255,255,0.5);
-
+        .fieldset-legend {
+            font-weight: 600;
+            font-size: 16px;
+            color: #374151;
+            padding: 0 10px;
+            background: white;
+            border-radius: 4px;
         }
 
         .form-legend {
@@ -686,27 +694,98 @@
                                 </div>
 
             <div id="form-view" class="view h-full flex flex-col items-center justify-center" style="display: none;">
-                <div class="text-center w-full max-w-md">
-                    <h1 class="text-2xl font-bold text-gray-800 mb-6">צור את הדף שלך</h1>
-                    <form id="details-form" class="space-y-4">
+                <div class="text-center w-full max-w-2xl">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-6" data-translate-key="create_page_title">צור את הדף שלך</h1>
+                    <p class="text-gray-600 mb-8" data-translate-key="form_subtitle">מלא את הפרטים והבוט החכם ילווה אותך ויבנה עבורך דף מותאם אישית.</p>
+                    
+                    <form id="details-form" class="space-y-6">
+                        <!-- פרטים בסיסיים -->
+                        <fieldset class="form-fieldset" data-translate-key="fieldset_basic_details">
+                            <legend class="fieldset-legend">פרטים בסיסיים</legend>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">שם העסק</label>
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="הכנס שם העסק">
-                                    </div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_contact_name">שם איש קשר / תפקיד</label>
+                                    <input type="text" id="contactName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="הכנס שם איש קשר">
+                                </div>
                                 <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">תיאור קצר</label>
-                            <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="תאר את העסק שלך"></textarea>
-                                    </div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_email">אימייל</label>
+                                    <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="הכנס אימייל">
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">טלפון</label>
-                            <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="050-123-4567">
-                                    </div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_phone">טלפון</label>
+                                    <input type="tel" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="050-123-4567">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_address">כתובת פיזית (אופציונלי)</label>
+                                    <input type="text" id="address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="הכנס כתובת">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_description">תיאור העסק</label>
+                                <textarea id="description" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="תאר את העסק שלך"></textarea>
+                            </div>
+                        </fieldset>
+
+                        <!-- מקטעים אופציונליים -->
+                        <fieldset class="form-fieldset" data-translate-key="fieldset_optional_sections">
+                            <legend class="fieldset-legend">מקטעים אופציונליים</legend>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="includeTestimonials" class="mr-2">
+                                    <label for="includeTestimonials" class="text-sm text-gray-700">כולל המלצות לקוחות</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="includeGallery" class="mr-2">
+                                    <label for="includeGallery" class="text-sm text-gray-700">כולל גלריית תמונות</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="includePricing" class="mr-2">
+                                    <label for="includePricing" class="text-sm text-gray-700">כולל מחירים</label>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- עיצוב והגדרות -->
+                        <fieldset class="form-fieldset" data-translate-key="fieldset_design">
+                            <legend class="fieldset-legend">עיצוב והגדרות</legend>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_output_language">שפת הדף</label>
+                                    <select id="outputLanguage" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="he">עברית</option>
+                                        <option value="en">English</option>
+                                        <option value="ar">العربية</option>
+                                        <option value="es">Español</option>
+                                        <option value="fr">Français</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="label_design_style">בחר סגנון עיצוב</label>
+                                    <select id="designStyle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="minimalist_pro" data-translate-key="style_minimalist_pro">מקצועי ונקי</option>
+                                        <option value="midnight" data-translate-key="style_midnight">כהה ואלגנטי</option>
+                                        <option value="claymorphism" data-translate-key="style_claymorphism">Claymorphism 3D</option>
+                                        <option value="retro" data-translate-key="style_retro">רטרו מגזין</option>
+                                        <option value="aurora" data-translate-key="style_aurora">Aurora UI</option>
+                                        <option value="bento" data-translate-key="style_bento">Bento Grid</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+
                         <button type="button" onclick="generatePage()" class="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-all">
-                            צור דף נחיתה
+                            <span data-translate-key="btn_generate">צור דף נחיתה</span>
                         </button>
                     </form>
-                                </div>
-                                    </div>
+                </div>
+            </div>
 
             <div id="preview-view" class="view h-full">
                 <iframe id="preview-iframe" class="w-full h-full border-0" title="Preview"></iframe>
@@ -806,43 +885,199 @@
             document.querySelector('#form-view h1').textContent = `צור דף נחיתה - ${titles[templateType]}`;
         }
         
-        // Simple form submission
-        function generatePage() {
-            // Hide form view
-            document.getElementById('form-view').classList.remove('active');
-            document.getElementById('form-view').style.display = 'none';
+        // Advanced form submission with AI generation
+        async function generatePage() {
+            // Collect form data
+            const formData = {
+                contactName: document.getElementById('contactName')?.value || '',
+                email: document.getElementById('email')?.value || '',
+                phone: document.getElementById('phone')?.value || '',
+                address: document.getElementById('address')?.value || '',
+                description: document.getElementById('description')?.value || '',
+                outputLanguage: document.getElementById('outputLanguage')?.value || 'he',
+                designStyle: document.getElementById('designStyle')?.value || 'minimalist_pro',
+                includeTestimonials: document.getElementById('includeTestimonials')?.checked || false,
+                includeGallery: document.getElementById('includeGallery')?.checked || false,
+                includePricing: document.getElementById('includePricing')?.checked || false
+            };
+
+            // Show loading
+            showModal('יוצר דף נחיתה מקצועי...');
+
+            try {
+                // Hide form view
+                document.getElementById('form-view').classList.remove('active');
+                document.getElementById('form-view').style.display = 'none';
+                
+                // Show preview view
+                document.getElementById('preview-view').classList.add('active');
+                document.getElementById('preview-view').style.display = 'block';
+
+                // Generate AI-powered landing page
+                const generatedHTML = await generateAILandingPage(formData);
+                
+                // Load into iframe
+                const iframe = document.getElementById('preview-iframe');
+                iframe.srcdoc = generatedHTML;
+                
+                hideModal();
+                
+            } catch (error) {
+                console.error('Error generating page:', error);
+                showModal('שגיאה ביצירת הדף. נסה שוב.');
+            }
+        }
+
+        // AI Landing Page Generator
+        async function generateAILandingPage(formData) {
+            // This is a simplified version - you can expand this with actual AI integration
+            const language = formData.outputLanguage;
+            const style = formData.designStyle;
             
-            // Show preview view with sample content
-            document.getElementById('preview-view').classList.add('active');
-            document.getElementById('preview-view').style.display = 'block';
+            // Generate content based on language
+            const content = getContentByLanguage(language, formData);
+            const styles = getStylesByDesign(style);
             
-            // Add sample HTML to iframe
-            const iframe = document.getElementById('preview-iframe');
-            const sampleHTML = `
+            return `
                 <!DOCTYPE html>
-                <html dir="rtl" lang="he">
+                <html dir="${language === 'ar' || language === 'he' ? 'rtl' : 'ltr'}" lang="${language}">
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>דף נחיתה מקצועי</title>
+                    <title>${content.title}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-                        .container { max-width: 800px; margin: 0 auto; text-align: center; }
-                        h1 { font-size: 3rem; margin-bottom: 1rem; }
-                        p { font-size: 1.2rem; margin-bottom: 2rem; }
-                        .btn { background: white; color: #667eea; padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; }
+                        ${styles}
                     </style>
                 </head>
                 <body>
                     <div class="container">
-                        <h1>ברוכים הבאים!</h1>
-                        <p>זהו דף נחיתה מקצועי שנוצר עבורכם</p>
-                        <button class="btn">התחל עכשיו</button>
-            </div>
+                        <header class="hero">
+                            <h1>${content.headline}</h1>
+                            <p class="subtitle">${content.subtitle}</p>
+                            ${formData.phone ? `<a href="tel:${formData.phone}" class="cta-button">${content.cta}</a>` : ''}
+                        </header>
+                        
+                        <section class="about">
+                            <h2>${content.about}</h2>
+                            <p>${formData.description || content.defaultDescription}</p>
+                        </section>
+                        
+                        ${formData.includeTestimonials ? `
+                        <section class="testimonials">
+                            <h2>${content.testimonials}</h2>
+                            <div class="testimonial">
+                                <p>"${content.testimonialText}"</p>
+                                <cite>- ${content.testimonialAuthor}</cite>
+                            </div>
+                        </section>
+                        ` : ''}
+                        
+                        ${formData.includePricing ? `
+                        <section class="pricing">
+                            <h2>${content.pricing}</h2>
+                            <div class="price-card">
+                                <h3>${content.basicPlan}</h3>
+                                <div class="price">${content.price}</div>
+                                <ul>
+                                    <li>${content.feature1}</li>
+                                    <li>${content.feature2}</li>
+                                    <li>${content.feature3}</li>
+                                </ul>
+                                <button class="cta-button">${content.choosePlan}</button>
+                            </div>
+                        </section>
+                        ` : ''}
+                        
+                        <footer class="contact">
+                            <h2>${content.contact}</h2>
+                            ${formData.phone ? `<p>📞 ${formData.phone}</p>` : ''}
+                            ${formData.email ? `<p>✉️ ${formData.email}</p>` : ''}
+                            ${formData.address ? `<p>📍 ${formData.address}</p>` : ''}
+                        </footer>
+                    </div>
                 </body>
                 </html>
             `;
-            iframe.srcdoc = sampleHTML;
+        }
+
+        // Content by language
+        function getContentByLanguage(lang, formData) {
+            const content = {
+                'he': {
+                    title: 'דף נחיתה מקצועי',
+                    headline: formData.contactName || 'ברוכים הבאים!',
+                    subtitle: 'השירות הטוב ביותר עבורכם',
+                    cta: 'התחל עכשיו',
+                    about: 'אודותינו',
+                    defaultDescription: 'אנו מספקים שירותים מקצועיים ואיכותיים',
+                    testimonials: 'המלצות לקוחות',
+                    testimonialText: 'שירות מצוין ומקצועי מאוד!',
+                    testimonialAuthor: 'לקוח מרוצה',
+                    pricing: 'מחירים',
+                    basicPlan: 'תוכנית בסיסית',
+                    price: '₪299',
+                    feature1: 'כלול בתכונה 1',
+                    feature2: 'כלול בתכונה 2',
+                    feature3: 'כלול בתכונה 3',
+                    choosePlan: 'בחר תוכנית',
+                    contact: 'צור קשר'
+                },
+                'en': {
+                    title: 'Professional Landing Page',
+                    headline: formData.contactName || 'Welcome!',
+                    subtitle: 'The best service for you',
+                    cta: 'Get Started',
+                    about: 'About Us',
+                    defaultDescription: 'We provide professional and quality services',
+                    testimonials: 'Customer Testimonials',
+                    testimonialText: 'Excellent and very professional service!',
+                    testimonialAuthor: 'Satisfied Customer',
+                    pricing: 'Pricing',
+                    basicPlan: 'Basic Plan',
+                    price: '$99',
+                    feature1: 'Feature 1 included',
+                    feature2: 'Feature 2 included',
+                    feature3: 'Feature 3 included',
+                    choosePlan: 'Choose Plan',
+                    contact: 'Contact Us'
+                }
+            };
+            
+            return content[lang] || content['he'];
+        }
+
+        // Styles by design
+        function getStylesByDesign(style) {
+            const styles = {
+                'minimalist_pro': `
+                    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #ffffff; color: #333; }
+                    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+                    .hero { text-align: center; padding: 80px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+                    h1 { font-size: 3rem; margin-bottom: 1rem; font-weight: 700; }
+                    .subtitle { font-size: 1.3rem; margin-bottom: 2rem; opacity: 0.9; }
+                    .cta-button { background: white; color: #667eea; padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; text-decoration: none; display: inline-block; }
+                    section { padding: 60px 0; }
+                    h2 { font-size: 2.5rem; margin-bottom: 2rem; text-align: center; }
+                    .testimonial { background: #f8f9fa; padding: 30px; border-radius: 12px; margin: 20px 0; }
+                    .price-card { background: #f8f9fa; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; margin: 0 auto; }
+                    .price { font-size: 3rem; font-weight: bold; color: #667eea; margin: 20px 0; }
+                `,
+                'midnight': `
+                    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #0a0a0a; color: #ffffff; }
+                    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+                    .hero { text-align: center; padding: 80px 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; }
+                    h1 { font-size: 3rem; margin-bottom: 1rem; font-weight: 700; }
+                    .subtitle { font-size: 1.3rem; margin-bottom: 2rem; opacity: 0.9; }
+                    .cta-button { background: #ff6b6b; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; text-decoration: none; display: inline-block; }
+                    section { padding: 60px 0; }
+                    h2 { font-size: 2.5rem; margin-bottom: 2rem; text-align: center; }
+                    .testimonial { background: #1a1a2e; padding: 30px; border-radius: 12px; margin: 20px 0; border: 1px solid #333; }
+                    .price-card { background: #1a1a2e; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; margin: 0 auto; border: 1px solid #333; }
+                    .price { font-size: 3rem; font-weight: bold; color: #ff6b6b; margin: 20px 0; }
+                `
+            };
+            
+            return styles[style] || styles['minimalist_pro'];
         }
         
         // Control panel functions
