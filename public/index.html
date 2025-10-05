@@ -1,0 +1,3211 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoPage - דף כניסה</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #4f46e5;
+            width: 24px;
+            height: 24px;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .debug {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: right;
+            max-height: 150px;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+        .project-saved-indicator {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .status-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+        
+        /* Tooltip styles */
+        [data-tooltip] {
+            position: relative;
+        }
+        
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        
+        [data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            margin-bottom: 1px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .status-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-processing {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 transition-all duration-500">
+
+    <div id="app-container" class="min-h-screen flex items-center justify-center p-4">
+
+        <div id="login-view" class="w-full max-w-6xl mx-auto hidden">
+            <div class="bg-white rounded-2xl shadow-2xl flex flex-col md:flex-row-reverse overflow-hidden">
+                <div class="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
+                    <h1 class="text-4xl md:text-5xl font-bold text-indigo-700 mb-4 leading-tight">דף נחיתה מנצח.<br/>בלחיצת כפתור.</h1>
+                    <p class="text-gray-800 text-lg leading-relaxed mb-6">
+                        תפסיק לבזבז זמן וכסף. הבוט החכם של AutoPage יבנה לך דף נחיתה מקצועי שממיר גולשים ללקוחות - תוך דקות, בלי צורך בקוד או ידע בעיצוב.
+                    </p>
+                     <ul class="space-y-4 text-gray-700 mb-8 text-base">
+                        <li class="flex items-center gap-3">✨ <b>יצירה מיידית:</b> ענה על כמה שאלות והדף שלך באוויר.</li>
+                        <li class="flex items-center gap-3">🎨 <b>עיצוב יוקרתי:</b> בחר מתוך תבניות שנראות כאילו עוצבו בסטודיו.</li>
+                        <li class="flex items-center gap-3">🚀 <b>מוכן לצמיחה:</b> חיבור קל לוואטסאפ, אימייל וניהול לידים.</li>
+                        <li class="flex items-center gap-3">💡 <b>24/7 בשבילך:</b> הבוט עונה לגולשים גם כשאתה ישן.</li>
+                    </ul>
+                    
+                    <!-- Auth Tabs -->
+                    <div class="flex mb-6 border-b border-gray-200">
+                        <button id="loginTab" class="flex-1 py-3 px-4 text-center font-medium text-indigo-600 border-b-2 border-indigo-600" onclick="showAuthTab('login')">
+                            התחברות
+                        </button>
+                        <button id="registerTab" class="flex-1 py-3 px-4 text-center font-medium text-gray-500 hover:text-gray-700" onclick="showAuthTab('register')">
+                            הרשמה
+                        </button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-form">
+                        <div class="mb-4">
+                            <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">אימייל:</label>
+                            <input type="email" id="loginEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="הכנס את האימייל שלך">
+                        </div>
+                        <div class="mb-4">
+                            <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">סיסמה:</label>
+                            <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="הכנס את הסיסמה שלך">
+                        </div>
+                        <button onclick="loginWithEmail()" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-indigo-700 transition-transform transform hover:scale-105 mb-3">
+                            התחבר
+                        </button>
+                        <button onclick="resetPassword()" class="w-full text-indigo-600 py-2 px-4 font-medium hover:text-indigo-800 transition">
+                            שכחת סיסמה?
+                        </button>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerForm" class="auth-form hidden">
+                        <div class="mb-4">
+                            <label for="registerEmail" class="block text-sm font-medium text-gray-700 mb-2">אימייל:</label>
+                            <input type="email" id="registerEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="הכנס את האימייל שלך">
+                        </div>
+                        <div class="mb-4">
+                            <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-2">סיסמה:</label>
+                            <input type="password" id="registerPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="הכנס סיסמה חדשה">
+                        </div>
+                        <div class="mb-4">
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">אישור סיסמה:</label>
+                            <input type="password" id="confirmPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="הכנס שוב את הסיסמה">
+                        </div>
+                        <button onclick="registerWithEmail()" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-green-700 transition-transform transform hover:scale-105 mb-3">
+                            הרשם
+                        </button>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="flex items-center my-6">
+                        <div class="flex-1 border-t border-gray-300"></div>
+                        <span class="px-4 text-gray-500 text-sm">או</span>
+                        <div class="flex-1 border-t border-gray-300"></div>
+                    </div>
+                    
+                    <button id="googleSignInBtn" class="w-full bg-red-600 text-white py-4 px-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-red-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-400">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>התחבר עם Google</span>
+                    </button>
+                    <div id="loading" class="mt-4 flex items-center justify-center gap-2 text-gray-500 hidden">
+                        <div class="loader"></div>
+                        <span>מתחבר...</span>
+                    </div>
+                    <div id="error-message" class="bg-red-100 text-red-700 p-3 rounded-lg mt-4 hidden"></div>
+                    <div id="success-message" class="bg-green-100 text-green-700 p-3 rounded-lg mt-4 hidden"></div>
+                </div>
+                
+                <aside class="relative bg-slate-100 p-4 w-full md:w-1/2 hidden md:flex items-center justify-center">
+                    <div id="slides-container" class="relative w-full max-w-md h-[480px] overflow-hidden rounded-xl shadow-lg">
+                        </div>
+                    <button id="prev" class="absolute top-1/2 -translate-y-1/2 right-7 bg-white/90 hover:bg-white rounded-full w-9 h-9 grid place-items-center shadow z-10">‹</button>
+                    <button id="next" class="absolute top-1/2 -translate-y-1/2 left-7 bg-white/90 hover:bg-white rounded-full w-9 h-9 grid place-items-center shadow z-10">›</button>
+                    <div id="dots" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10"></div>
+                </aside>
+            </div>
+        </div>
+
+
+        <div id="dashboard-view" class="w-full max-w-5xl hidden">
+            <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-2xl min-h-[80vh]">
+                <div class="flex flex-col sm:flex-row items-center justify-between mb-10 pb-6 border-b border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">A</div>
+                        <h1 class="text-2xl font-bold text-gray-800">הסביבה האישית שלך</h1>
+                    </div>
+                <div class="flex items-center gap-4 mt-4 sm:mt-0">
+                        <button id="account-summary-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            סיכום חשבון
+                        </button>
+                        <button id="admin-panel-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors hidden">
+                            <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            פאנל מנהל
+                        </button>
+                    <div class="text-right">
+                        <div id="user-name" class="font-semibold text-gray-700">טוען...</div>
+                        <div id="subscription-status" class="text-sm text-gray-500">
+                            <span id="subscription-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span id="subscription-text">משתמש רשום</span>
+                            </span>
+                        </div>
+                        <div id="subscription-details" class="text-xs text-gray-400 mt-1 hidden">
+                            <span id="subscription-expires"></span>
+                        </div>
+                    </div>
+                    <img id="user-avatar" src="https://placehold.co/80x80/E2E8F0/4A5568?text=U" alt="תמונת פרופיל" class="w-12 h-12 rounded-full object-cover">
+                    <button onclick="signOut()" title="התנתק" class="text-gray-500 hover:text-red-600 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </div>
+                </div>
+
+
+                <!-- Subscription Section -->
+
+                <div id="projects-section">
+                    <div class="flex justify-between items-center mb-6">
+                         <h2 class="text-2xl font-bold text-gray-800">דפי הנחיתה שלי</h2>
+                        <button onclick="goToFullApp()" class="bg-indigo-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-indigo-700 transition-transform transform hover:scale-105 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            <span>דף חדש</span>
+                        </button>
+                    </div>
+                    <div id="projects-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Subscription Modal -->
+    <div id="page-subscription-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">הפעל מנוי לצפייה בדף</h3>
+                        <p class="text-gray-600">הפעל מנוי חודשי ב-₪39 לצפייה בדף זה</p>
+                    </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">גישה מלאה לדף</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">קישור קבוע לדף</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">עדכונים אוטומטיים</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-indigo-600 mb-1">₪39</div>
+                        <div class="text-sm text-gray-500">לחודש</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="closePageSubscriptionModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition">
+                        ביטול
+                    </button>
+                        <button onclick="processPageSubscription()" class="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-indigo-700 transition">
+                            הפעל מנוי
+                        </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div id="subscription-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">מנוי AutoPage Pro</h3>
+                    <p class="text-gray-600">התחל מנוי חודשי ב-₪39 וקבל גישה מלאה</p>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">יצירת דפים ללא הגבלה</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">קישור קבוע לדף שלך</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">תמיכה טכנית 24/7</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-indigo-600 mb-1">₪39</div>
+                        <div class="text-sm text-gray-500">לחודש</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="closeSubscriptionModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition">
+                        ביטול
+                    </button>
+                    <button onclick="processSubscription()" class="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-indigo-700 transition">
+                        התחל מנוי
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="fixed inset-0 bg-gray-100 z-50 hidden">
+        <div class="flex h-screen">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-lg border-l border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h1 class="text-xl font-bold text-gray-800">פאנל מנהל</h1>
+                        <button id="close-admin-panel" class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <nav class="mt-6">
+                    <div class="px-3 space-y-1">
+                        <button id="dashboard-tab" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-indigo-600">
+                            <svg class="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v1H8V5z"></path>
+                            </svg>
+                            דשבורד
+                        </button>
+                        
+                        <button id="users-tab" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                            <svg class="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            משתמשים
+                        </button>
+                        
+                        <button id="finance-tab" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                            <svg class="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                            כספים
+                        </button>
+                        
+                        <button id="analytics-tab" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                            <svg class="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            סטטיסטיקות
+                        </button>
+                        
+                        <button id="settings-tab" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                            <svg class="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            הגדרות
+                        </button>
+                    </div>
+                </nav>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Top Bar -->
+                <header class="bg-white shadow-sm border-b border-gray-200">
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h2 id="admin-page-title" class="text-2xl font-semibold text-gray-800">דשבורד</h2>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-500">
+                                    <span id="admin-current-time"></span>
+                                </div>
+                                <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    A
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Content Area -->
+                <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+
+                    <!-- Dashboard Content -->
+                    <div id="dashboard-content" class="tab-content">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">משתמשים במערכת</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-total-users">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">הכנסות חודשיות</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-monthly-revenue">₪2,450</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">דפים פעילים</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-active-pages">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-amber-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">דפים לא פעילים</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-inactive-pages">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-medium text-gray-900">פעילות אחרונה</h3>
+                                </div>
+                                <div class="p-6 max-h-96 overflow-y-auto">
+                                    <div id="recent-activity" class="space-y-4">
+                                        <!-- פעילות אמיתית תיטען כאן -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-medium text-gray-900">סטטיסטיקות מהירות</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="space-y-4">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">משתמשים חדשים השבוע</span>
+                                            <span class="text-sm font-semibold text-gray-900" id="weekly-new-users">1</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">דפים שנוצרו השבוע</span>
+                                            <span class="text-sm font-semibold text-gray-900" id="weekly-new-pages">0</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">הכנסות השבוע</span>
+                                            <span class="text-sm font-semibold text-gray-900" id="weekly-revenue">₪0</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">שיעור המרה</span>
+                                            <span class="text-sm font-semibold text-gray-900" id="conversion-rate">100%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users Management Content -->
+                    <div id="users-content" class="tab-content hidden">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900">ניהול משתמשים</h3>
+                                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                                        משתמש חדש
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">משתמש</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">אימייל</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך הצטרפות</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">מנוי</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- Users will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Finance Management Content -->
+                    <div id="finance-content" class="tab-content hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">הכנסות חודשיות</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="monthly-revenue">₪2,450</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">משתמשים מחוברים</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="active-users">1</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="mr-4">
+                                        <p class="text-sm font-medium text-gray-500">דפים שנוצרו</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="total-pages">47</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">היסטוריית תשלומים</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">משתמש</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סכום</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סטטוס</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payments-table-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- Payments will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Content -->
+                    <div id="analytics-content" class="tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-medium text-gray-900">סטטוס דפים</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div id="pages-status-chart" class="h-64 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <div class="w-32 h-32 mx-auto mb-4 relative">
+                                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                    <circle cx="50" cy="50" r="40" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                                                    <circle id="pages-progress" cx="50" cy="50" r="40" stroke="#10b981" stroke-width="8" fill="none" 
+                                                            stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"/>
+                                                </svg>
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <span id="pages-percentage" class="text-2xl font-bold text-gray-700">0%</span>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span class="text-gray-600">דפים פעילים</span>
+                                                    <span id="active-pages-count" class="font-medium">0</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span class="text-gray-600">דפים לא פעילים</span>
+                                                    <span id="inactive-pages-count" class="font-medium">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-medium text-gray-900">הכנסות חודשיות</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div id="revenue-chart" class="h-64 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <div class="text-4xl font-bold text-green-600 mb-2" id="monthly-revenue-display">₪0</div>
+                                            <div class="text-sm text-gray-500 mb-4">הכנסות החודש</div>
+                                            <div class="space-y-3">
+                                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                                    <span class="text-sm text-gray-600">דפים פעילים</span>
+                                                    <span id="revenue-active-pages" class="font-medium text-green-600">0</span>
+                                                </div>
+                                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                    <span class="text-sm text-gray-600">דפים לא פעילים</span>
+                                                    <span id="revenue-inactive-pages" class="font-medium text-gray-600">0</span>
+                                                </div>
+                                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                                    <span class="text-sm text-gray-600">פוטנציאל הכנסות</span>
+                                                    <span id="revenue-potential" class="font-medium text-blue-600">₪0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-medium text-gray-900">פעילות שבועית</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div id="weekly-activity-chart" class="h-64">
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-blue-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">דפים שנוצרו השבוע</span>
+                                                </div>
+                                                <span id="weekly-pages-created" class="font-bold text-blue-600">0</span>
+                                            </div>
+                                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-green-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">דפים שהופעלו השבוע</span>
+                                                </div>
+                                                <span id="weekly-pages-activated" class="font-bold text-green-600">0</span>
+                                            </div>
+                                            <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-purple-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">הכנסות השבוע</span>
+                                                </div>
+                                                <span id="weekly-revenue-display" class="font-bold text-purple-600">₪0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-medium text-gray-900">סטטיסטיקות משתמשים</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div id="users-stats-chart" class="h-64">
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-indigo-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">סה"כ משתמשים מחוברים</span>
+                                                </div>
+                                                <span id="total-users-count" class="font-bold text-indigo-600">0</span>
+                                            </div>
+                                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-green-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">משתמשים מחוברים</span>
+                                                </div>
+                                                <span id="active-users-count" class="font-bold text-green-600">0</span>
+                                            </div>
+                                            <div class="flex items-center justify-between p-4 bg-amber-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-amber-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">משתמשים לא מחוברים</span>
+                                                </div>
+                                                <span id="inactive-users-count" class="font-bold text-amber-600">0</span>
+                                            </div>
+                                            <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <div class="w-3 h-3 bg-red-500 rounded-full ml-2"></div>
+                                                    <span class="text-sm text-gray-600">שיעור המרה</span>
+                                                </div>
+                                                <span id="conversion-rate-display" class="font-bold text-red-600">0%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Content -->
+                    <div id="settings-content" class="tab-content hidden">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">הגדרות מערכת</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">שם המערכת</label>
+                                        <input type="text" value="AutoPage" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">אימייל מנהל</label>
+                                        <input type="email" value="admin@autopage.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">הגדרות אבטחה</label>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" checked class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="mr-2 text-sm text-gray-700">דורש אימות דו-שלבי</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="mr-2 text-sm text-gray-700">הגבל מספר ניסיונות התחברות</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                                            שמור הגדרות
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- הגדרות ---
+        const supabaseUrl = 'https://osoqfadqohqcauawzmmq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zb3FmYWRxb2hxY2F1YXd6bW1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2OTIzMjMsImV4cCI6MjA3MzI2ODMyM30.TBLmKIntYGSfBm2StItfWm87-ebojV_NbaKNcYNWMPg';
+        const googleClientId = '962311085001-vprul5vgv7o025n9mvunfm7tjhcc5pg8.apps.googleusercontent.com';
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        let currentUser = null;
+        let subscriptionData = null;
+        let subscriptionTimer = null;
+        let currentPageForSubscription = null;
+
+        // --- Admin Variables ---
+        const ADMIN_USER_ID = 'fae06b49-1239-4ba5-93db-244ce2851fb4'; // המנהל הנוכחי
+        let isAdmin = false;
+
+        // --- User Session Management ---
+        function saveCurrentUser(user) {
+            if (user) {
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+            }
+        }
+
+        function loadCurrentUser() {
+            try {
+                const stored = sessionStorage.getItem('currentUser');
+                return stored ? JSON.parse(stored) : null;
+            } catch (error) {
+                console.error('Error loading user from session:', error);
+                return null;
+            }
+        }
+
+        function clearCurrentUser() {
+            sessionStorage.removeItem('currentUser');
+        }
+
+        // --- DOM Elements ---
+        const loginView = document.getElementById('login-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const adminPanelBtn = document.getElementById('admin-panel-btn');
+        const adminPanel = document.getElementById('admin-panel');
+        const closeAdminPanel = document.getElementById('close-admin-panel');
+        const adminPageTitle = document.getElementById('admin-page-title');
+        const adminCurrentTime = document.getElementById('admin-current-time');
+        
+        // --- Subscription Functions ---
+        function openSubscriptionModal() {
+            document.getElementById('subscription-modal').classList.remove('hidden');
+        }
+
+        function closeSubscriptionModal() {
+            document.getElementById('subscription-modal').classList.add('hidden');
+        }
+
+        async function processSubscription() {
+            if (!currentUser) {
+                showError('עליך להיות מחובר כדי לרכוש מנוי');
+                return;
+            }
+
+            // סימולציה של תשלום - בפועל כאן יהיה שילוב עם מערכת תשלומים
+            try {
+                // יצירת מנוי חדש
+                const subscriptionEndDate = new Date();
+                subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+
+                subscriptionData = {
+                    userId: currentUser.id,
+                    startDate: new Date().toISOString(),
+                    endDate: subscriptionEndDate.toISOString(),
+                    isActive: true,
+                    pageUrl: `${window.location.origin}/pages/${currentUser.id}/landing.html`
+                };
+
+                // שמירה ב-localStorage (בפועל יהיה בבסיס נתונים)
+                localStorage.setItem(`subscription_${currentUser.id}`, JSON.stringify(subscriptionData));
+
+                closeSubscriptionModal();
+                // updateSubscriptionUI(); // לא נדרש יותר
+                startSubscriptionCountdown();
+                
+                showSuccess('המנוי הופעל בהצלחה!');
+                
+            } catch (error) {
+                console.error('Subscription error:', error);
+                showError('שגיאה בהפעלת המנוי');
+            }
+        }
+
+        function updateSubscriptionUI() {
+            // הפונקציה הזו כבר לא נדרשת כי הסרנו את האלמנטים מהדף הראשי
+            // כל המנויים הם פרטיים לכל דף
+            console.log('updateSubscriptionUI called - no longer needed');
+        }
+
+        function startSubscriptionCountdown() {
+            if (!subscriptionData || !subscriptionData.isActive) return;
+
+            const subscriptionCountdown = document.getElementById('subscription-countdown');
+            
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const endDate = new Date(subscriptionData.endDate).getTime();
+                const timeLeft = endDate - now;
+
+                if (timeLeft <= 0) {
+                    // המנוי פג
+                    subscriptionData.isActive = false;
+                    localStorage.setItem(`subscription_${currentUser.id}`, JSON.stringify(subscriptionData));
+                    // updateSubscriptionUI(); // לא נדרש יותר
+                    showError('המנוי שלך פג. אנא חדש את המנוי להמשך השימוש.');
+                    return;
+                }
+
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+                subscriptionCountdown.textContent = `נותרו: ${days} ימים, ${hours} שעות, ${minutes} דקות`;
+            }
+
+            updateCountdown();
+            subscriptionTimer = setInterval(updateCountdown, 60000); // עדכון כל דקה
+        }
+
+        function loadSubscriptionData() {
+            if (!currentUser) return;
+            
+            const stored = localStorage.getItem(`subscription_${currentUser.id}`);
+            if (stored) {
+                subscriptionData = JSON.parse(stored);
+                
+                // בדוק אם המנוי עדיין פעיל
+                const now = new Date().getTime();
+                const endDate = new Date(subscriptionData.endDate).getTime();
+                
+                if (now > endDate) {
+                    subscriptionData.isActive = false;
+                    localStorage.setItem(`subscription_${currentUser.id}`, JSON.stringify(subscriptionData));
+                }
+            }
+            
+            // updateSubscriptionUI(); // לא נדרש יותר
+        }
+
+        // --- Page Subscription Functions ---
+        function openPageSubscriptionModal(pageId) {
+            console.log('Opening subscription modal for page:', pageId);
+            currentPageForSubscription = pageId;
+            document.getElementById('page-subscription-modal').classList.remove('hidden');
+        }
+
+        function closePageSubscriptionModal() {
+            document.getElementById('page-subscription-modal').classList.add('hidden');
+            currentPageForSubscription = null;
+        }
+
+        // --- Account Summary Modal Functions ---
+        function openAccountSummaryModal() {
+            document.getElementById('account-summary-modal').classList.remove('hidden');
+            // עדכן את הנתונים במודל עם נתונים אמיתיים
+            updateModalAccountSummary();
+        }
+
+        function closeAccountSummaryModal() {
+            document.getElementById('account-summary-modal').classList.add('hidden');
+        }
+
+        async function updateModalAccountSummary() {
+            console.log('=== updateModalAccountSummary called ===');
+            console.log('Current user:', currentUser);
+            
+            if (!currentUser || !currentUser.id) {
+                console.log('No current user, skipping modal update');
+                return;
+            }
+
+            try {
+                // קבל את הדפים מהשרת (כמו ב-loadProjects)
+                console.log('Fetching pages from server...');
+                const response = await fetch(`/api/pages/${currentUser.id}`);
+                const serverData = await response.json();
+                const serverPages = serverData.pages || [];
+                console.log('Server pages for modal:', serverPages);
+                
+                // קבל גם דפים מקומיים
+                const localData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
+                const localPages = localData.pages || [];
+                console.log('Local pages for modal:', localPages);
+                
+                // שלב את הנתונים
+                const allPages = [...serverPages, ...localPages];
+                console.log('All pages for modal:', allPages);
+
+                // ספור מנויים פעילים (כמו ב-loadProjects)
+                let activeSubscriptions = 0;
+                allPages.forEach(page => {
+                    const pageKey = `local_${page.fileName}`;
+                    const pageSubscription = localStorage.getItem(`page_subscription_${pageKey}`);
+                    console.log(`Checking subscription for ${pageKey}:`, pageSubscription);
+                    if (pageSubscription) {
+                        const subscriptionData = JSON.parse(pageSubscription);
+                        console.log(`Subscription data for ${pageKey}:`, subscriptionData);
+                        if (subscriptionData.isActive) {
+                            activeSubscriptions++;
+                        }
+                    }
+                });
+
+                console.log(`Modal - Total pages: ${allPages.length}, Active subscriptions: ${activeSubscriptions}`);
+
+                // חשב חיוב חודשי (₪39 לכל דף פעיל בלבד)
+                const monthlyCharge = activeSubscriptions * 39;
+                const lastUpdateTime = new Date().toLocaleString('he-IL');
+
+                // עדכן את המודל
+                document.getElementById('modal-account-total-pages').textContent = allPages.length;
+                document.getElementById('modal-account-active-pages').textContent = activeSubscriptions;
+                document.getElementById('modal-account-monthly-charge').textContent = `₪${monthlyCharge}`;
+                document.getElementById('modal-last-update').textContent = lastUpdateTime;
+
+                // עדכן את התצוגות המקדימות הקטנות
+                document.getElementById('modal-total-pages-icon').textContent = allPages.length;
+                document.getElementById('modal-active-pages-icon').textContent = activeSubscriptions;
+                document.getElementById('modal-monthly-charge-amount').textContent = monthlyCharge;
+
+                console.log('Modal Account Summary Updated:', {
+                    totalPages: allPages.length,
+                    activePages: activeSubscriptions,
+                    monthlyCharge,
+                    serverPages: serverPages.length,
+                    localPages: localPages.length
+                });
+
+            } catch (error) {
+                console.error('Error updating modal account summary:', error);
+                // הצג נתונים ברירת מחדל
+                document.getElementById('modal-account-total-pages').textContent = '0';
+                document.getElementById('modal-account-active-pages').textContent = '0';
+                document.getElementById('modal-account-monthly-charge').textContent = '₪0';
+                document.getElementById('modal-last-update').textContent = new Date().toLocaleString('he-IL');
+            }
+        }
+
+        async function processPageSubscription() {
+            console.log('Processing subscription for:', currentPageForSubscription);
+            console.log('Current user:', currentUser);
+            
+            if (!currentUser || !currentPageForSubscription) {
+                showError('שגיאה בפרטי המנוי');
+                return;
+            }
+
+            try {
+                // יצירת מנוי לדף ספציפי
+                const subscriptionEndDate = new Date();
+                subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+
+                const pageSubscriptionData = {
+                    pageId: currentPageForSubscription,
+                    userId: currentUser.id,
+                    startDate: new Date().toISOString(),
+                    endDate: subscriptionEndDate.toISOString(),
+                    isActive: true
+                };
+
+                // שמירה ב-localStorage
+                localStorage.setItem(`page_subscription_${currentPageForSubscription}`, JSON.stringify(pageSubscriptionData));
+                console.log('Subscription saved to localStorage:', pageSubscriptionData);
+
+                closePageSubscriptionModal();
+                
+                // רענן את רשימת הדפים
+                loadProjects();
+                
+                // רענן את הפעילות האחרונה בפאנל המנהל
+                console.log('All localStorage keys:', Object.keys(localStorage).filter(key => key.includes('page_subscription')));
+                
+                // נסה לטעון מחדש את הפעילות
+                setTimeout(async () => {
+                    try {
+                        const response = await fetch('/api/all-pages');
+                        const allPages = await response.json();
+                        await loadRecentActivity(allPages);
+                        console.log('Recent activity refreshed');
+                    } catch (error) {
+                        console.error('Error refreshing recent activity:', error);
+                    }
+                }, 500);
+                
+                showSuccess('המנוי לדף הופעל בהצלחה! כעת ניתן לצפות בדף');
+                
+            } catch (error) {
+                console.error('Page subscription error:', error);
+                showError('שגיאה בהפעלת המנוי לדף');
+            }
+        }
+        
+        // --- לוגיקת אימות ---
+        window.onload = async function() {
+            console.log("=== PAGE LOAD CHECK ===");
+            
+            // בדוק אם חזרנו מיצירת דף חדש
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromCreator = urlParams.get('fromCreator');
+            if (fromCreator === 'true') {
+                // נקה את הפרמטר מה-URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                // עדכן את המודל אם הוא פתוח (רק אם באמת צריך)
+                // הוסר רענון אוטומטי שגרם לבעיות
+            }
+            
+            // נסה לטעון משתמש מ-sessionStorage
+            const savedUser = loadCurrentUser();
+            if (savedUser) {
+                console.log("Found saved user in session:", savedUser.email);
+                currentUser = savedUser;
+                // המתן קצת לפני הצגת הדשבורד
+                setTimeout(() => {
+                showDashboard();
+                }, 100);
+                return;
+            }
+            
+            console.log("Supabase URL:", supabaseUrl);
+            console.log("Supabase Key:", supabaseKey ? 'Present' : 'Missing');
+            
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                console.log("Session data:", session);
+                console.log("Session error:", error);
+                
+                if (session && session.user) {
+                    console.log("Found existing session!");
+                    console.log("User ID:", session.user.id);
+                    console.log("User email:", session.user.email);
+                    currentUser = session.user;
+                    saveCurrentUser(currentUser);
+                    setTimeout(() => {
+                    showDashboard();
+                    }, 100);
+                } else {
+                    console.log("No session found, showing login");
+                    loginView.classList.remove('hidden');
+                    initGoogleSignIn();
+                }
+            } catch (err) {
+                console.error("Error checking session:", err);
+                loginView.classList.remove('hidden');
+                initGoogleSignIn();
+            }
+        };
+
+        function initCarousel() {
+            const DEMOS = [
+                {src:'https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', caption:'דף נחיתה לעסק'},
+                {src:'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', caption:'תפריט למסעדה'},
+                {src:'https://images.pexels.com/photos/374631/pexels-photo-374631.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', caption:'קטלוג מוצרים'},
+                {src:'https://images.pexels.com/photos/5077063/pexels-photo-5077063.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', caption:'פוסט שיווקי'},
+                {src:'https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', caption:'כרטיס ביקור דיגיטלי'},
+                {src:'https://images.pexels.com/photos/326503/pexels-photo-326503.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', caption:'אתר תדמית'}
+            ];
+            const slidesContainer = document.getElementById('slides-container');
+            if (slidesContainer) {
+                const dotsC = document.getElementById('dots');
+                const prevBtn = document.getElementById('prev');
+                const nextBtn = document.getElementById('next');
+                const count = DEMOS.length;
+                let i = 0;
+                let timer;
+                slidesContainer.innerHTML = DEMOS.map((d) => `
+                    <figure class="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out opacity-0">
+                        <img loading="lazy" src="${d.src}" alt="${d.caption}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https.placehold.co/800x600/cccccc/ffffff?text=Image+Not+Found';">
+                        <figcaption class="absolute bottom-3 right-3 bg-white/85 px-3 py-1 rounded text-xs font-medium text-gray-700 shadow">${d.caption}</figcaption>
+                    </figure>
+                `).join('');
+                const slides = Array.from(slidesContainer.children);
+                dotsC.innerHTML = DEMOS.map(() => '<button class="w-2.5 h-2.5 rounded-full bg-white/60 transition-colors"></button>').join('');
+                const dots = [...dotsC.children];
+                function setDot() { dots.forEach((d, j) => { d.className = 'w-2.5 h-2.5 rounded-full transition-colors ' + (j === i ? 'bg-white shadow' : 'bg-white/60'); }); }
+                function go(n) { i = (n + count) % count; slides.forEach((slide, index) => { slide.classList.toggle('opacity-100', index === i); }); setDot(); }
+                function reset() { clearInterval(timer); auto(); }
+                function auto() { timer = setInterval(() => go(i + 1), 5000); }
+                prevBtn.onclick = () => { go(i - 1); reset(); };
+                nextBtn.onclick = () => { go(i + 1); reset(); };
+                dots.forEach((d, idx) => d.onclick = () => { go(idx); reset(); });
+                go(0);
+                auto();
+            }
+        }
+
+        // --- פונקציות אימות רגיל ---
+        function showAuthTab(tab) {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (tab === 'login') {
+                loginTab.className = 'flex-1 py-3 px-4 text-center font-medium text-indigo-600 border-b-2 border-indigo-600';
+                registerTab.className = 'flex-1 py-3 px-4 text-center font-medium text-gray-500 hover:text-gray-700';
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                registerTab.className = 'flex-1 py-3 px-4 text-center font-medium text-indigo-600 border-b-2 border-indigo-600';
+                loginTab.className = 'flex-1 py-3 px-4 text-center font-medium text-gray-500 hover:text-gray-700';
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+        }
+
+        async function loginWithEmail() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            console.log("=== LOGIN ATTEMPT ===");
+            console.log("Email:", email);
+            
+            if (!email || !password) {
+                showError('אנא מלא את כל השדות');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                console.log("Login response:", { data, error });
+                
+                if (error) {
+                    console.error("Login error:", error);
+                    showError('שגיאה בהתחברות: ' + error.message);
+                } else if (data && data.user) {
+                    console.log("Login successful!");
+                    console.log("User ID:", data.user.id);
+                    currentUser = data.user;
+                    saveCurrentUser(currentUser);
+                    setTimeout(() => {
+                    showDashboard();
+                    }, 100);
+                } else {
+                    console.error("No user data in response");
+                    showError('שגיאה בהתחברות');
+                }
+            } catch (error) {
+                console.error("Login exception:", error);
+                showError('שגיאה בהתחברות');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function registerWithEmail() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!email || !password || !confirmPassword) {
+                showError('אנא מלא את כל השדות');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('הסיסמאות אינן תואמות');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('הסיסמה חייבת להכיל לפחות 6 תווים');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                console.log("=== REGISTRATION ATTEMPT ===");
+                console.log("Email:", email);
+                
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            name: email.split('@')[0],
+                            full_name: email.split('@')[0]
+                        }
+                    }
+                });
+                
+                console.log("Registration response:", { data, error });
+                
+                if (error) {
+                    console.error("Registration error:", error);
+                    showError('שגיאה בהרשמה: ' + error.message);
+                } else if (data && data.user) {
+                    console.log("Registration successful!");
+                    console.log("User ID:", data.user.id);
+                    showSuccess('הרשמה בוצעה בהצלחה! בדוק את האימייל שלך לאישור החשבון.');
+                    // עבר לטב התחברות
+                    showAuthTab('login');
+                    // נקה את השדות
+                    document.getElementById('registerEmail').value = '';
+                    document.getElementById('registerPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    console.error("No user data in registration response");
+                    showError('שגיאה בהרשמה');
+                }
+            } catch (error) {
+                showError('שגיאה בהרשמה');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function resetPassword() {
+            const email = document.getElementById('loginEmail').value;
+            
+            if (!email) {
+                showError('אנא הכנס את האימייל שלך תחילה');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/reset-password'
+                });
+                
+                if (error) {
+                    showError('שגיאה בשליחת אימייל שחזור: ' + error.message);
+                } else {
+                    showSuccess('נשלח אימייל שחזור סיסמה. בדוק את תיבת הדואר שלך.');
+                }
+            } catch (error) {
+                showError('שגיאה בשליחת אימייל שחזור');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            const loadingEl = document.getElementById('loading');
+            if (show) {
+                loadingEl.classList.remove('hidden');
+            } else {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        function showSuccess(message) {
+            // יצירת הודעת הצלחה זמנית
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+
+        function initGoogleSignIn() {
+            console.log("=== INIT GOOGLE SIGNIN ===");
+            if (typeof google === 'undefined') {
+                console.log("Google not loaded yet, retrying...");
+                setTimeout(initGoogleSignIn, 100);
+                return;
+            }
+            
+            console.log("Google loaded, initializing...");
+            initCarousel();
+            google.accounts.id.initialize({
+                client_id: googleClientId,
+                callback: handleGoogleResponse,
+            });
+            
+            document.getElementById('googleSignInBtn').onclick = () => {
+                console.log("Sign in button clicked!");
+                showLoading(true);
+                document.getElementById('googleSignInBtn').disabled = true;
+                google.accounts.id.prompt();
+            };
+            
+            console.log("Google Sign-In initialized");
+        }
+
+        async function handleGoogleResponse(response) {
+            console.log("=== GOOGLE RESPONSE ===");
+            console.log("Google credential:", response.credential);
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithIdToken({
+                    provider: 'google',
+                    token: response.credential,
+                });
+                
+                console.log("Google sign-in response:", { data, error });
+                
+                if (error) {
+                    console.error("Supabase auth error:", error);
+                    showError('שגיאה בהתחברות: ' + error.message);
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('googleSignInBtn').disabled = false;
+                } else if (data && data.user) {
+                    currentUser = data.user;
+                    saveCurrentUser(currentUser);
+                    console.log("Google login successful!");
+                    console.log("User ID:", currentUser.id);
+                    console.log("User email:", currentUser.email);
+                    console.log("User metadata:", currentUser?.user_metadata);
+                    setTimeout(() => {
+                    showDashboard();
+                    }, 100);
+                } else {
+                    console.error("No user data in Google response");
+                    showError('שגיאה בהתחברות');
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('googleSignInBtn').disabled = false;
+                }
+            } catch (err) {
+                console.error("Google sign-in exception:", err);
+                showError('שגיאה בהתחברות');
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('googleSignInBtn').disabled = false;
+            }
+        }
+        
+        // פונקציה חכמה לחילוץ נתונים
+        function extractUserData(user) {
+            console.log("=== EXTRACTING USER DATA ===");
+            console.log("Raw user object:", user);
+            console.log("User metadata:", user.user_metadata);
+            console.log("User email:", user.email);
+            
+            // חילוץ שם - נסה כמה אפשרויות
+            let name = 'משתמש רשום';
+            
+            // בדוק user_metadata
+            if (user.user_metadata) {
+                if (user.user_metadata.name) name = user.user_metadata.name;
+                else if (user.user_metadata.full_name) name = user.user_metadata.full_name;
+                else if (user.user_metadata.display_name) name = user.user_metadata.display_name;
+                else if (user.user_metadata.first_name || user.user_metadata.last_name) {
+                    name = `${user.user_metadata.first_name || ''} ${user.user_metadata.last_name || ''}`.trim();
+                }
+            }
+            
+            // אם לא מצאנו שם, נסה מהאימייל
+            if (name === 'משתמש רשום' && user.email) {
+                const emailName = user.email.split('@')[0];
+                name = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+            }
+            
+            // חילוץ תמונה - נסה כמה אפשרויות
+            let avatar = null;
+            if (user.user_metadata?.avatar_url) avatar = user.user_metadata.avatar_url;
+            else if (user.user_metadata?.picture) avatar = user.user_metadata.picture;
+            else if (user.user_metadata?.picture_url) avatar = user.user_metadata.picture_url;
+            else avatar = 'https://placehold.co/80x80/E2E8F0/4A5568?text=' + encodeURIComponent(name.charAt(0));
+            
+            console.log("Extracted name:", name);
+            console.log("Extracted avatar:", avatar);
+            console.log("========================");
+            
+            return { name, avatar };
+        }
+        
+        // --- Admin Functions ---
+        function checkAdminStatus() {
+            isAdmin = currentUser && currentUser.id === ADMIN_USER_ID;
+            console.log('Checking admin status:', { 
+                currentUser: currentUser?.email, 
+                userId: currentUser?.id, 
+                adminId: ADMIN_USER_ID, 
+                isAdmin 
+            });
+            if (isAdmin) {
+                adminPanelBtn.classList.remove('hidden');
+                console.log('Admin panel button shown');
+            } else {
+                adminPanelBtn.classList.add('hidden');
+                console.log('Admin panel button hidden');
+            }
+        }
+
+        function openAdminPanel() {
+            adminPanel.classList.remove('hidden');
+            loadAdminData();
+            updateAdminTime();
+            setInterval(updateAdminTime, 1000); // עדכן כל שנייה
+        }
+
+        function closeAdminPanelHandler() {
+            adminPanel.classList.add('hidden');
+        }
+
+        function updateAdminTime() {
+            if (adminCurrentTime) {
+                const now = new Date();
+                adminCurrentTime.textContent = now.toLocaleString('he-IL');
+            }
+        }
+
+        async function loadAdminData() {
+            console.log('Loading admin data...', { isAdmin, currentUser: currentUser?.email, userId: currentUser?.id });
+            if (!isAdmin) {
+                console.log('User is not admin, skipping admin data load');
+                return;
+            }
+            
+            try {
+                // טען נתוני משתמשים
+                console.log('Loading users data...');
+                await loadUsersData();
+                
+                // טען נתוני כספים
+                console.log('Loading finance data...');
+                await loadFinanceData();
+                
+                // טען סטטיסטיקות
+                console.log('Loading analytics data...');
+                await loadAnalyticsData();
+                
+                // רענן את הדשבורד הראשי
+                console.log('Loading projects...');
+                await loadProjects();
+                
+                console.log('Admin data loaded successfully');
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+            }
+        }
+
+        async function loadUsersData() {
+            try {
+                // טען את כל המשתמשים מהשרת
+                const response = await fetch('/api/users');
+                const serverUsers = await response.json();
+                
+                console.log('Server users:', serverUsers);
+                
+                const usersTableBody = document.getElementById('users-table-body');
+                usersTableBody.innerHTML = '';
+
+                // טען את כל הדפים כדי לחשב מנויים אמיתיים
+                const allPagesResponse = await fetch('/api/all-pages');
+                const allPages = await allPagesResponse.json();
+                
+                console.log('All pages for subscription calculation:', allPages);
+
+                // הצג את כל המשתמשים מהשרת (כולל המנהל אם הוא קיים)
+                serverUsers.forEach(user => {
+                    // חשב מנויים פעילים אמיתיים למשתמש
+                    let activeSubscriptions = 0;
+                    let totalRevenue = 0;
+                    
+                    // מצא את כל הדפים של המשתמש הזה
+                    const userPages = allPages.filter(page => page.userId === user.id);
+                    
+                    userPages.forEach(page => {
+                        // בדוק אם יש מנוי פעיל לדף הזה - נסה כמה מפתחות
+                        let pageSubscription = null;
+                        
+                        // 1. נסה עם שם הקובץ המלא
+                        pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                        
+                        // 2. נסה עם שם קובץ ללא סיומת
+                        if (!pageSubscription) {
+                            const fileNameWithoutExt = page.fileName.replace('.html', '');
+                            pageSubscription = localStorage.getItem(`page_subscription_${fileNameWithoutExt}`);
+                        }
+                        
+                        // 3. נסה עם ID של הדף
+                        if (!pageSubscription) {
+                            pageSubscription = localStorage.getItem(`page_subscription_${page.id || page.fileName}`);
+                        }
+                        
+                        // 4. נסה עם כל המפתחות הקיימים
+                        if (!pageSubscription) {
+                            const allKeys = Object.keys(localStorage).filter(key => key.includes('page_subscription'));
+                            for (const key of allKeys) {
+                                const keyValue = localStorage.getItem(key);
+                                try {
+                                    const sub = JSON.parse(keyValue);
+                                    // בדוק אם זה המנוי של הדף הזה
+                                    if (sub.pageId === page.fileName || 
+                                        sub.pageId === page.id || 
+                                        key.includes(page.fileName) ||
+                                        key.includes(page.id)) {
+                                        pageSubscription = keyValue;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    // המשך לחפש
+                                }
+                            }
+                        }
+                        
+                        if (pageSubscription) {
+                            try {
+                                const subscription = JSON.parse(pageSubscription);
+                                if (subscription.isActive) {
+                                    activeSubscriptions++;
+                                    totalRevenue += 39;
+                                }
+                            } catch (e) {
+                                console.error('Error parsing subscription:', e);
+                            }
+                        }
+                    });
+                    
+                    // עדכן את הנתונים
+                    user.activeSubscriptions = activeSubscriptions;
+                    user.totalRevenue = totalRevenue;
+                    user.subscription_status = activeSubscriptions > 0 ? 'active' : 'inactive';
+                    user.totalPages = userPages.length;
+                    
+                    console.log(`User ${user.email}: ${activeSubscriptions} active subscriptions, status: ${user.subscription_status}`);
+                    console.log(`User pages:`, userPages.map(p => ({ fileName: p.fileName, hasSubscription: !!localStorage.getItem(`page_subscription_${p.fileName}`) })));
+                    
+                    // צור את השורה
+                    const row = createUserRow(user);
+                    usersTableBody.appendChild(row);
+                });
+
+                console.log('Loaded users:', serverUsers.length, 'from server');
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                loadLocalUsersData();
+            }
+        }
+
+        function loadLocalUsersData() {
+            // טען נתונים מקומיים
+            const usersTableBody = document.getElementById('users-table-body');
+            usersTableBody.innerHTML = '';
+
+            // קבל את כל המשתמשים מ-localStorage
+            const localData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
+            const pages = localData.pages || [];
+            
+            // חשב סטטיסטיקות משתמש
+            let totalPages = pages.length;
+            let activeSubscriptions = 0;
+            let totalRevenue = 0;
+            
+            // חשב מנויים פעילים אמיתיים
+            activeSubscriptions = 0;
+            totalRevenue = 0;
+            
+            pages.forEach(page => {
+                // בדוק אם יש מנוי פעיל לדף הזה - נסה כמה מפתחות
+                let pageSubscription = null;
+                
+                // 1. נסה עם שם הקובץ המלא
+                pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                
+                // 2. נסה עם שם קובץ ללא סיומת
+                if (!pageSubscription) {
+                    const fileNameWithoutExt = page.fileName.replace('.html', '');
+                    pageSubscription = localStorage.getItem(`page_subscription_${fileNameWithoutExt}`);
+                }
+                
+                // 3. נסה עם ID של הדף
+                if (!pageSubscription) {
+                    pageSubscription = localStorage.getItem(`page_subscription_${page.id || page.fileName}`);
+                }
+                
+                // 4. נסה עם כל המפתחות הקיימים
+                if (!pageSubscription) {
+                    const allKeys = Object.keys(localStorage).filter(key => key.includes('page_subscription'));
+                    for (const key of allKeys) {
+                        const keyValue = localStorage.getItem(key);
+                        try {
+                            const sub = JSON.parse(keyValue);
+                            // בדוק אם זה המנוי של הדף הזה
+                            if (sub.pageId === page.fileName || 
+                                sub.pageId === page.id || 
+                                key.includes(page.fileName) ||
+                                key.includes(page.id)) {
+                                pageSubscription = keyValue;
+                                break;
+                            }
+                        } catch (e) {
+                            // המשך לחפש
+                        }
+                    }
+                }
+                
+                if (pageSubscription) {
+                    try {
+                        const subscription = JSON.parse(pageSubscription);
+                        if (subscription.isActive) {
+                            activeSubscriptions++;
+                            totalRevenue += 39;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing subscription:', e);
+                    }
+                }
+            });
+            
+            // הוסף את המשתמש הנוכחי עם נתונים אמיתיים
+            if (currentUser) {
+                const isCurrentAdmin = currentUser.id === ADMIN_USER_ID;
+                const row = createUserRow({
+                    id: currentUser.id,
+                    email: currentUser.email,
+                    full_name: currentUser.user_metadata?.full_name || (isCurrentAdmin ? 'מנהל' : 'משתמש'),
+                    created_at: new Date().toISOString(),
+                    subscription_status: activeSubscriptions > 0 ? 'active' : 'inactive',
+                    totalPages: totalPages,
+                    activeSubscriptions: activeSubscriptions,
+                    totalRevenue: totalRevenue,
+                    isAdmin: isCurrentAdmin
+                });
+                usersTableBody.appendChild(row);
+            }
+
+            console.log('User Data:', {
+                totalPages,
+                activeSubscriptions,
+                totalRevenue,
+                user: currentUser?.user_metadata?.full_name,
+                isAdmin: isAdmin,
+                userId: currentUser?.id,
+                adminId: ADMIN_USER_ID
+            });
+        }
+
+        function createUserRow(user) {
+            const row = document.createElement('tr');
+            row.setAttribute('data-user-id', user.id);
+            const joinDate = new Date(user.created_at).toLocaleDateString('he-IL');
+            // בדוק אם המשתמש מחובר (כרגע רק המנהל מחובר)
+            const isConnected = user.id === currentUser?.id;
+            const statusBadge = isConnected ? 
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">מחובר</span>' :
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">לא מחובר</span>';
+
+            // בדוק אם זה המנהל
+            const isCurrentAdmin = user.id === currentUser?.id || user.isAdmin;
+            const adminBadge = isCurrentAdmin ? 
+                '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2">מנהל</span>' : '';
+
+            // הוסף מידע נוסף על המשתמש
+            const additionalInfo = user.totalPages ? 
+                `<div class="text-xs text-gray-400 mt-1">
+                    דפים: ${user.totalPages} | מנויים פעילים: ${user.activeSubscriptions || 0} | הכנסות: ₪${user.totalRevenue || 0}
+                </div>` : '';
+
+            // כפתורי פעולה - מנהל יכול לשלוט בכל המשתמשים
+            const actionButtons = isCurrentAdmin ? 
+                `<span class="text-gray-400 text-sm">מנהל המערכת</span>` :
+                `<button onclick="toggleUserStatus('${user.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                    ${isConnected ? 'נתק' : 'התחבר'}
+                </button>
+                <button onclick="viewUserPages('${user.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                    דפים
+                </button>
+                <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:text-red-900">
+                    מחק
+                </button>`;
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                            <div class="h-10 w-10 rounded-full ${isCurrentAdmin ? 'bg-red-600' : 'bg-indigo-600'} flex items-center justify-center text-white font-bold">
+                                ${user.full_name.charAt(0)}
+                            </div>
+                        </div>
+                        <div class="mr-4">
+                            <div class="text-sm font-medium text-gray-900 flex items-center">
+                                ${user.full_name}
+                                ${adminBadge}
+                            </div>
+                            <div class="text-sm text-gray-500">${user.id}</div>
+                            ${additionalInfo}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.email}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${joinDate}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    ${actionButtons}
+                </td>
+            `;
+            return row;
+        }
+
+        async function loadFinanceData() {
+            // טען נתונים אמיתיים מהשרת
+            try {
+                // קבל את כל הדפים במערכת מהשרת
+                const response = await fetch('/api/all-pages');
+                const allPages = await response.json();
+                
+                console.log('All pages in system:', allPages);
+                
+                // חשב מנויים פעילים ולא פעילים
+                let activeSubscriptions = 0;
+                let inactivePages = 0;
+                
+                allPages.forEach(page => {
+                    // בדוק אם יש מנוי פעיל לדף הזה
+                    const pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                    if (pageSubscription) {
+                        const subscription = JSON.parse(pageSubscription);
+                        if (subscription.isActive) {
+                            activeSubscriptions++;
+                        } else {
+                            inactivePages++;
+                        }
+                    } else {
+                        // אין מנוי בכלל - נחשב כלא פעיל
+                        inactivePages++;
+                    }
+                });
+                
+                let totalRevenue = activeSubscriptions * 39; // ₪39 לכל דף פעיל בלבד
+                
+                // חשב נתונים אמיתיים
+                const totalPages = allPages.length;
+                
+                // משתמשים מחוברים - כרגע רק המנהל מחובר
+                const connectedUsers = 1; // רק המנהל מחובר כרגע
+                
+                const monthlyRevenue = totalRevenue; // רק מנויים פעילים, לא כל הדפים
+                
+                console.log('Finance Data:', {
+                    totalPages,
+                    connectedUsers,
+                    activeSubscriptions,
+                    inactivePages,
+                    monthlyRevenue,
+                    publishedPagesRevenue: totalPages * 39,
+                    pages: allPages.map(p => ({ name: p.title, fileName: p.fileName, userId: p.userId }))
+                });
+                
+                // עדכן את הדשבורד
+                document.getElementById('monthly-revenue').textContent = `₪${monthlyRevenue}`;
+                document.getElementById('active-users').textContent = connectedUsers.toString();
+                document.getElementById('total-pages').textContent = totalPages.toString();
+                
+                // עדכן גם את הדשבורד הראשי
+                const dashboardTotalUsers = document.getElementById('dashboard-total-users');
+                const dashboardMonthlyRevenue = document.getElementById('dashboard-monthly-revenue');
+                const dashboardActivePages = document.getElementById('dashboard-active-pages');
+                const dashboardInactivePages = document.getElementById('dashboard-inactive-pages');
+                
+                // קבל את מספר המשתמשים הכולל במערכת
+                const usersResponse = await fetch('/api/users');
+                const users = await usersResponse.json();
+                const totalUsersInSystem = users.length;
+                
+                if (dashboardTotalUsers) dashboardTotalUsers.textContent = totalUsersInSystem.toString();
+                if (dashboardMonthlyRevenue) dashboardMonthlyRevenue.textContent = `₪${monthlyRevenue}`;
+                if (dashboardActivePages) dashboardActivePages.textContent = activeSubscriptions.toString();
+                if (dashboardInactivePages) dashboardInactivePages.textContent = inactivePages.toString();
+                
+            } catch (error) {
+                console.error('Error loading finance data:', error);
+                // נתונים דמו במקרה של שגיאה
+                document.getElementById('monthly-revenue').textContent = '₪0';
+                document.getElementById('active-users').textContent = '1';
+                document.getElementById('total-pages').textContent = '0';
+            }
+
+            // טען היסטוריית תשלומים
+            const paymentsTableBody = document.getElementById('payments-table-body');
+            paymentsTableBody.innerHTML = '';
+
+            // צור תשלומים אמיתיים על בסיס הדפים עם מנויים פעילים
+            const allPagesResponse = await fetch('/api/all-pages');
+            const allPages = await allPagesResponse.json();
+            
+            const realPayments = [];
+            
+            allPages.forEach((page, index) => {
+                // בדוק אם יש מנוי פעיל לדף הזה
+                const pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                if (pageSubscription) {
+                    const subscription = JSON.parse(pageSubscription);
+                    if (subscription.isActive) {
+                        // רק דפים עם מנוי פעיל נחשבים כתשלום
+                        realPayments.push({
+                            user: currentUser?.user_metadata?.full_name || 'משתמש',
+                            amount: '₪39',
+                            date: new Date(subscription.purchaseDate || page.created_at || Date.now() - (index * 86400000)).toLocaleDateString('he-IL'),
+                            status: 'completed',
+                            pageName: page.title || 'דף נחיתה'
+                        });
+                    }
+                }
+            });
+            
+            console.log('Real Payments:', realPayments);
+            
+            // אם אין תשלומים, הוסף הודעה
+            const demoPayments = realPayments.length > 0 ? realPayments : [{
+                user: 'אין תשלומים',
+                amount: '₪0',
+                date: '-',
+                status: 'none',
+                pageName: 'אין דפים עם מנוי פעיל'
+            }];
+
+            demoPayments.forEach(payment => {
+                const row = document.createElement('tr');
+                let statusBadge;
+                
+                if (payment.status === 'completed') {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">הושלם</span>';
+                } else if (payment.status === 'none') {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">אין נתונים</span>';
+                } else {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">ממתין</span>';
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${payment.user}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${payment.amount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${payment.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                `;
+                paymentsTableBody.appendChild(row);
+            });
+        }
+
+        async function loadAnalyticsData() {
+            // טען נתונים אמיתיים לסטטיסטיקות
+            try {
+                const response = await fetch('/api/all-pages');
+                const allPages = await response.json();
+                
+                // חשב דפים שנוצרו השבוע
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                const weeklyPages = allPages.filter(page => {
+                    const pageDate = new Date(page.created_at || Date.now());
+                    return pageDate >= weekAgo;
+                }).length;
+                
+                // חשב מנויים פעילים השבוע
+                let weeklyActiveSubscriptions = 0;
+                let weeklyRevenue = 0;
+                
+                const weeklyPagesList = allPages.filter(page => {
+                    const pageDate = new Date(page.created_at || Date.now());
+                    return pageDate >= weekAgo;
+                });
+                
+                weeklyPagesList.forEach(page => {
+                    const pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                    if (pageSubscription) {
+                        const subscription = JSON.parse(pageSubscription);
+                        if (subscription.isActive) {
+                            weeklyActiveSubscriptions++;
+                            weeklyRevenue += 39;
+                        }
+                    }
+                });
+                
+                console.log('Analytics Data:', {
+                    weeklyPages,
+                    weeklyActiveSubscriptions,
+                    weeklyRevenue,
+                    totalPages: allPages.length
+                });
+                
+                // עדכן את הסטטיסטיקות
+                const weeklyNewUsers = document.getElementById('weekly-new-users');
+                const weeklyNewPages = document.getElementById('weekly-new-pages');
+                const weeklyRevenueEl = document.getElementById('weekly-revenue');
+                const conversionRate = document.getElementById('conversion-rate');
+                
+                // משתמשים מחוברים - כרגע רק המנהל מחובר
+                const totalUsers = 1; // רק המנהל מחובר כרגע
+                
+                if (weeklyNewUsers) weeklyNewUsers.textContent = "1"; // משתמש חדש השבוע (המנהל)
+                if (weeklyNewPages) weeklyNewPages.textContent = weeklyPages.toString();
+                if (weeklyRevenueEl) weeklyRevenueEl.textContent = `₪${weeklyRevenue}`;
+                
+                // חשב שיעור המרה - דפים פעילים מתוך סה"כ דפים
+                let totalActiveSubscriptions = 0;
+                allPages.forEach(page => {
+                    const pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                    if (pageSubscription) {
+                        const subscription = JSON.parse(pageSubscription);
+                        if (subscription.isActive) {
+                            totalActiveSubscriptions++;
+                        }
+                    }
+                });
+                
+                const conversionRateValue = allPages.length > 0 ? Math.round((totalActiveSubscriptions / allPages.length) * 100) : 0;
+                if (conversionRate) conversionRate.textContent = `${conversionRateValue}%`;
+                
+                // טען פעילות אמיתית
+                await loadRecentActivity(allPages);
+                
+                // עדכן גרפים
+                await updateAnalyticsCharts(allPages, totalUsers);
+                
+            } catch (error) {
+                console.error('Error loading analytics data:', error);
+            }
+        }
+
+        async function updateAnalyticsCharts(allPages, totalUsers) {
+            try {
+                // חשב נתונים לגרפים
+                let activePages = 0;
+                let inactivePages = 0;
+                let weeklyActivePages = 0;
+                
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                
+                allPages.forEach(page => {
+                    const pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                    if (pageSubscription) {
+                        const subscription = JSON.parse(pageSubscription);
+                        if (subscription.isActive) {
+                            activePages++;
+                            // בדוק אם זה השבוע
+                            const pageDate = new Date(page.created_at || Date.now());
+                            if (pageDate >= weekAgo) {
+                                weeklyActivePages++;
+                            }
+                        } else {
+                            inactivePages++;
+                        }
+                    } else {
+                        inactivePages++;
+                    }
+                });
+                
+                const totalPages = allPages.length;
+                const percentage = totalPages > 0 ? Math.round((activePages / totalPages) * 100) : 0;
+                const monthlyRevenue = activePages * 39;
+                const potentialRevenue = totalPages * 39;
+                
+                // עדכן גרף סטטוס דפים
+                const pagesProgress = document.getElementById('pages-progress');
+                const pagesPercentage = document.getElementById('pages-percentage');
+                const activePagesCount = document.getElementById('active-pages-count');
+                const inactivePagesCount = document.getElementById('inactive-pages-count');
+                
+                if (pagesProgress) {
+                    const circumference = 251.2; // 2 * π * 40
+                    const offset = circumference - (percentage / 100) * circumference;
+                    pagesProgress.style.strokeDashoffset = offset;
+                }
+                
+                if (pagesPercentage) pagesPercentage.textContent = `${percentage}%`;
+                if (activePagesCount) activePagesCount.textContent = activePages.toString();
+                if (inactivePagesCount) inactivePagesCount.textContent = inactivePages.toString();
+                
+                // עדכן גרף הכנסות
+                const monthlyRevenueDisplay = document.getElementById('monthly-revenue-display');
+                const revenueActivePages = document.getElementById('revenue-active-pages');
+                const revenueInactivePages = document.getElementById('revenue-inactive-pages');
+                const revenuePotential = document.getElementById('revenue-potential');
+                
+                if (monthlyRevenueDisplay) monthlyRevenueDisplay.textContent = `₪${monthlyRevenue}`;
+                if (revenueActivePages) revenueActivePages.textContent = activePages.toString();
+                if (revenueInactivePages) revenueInactivePages.textContent = inactivePages.toString();
+                if (revenuePotential) revenuePotential.textContent = `₪${potentialRevenue}`;
+                
+                // עדכן פעילות שבועית
+                const weeklyPagesCreated = allPages.filter(page => {
+                    const pageDate = new Date(page.created_at || Date.now());
+                    return pageDate >= weekAgo;
+                }).length;
+                
+                const weeklyRevenue = weeklyActivePages * 39;
+                
+                const weeklyPagesCreatedEl = document.getElementById('weekly-pages-created');
+                const weeklyPagesActivatedEl = document.getElementById('weekly-pages-activated');
+                const weeklyRevenueDisplay = document.getElementById('weekly-revenue-display');
+                
+                if (weeklyPagesCreatedEl) weeklyPagesCreatedEl.textContent = weeklyPagesCreated.toString();
+                if (weeklyPagesActivatedEl) weeklyPagesActivatedEl.textContent = weeklyActivePages.toString();
+                if (weeklyRevenueDisplay) weeklyRevenueDisplay.textContent = `₪${weeklyRevenue}`;
+                
+                // עדכן סטטיסטיקות משתמשים
+                // קבל את מספר המשתמשים הכולל במערכת
+                const usersResponse = await fetch('/api/users');
+                const allUsers = await usersResponse.json();
+                const totalUsersInSystem = allUsers.length;
+                
+                const activeUsers = 1; // רק המנהל מחובר כרגע
+                const inactiveUsers = Math.max(0, totalUsersInSystem - activeUsers); // משתמשים לא מחוברים
+                const conversionRate = totalPages > 0 ? Math.round((activePages / totalPages) * 100) : 0;
+                
+                const totalUsersCount = document.getElementById('total-users-count');
+                const activeUsersCount = document.getElementById('active-users-count');
+                const inactiveUsersCount = document.getElementById('inactive-users-count');
+                const conversionRateDisplay = document.getElementById('conversion-rate-display');
+                
+                if (totalUsersCount) totalUsersCount.textContent = totalUsersInSystem.toString();
+                if (activeUsersCount) activeUsersCount.textContent = activeUsers.toString();
+                if (inactiveUsersCount) inactiveUsersCount.textContent = inactiveUsers.toString();
+                if (conversionRateDisplay) conversionRateDisplay.textContent = `${conversionRate}%`;
+                
+            } catch (error) {
+                console.error('Error updating analytics charts:', error);
+            }
+        }
+
+        async function loadRecentActivity(allPages) {
+            try {
+                const recentActivityContainer = document.getElementById('recent-activity');
+                recentActivityContainer.innerHTML = '';
+                
+                // צור רשימת פעילויות כולל יצירת דפים ופרסום
+                const activities = [];
+                
+                // הוסף פעילות יצירת דפים
+                allPages.forEach(page => {
+                    activities.push({
+                        type: 'created',
+                        page: page,
+                        date: new Date(page.created_at),
+                        timestamp: new Date(page.created_at).getTime()
+                    });
+                });
+                
+                // הוסף פעילות פרסום דפים (מנויים)
+                const subscriptionKeys = Object.keys(localStorage).filter(key => key.includes('page_subscription'));
+                subscriptionKeys.forEach(key => {
+                    try {
+                        const subscription = JSON.parse(localStorage.getItem(key));
+                        if (subscription && subscription.isActive) {
+                            // מצא את הדף המתאים
+                            const page = allPages.find(p => 
+                                p.fileName === subscription.pageId || 
+                                p.id === subscription.pageId ||
+                                key.includes(p.fileName) ||
+                                key.includes(p.id)
+                            );
+                            
+                            if (page) {
+                                activities.push({
+                                    type: 'published',
+                                    page: page,
+                                    subscription: subscription,
+                                    date: new Date(subscription.startDate || subscription.endDate),
+                                    timestamp: new Date(subscription.startDate || subscription.endDate).getTime()
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error parsing subscription:', e);
+                    }
+                });
+                
+                // מיון כל הפעילויות לפי תאריך (החדשים ביותר ראשון)
+                activities.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // הצג את 10 הפעילויות האחרונות
+                const recentActivities = activities.slice(0, 10);
+                
+                if (recentActivities.length === 0) {
+                    recentActivityContainer.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <p>אין פעילות אחרונה</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                recentActivities.forEach((activity, index) => {
+                    const timeAgo = getTimeAgo(activity.date);
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'flex items-center';
+                    
+                    // בחר אייקון וטקסט לפי סוג הפעילות
+                    let iconBg, iconColor, activityText;
+                    if (activity.type === 'published') {
+                        iconBg = 'bg-green-100';
+                        iconColor = 'text-green-600';
+                        activityText = 'דף פורסם';
+                    } else {
+                        iconBg = 'bg-blue-100';
+                        iconColor = 'text-blue-600';
+                        activityText = 'דף חדש נוצר';
+                    }
+                    
+                    activityItem.innerHTML = `
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 ${iconBg} rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    ${activity.type === 'published' ? 
+                                        `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>` :
+                                        `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>`
+                                    }
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mr-4">
+                            <p class="text-sm font-medium text-gray-900">${activityText}</p>
+                            <p class="text-sm text-gray-500">${activity.page.title || 'דף נחיתה'}</p>
+                        </div>
+                        <div class="mr-auto text-sm text-gray-500">${timeAgo}</div>
+                    `;
+                    
+                    recentActivityContainer.appendChild(activityItem);
+                });
+                
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+            }
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'לפני רגע';
+            } else if (diffInSeconds < 3600) {
+                const minutes = Math.floor(diffInSeconds / 60);
+                return `לפני ${minutes} דקות`;
+            } else if (diffInSeconds < 86400) {
+                const hours = Math.floor(diffInSeconds / 3600);
+                return `לפני ${hours} שעות`;
+            } else {
+                const days = Math.floor(diffInSeconds / 86400);
+                return `לפני ${days} ימים`;
+            }
+        }
+
+        function toggleUserStatus(userId) {
+            console.log('Toggling user status for:', userId);
+            showSuccess('סטטוס המשתמש עודכן בהצלחה');
+            loadUsersData(); // רענן את הרשימה
+        }
+
+        function deleteUser(userId) {
+            if (confirm('האם אתה בטוח שברצונך למחוק את המשתמש?')) {
+                console.log('Deleting user:', userId);
+                showSuccess('המשתמש נמחק בהצלחה');
+                loadUsersData(); // רענן את הרשימה
+            }
+        }
+
+        async function viewUserPages(userId) {
+            try {
+                // קבל את כל הדפים של המשתמש
+                const response = await fetch(`/api/pages/${userId}`);
+                const userPages = await response.json();
+                
+                console.log('User pages:', userPages);
+                
+                // פתח מודל עם רשימת הדפים
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-gray-900">דפים של המשתמש</h3>
+                                <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                ${userPages.map(page => `
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <h4 class="font-medium text-gray-900 mb-2">${page.title || 'דף נחיתה'}</h4>
+                                        <p class="text-sm text-gray-600 mb-3">${page.fileName}</p>
+                                        <div class="flex space-x-2">
+                                            <button onclick="editUserPage('${page.fileName}', '${userId}')" class="text-blue-600 hover:text-blue-800 text-sm">
+                                                ערוך
+                                            </button>
+                                            <button onclick="deleteUserPage('${page.fileName}', '${userId}')" class="text-red-600 hover:text-red-800 text-sm">
+                                                מחק
+                                            </button>
+                                            <button onclick="viewUserPage('${page.fileName}', '${userId}')" class="text-green-600 hover:text-green-800 text-sm">
+                                                צפה
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${userPages.length === 0 ? '<p class="text-gray-500 text-center">אין דפים למשתמש הזה</p>' : ''}
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                console.error('Error loading user pages:', error);
+                alert('שגיאה בטעינת דפי המשתמש');
+            }
+        }
+
+        function editUserPage(fileName, userId = null) {
+            // פתח את עורך הדפים עם הדף של המשתמש
+            const targetUserId = userId || currentUser.id;
+            window.open(`/page-creator/page-creator.html?edit=${fileName}&userId=${targetUserId}`, '_blank');
+        }
+
+        async function deleteUserPage(fileName, userId) {
+            if (confirm('האם אתה בטוח שברצונך למחוק את הדף?')) {
+                try {
+                    const response = await fetch(`/api/delete-page`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ fileName, userId })
+                    });
+                    
+                    if (response.ok) {
+                        alert('הדף נמחק בהצלחה');
+                        viewUserPages(userId); // רענן את הרשימה
+                    } else {
+                        alert('שגיאה במחיקת הדף');
+                    }
+                } catch (error) {
+                    console.error('Error deleting page:', error);
+                    alert('שגיאה במחיקת הדף');
+                }
+            }
+        }
+
+        function viewUserPage(fileName, userId = null) {
+            // פתח את הדף בטאב חדש
+            const targetUserId = userId || currentUser.id;
+            window.open(`/pages/${targetUserId}/${fileName}`, '_blank');
+        }
+        
+        // --- פונקציות סיכום חשבון ---
+        async function updateAccountSummary() {
+            console.log('=== updateAccountSummary called ===');
+            
+            if (!currentUser || !currentUser.id) {
+                console.log('No current user, skipping account summary update');
+                return;
+            }
+            
+            try {
+                // קבל את הדפים מהשרת (כמו ב-loadProjects)
+                console.log('Fetching pages from server...');
+                const response = await fetch(`/api/pages/${currentUser.id}`);
+                const serverData = await response.json();
+                const serverPages = serverData.pages || [];
+                console.log('Server pages:', serverPages);
+                
+                // קבל גם דפים מקומיים
+                const localData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
+                const localPages = localData.pages || [];
+                console.log('Local pages:', localPages);
+                
+                // שלב את הדפים מהשרת והדפים המקומיים
+                const allPages = [...serverPages, ...localPages];
+                console.log('All pages combined:', allPages);
+                
+                // חשב מנויים פעילים
+                let activeSubscriptions = 0;
+                let totalRevenue = 0;
+                
+                console.log('Checking subscriptions for pages...');
+                allPages.forEach((page, index) => {
+                    // השתמש באותו מפתח כמו ב-loadProjects - project.id
+                    const pageKey = page.id || `local_${page.fileName}`;
+                    const pageSubscription = localStorage.getItem(`page_subscription_${pageKey}`);
+                    console.log(`Page ${index + 1}: ${pageKey}, subscription:`, pageSubscription);
+                    
+                    if (pageSubscription) {
+                        const subscription = JSON.parse(pageSubscription);
+                        console.log(`Subscription data:`, subscription);
+                        if (subscription.isActive) {
+                            activeSubscriptions++;
+                            totalRevenue += 39;
+                            console.log(`Active subscription found for: ${pageKey}`);
+                        }
+                    }
+                });
+                
+                console.log(`Total active subscriptions: ${activeSubscriptions}`);
+                
+                // עדכן את הסיכום
+                document.getElementById('account-total-pages').textContent = allPages.length;
+                document.getElementById('account-active-pages').textContent = activeSubscriptions;
+                
+                // עדכן את התצוגות המקדימות הקטנות
+                document.getElementById('total-pages-icon').textContent = allPages.length;
+                document.getElementById('active-pages-icon').textContent = activeSubscriptions;
+                
+                // חשב חיוב חודשי (₪39 לכל דף פעיל בלבד)
+                const monthlyCharge = activeSubscriptions * 39;
+                document.getElementById('account-monthly-charge').textContent = `₪${monthlyCharge}`;
+                document.getElementById('monthly-charge-amount').textContent = monthlyCharge;
+                
+                // עדכן זמן עדכון אחרון
+                const lastUpdateTime = new Date().toLocaleString('he-IL');
+                
+                // עדכן את המודל רק אם המשתמש ביקש זאת במפורש
+                // הוסר רענון אוטומטי שגרם לבעיות
+                
+                console.log('Account Summary Updated:', {
+                    totalPages: allPages.length,
+                    activePages: activeSubscriptions,
+                    activeSubscriptions,
+                    monthlyCharge,
+                    serverPages: serverPages.length,
+                    localPages: localPages.length
+                });
+                
+            } catch (error) {
+                console.error('Error updating account summary:', error);
+            }
+        }
+
+        function updatePagesBreakdown(pages) {
+            const pagesBreakdown = document.getElementById('pages-breakdown');
+            if (!pagesBreakdown) return;
+            
+            pagesBreakdown.innerHTML = '';
+            
+            if (pages.length === 0) {
+                pagesBreakdown.innerHTML = '<div class="text-sm text-gray-500 text-center py-2">אין דפים שפורסמו</div>';
+                return;
+            }
+            
+            // מיון הדפים לפי תאריך (החדש ביותר ראשון)
+            const sortedPages = pages.sort((a, b) => {
+                const dateA = new Date(a.created_at || a.fileName.split('_').pop() || Date.now());
+                const dateB = new Date(b.created_at || b.fileName.split('_').pop() || Date.now());
+                return dateB - dateA;
+            });
+            
+            sortedPages.forEach((page, index) => {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'flex items-center justify-between p-2 bg-white rounded border border-gray-200';
+                
+                // חלץ תאריך מהשם או השתמש בתאריך נוכחי
+                let publishDate;
+                try {
+                    // נסה לחלץ תאריך מהשם
+                    const timestampMatch = page.fileName.match(/(\d{13})/);
+                    if (timestampMatch) {
+                        publishDate = new Date(parseInt(timestampMatch[1]));
+                    } else {
+                        publishDate = new Date(page.created_at || Date.now());
+                    }
+                } catch (error) {
+                    publishDate = new Date();
+                }
+                
+                const formattedDate = publishDate.toLocaleDateString('he-IL', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // נקה את שם הדף
+                let cleanPageName = page.title || page.fileName || 'דף נחיתה';
+                if (cleanPageName.includes('_')) {
+                    const parts = cleanPageName.split('_');
+                    cleanPageName = parts[0] || 'דף נחיתה';
+                }
+                
+                pageDiv.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span class="text-xs font-semibold text-indigo-600">${index + 1}</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-800">${cleanPageName}</div>
+                            <div class="text-xs text-gray-500">פורסם: ${formattedDate}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold text-green-600">₪39</div>
+                        <div class="text-xs text-gray-500">דף שפורסם</div>
+                    </div>
+                `;
+                
+                pagesBreakdown.appendChild(pageDiv);
+            });
+        }
+
+        function createTestSubscriptions() {
+            console.log('Creating test subscriptions...');
+            
+            // קבל את הדפים מהשרת
+            fetch(`/api/pages/${currentUser.id}`)
+                .then(response => response.json())
+                .then(serverData => {
+                    const serverPages = serverData.pages || [];
+                    
+                    // צור מנויים לדפים הראשונים (עד 3)
+                    serverPages.slice(0, 3).forEach((page, index) => {
+                        const pageKey = `local_${page.fileName}`; // אותו מפתח כמו ב-loadProjects
+                        const subscriptionData = {
+                            isActive: true,
+                            createdAt: new Date().toISOString(),
+                            userId: currentUser.id,
+                            pageId: pageKey
+                        };
+                        
+                        localStorage.setItem(`page_subscription_${pageKey}`, JSON.stringify(subscriptionData));
+                        console.log(`Created subscription for: ${pageKey}`);
+                    });
+                    
+                    // עדכן את המודל רק אם המשתמש ביקש זאת במפורש
+                    // הוסר רענון אוטומטי שגרם לבעיות
+                    
+                    showSuccess('נוצרו 3 מנויים לדפים הראשונים');
+                })
+                .catch(error => {
+                    console.error('Error creating test subscriptions:', error);
+                    showError('שגיאה ביצירת מנויים');
+                });
+        }
+        
+        // --- לוגיקת דשבורד (מתוקנת) ---
+        async function showDashboard() {
+            console.log("=== SHOW DASHBOARD ===");
+            console.log("currentUser:", currentUser);
+            
+            if (!currentUser) {
+                console.error("currentUser לא מוגדר ב-showDashboard!");
+                return;
+            }
+            
+            loginView.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+            document.body.classList.add('bg-gray-50');
+            
+            // בדוק סטטוס מנהל
+            checkAdminStatus();
+            
+            // עדכן את המודל רק אם המשתמש ביקש זאת במפורש
+            // הוסר רענון אוטומטי שגרם לבעיות
+            
+            // טען נתוני מנוי
+            loadSubscriptionData();
+
+            if (!currentUser || !currentUser.id) {
+                console.error("Invalid user object:", currentUser);
+                showError("שגיאה בזיהוי המשתמש. נסה להתחבר מחדש.");
+                return;
+            }
+
+            // חלץ נתונים
+            const userData = extractUserData(currentUser);
+            
+            // הצג בממשק מיידית (לפני בדיקת הפרופיל)
+            const nameElement = document.getElementById('user-name');
+            const avatarElement = document.getElementById('user-avatar');
+            
+            if (nameElement && avatarElement) {
+                nameElement.textContent = userData.name;
+                avatarElement.src = userData.avatar;
+                avatarElement.onerror = function() {
+                    this.src = 'https://placehold.co/80x80/E2E8F0/4A5568?text=' + encodeURIComponent(userData.name.charAt(0));
+                };
+                console.log("✅ UI Updated immediately with:", userData);
+            } else {
+                console.error("UI elements not found:", { nameElement, avatarElement });
+            }
+
+            // כעת נטפל בפרופיל ברקע
+            try {
+                let { data: profile, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (profileError && profileError.code !== 'PGRST116') {
+                    console.error("Profile fetch error:", profileError);
+                }
+
+                // אם אין פרופיל או הפרופיל ריק, צור/עדכן
+                if (!profile) {
+                    console.log("Creating new profile...");
+                    await supabaseClient
+                        .from('profiles')
+                        .upsert({
+                            id: currentUser.id,
+                            display_name: userData.name,
+                            avatar_url: userData.avatar,
+                        });
+                } else if (!profile.display_name || profile.display_name === 'משתמש') {
+                    console.log("Updating existing profile...");
+                    await supabaseClient
+                        .from('profiles')
+                        .update({
+                            display_name: userData.name,
+                            avatar_url: userData.avatar,
+                        })
+                        .eq('id', currentUser.id);
+                }
+            } catch (err) {
+                console.error("Profile operations error:", err);
+                // לא חשוב - הUI כבר מעודכן
+            }
+            
+            // המתן קצת לפני טעינת הפרויקטים
+            setTimeout(() => {
+            loadProjects();
+            }, 200);
+            console.log("======================");
+        }
+        
+        // --- פרויקטים ---
+        async function loadProjects() {
+            console.log('loadProjects התחיל');
+            console.log('currentUser:', currentUser);
+            if (!currentUser) {
+                console.error('currentUser לא מוגדר!');
+                projectsList.innerHTML = '<div class="text-center py-16 col-span-full">שגיאה: משתמש לא מחובר</div>';
+                return;
+            }
+            const projectsList = document.getElementById('projects-list');
+            if (!projectsList) {
+                console.error('לא נמצא projects-list element');
+                return;
+            }
+            projectsList.innerHTML = '<div class="loader mx-auto col-span-full"></div>';
+            console.log('הוספתי loader');
+            
+            let projects = [];
+            let supabaseError = null;
+            
+            // נסה לטעון מ-Supabase
+            try {
+                console.log('מנסה לטעון מ-Supabase...');
+                const { data: supabaseProjects, error } = await supabaseClient
+                    .from('projects')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                if (!error && supabaseProjects) {
+                    projects = supabaseProjects;
+                    console.log('נטענו מ-Supabase:', projects.length, 'פרויקטים');
+                } else {
+                    console.log('שגיאה ב-Supabase:', error);
+                    supabaseError = error;
+                }
+            } catch (err) {
+                console.log('שגיאה ב-Supabase, עובר לנתונים מקומיים:', err);
+                supabaseError = err;
+            }
+            
+            // אם Supabase נכשל, טען מקומית
+            if (supabaseError || projects.length === 0) {
+                try {
+                    console.log('מנסה לטעון נתונים מקומיים...');
+                    const localResponse = await fetch(`/api/pages/${currentUser.id}`);
+                    const localData = await localResponse.json();
+                    
+                    if (localData.pages && localData.pages.length > 0) {
+                        // המר דפים מקומיים לפורמט Supabase
+                        projects = localData.pages.map(page => {
+                            // חלץ שם נקי מתוך שם הקובץ
+                            let cleanName = page.title || 'דף נחיתה';
+                            
+                            // נסה לחלץ את שם האתר מתוך תוכן הקובץ
+                            if (page.fileName && page.url) {
+                                // קריאה אסינכרונית של הקובץ לחילוץ הכותרת
+                                fetch(page.url)
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+                                        if (titleMatch && titleMatch[1]) {
+                                            const extractedTitle = titleMatch[1].trim();
+                                            if (extractedTitle && extractedTitle !== 'דף נחיתה' && extractedTitle.length > 3) {
+                                                // עדכן את השם בריבוע
+                                                setTimeout(() => {
+                                                    const projectElement = document.querySelector(`[data-project-id="local_${page.fileName}"]`);
+                                                    if (projectElement) {
+                                                        const nameElement = projectElement.querySelector('h3');
+                                                        if (nameElement) {
+                                                            nameElement.textContent = extractedTitle;
+                                                        }
+                                                    }
+                                                }, 100);
+                                            }
+                                        }
+                                    })
+                                    .catch(err => {
+                                        // אם לא הצלחנו לקרוא את הקובץ, נסה לחלץ מהשם
+                                        if (page.fileName && page.fileName.includes('_')) {
+                                            const namePart = page.fileName.split('_')[0];
+                                            if (namePart && namePart !== 'page' && namePart !== 'דף' && namePart.length > 2) {
+                                                cleanName = decodeURIComponent(namePart);
+                                            }
+                                        }
+                                    });
+                            }
+                            
+                            // אם יש שם קובץ עם timestamp, נסה לחלץ שם יותר טוב
+                            if (page.fileName && page.fileName.includes('_')) {
+                                const namePart = page.fileName.split('_')[0];
+                                if (namePart && namePart !== 'page' && namePart !== 'דף' && namePart.length > 2) {
+                                    cleanName = decodeURIComponent(namePart);
+                                }
+                            }
+                            
+                            return {
+                            id: `local_${page.fileName}`,
+                                name: cleanName,
+                                description: 'דף נחיתה מקצועי',
+                            html_content: null, // נטען בנפרד
+                            template_type: 'local',
+                            status: 'completed',
+                            created_at: new Date().toISOString(),
+                            local_file: page.fileName,
+                            local_url: page.url
+                            };
+                        });
+                        console.log('נטענו דפים מקומיים:', projects.length);
+                    }
+                } catch (localErr) {
+                    console.error('שגיאה בטעינת דפים מקומיים:', localErr);
+                    console.log('מציג הודעה ריקה...');
+                }
+            }
+            
+            console.log('סיימתי לטעון, יש', projects.length, 'פרויקטים');
+            
+            // אם יש שגיאה מ-Supabase אבל יש דפים מקומיים, נמשיך
+            // אם אין דפים בכלל, נציג הודעה ריקה
+            
+            if (projects && projects.length > 0) {
+                console.log('מציג', projects.length, 'פרויקטים');
+                projectsList.innerHTML = '';
+                projects.forEach((project, index) => {
+                    console.log(`מציג פרויקט ${index + 1}:`, project.name);
+                    const creationDate = new Date(project.created_at).toLocaleDateString('he-IL');
+                    const projectCard = document.createElement('div');
+                    projectCard.className = 'bg-white p-4 rounded-xl border border-gray-200 shadow-md hover:shadow-lg hover:border-indigo-400 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden backdrop-blur-sm bg-white/95';
+        projectCard.style.minHeight = '400px';
+        projectCard.style.maxHeight = '400px';
+                    projectCard.setAttribute('data-project-id', project.id);
+                    
+                    const hasHtmlContent = (project.html_content && project.html_content.trim() !== '') || project.local_url;
+                    
+                    // בדוק אם הדף הזה יש לו מנוי פעיל
+                    const fileName = project.local_file || project.id.replace('local_', '');
+                    const pageSubscription = localStorage.getItem(`page_subscription_${fileName}`);
+                    const hasPageSubscription = pageSubscription && JSON.parse(pageSubscription).isActive;
+                    
+                    console.log(`Page ${project.id}: subscription=${pageSubscription}, hasSubscription=${hasPageSubscription}`);
+                    
+                    // דפים חדשים מתחילים ללא מנוי (אין מנוי ב-localStorage)
+                    const finalHasSubscription = hasPageSubscription;
+                    
+                    const statusBadge = finalHasSubscription ? 
+                        '<span class="status-badge status-completed">מנוי פעיל</span>' :
+                        '<span class="status-badge status-processing">מנוי לא פעיל</span>';
+                    
+                    // קבל את כתובת הדף
+                    const pageUrl = project.local_url || (project.html_content ? '#' : '');
+                    
+        const actionButtons = `
+            <button onclick="editProject('${project.id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-600 transition">
+                ערוך
+            </button>
+            <button onclick="deleteProject('${project.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-red-600 transition">
+                מחק
+            </button>
+            ${hasHtmlContent && finalHasSubscription ?
+                `<button onclick="viewProject('${project.id}')" class="bg-green-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-green-600 transition">
+                    צפה
+                </button>` :
+                hasHtmlContent && !finalHasSubscription ?
+                `<button onclick="openPageSubscriptionModal('${fileName}')" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-yellow-600 transition">
+                    מנוי
+                </button>` : ''
+            }
+            ${pageUrl && finalHasSubscription ?
+                `<button onclick="copyToClipboard('${window.location.origin}${pageUrl}')" class="bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-purple-600 transition">
+                    העתק קישור
+                </button>` : ''
+            }
+        `;
+                    
+                    projectCard.innerHTML = `
+                            <!-- תצוגה מקדימה של האתר -->
+                        <div class="relative rounded-t-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100" style="height: 250px; flex-shrink: 0;">
+                                ${pageUrl ? `
+                                    <!-- תצוגה מקדימה של האתר -->
+                                    <div class="absolute inset-2 bg-white rounded-lg overflow-hidden shadow-lg border border-gray-300">
+                                        <iframe 
+                                            src="${window.location.origin}${pageUrl}" 
+                                            class="w-full h-full border-0"
+                                            style="pointer-events: none; transform: scale(0.6) translateX(65%); transform-origin: top left; width: 166.67%; height: 166.67%;"
+                                            title="תצוגה מקדימה של ${project.name}"
+                                            loading="lazy"
+                                            onload="console.log('Preview loaded for:', '${project.name}')"
+                                            onerror="console.log('Preview error for:', '${project.name}')">
+                                        </iframe>
+                                    </div>
+                                ` : `
+                                    <!-- תצוגה מקדימה סטטית -->
+                                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10"></div>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg border-2 border-indigo-200">
+                                                <span class="text-2xl font-bold text-indigo-600">${project.name.charAt(0)}</span>
+                                            </div>
+                                            <div class="text-sm font-medium text-gray-700 bg-white/90 px-3 py-1 rounded-full shadow-sm border border-gray-200">
+                                                אין תוכן
+                                            </div>
+                                        </div>
+                                    </div>
+                                `}
+                                ${finalHasSubscription ? `
+                                    <div class="absolute top-3 right-3">
+                                        <div class="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            זמין לצפייה
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="absolute top-3 right-3">
+                                        <div class="bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            ממתין
+                                        </div>
+                                    </div>
+                                `}
+                            </div>
+                            
+                        <!-- תוכן הכרטיס -->
+                        <div class="p-4 flex-1 flex flex-col">
+                            <!-- כותרת וסטטוס -->
+                            <div class="mb-3">
+                                    <h3 class="font-semibold text-lg text-gray-800 mb-1 truncate">${project.name}</h3>
+                                <p class="text-sm text-gray-500 mb-2 line-clamp-2">${project.description || 'דף נחיתה מקצועי'}</p>
+                                <div class="flex items-center justify-between text-xs text-gray-400">
+                                    <span>נוצר: ${creationDate}</span>
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- פס כפתורים בתחתית -->
+                        <div class="border-t border-gray-100 bg-gray-50 px-4 py-3 rounded-b-xl">
+                            <div class="flex items-center justify-center gap-2">${actionButtons}</div>
+                        </div>
+                    `;
+                    console.log(`מוסיף כרטיס ${index + 1} ל-DOM`);
+                    projectsList.appendChild(projectCard);
+                });
+                console.log('סיימתי להוסיף כרטיסים');
+                
+                // עדכן את המודל רק אם המשתמש ביקש זאת במפורש
+                // הוסר רענון אוטומטי שגרם לבעיות
+            } else {
+                 projectsList.innerHTML = `
+                    <div class="text-center py-16 col-span-full">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                        <h3 class="mt-2 text-lg font-medium text-gray-900">עדיין אין דפי נחיתה</h3>
+                        <p class="mt-1 text-sm text-gray-500">הגיע הזמן ליצור את דף הנחיתה הראשון שלך.</p>
+                        <div class="mt-6">
+                            <button onclick="goToFullApp()" class="bg-indigo-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-indigo-700 transition-transform transform hover:scale-105 flex items-center gap-2 mx-auto">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                <span>צור דף חדש</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function viewProject(projectId) {
+            // בדוק אם זה דף מקומי
+            if (projectId.startsWith('local_')) {
+                const fileName = projectId.replace('local_', '');
+                const url = `/pages/${currentUser.id}/${fileName}`;
+                
+                // פתח בחלון חדש
+                const newWindow = window.open(url, '_blank');
+                if (!newWindow) {
+                    showError('פתיחת חלון חדש נכשלה. בדוק חוסם פופ-אפים.');
+                }
+                return;
+            }
+            
+            // דף מ-Supabase
+            try {
+                const { data: project, error } = await supabaseClient.from('projects').select('html_content, name').eq('id', projectId).single();
+                if (error || !project) return showError('שגיאה בטעינת הפרויקט.');
+                if (!project.html_content) return showError('לא נמצא תוכן HTML לפרויקט זה.');
+
+                // פתח בחלון חדש
+                const newWindow = window.open("");
+                if (newWindow) {
+                    newWindow.document.write(project.html_content);
+                    newWindow.document.close();
+                    newWindow.document.title = project.name || 'דף נחיתה';
+                } else {
+                    showError('פתיחת חלון חדש נכשלה. בדוק חוסם פופ-אפים.');
+                }
+            } catch (err) {
+                console.error('Error viewing project:', err);
+                showError('שגיאה בטעינת הפרויקט.');
+            }
+        }
+
+        function editProject(projectId) {
+            window.location.href = `/page-creator?edit=${projectId}&redirectUrl=${encodeURIComponent(window.location.href)}`;
+        }
+
+        async function deleteProject(projectId) {
+            if (!confirm('האם אתה בטוח שברצונך למחוק את דף הנחיתה? הפעולה לא ניתנת לביטול.')) return;
+            
+            try {
+                // בדוק אם זה דף מקומי
+                if (projectId.startsWith('local_')) {
+                    const fileName = projectId.replace('local_', '');
+                    console.log('Deleting local file:', fileName);
+                    
+                    // מחק מהשרת המקומי
+                    const response = await fetch(`/api/delete-page`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: currentUser.id,
+                            fileName: fileName
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showSuccess('הדף נמחק בהצלחה');
+                        loadProjects(); // רענן את הרשימה
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'שגיאה במחיקת הדף המקומי');
+                    }
+                    return;
+                }
+                
+                // דף מ-Supabase
+                const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
+                if (error) throw error;
+                
+                showSuccess('הדף נמחק בהצלחה');
+                loadProjects(); // רענן את הרשימה
+            } catch (error) {
+                console.error('Error deleting project:', error);
+                showError('שגיאה במחיקת הפרויקט: ' + error.message);
+            }
+        }
+
+        async function signOut() {  
+            await supabaseClient.auth.signOut();  
+        }
+
+        function goToFullApp() {  
+            window.location.href = '/page-creator?redirectUrl=' + encodeURIComponent(window.location.href);  
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('הכתובת הועתקה ללוח');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showError('שגיאה בהעתקת הכתובת');
+            });
+        }
+
+        // --- Event Listeners ---
+        adminPanelBtn.addEventListener('click', openAdminPanel);
+        closeAdminPanel.addEventListener('click', closeAdminPanelHandler);
+        
+        // Account summary button
+        const accountSummaryBtn = document.getElementById('account-summary-btn');
+        if (accountSummaryBtn) {
+            accountSummaryBtn.addEventListener('click', openAccountSummaryModal);
+        }
+
+        // Admin tab switching
+        document.getElementById('dashboard-tab').addEventListener('click', () => switchAdminTab('dashboard', 'דשבורד'));
+        document.getElementById('users-tab').addEventListener('click', () => switchAdminTab('users', 'ניהול משתמשים'));
+        document.getElementById('finance-tab').addEventListener('click', () => switchAdminTab('finance', 'ניהול כספים'));
+        document.getElementById('analytics-tab').addEventListener('click', () => switchAdminTab('analytics', 'סטטיסטיקות'));
+        document.getElementById('settings-tab').addEventListener('click', () => switchAdminTab('settings', 'הגדרות'));
+
+        function switchAdminTab(tabName, title) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all sidebar tabs
+            document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+                tab.classList.remove('text-white', 'bg-indigo-600');
+                tab.classList.add('text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900');
+            });
+            
+            // Show selected tab content
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const selectedTab = document.getElementById(`${tabName}-tab`);
+            selectedTab.classList.add('text-white', 'bg-indigo-600');
+            selectedTab.classList.remove('text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900');
+            
+            // Update page title
+            if (adminPageTitle) {
+                adminPageTitle.textContent = title;
+            }
+        }
+
+        // --- מאזינים לאירועים ---
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                clearCurrentUser();
+                isAdmin = false;
+                dashboardView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+                document.body.classList.remove('bg-gray-50');
+                if (!document.getElementById('googleSignInBtn').onclick) {
+                   initGoogleSignIn();
+                }
+            } else if (event === 'SIGNED_IN') {
+                currentUser = session.user;
+                saveCurrentUser(currentUser);
+                setTimeout(() => {
+                showDashboard();
+                }, 100);
+            }
+        });
+    </script>
+
+    <!-- Account Summary Modal -->
+    <div id="account-summary-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">סיכום חשבון</h3>
+                    <button onclick="closeAccountSummaryModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="text-sm text-gray-500">עדכון אחרון: <span id="modal-last-update"></span></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm font-medium text-blue-600">דפים שנוצרו</p>
+                                <p class="text-2xl font-bold text-blue-800" id="modal-account-total-pages">0</p>
+                            </div>
+                            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <!-- תצוגה מקדימה קטנה -->
+                        <div class="relative bg-white rounded-lg overflow-hidden shadow-sm border border-blue-200 h-24">
+                            <div id="modal-total-pages-preview" class="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                                        <span class="text-white text-sm font-bold" id="modal-total-pages-icon">0</span>
+                                    </div>
+                                    <div class="text-xs text-blue-700 font-medium">דפים</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm font-medium text-green-600">דפים פעילים</p>
+                                <p class="text-2xl font-bold text-green-800" id="modal-account-active-pages">0</p>
+                            </div>
+                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <!-- תצוגה מקדימה קטנה -->
+                        <div class="relative bg-white rounded-lg overflow-hidden shadow-sm border border-green-200 h-24">
+                            <div id="modal-active-pages-preview" class="absolute inset-0 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                                        <span class="text-white text-sm font-bold" id="modal-active-pages-icon">0</span>
+                                    </div>
+                                    <div class="text-xs text-green-700 font-medium">פעילים</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm font-medium text-purple-600">חיוב חודשי</p>
+                                <p class="text-2xl font-bold text-purple-800" id="modal-account-monthly-charge">₪0</p>
+                            </div>
+                            <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                        </div>
+                        <!-- תצוגה מקדימה קטנה -->
+                        <div class="relative bg-white rounded-lg overflow-hidden shadow-sm border border-purple-200 h-24">
+                            <div id="modal-monthly-charge-preview" class="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                                        <span class="text-white text-xs font-bold">₪</span>
+                                    </div>
+                                    <div class="text-xs text-purple-700 font-medium" id="modal-monthly-charge-amount">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeAccountSummaryModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg font-medium transition-colors">
+                        סגור
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
