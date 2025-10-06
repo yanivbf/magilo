@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תנאי שירות - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">תנאי שירות</h1>
+                <button onclick="goBack()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    חזור
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="bg-white rounded-lg shadow-sm p-8">
+            <div class="prose prose-lg max-w-none">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">1. קבלת התנאים</h2>
+                <p class="text-gray-700 mb-6">
+                    על ידי שימוש בשירותי AutoPage, אתה מסכים לתנאי שירות אלו. אם אינך מסכים לתנאים אלו, אנא הימנע משימוש בשירותינו.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">2. תיאור השירות</h2>
+                <p class="text-gray-700 mb-6">
+                    AutoPage מספקת פלטפורמה ליצירת דפי נחיתה וקידום אתרים. השירות כולל כלים ליצירת דפים, ניהול תוכן, אנליטיקס ושירותי קידום.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">3. הרשמה וחשבון משתמש</h2>
+                <p class="text-gray-700 mb-4">כדי להשתמש בשירותינו, עליך:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>לספק מידע מדויק ומעודכן</li>
+                    <li>לשמור על סודיות הסיסמה שלך</li>
+                    <li>להיות אחראי לכל פעילות בחשבון שלך</li>
+                    <li>להודיע לנו מיד על כל שימוש לא מורשה</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">4. תשלומים ומנויים</h2>
+                <p class="text-gray-700 mb-6">
+                    שירותי המנוי שלנו מחויבים מראש. תשלומים לא ניתנים להחזרה, אלא אם כן נקבע אחרת בהסכם נפרד. אנו שומרים לעצמנו את הזכות לשנות מחירים עם הודעה מוקדמת של 30 יום.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">5. שימוש מותר</h2>
+                <p class="text-gray-700 mb-4">אתה מתחייב להשתמש בשירותינו רק למטרות חוקיות ולא:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>ליצור תוכן פוגעני, בלתי חוקי או מטעה</li>
+                    <li>להפר זכויות יוצרים או קניין רוחני</li>
+                    <li>להעביר וירוסים או קוד זדוני</li>
+                    <li>לנסות לפרוץ למערכת או לשבש את השירות</li>
+                    <li>לשדר ספאם או הודעות לא רצויות</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">6. תוכן משתמש</h2>
+                <p class="text-gray-700 mb-6">
+                    אתה שומר על כל הזכויות בתוכן שאתה יוצר. על ידי העלאת תוכן לשירותינו, אתה מעניק לנו רישיון לא בלעדי לשימוש, העתקה, שינוי והצגה של התוכן למטרות מתן השירות.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">7. הגבלת אחריות</h2>
+                <p class="text-gray-700 mb-6">
+                    השירות מסופק "כפי שהוא" ללא ערבויות מכל סוג שהוא. אנו לא נהיה אחראים לנזקים עקיפים, מיוחדים, מקריים או תוצאתיים הנובעים משימוש בשירותינו.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">8. הפסקת שירות</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו שומרים לעצמנו את הזכות להפסיק או להשעות את השירות בכל עת, עם או בלי הודעה מוקדמת. במקרה של הפרת תנאים אלו, אנו נפסיק את השירות מיידית.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">9. שינויים בתנאים</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו שומרים לעצמנו את הזכות לשנות תנאי שירות אלו בכל עת. שינויים ייכנסו לתוקף מיידית עם פרסומם באתר. המשך השימוש בשירות לאחר השינויים מהווה הסכמה לתנאים החדשים.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">10. חוק שולט</h2>
+                <p class="text-gray-700 mb-6">
+                    תנאי שירות אלו כפופים לחוקי מדינת ישראל. כל מחלוקת תיפתר בבית המשפט המוסמך בישראל.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">11. יצירת קשר</h2>
+                <p class="text-gray-700 mb-6">
+                    לשאלות בנוגע לתנאי שירות אלו, אנא צור איתנו קשר:
+                    <br>
+                    <strong>אימייל:</strong> <span id="contact-email">legal@autopage.com</span>
+                    <br>
+                    <strong>טלפון:</strong> <span id="contact-phone">03-1234567</span>
+                    <br>
+                    <strong>אתר:</strong> <span id="website-url">www.example.com</span>
+                </p>
+
+                <div class="bg-yellow-50 border-r-4 border-yellow-400 p-4 mt-8">
+                    <p class="text-yellow-800">
+                        <strong>תאריך עדכון אחרון:</strong> <span id="last-update-date"></span>
+                    </p>
+                    <p class="text-yellow-800 mt-2">
+                        <strong>גרסה:</strong> 1.0
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+        
+        // עדכן פרטי יצירת קשר לפי פרמטרים מה-URL
+        function updateContactInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const business = urlParams.get('business');
+            const email = urlParams.get('email');
+            const phone = urlParams.get('phone');
+            const website = urlParams.get('website');
+            
+            if (email) {
+                const emailElement = document.getElementById('contact-email');
+                if (emailElement) emailElement.textContent = email;
+            }
+            
+            if (phone) {
+                const phoneElement = document.getElementById('contact-phone');
+                if (phoneElement) phoneElement.textContent = phone;
+            }
+            
+            if (website) {
+                const websiteElement = document.getElementById('website-url');
+                if (websiteElement) websiteElement.textContent = website;
+            }
+            
+            if (business) {
+                // עדכן את הכותרת עם שם החברה
+                const title = document.querySelector('h1');
+                if (title) title.textContent = `תנאי שירות - ${business}`;
+            }
+            
+            // עדכן את התאריך
+            const dateElement = document.getElementById('last-update-date');
+            if (dateElement) {
+                const today = new Date();
+                dateElement.textContent = today.toLocaleDateString('he-IL');
+            }
+        }
+        
+        // הפעל את העדכון כשהדף נטען
+        document.addEventListener('DOMContentLoaded', updateContactInfo);
+    </script>
+</body>
+</html>

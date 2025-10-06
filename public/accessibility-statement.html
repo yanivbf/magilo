@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הצהרת נגישות - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">הצהרת נגישות</h1>
+                <button onclick="goBack()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    חזור
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="bg-white rounded-lg shadow-sm p-8">
+            <div class="prose prose-lg max-w-none">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">1. מחויבות לנגישות</h2>
+                <p class="text-gray-700 mb-6">
+                    AutoPage מחויבת לספק שירותים נגישים לכל המשתמשים, ללא קשר ליכולותיהם הטכניות או הפיזיות. אנו פועלים בהתאם לתקן WCAG 2.1 ברמה AA.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">2. תכונות נגישות</h2>
+                <p class="text-gray-700 mb-4">האתר שלנו כולל תכונות נגישות הבאות:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>ניווט מקלדת מלא</li>
+                    <li>תמיכה בקוראי מסך</li>
+                    <li>ניגודיות צבעים מותאמת</li>
+                    <li>גודל טקסט ניתן להתאמה</li>
+                    <li>תמונות עם טקסט חלופי</li>
+                    <li>מבנה HTML סמנטי</li>
+                    <li>טופסי נגישים עם תוויות ברורות</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">3. תמיכה בדפדפנים</h2>
+                <p class="text-gray-700 mb-6">
+                    האתר תומך בדפדפנים מודרניים ומתעדכן באופן קבוע כדי להבטיח תאימות עם טכנולוגיות סיוע חדשות.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">4. דפי נגישות</h2>
+                <p class="text-gray-700 mb-6">
+                    כל הדפים שנוצרים במערכת שלנו כוללים תכונות נגישות בסיסיות:
+                </p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>מבנה כותרות היררכי</li>
+                    <li>קישורים עם טקסט תיאורי</li>
+                    <li>טופסי נגישים</li>
+                    <li>ניגודיות צבעים מינימלית</li>
+                    <li>גודל כפתורים מתאים</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">5. דיווח על בעיות נגישות</h2>
+                <p class="text-gray-700 mb-6">
+                    אם נתקלת בבעיה נגישות באתר שלנו או בדפים שנוצרו, אנא צור איתנו קשר:
+                </p>
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <p class="text-gray-700">
+                        <strong>אימייל:</strong> <span id="contact-email">accessibility@autopage.com</span><br>
+                        <strong>טלפון:</strong> <span id="contact-phone">03-1234567</span><br>
+                        <strong>שעות פעילות:</strong> א'-ה' 9:00-17:00
+                    </p>
+                </div>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">6. תהליך הטיפול בפניות</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו מתחייבים להגיב לכל פנייה בנוגע לנגישות תוך 5 ימי עבודה ולהתחיל לטפל בבעיה תוך 10 ימי עבודה.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">7. כלי נגישות מומלצים</h2>
+                <p class="text-gray-700 mb-4">להלן כלים שיכולים לסייע לך:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>קוראי מסך: NVDA, JAWS, VoiceOver</li>
+                    <li>הגדלת מסך: ZoomText, Magnifier</li>
+                    <li>הקלדה קולית: Dragon NaturallySpeaking</li>
+                    <li>ניווט מקלדת: כל הדפדפנים המודרניים</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">8. עדכונים ושיפורים</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו ממשיכים לעבוד על שיפור הנגישות של השירותים שלנו ומעדכנים את האתר באופן קבוע עם תכונות נגישות חדשות.
+                </p>
+
+                <div class="bg-green-50 border-r-4 border-green-400 p-4 mt-8">
+                    <p class="text-green-800">
+                        <strong>תאריך עדכון אחרון:</strong> <span id="last-update-date"></span>
+                    </p>
+                    <p class="text-green-800 mt-2">
+                        <strong>רמת נגישות:</strong> WCAG 2.1 AA
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+        
+        // עדכן פרטי יצירת קשר לפי פרמטרים מה-URL
+        function updateContactInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const business = urlParams.get('business');
+            const email = urlParams.get('email');
+            const phone = urlParams.get('phone');
+            
+            if (email) {
+                const emailElement = document.getElementById('contact-email');
+                if (emailElement) emailElement.textContent = email;
+            }
+            
+            if (phone) {
+                const phoneElement = document.getElementById('contact-phone');
+                if (phoneElement) phoneElement.textContent = phone;
+            }
+            
+            if (business) {
+                const title = document.querySelector('h1');
+                if (title) title.textContent = `הצהרת נגישות - ${business}`;
+            }
+            
+            // עדכן את התאריך
+            const dateElement = document.getElementById('last-update-date');
+            if (dateElement) {
+                const today = new Date();
+                dateElement.textContent = today.toLocaleDateString('he-IL');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', updateContactInfo);
+    </script>
+</body>
+</html>

@@ -18,7 +18,93 @@
             border-top: 4px solid #4f46e5;
             width: 24px;
             height: 24px;
-            animation: spin 1.5s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        
+        /* Generation Loading Animation Styles */
+        .gen-loader {
+            width: 60px; 
+            height: 60px;
+            border-radius: 50%;
+            perspective: 800px;
+            margin: 0 auto 20px;
+        }
+        
+        .gen-loader .inner {
+            position: absolute;
+            box-sizing: border-box;
+            width: 100%; 
+            height: 100%;
+            border-radius: 50%;
+        }
+        
+        .gen-loader .inner.one {
+            left: 0%; 
+            top: 0%;
+            animation: rotate-one 1.5s linear infinite;
+            border-bottom: 3px solid #8b5cf6;
+        }
+        
+        .gen-loader .inner.two {
+            right: 0%; 
+            top: 0%;
+            animation: rotate-two 1.5s linear infinite;
+            border-right: 3px solid #ec4899;
+        }
+        
+        .gen-loader .inner.three {
+            right: 0%; 
+            bottom: 0%;
+            animation: rotate-three 1.5s linear infinite;
+            border-top: 3px solid #3b82f6;
+        }
+        
+        @keyframes rotate-one { 
+            0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); } 
+            100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } 
+        }
+        
+        @keyframes rotate-two { 
+            0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); } 
+            100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); } 
+        }
+        
+        @keyframes rotate-three { 
+            0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); } 
+            100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); } 
+        }
+        
+        .gen-text {
+            text-align: center;
+            font-weight: 500;
+            color: #6b7280;
+            margin-top: 10px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -209,9 +295,9 @@
 
 
         <div id="dashboard-view" class="w-full max-w-5xl hidden">
-            <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-2xl min-h-[80vh]">
+            <div class="bg-slate-50 p-4 rounded-2xl shadow-2xl">
                 <!-- כפתורי פעולה ראשיים -->
-                <div class="flex justify-end gap-4 mb-6">
+                <div class="flex justify-end gap-4 mb-1">
                     <button id="account-summary-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -227,48 +313,28 @@
                     </button>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row items-center justify-between mb-10 pb-6 border-b border-gray-200">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">A</div>
-                        <h1 class="text-2xl font-bold text-gray-800">הסביבה האישית שלך</h1>
-                    </div>
-                <div class="flex items-center gap-4 mt-4 sm:mt-0">
-                        <button id="account-summary-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            סיכום חשבון
-                        </button>
-                        <button id="admin-panel-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors hidden">
-                            <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            פאנל מנהל
-                        </button>
-                    <div class="text-right">
-                        <div id="user-name" class="font-semibold text-gray-700">טוען...</div>
-                        <div id="subscription-status" class="text-sm text-gray-500">
-                            <span id="subscription-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <span id="subscription-text">משתמש רשום</span>
-                            </span>
+                <!-- User info and logout button -->
+                <div class="flex items-center justify-between mb-1 pb-1 border-b border-gray-200">
+                    <div class="flex items-center gap-2">
+                        <img id="user-avatar" src="https://placehold.co/80x80/E2E8F0/4A5568?text=U" alt="תמונת פרופיל" class="w-8 h-8 rounded-full object-cover">
+                        <div class="text-right">
+                            <div id="user-name" class="font-semibold text-gray-700 text-xs">
+                                <span class="loading-dots">טוען</span>
+                            </div>
+                            <div id="subscription-status" class="text-xs text-gray-500">
+                                <span id="subscription-badge" class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <span id="subscription-text">משתמש רשום</span>
+                                </span>
+                            </div>
                         </div>
-                        <div id="subscription-details" class="text-xs text-gray-400 mt-1 hidden">
-                            <span id="subscription-expires"></span>
-                        </div>
+                        <button onclick="signOut()" title="התנתק" class="text-gray-500 hover:text-red-600 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </button>
                     </div>
-                    <img id="user-avatar" src="https://placehold.co/80x80/E2E8F0/4A5568?text=U" alt="תמונת פרופיל" class="w-12 h-12 rounded-full object-cover">
-                    <button onclick="signOut()" title="התנתק" class="text-gray-500 hover:text-red-600 transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    </button>
                 </div>
-                </div>
-
-
-                <!-- Subscription Section -->
 
                 <div id="projects-section">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex justify-between items-center mb-1">
                          <h2 class="text-2xl font-bold text-gray-800">דפי הנחיתה שלי</h2>
                         <button onclick="goToFullApp()" class="bg-indigo-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-indigo-700 transition-transform transform hover:scale-105 flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -276,7 +342,7 @@
                         </button>
                     </div>
                     <div id="projects-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -474,7 +540,9 @@
                                     </div>
                                     <div class="mr-4">
                                         <p class="text-sm font-medium text-gray-500">משתמשים במערכת</p>
-                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-total-users">0</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-total-users">
+                                            <span class="loading-dots">טוען</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -490,7 +558,9 @@
                                     </div>
                                     <div class="mr-4">
                                         <p class="text-sm font-medium text-gray-500">הכנסות חודשיות</p>
-                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-monthly-revenue">₪2,450</p>
+                                        <p class="text-2xl font-semibold text-gray-900" id="dashboard-monthly-revenue">
+                                            <span class="loading-dots">טוען</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -739,7 +809,14 @@
                         <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                                 <div class="p-6 border-b border-gray-200">
-                                    <h3 class="text-lg font-medium text-gray-900">פעילות שבועית</h3>
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-lg font-medium text-gray-900">פעילות</h3>
+                                        <div class="flex bg-gray-100 rounded-lg p-1">
+                                            <button id="daily-btn" class="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md transition-colors" onclick="changeActivityPeriod('daily')">יומי</button>
+                                            <button id="weekly-btn" class="px-3 py-1 text-sm font-medium bg-white text-gray-900 shadow-sm rounded-md transition-colors" onclick="changeActivityPeriod('weekly')">שבועי</button>
+                                            <button id="monthly-btn" class="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md transition-colors" onclick="changeActivityPeriod('monthly')">חודשי</button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="p-6">
                                     <div id="weekly-activity-chart" class="h-64">
@@ -2074,6 +2151,9 @@
             }
         }
 
+        // משתנה גלובלי לתקופת הפעילות הנוכחית
+        let currentActivityPeriod = 'weekly';
+
         async function updateAnalyticsCharts(allPages, totalUsers) {
             try {
                 // חשב נתונים לגרפים
@@ -2134,11 +2214,11 @@
                 if (revenueInactivePages) revenueInactivePages.textContent = inactivePages.toString();
                 if (revenuePotential) revenuePotential.textContent = `₪${potentialRevenue}`;
                 
-                // עדכן פעילות שבועית
-                const weeklyPagesCreated = allPages.filter(page => {
-                    const pageDate = new Date(page.created_at || Date.now());
-                    return pageDate >= weekAgo;
-                }).length;
+                // שמור את הנתונים לשימוש בפונקציות אחרות
+                window.allPagesData = allPages;
+                
+                // עדכן פעילות לפי התקופה שנבחרה
+                updateActivityChart(allPages);
                 
                 const weeklyRevenue = weeklyActivePages * 39;
                 
@@ -2172,6 +2252,96 @@
                 
             } catch (error) {
                 console.error('Error updating analytics charts:', error);
+            }
+        }
+
+        function changeActivityPeriod(period) {
+            currentActivityPeriod = period;
+            
+            // עדכן את עיצוב הכפתורים
+            document.getElementById('daily-btn').className = 'px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md transition-colors';
+            document.getElementById('weekly-btn').className = 'px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md transition-colors';
+            document.getElementById('monthly-btn').className = 'px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md transition-colors';
+            
+            if (period === 'daily') {
+                document.getElementById('daily-btn').className = 'px-3 py-1 text-sm font-medium bg-white text-gray-900 shadow-sm rounded-md transition-colors';
+            } else if (period === 'weekly') {
+                document.getElementById('weekly-btn').className = 'px-3 py-1 text-sm font-medium bg-white text-gray-900 shadow-sm rounded-md transition-colors';
+            } else if (period === 'monthly') {
+                document.getElementById('monthly-btn').className = 'px-3 py-1 text-sm font-medium bg-white text-gray-900 shadow-sm rounded-md transition-colors';
+            }
+            
+            // עדכן את הגרף
+            updateActivityChart(window.allPagesData || []);
+        }
+
+        function updateActivityChart(allPages) {
+            const now = new Date();
+            let periodAgo, periodLabel, createdLabel, activatedLabel;
+            
+            if (currentActivityPeriod === 'daily') {
+                periodAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                periodLabel = 'היום';
+                createdLabel = 'דפים שנוצרו היום';
+                activatedLabel = 'דפים שהופעלו היום';
+            } else if (currentActivityPeriod === 'weekly') {
+                periodAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                periodLabel = 'השבוע';
+                createdLabel = 'דפים שנוצרו השבוע';
+                activatedLabel = 'דפים שהופעלו השבוע';
+            } else {
+                periodAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                periodLabel = 'החודש';
+                createdLabel = 'דפים שנוצרו החודש';
+                activatedLabel = 'דפים שהופעלו החודש';
+            }
+            
+            const pagesCreated = allPages.filter(page => {
+                const pageDate = new Date(page.created_at || Date.now());
+                return pageDate >= periodAgo;
+            }).length;
+            
+            const pagesActivated = allPages.filter(page => {
+                const pageDate = new Date(page.created_at || Date.now());
+                const pageSubscription = localStorage.getItem(`page_subscription_${page.fileName}`);
+                return pageDate >= periodAgo && pageSubscription;
+            }).length;
+            
+            // עדכן את התוכן בגרף
+            const chartContainer = document.getElementById('weekly-activity-chart');
+            if (chartContainer) {
+                chartContainer.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full ml-2"></div>
+                                <span class="text-sm text-gray-600">${createdLabel}</span>
+                            </div>
+                            <span class="text-lg font-semibold text-blue-600" id="period-pages-created">${pagesCreated}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full ml-2"></div>
+                                <span class="text-sm text-gray-600">${activatedLabel}</span>
+                            </div>
+                            <span class="text-lg font-semibold text-green-600" id="period-pages-activated">${pagesActivated}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full ml-2"></div>
+                                <span class="text-sm text-gray-600">הכנסות ${periodLabel}</span>
+                            </div>
+                            <span class="text-lg font-semibold text-purple-600">₪${pagesActivated * 39}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-orange-500 rounded-full ml-2"></div>
+                                <span class="text-sm text-gray-600">שיעור המרה ${periodLabel}</span>
+                            </div>
+                            <span class="text-lg font-semibold text-orange-600">${pagesCreated > 0 ? Math.round((pagesActivated / pagesCreated) * 100) : 0}%</span>
+                        </div>
+                    </div>
+                `;
             }
         }
 
@@ -2697,7 +2867,16 @@
                 console.error('לא נמצא projects-list element');
                 return;
             }
-            projectsList.innerHTML = '<div class="loader mx-auto col-span-full"></div>';
+            projectsList.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-8">
+                    <div class="gen-loader">
+                        <div class="inner one"></div>
+                        <div class="inner two"></div>
+                        <div class="inner three"></div>
+                    </div>
+                    <p class="gen-text">טוען דפים...</p>
+                </div>
+            `;
             console.log('הוספתי loader');
             
             let projects = [];

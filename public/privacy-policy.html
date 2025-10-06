@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מדיניות פרטיות - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">מדיניות פרטיות</h1>
+                <button onclick="goBack()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    חזור
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="bg-white rounded-lg shadow-sm p-8">
+            <div class="prose prose-lg max-w-none">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">1. מבוא</h2>
+                <p class="text-gray-700 mb-6">
+                    AutoPage מחויבת להגנה על פרטיות המשתמשים שלנו. מדיניות פרטיות זו מסבירה כיצד אנו אוספים, משתמשים, מגנים ומחשיפים מידע אישי.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">2. איסוף מידע</h2>
+                <p class="text-gray-700 mb-4">אנו אוספים מידע אישי בכמה דרכים:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>מידע שמסרת לנו ישירות (שם, כתובת אימייל, פרטי תשלום)</li>
+                    <li>מידע שאנו אוספים אוטומטית (כתובות IP, סוג דפדפן, דפי צפייה)</li>
+                    <li>מידע מדפים שנוצרו במערכת (תוכן, תמונות, הגדרות)</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">3. שימוש במידע</h2>
+                <p class="text-gray-700 mb-4">אנו משתמשים במידע האישי שלך כדי:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>לספק ולשפר את השירותים שלנו</li>
+                    <li>ליצור ולנהל את החשבון שלך</li>
+                    <li>לעבד תשלומים ולנהל מנויים</li>
+                    <li>לספק תמיכה טכנית</li>
+                    <li>לשלוח עדכונים והודעות חשובות</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">4. הגנה על מידע</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו משתמשים באמצעי אבטחה מתקדמים כדי להגן על המידע האישי שלך, כולל הצפנה, גישה מוגבלת וניטור אבטחה מתמיד.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">5. שיתוף מידע</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו לא מוכרים, משכירים או חולקים את המידע האישי שלך עם צדדים שלישיים ללא הסכמתך המפורשת, למעט מקרים חוקיים או כאשר הדבר נדרש על פי חוק.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">6. זכויותיך</h2>
+                <p class="text-gray-700 mb-4">יש לך זכות:</p>
+                <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+                    <li>לגשת למידע האישי שלך</li>
+                    <li>לתקן מידע שגוי או לא מדויק</li>
+                    <li>למחוק את החשבון שלך</li>
+                    <li>להתנגד לעיבוד המידע שלך</li>
+                    <li>לבקש העברה של המידע שלך</li>
+                </ul>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">7. קובצי Cookie</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו משתמשים בקובצי Cookie כדי לשפר את החוויה שלך באתר, לזכור העדפות ולנתח תנועה. ניתן להשבית קובצי Cookie בהגדרות הדפדפן.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">8. שינויים במדיניות</h2>
+                <p class="text-gray-700 mb-6">
+                    אנו עשויים לעדכן מדיניות פרטיות זו מעת לעת. שינויים משמעותיים יפורסמו באתר ויישלחו הודעה לאימייל שלך.
+                </p>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">9. יצירת קשר</h2>
+                <p class="text-gray-700 mb-6">
+                    לשאלות או בקשות בנוגע למדיניות פרטיות זו, אנא צור איתנו קשר בכתובת:
+                    <br>
+                    <strong>אימייל:</strong> <span id="contact-email">privacy@autopage.com</span>
+                    <br>
+                    <strong>טלפון:</strong> <span id="contact-phone">03-1234567</span>
+                </p>
+
+                <div class="bg-blue-50 border-r-4 border-blue-400 p-4 mt-8">
+                    <p class="text-blue-800">
+                        <strong>תאריך עדכון אחרון:</strong> <span id="last-update-date"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+        
+        // עדכן פרטי יצירת קשר לפי פרמטרים מה-URL
+        function updateContactInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const business = urlParams.get('business');
+            const email = urlParams.get('email');
+            const phone = urlParams.get('phone');
+            
+            if (email) {
+                const emailElement = document.getElementById('contact-email');
+                if (emailElement) emailElement.textContent = email;
+            }
+            
+            if (phone) {
+                const phoneElement = document.getElementById('contact-phone');
+                if (phoneElement) phoneElement.textContent = phone;
+            }
+            
+            if (business) {
+                const title = document.querySelector('h1');
+                if (title) title.textContent = `מדיניות פרטיות - ${business}`;
+            }
+            
+            // עדכן את התאריך
+            const dateElement = document.getElementById('last-update-date');
+            if (dateElement) {
+                const today = new Date();
+                dateElement.textContent = today.toLocaleDateString('he-IL');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', updateContactInfo);
+    </script>
+</body>
+</html>
