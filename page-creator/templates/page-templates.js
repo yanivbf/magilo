@@ -191,7 +191,40 @@ const pageTemplates = {
 
         fields: ['eventDetails'],
 
-        structurePrompt: `Build an event invitation with the following sections: 1. Hero Section (id="home") with the event name and date. 2. Countdown timer (id="countdown-timer") with elements having IDs: days, hours, minutes, seconds. **Very important**: The display order for Hebrew should be right-to-left: days, hours, minutes, seconds. 3. Event details (id="details") with location, time, and additional information. 4. RSVP form (id="rsvp").`,
+        structurePrompt: `Build an event invitation with the following sections: 1. Hero Section (id="home") with the event name and date. 2. Countdown timer (id="countdown-timer") with elements having IDs: days, hours, minutes, seconds. **Very important**: The display order for Hebrew should be right-to-left: days, hours, minutes, seconds. 3. Event details (id="details") with location, time, and additional information. 4. RSVP form (id="rsvp"). 
+
+**ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
+<meta name="page-type" content="event">
+
+**CRITICAL - RSVP Form Requirements:**
+- The RSVP form MUST send data to the API endpoint /api/rsvp using fetch() POST request
+- Form fields: name, phone, email, guests (number), message
+- After successful submission, show success message: "תודה! אישור ההגעה נשלח בהצלחה"
+- DO NOT use WhatsApp for RSVP - ONLY use the API endpoint
+- Include eventId and userId in the POST request (get from URL: window.location.pathname)
+Example code:
+document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const eventId = window.location.pathname.split('/').pop().replace('.html', '').replace('_html', '');
+    const userId = window.location.pathname.split('/')[2];
+    const response = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            eventId, userId,
+            name: document.getElementById('rsvp-name').value,
+            phone: document.getElementById('rsvp-phone').value,
+            email: document.getElementById('rsvp-email').value,
+            guests: document.getElementById('rsvp-guests').value,
+            status: 'confirmed',
+            message: document.getElementById('rsvp-notes').value
+        })
+    });
+    if (response.ok) {
+        document.getElementById('rsvp-success').classList.remove('hidden');
+        document.getElementById('rsvp-form').reset();
+    }
+});`,
 
         t: {
 
@@ -280,6 +313,9 @@ const pageTemplates = {
         fields: ['productManagement'],
 
         structurePrompt: `Build a ${data.style} online store HTML page with these requirements:
+
+**ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
+<meta name="page-type" content="store">
 
 1. Header with ${data.mainName || 'Store Name'} logo
 2. Product catalog section with 6 product cards

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול לידים - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            text-align: right;
+            background: #f5f7fa;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .stat-card p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        .lead-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border-right: 5px solid #3b82f6;
+        }
+        .lead-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .lead-card.new { border-right-color: #3b82f6; }
+        .lead-card.contacted { border-right-color: #f59e0b; }
+        .lead-card.converted { border-right-color: #10b981; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-contacted { background: #fef3c7; color: #92400e; }
+        .status-converted { background: #d1fae5; color: #065f46; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">📋 ניהול לידים</h1>
+                        <p class="text-gray-600" id="page-name">טוען...</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="exportLeads()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                            📥 ייצא Excel
+                        </button>
+                        <button onclick="window.location.href='/'" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                            🏠 דף הבית
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <h3 id="total-leads">0</h3>
+                    <p>סה"כ לידים</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                    <h3 id="new-leads">0</h3>
+                    <p>🆕 חדשים</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <h3 id="contacted-leads">0</h3>
+                    <p>☎️ יצרנו קשר</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <h3 id="converted-leads">0</h3>
+                    <p>✅ הומרו</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-lg shadow p-4 mb-6 flex gap-3 items-center">
+                <button class="filter-btn active px-4 py-2 bg-purple-500 text-white rounded-lg" onclick="filterLeads('all', event)">הכל</button>
+                <button class="filter-btn px-4 py-2 bg-gray-200 rounded-lg" onclick="filterLeads('new', event)">🆕 חדש</button>
+                <button class="filter-btn px-4 py-2 bg-gray-200 rounded-lg" onclick="filterLeads('contacted', event)">☎️ יצרנו קשר</button>
+                <button class="filter-btn px-4 py-2 bg-gray-200 rounded-lg" onclick="filterLeads('converted', event)">✅ הומר</button>
+                <div class="mr-auto">
+                    <input type="text" id="search-lead" placeholder="חפש ליד..." class="px-4 py-2 border-2 rounded-lg w-64">
+                </div>
+            </div>
+
+            <!-- Leads List -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">📋 רשימת לידים</h2>
+                <div id="leads-list" class="space-y-3">
+                    <p class="text-center text-gray-500 py-8">טוען לידים...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLeads = [];
+        let currentFilter = 'all';
+        let pageInfo = {};
+
+        function getPageInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            pageInfo = {
+                page: urlParams.get('page'),
+                userId: urlParams.get('userId')
+            };
+            console.log('📋 Page info from URL:', pageInfo);
+            return pageInfo;
+        }
+
+        async function loadLeadsData() {
+            console.log('🔍 loadLeadsData called');
+            const info = getPageInfo();
+            
+            if (!info.page || !info.userId) {
+                console.warn('⚠️ Missing page or userId in URL!');
+                return;
+            }
+
+            // Update page name
+            document.getElementById('page-name').textContent = decodeURIComponent(info.page).replace('_html', '').replace(/_/g, ' ');
+
+            console.log(`📊 Fetching leads for: ${info.page}`);
+            
+            try {
+                const apiUrl = `/api/leads/page/${info.page}?userId=${info.userId}`;
+                console.log('🌐 API URL:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                console.log('✅ Leads data received:', data);
+                allLeads = data.leads || [];
+                
+                renderLeads(allLeads);
+                updateStats();
+                
+                console.log('✅ Leads dashboard updated');
+            } catch (error) {
+                console.error('❌ Error loading leads:', error);
+            }
+        }
+
+        function renderLeads(leads) {
+            const container = document.getElementById('leads-list');
+            if (!leads || leads.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">אין לידים עדיין</p>';
+                return;
+            }
+            
+            container.innerHTML = leads.map(lead => `
+                <div class="lead-card ${lead.status || 'new'}">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="font-bold text-lg">${lead.name || 'ללא שם'}</div>
+                            <div class="text-sm text-gray-600">${lead.phone || ''} ${lead.email ? '• ' + lead.email : ''}</div>
+                            <div class="text-xs text-gray-500">${new Date(lead.createdAt).toLocaleString('he-IL')}</div>
+                        </div>
+                        <span class="status-badge status-${lead.status || 'new'}">
+                            ${lead.status === 'contacted' ? '☎️ יצרנו קשר' : lead.status === 'converted' ? '✅ הומר' : '🆕 חדש'}
+                        </span>
+                    </div>
+                    ${lead.message ? `<div class="mt-3 p-3 bg-gray-50 rounded-lg text-sm"><strong>הודעה:</strong> "${lead.message}"</div>` : ''}
+                    ${lead.company ? `<div class="text-sm text-gray-600 mt-2"><strong>חברה:</strong> ${lead.company}</div>` : ''}
+                    ${lead.source ? `<div class="text-xs text-gray-500 mt-1">מקור: ${lead.source}</div>` : ''}
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="updateLeadStatus('${lead.id}', 'contacted')" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm">☎️ יצרנו קשר</button>
+                        <button onclick="updateLeadStatus('${lead.id}', 'converted')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">✅ הומר</button>
+                        <a href="tel:${lead.phone}" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">📞 התקשר</a>
+                        ${lead.email ? `<a href="mailto:${lead.email}" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm">📧 מייל</a>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const newLeads = allLeads.filter(l => !l.status || l.status === 'new').length;
+            const contacted = allLeads.filter(l => l.status === 'contacted').length;
+            const converted = allLeads.filter(l => l.status === 'converted').length;
+            
+            document.getElementById('total-leads').textContent = allLeads.length;
+            document.getElementById('new-leads').textContent = newLeads;
+            document.getElementById('contacted-leads').textContent = contacted;
+            document.getElementById('converted-leads').textContent = converted;
+        }
+
+        async function updateLeadStatus(leadId, newStatus) {
+            try {
+                const response = await fetch(`/api/lead/${leadId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    const lead = allLeads.find(l => l.id === leadId);
+                    if (lead) {
+                        lead.status = newStatus;
+                        filterLeads(currentFilter);
+                        updateStats();
+                        alert(`✅ ליד עודכן ל: ${newStatus === 'contacted' ? 'יצרנו קשר' : 'הומר'}`);
+                    }
+                } else {
+                    alert('❌ שגיאה בעדכון ליד');
+                }
+            } catch (error) {
+                console.error('Error updating lead:', error);
+                alert('❌ שגיאה בעדכון ליד');
+            }
+        }
+
+        function filterLeads(status, event) {
+            currentFilter = status;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-purple-500', 'text-white');
+                btn.classList.add('bg-gray-200');
+            });
+            if (event && event.target) {
+                event.target.classList.remove('bg-gray-200');
+                event.target.classList.add('bg-purple-500', 'text-white');
+            }
+            
+            let filtered = status === 'all' ? allLeads : allLeads.filter(l => (l.status || 'new') === status);
+            
+            const search = document.getElementById('search-lead')?.value?.toLowerCase();
+            if (search) {
+                filtered = filtered.filter(l => 
+                    l.name?.toLowerCase().includes(search) ||
+                    l.phone?.includes(search) ||
+                    l.email?.toLowerCase().includes(search) ||
+                    l.company?.toLowerCase().includes(search)
+                );
+            }
+            
+            renderLeads(filtered);
+        }
+
+        function exportLeads() {
+            alert('מייצא ' + allLeads.length + ' לידים ל-Excel...');
+            // TODO: Implement Excel export
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLeadsData();
+            document.getElementById('search-lead')?.addEventListener('input', () => filterLeads(currentFilter));
+        });
+    </script>
+</body>
+</html>
+

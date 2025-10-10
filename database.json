@@ -39,10 +39,12 @@
         "purchase_1760074359835_ejg6kry7k",
         "purchase_1760075153289_slvkko16k",
         "purchase_1760075732612_i23wilj7r",
-        "purchase_1760082908809_137owz9ov"
+        "purchase_1760082908809_137owz9ov",
+        "purchase_1760102391211_zebsq4lh4",
+        "purchase_1760104973347_zjn5b231u"
       ],
       "createdAt": "2025-10-10T04:34:55.026Z",
-      "lastActive": "2025-10-10T07:55:08.834Z"
+      "lastActive": "2025-10-10T14:02:53.462Z"
     },
     "3ed25bfd-680d-4c09-a027-1a846170c13e": {
       "id": "3ed25bfd-680d-4c09-a027-1a846170c13e",
@@ -889,21 +891,80 @@
       "shipping": false,
       "status": "new",
       "createdAt": "2025-10-10T09:28:53.718Z"
+    },
+    "purchase_1760102391211_zebsq4lh4": {
+      "id": "purchase_1760102391211_zebsq4lh4",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "ממתקי_1760071310076",
+      "products": [
+        {
+          "id": 1760102344313,
+          "name": "שוקולד קלאסי רטרו",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1579895289139-4d6d7e0d7c71?q=80&w=2835&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 70,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T13:19:51.213Z",
+      "completedAt": "2025-10-10T13:55:48.826Z"
+    },
+    "purchase_1760104973347_zjn5b231u": {
+      "id": "purchase_1760104973347_zjn5b231u",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "ממתקי_1760071310076",
+      "products": [
+        {
+          "id": 1760104938966,
+          "name": "פרלינים מעוצבים",
+          "price": 50,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1549488344-9f79c233e70d?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760104942203,
+          "name": "טבלת שוקולד מריר עתיקה",
+          "price": 40,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1558235252-87f5d0f6a27e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760104945511,
+          "name": "שוקולד לבן עוגיות קרם",
+          "price": 42,
+          "quantity": 3,
+          "image": "https://images.unsplash.com/photo-1533910534275-f55a16d5e7d5?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 251,
+      "customerName": "מיה",
+      "customerPhone": "099888777",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T14:02:53.350Z"
     }
   },
   "products": {},
   "stores": {},
   "analytics": {
-    "totalSales": 32594.9,
+    "totalSales": 32915.9,
     "totalUsers": 0,
     "totalProducts": 0,
     "dailySales": {
       "2025-10-08": 1520,
       "2025-10-09": 28785,
-      "2025-10-10": 2289.9
+      "2025-10-10": 2610.9
     },
     "monthlySales": {
-      "2025-10": 32594.9
+      "2025-10": 32915.9
     },
     "topProducts": [
       {
@@ -935,6 +996,12 @@
         "name": "זוהר הקדוש - כרך א",
         "sales": 1,
         "revenue": 180
+      },
+      {
+        "id": 1760104945511,
+        "name": "שוקולד לבן עוגיות קרם",
+        "sales": 3,
+        "revenue": 126
       },
       {
         "id": "p_1759931099638_k3hfnn0h8",
@@ -1027,6 +1094,12 @@
         "revenue": 50
       },
       {
+        "id": 1760104938966,
+        "name": "פרלינים מעוצבים",
+        "sales": 1,
+        "revenue": 50
+      },
+      {
         "id": 1760074337158,
         "name": "פרלינים פיסטוק מריר",
         "sales": 1,
@@ -1099,6 +1172,12 @@
         "revenue": 40
       },
       {
+        "id": 1760104942203,
+        "name": "טבלת שוקולד מריר עתיקה",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
         "id": "p_1759947166760_g55bcwghx",
         "name": "סנדוויץ גבינה קלאסי",
         "sales": 1,
@@ -1119,6 +1198,12 @@
       {
         "id": 1760075165381,
         "name": "חלבה וניל קלאסית",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760102344313,
+        "name": "שוקולד קלאסי רטרו",
         "sales": 1,
         "revenue": 35
       },
@@ -1196,6 +1281,64 @@
       }
     ],
     "recentPurchases": [
+      {
+        "id": "purchase_1760104973347_zjn5b231u",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "ממתקי_1760071310076",
+        "products": [
+          {
+            "id": 1760104938966,
+            "name": "פרלינים מעוצבים",
+            "price": 50,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1549488344-9f79c233e70d?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760104942203,
+            "name": "טבלת שוקולד מריר עתיקה",
+            "price": 40,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1558235252-87f5d0f6a27e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760104945511,
+            "name": "שוקולד לבן עוגיות קרם",
+            "price": 42,
+            "quantity": 3,
+            "image": "https://images.unsplash.com/photo-1533910534275-f55a16d5e7d5?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 251,
+        "customerName": "מיה",
+        "customerPhone": "099888777",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T14:02:53.350Z"
+      },
+      {
+        "id": "purchase_1760102391211_zebsq4lh4",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "ממתקי_1760071310076",
+        "products": [
+          {
+            "id": 1760102344313,
+            "name": "שוקולד קלאסי רטרו",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1579895289139-4d6d7e0d7c71?q=80&w=2835&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 70,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T13:19:51.213Z"
+      },
       {
         "id": "purchase_1760088533718_brbjmuw3g",
         "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",

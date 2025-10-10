@@ -194,37 +194,37 @@
         <div class="bg-white shadow-sm border-b py-4">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex">
-                    <button class="tab-btn active" onclick="switchTab('stats')">📊 סטטיסטיקות</button>
-                    <button class="tab-btn" onclick="switchTab('orders')">📦 הזמנות</button>
-                    <button class="tab-btn" onclick="switchTab('customers')">👥 מועדון לקוחות</button>
-                    <button class="tab-btn" onclick="switchTab('finance')">💰 כספים</button>
-                    <button class="tab-btn" onclick="switchTab('export')">📥 ייצוא נתונים</button>
+                    <button class="tab-btn active" onclick="switchTab('stats', event)">📊 סטטיסטיקות</button>
+                    <button class="tab-btn" onclick="switchTab('orders', event)">📦 הזמנות</button>
+                    <button class="tab-btn" onclick="switchTab('customers', event)">👥 מועדון לקוחות</button>
+                    <button class="tab-btn" onclick="switchTab('finance', event)">💰 כספים</button>
+                    <button class="tab-btn" onclick="switchTab('export', event)">📥 ייצוא נתונים</button>
                 </div>
             </div>
         </div>
 
         <!-- Tab: Statistics (FIRST) -->
         <div id="tab-stats">
-            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <!-- Key Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card">
-                        <h3 id="totalSales">₪0</h3>
-                        <p>סה"כ מכירות</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="totalOrders">0</h3>
-                        <p>סה"כ הזמנות</p>
-                    </div>
-                    <div class="stat-card">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <h3 id="totalSales">₪0</h3>
+                    <p>סה"כ מכירות</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalOrders">0</h3>
+                    <p>סה"כ הזמנות</p>
+                </div>
+                <div class="stat-card">
                         <h3 id="totalCustomers">0</h3>
                         <p>סה"כ לקוחות</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="avgOrderValue">₪0</h3>
-                        <p>ערך הזמנה ממוצע</p>
-                    </div>
                 </div>
+                <div class="stat-card">
+                    <h3 id="avgOrderValue">₪0</h3>
+                    <p>ערך הזמנה ממוצע</p>
+                </div>
+            </div>
 
                 <!-- Charts & Graphs -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -309,8 +309,8 @@
                             <button onclick="sendMessage('email')" class="action-btn btn-success">📧 שלח מייל</button>
                             <button onclick="sendMessage('whatsapp')" class="action-btn btn-success">💬 שלח WhatsApp</button>
                         </div>
-                    </div>
                 </div>
+            </div>
 
                 <!-- Customers List -->
                 <div class="bg-white rounded-lg shadow p-6">
@@ -340,8 +340,8 @@
                     <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
                         <div class="text-sm mb-2">📊 רווח נקי</div>
                         <div class="text-3xl font-bold" id="finance-profit">₪0</div>
-                    </div>
                 </div>
+            </div>
 
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
                     <h3 class="text-xl font-bold mb-4">➕ הוסף הוצאה</h3>
@@ -363,8 +363,8 @@
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-xl font-bold mb-4">📋 רשימת הוצאות</h3>
                     <div id="expenses-list" class="space-y-2"></div>
-                </div>
-            </main>
+            </div>
+        </main>
         </div>
 
         <!-- Tab: Export -->
@@ -429,6 +429,16 @@
     </div>
 
     <script>
+        // Error handling for Edge compatibility
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            e.preventDefault();
+        });
+
         let allOrders = [];
         let allCustomers = [];
         let currentFilter = 'all';
@@ -450,10 +460,15 @@
             
             if (!info.page || !info.userId) {
                 console.warn('⚠️ Missing page or userId in URL!');
-                document.getElementById('totalSales').textContent = '₪0';
-                document.getElementById('totalOrders').textContent = '0';
-                document.getElementById('totalCustomers').textContent = '0';
-                document.getElementById('avgOrderValue').textContent = '₪0';
+                const totalSalesEl = document.getElementById('totalSales');
+                const totalOrdersEl = document.getElementById('totalOrders');
+                const totalCustomersEl = document.getElementById('totalCustomers');
+                const avgOrderValueEl = document.getElementById('avgOrderValue');
+                
+                if (totalSalesEl) totalSalesEl.textContent = '₪0';
+                if (totalOrdersEl) totalOrdersEl.textContent = '0';
+                if (totalCustomersEl) totalCustomersEl.textContent = '0';
+                if (avgOrderValueEl) avgOrderValueEl.textContent = '₪0';
                 return;
             }
 
@@ -468,11 +483,16 @@
                 
                 console.log('✅ Analytics data received:', data);
                 
-                // Update stats
-                document.getElementById('totalSales').textContent = '₪' + (data.totalSales || 0).toLocaleString();
-                document.getElementById('totalOrders').textContent = data.totalOrders || 0;
-                document.getElementById('totalCustomers').textContent = data.totalCustomers || 0;
-                document.getElementById('avgOrderValue').textContent = '₪' + (data.averageOrderValue || 0).toFixed(0);
+                // Update stats - with null checks for Edge compatibility
+                const totalSalesEl = document.getElementById('totalSales');
+                const totalOrdersEl = document.getElementById('totalOrders');
+                const totalCustomersEl = document.getElementById('totalCustomers');
+                const avgOrderValueEl = document.getElementById('avgOrderValue');
+                
+                if (totalSalesEl) totalSalesEl.textContent = '₪' + (data.totalSales || 0).toLocaleString('he-IL');
+                if (totalOrdersEl) totalOrdersEl.textContent = data.totalOrders || 0;
+                if (totalCustomersEl) totalCustomersEl.textContent = data.totalCustomers || 0;
+                if (avgOrderValueEl) avgOrderValueEl.textContent = '₪' + (data.averageOrderValue || 0).toFixed(0);
                 
                 // Store orders and customers
                 allOrders = data.purchases || [];
@@ -493,11 +513,13 @@
 
         function renderOrders(orders) {
             const container = document.getElementById('orders-list');
+            if (!container) return;
+            
             if (!orders || orders.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500 py-8">אין הזמנות עדיין</p>';
                 return;
             }
-            
+
             container.innerHTML = orders.map(order => `
                 <div class="order-card ${order.status}" data-status="${order.status}" data-order-id="${order.id}">
                     <div class="flex justify-between items-start mb-3">
@@ -529,11 +551,13 @@
 
         function renderCustomers(customers) {
             const container = document.getElementById('customers-list');
+            if (!container) return;
+            
             if (!customers || customers.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500 py-8">אין לקוחות עדיין</p>';
                 return;
             }
-            
+
             container.innerHTML = customers.map(customer => `
                 <div class="customer-card">
                     <div class="flex justify-between items-center">
@@ -542,7 +566,7 @@
                             <div class="text-sm text-gray-600">${customer.phone || customer.email || ''}</div>
                         </div>
                         <div class="text-left">
-                            <div class="text-xl font-bold text-purple-600">₪${customer.totalSpent.toLocaleString()}</div>
+                            <div class="text-xl font-bold text-purple-600">₪${customer.totalSpent.toLocaleString('he-IL')}</div>
                             <div class="text-xs text-gray-500">${customer.purchaseCount} קניות</div>
                             ${customer.purchaseCount >= 5 ? '<div class="text-xs font-bold text-yellow-600">⭐ VIP</div>' : ''}
                         </div>
@@ -559,10 +583,15 @@
                 completed: allOrders.filter(o => o.status === 'completed').length
             };
             
-            document.getElementById('orders-new').textContent = stats.new;
-            document.getElementById('orders-processing').textContent = stats.processing;
-            document.getElementById('orders-shipped').textContent = stats.shipped;
-            document.getElementById('orders-completed').textContent = stats.completed;
+            const ordersNewEl = document.getElementById('orders-new');
+            const ordersProcessingEl = document.getElementById('orders-processing');
+            const ordersShippedEl = document.getElementById('orders-shipped');
+            const ordersCompletedEl = document.getElementById('orders-completed');
+            
+            if (ordersNewEl) ordersNewEl.textContent = stats.new;
+            if (ordersProcessingEl) ordersProcessingEl.textContent = stats.processing;
+            if (ordersShippedEl) ordersShippedEl.textContent = stats.shipped;
+            if (ordersCompletedEl) ordersCompletedEl.textContent = stats.completed;
         }
 
         function updateFinanceData(data) {
@@ -570,13 +599,19 @@
             const expenses = 0; // TODO: Load from expenses data
             const profit = revenue - expenses;
             
-            document.getElementById('finance-revenue').textContent = '₪' + revenue.toLocaleString();
-            document.getElementById('finance-expenses').textContent = '₪' + expenses.toLocaleString();
-            document.getElementById('finance-profit').textContent = '₪' + profit.toLocaleString();
+            const financeRevenueEl = document.getElementById('finance-revenue');
+            const financeExpensesEl = document.getElementById('finance-expenses');
+            const financeProfitEl = document.getElementById('finance-profit');
+            
+            if (financeRevenueEl) financeRevenueEl.textContent = '₪' + revenue.toLocaleString('he-IL');
+            if (financeExpensesEl) financeExpensesEl.textContent = '₪' + expenses.toLocaleString('he-IL');
+            if (financeProfitEl) financeProfitEl.textContent = '₪' + profit.toLocaleString('he-IL');
         }
 
         function renderPopularProducts(products) {
             const container = document.getElementById('popular-products');
+            if (!container) return;
+            
             if (!products || products.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500 py-4">אין נתונים</p>';
                 return;
@@ -591,7 +626,7 @@
                             <div class="text-xs text-gray-500">${p.count} נמכרו</div>
                         </div>
                     </div>
-                    <div class="font-bold">₪${p.revenue.toLocaleString()}</div>
+                    <div class="font-bold">₪${p.revenue.toLocaleString('he-IL')}</div>
                 </div>
             `).join('');
         }
@@ -694,7 +729,7 @@
                             <div class="flex justify-between py-2 border-b">
                                 <div>${p.name} × ${p.quantity}</div>
                                 <div>₪${p.price * p.quantity}</div>
-                            </div>
+                        </div>
                         `).join('')}
                     </div>
                     <div class="text-xl font-bold text-left">סה"כ: ₪${order.total}</div>
@@ -753,22 +788,35 @@
             alert(`מייצא נתונים ל-${format}\nמ-${startDate} עד ${endDate}`);
         }
 
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             // Update active button
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
-            // Scroll to the selected section smoothly
+            // Scroll to the selected section smoothly - Edge compatible
             const targetSection = document.getElementById('tab-' + tabName);
             if (targetSection) {
-                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                try {
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (e) {
+                    // Fallback for older browsers
+                    targetSection.scrollIntoView();
+                }
             }
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Log browser info for debugging
+            const userAgent = navigator.userAgent;
+            const isEdge = userAgent.indexOf('Edg') !== -1;
+            const isChrome = userAgent.indexOf('Chrome') !== -1 && !isEdge;
+            console.log('Browser detected:', { isEdge, isChrome, userAgent });
+            
             loadStoreData();
             
             // Setup search

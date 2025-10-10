@@ -229,29 +229,53 @@ app.post('/api/create-page', async (req, res) => {
     let pageType = 'generic';
     const lowerHtml = pageHtml.toLowerCase();
     
-    // Check for purchase/shopping indicators (broader detection)
+    // Check for purchase/shopping indicators (always check for script injection)
     const purchaseKeywords = ['addtocart', 'shopping-cart', 'cart-icon', 'product-card', 'btn-add-cart', 
                              'מוצר', 'מחיר', 'קנה עכשיו', 'הוסף לעגלה', 'product', 'price', 'מחיר:', '₪',
-                             'תשלום', 'payment', 'checkout', 'קנייה', 'רכישה', 'הזמנה', 'order',
-                             'מתנה', 'gift', 'מכירה', 'sale', 'מבצע', 'חנות', 'store', 'shop'];
+                             'תשלום', 'payment', 'checkout', 'קנייה', 'רכישה', 'מתנה', 'gift'];
     const hasPurchaseKeywords = purchaseKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
     
-    // Check for RSVP/event indicators ONLY (pure event without store)
-    const eventOnlyKeywords = ['rsvp', 'אישור הגעה', 'מוזמנים'];
-    const hasEventOnlyKeywords = eventOnlyKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
+    // Detect page type using keyword analysis
+    console.log('🔍 Analyzing page type...');
     
-    // Priority: Store > Event > Generic
-    // If has purchase keywords -> it's a STORE (even if it has countdown/event elements)
-    if (hasPurchaseKeywords) {
-      pageType = 'store';
-      console.log(`✅ Detected STORE page with purchase capability - will inject store scripts`);
-    } else if (hasEventOnlyKeywords) {
+    // Check for RSVP/event indicators (HIGHEST PRIORITY)
+    const eventKeywords = ['rsvp', 'אישור הגעה', 'מוזמנים', 'countdown-timer', 'חתונה', 'wedding', 'בר מצווה', 'אירוע', 'הזמנה לאירוע'];
+    const hasEventKeywords = eventKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
+    
+    // Check for STORE-specific keywords
+    const storeKeywords = ['חנות', 'store', 'shop', 'מכירה', 'sale', 'מבצע'];
+    const hasStoreKeywords = storeKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
+    
+    // Check template selection from request
+    const selectedTemplate = req.body.selectedPageType;
+    console.log('📋 Selected template:', selectedTemplate);
+    
+    // Priority: Template selection > Event keywords > Store keywords > Generic
+    if (selectedTemplate === 'event') {
       pageType = 'event';
-      console.log('✅ Detected pure EVENT page (no purchase)');
+      console.log(`🎯 DETECTED from TEMPLATE: event (100% RELIABLE ✅)`);
+    } else if (selectedTemplate === 'onlineStore') {
+      pageType = 'store';
+      console.log(`🎯 DETECTED from TEMPLATE: store (100% RELIABLE ✅)`);
+    } else if (hasEventKeywords) {
+      pageType = 'event';
+      console.log(`✅ Detected EVENT page from keywords${hasPurchaseKeywords ? ' (with gifts/purchases)' : ''}`);
+    } else if (hasPurchaseKeywords || hasStoreKeywords) {
+      pageType = 'store';
+      console.log(`✅ Detected STORE page from keywords`);
     }
     
-    // If it has purchase capability, inject checkout scripts (works for stores, events with gifts, landing pages with products, etc.)
-    if (hasPurchaseKeywords) {
+    // FORCE INJECT meta tag to ensure future detection is 100% reliable
+    const metaTag = `<meta name="page-type" content="${pageType}">`;
+    if (!pageHtml.includes('page-type')) {
+      if (pageHtml.includes('</head>')) {
+        pageHtml = pageHtml.replace('</head>', `    ${metaTag}\n</head>`);
+        console.log(`✅ Injected meta tag: ${metaTag}`);
+      }
+    }
+    
+    // If it has purchase capability OR it's a store, inject checkout scripts
+    if (hasPurchaseKeywords || pageType === 'store') {
       const storeScriptInjection = `
 <script src="/store-checkout.js"></script>
 <!-- CHECKOUT_SCRIPTS_INJECTED -->`;
@@ -1735,6 +1759,161 @@ app.post('/api/order/:orderId/status', async (req, res) => {
     } catch (error) {
         console.error('Error updating order status:', error);
         res.status(500).json({ error: 'Failed to update order status' });
+    }
+});
+
+// Save RSVP
+app.post('/api/rsvp', async (req, res) => {
+    try {
+        const db = loadDatabase();
+        const { eventId, userId, name, phone, email, guests, status, message } = req.body;
+        
+        const rsvpId = 'rsvp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        const rsvp = {
+            id: rsvpId,
+            eventId,
+            userId,
+            name: name || 'אורח',
+            phone: phone || '',
+            email: email || '',
+            guests: guests || 1,
+            status: status || 'pending',
+            message: message || '',
+            createdAt: new Date().toISOString()
+        };
+        
+        // Save to global database
+        if (!db.rsvps) db.rsvps = {};
+        db.rsvps[rsvpId] = rsvp;
+        saveDatabase(db);
+        
+        // Save to event-specific data folder
+        if (userId && eventId) {
+            const cleanEventId = eventId.replace(/_html$/, '');
+            const eventDataDir = path.join('output', userId, cleanEventId + '_data');
+            const rsvpsFile = path.join(eventDataDir, 'rsvps.json');
+            
+            await fs.ensureDir(eventDataDir);
+            
+            let rsvps = [];
+            if (await fs.pathExists(rsvpsFile)) {
+                const fileContent = await fs.readFile(rsvpsFile, 'utf8');
+                rsvps = JSON.parse(fileContent);
+            }
+            
+            rsvps.push(rsvp);
+            await fs.writeFile(rsvpsFile, JSON.stringify(rsvps, null, 2));
+            console.log('✅ RSVP saved to event folder');
+        }
+        
+        res.json({ success: true, rsvp });
+    } catch (error) {
+        console.error('Error saving RSVP:', error);
+        res.status(500).json({ error: 'Failed to save RSVP' });
+    }
+});
+
+// Get event RSVPs
+app.get('/api/event/:eventId/rsvps', async (req, res) => {
+    try {
+        const db = loadDatabase();
+        const eventId = decodeURIComponent(req.params.eventId);
+        const userId = decodeURIComponent(req.query.userId);
+        
+        console.log('Getting RSVPs for event:', eventId, 'userId:', userId);
+        
+        let eventRsvps = [];
+        
+        // Try to load from event-specific data folder first
+        if (userId && eventId) {
+            const cleanEventId = eventId.replace(/_html$/, '');
+            const eventDataDir = path.join('output', userId, cleanEventId + '_data');
+            const rsvpsFile = path.join(eventDataDir, 'rsvps.json');
+            
+            console.log('Looking for RSVPs in:', eventDataDir);
+            
+            try {
+                if (await fs.pathExists(rsvpsFile)) {
+                    const fileContent = await fs.readFile(rsvpsFile, 'utf8');
+                    eventRsvps = JSON.parse(fileContent);
+                    console.log('Loaded RSVPs from event folder:', eventRsvps.length);
+                }
+            } catch (error) {
+                console.error('Error reading RSVPs file:', error);
+            }
+        }
+        
+        // If no RSVPs found in folder, try global database
+        if (eventRsvps.length === 0 && db.rsvps) {
+            console.log('No RSVPs in folder, checking global database...');
+            eventRsvps = Object.values(db.rsvps).filter(r => 
+                r.eventId === eventId || 
+                eventId.includes(r.eventId) ||
+                r.eventId?.includes(eventId.replace('_html', ''))
+            );
+        }
+        
+        console.log('Total RSVPs found:', eventRsvps.length);
+        
+        res.json({ 
+            rsvps: eventRsvps,
+            total: eventRsvps.length,
+            confirmed: eventRsvps.filter(r => r.status === 'confirmed').length,
+            pending: eventRsvps.filter(r => r.status === 'pending' || !r.status).length,
+            declined: eventRsvps.filter(r => r.status === 'declined').length
+        });
+    } catch (error) {
+        console.error('Error getting event RSVPs:', error);
+        res.status(500).json({ error: 'Failed to get event RSVPs' });
+    }
+});
+
+// Update lead status
+app.post('/api/lead/:leadId/status', async (req, res) => {
+    try {
+        const db = loadDatabase();
+        const { leadId } = req.params;
+        const { status } = req.body;
+        
+        console.log('Updating lead:', leadId, 'to status:', status);
+        
+        // Update in global database
+        if (db.leads && db.leads[leadId]) {
+            db.leads[leadId].status = status;
+            db.leads[leadId].updatedAt = new Date().toISOString();
+            saveDatabase(db);
+            console.log('✅ Lead status updated in database');
+        }
+        
+        // Also update in page-specific data folder
+        const lead = db.leads?.[leadId];
+        if (lead && lead.userId && lead.pageId) {
+            const cleanPageId = lead.pageId.replace(/_html$/, '');
+            const pageDataDir = path.join('output', lead.userId, cleanPageId + '_data');
+            const leadsFile = path.join(pageDataDir, 'leads.json');
+            
+            try {
+                if (await fs.pathExists(leadsFile)) {
+                    const fileContent = await fs.readFile(leadsFile, 'utf8');
+                    const leads = JSON.parse(fileContent);
+                    const leadIndex = leads.findIndex(l => l.id === leadId);
+                    if (leadIndex !== -1) {
+                        leads[leadIndex].status = status;
+                        leads[leadIndex].updatedAt = new Date().toISOString();
+                        await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2));
+                        console.log('✅ Lead status updated in folder');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating lead in folder:', error);
+            }
+        }
+        
+        res.json({ success: true, lead: db.leads?.[leadId] });
+    } catch (error) {
+        console.error('Error updating lead status:', error);
+        res.status(500).json({ error: 'Failed to update lead status' });
     }
 });
 

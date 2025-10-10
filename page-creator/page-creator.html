@@ -4694,7 +4694,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                         userId: user.id,
 
                                 title: document.getElementById('mainName').value || 'דף נחיתה',
-                                htmlContent: finalHtml
+                                htmlContent: finalHtml,
+                                selectedPageType: state.selectedPageType
                     })
 
                 });

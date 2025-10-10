@@ -1200,8 +1200,8 @@
         }
 
         async function processPageSubscription() {
-            console.log('Processing subscription for:', currentPageForSubscription);
-            console.log('Current user:', currentUser);
+            console.log('🔔 Processing subscription for:', currentPageForSubscription);
+            console.log('👤 Current user:', currentUser);
             
             if (!currentUser || !currentPageForSubscription) {
                 showError('שגיאה בפרטי המנוי');
@@ -1222,33 +1222,68 @@
                 };
 
                 // שמירה ב-localStorage
-                localStorage.setItem(`page_subscription_${currentPageForSubscription}`, JSON.stringify(pageSubscriptionData));
-                console.log('Subscription saved to localStorage:', pageSubscriptionData);
+                const storageKey = `page_subscription_${currentPageForSubscription}`;
+                localStorage.setItem(storageKey, JSON.stringify(pageSubscriptionData));
+                console.log('✅ Subscription saved to localStorage with key:', storageKey);
+                console.log('📦 Subscription data:', pageSubscriptionData);
+                
+                // בדוק שהנתונים נשמרו בהצלחה
+                const savedData = localStorage.getItem(storageKey);
+                console.log('🔍 Verification - data saved?', savedData !== null);
 
                 closePageSubscriptionModal();
                 
-                // רענן את רשימת הדפים
-                loadProjects();
+                // עדכן את הכרטיס מיידית
+                console.log('🔄 Looking for project card:', currentPageForSubscription);
+                const projectCard = document.querySelector(`[data-project-id="${currentPageForSubscription}"]`);
+                console.log('📌 Project card found:', projectCard !== null);
                 
-                // רענן את הפעילות האחרונה בפאנל המנהל
-                console.log('All localStorage keys:', Object.keys(localStorage).filter(key => key.includes('page_subscription')));
-                
-                // נסה לטעון מחדש את הפעילות
-                setTimeout(async () => {
-                    try {
-                        const response = await fetch('/api/all-pages');
-                        const allPages = await response.json();
-                        await loadRecentActivity(allPages);
-                        console.log('Recent activity refreshed');
-                    } catch (error) {
-                        console.error('Error refreshing recent activity:', error);
+                if (projectCard) {
+                    // מצא את אזור הכפתורים - עדכנו את ה-selector
+                    const actionButtonsDiv = projectCard.querySelector('.flex.items-center.justify-between');
+                    console.log('🔘 Action buttons div found:', actionButtonsDiv !== null);
+                    
+                    if (actionButtonsDiv) {
+                        // מצא את הכפתור הצהוב "הפעל מנוי" והחלף אותו בכפתור ירוק "צפה"
+                        const subscribeBtn = actionButtonsDiv.querySelector('button.bg-yellow-500');
+                        if (subscribeBtn) {
+                            subscribeBtn.outerHTML = `
+                                <button onclick="viewProject('${currentPageForSubscription}')" class="bg-green-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-600 transition shadow-sm" style="min-width: 60px;">
+                                    צפה
+                                </button>`;
+                            console.log('✅ Button updated successfully!');
+                        }
+                        
+                        // עדכן את התג של הסטטוס
+                        const statusBadge = projectCard.querySelector('.status-badge');
+                        if (statusBadge) {
+                            statusBadge.className = 'status-badge status-completed';
+                            statusBadge.textContent = 'מנוי פעיל';
+                        }
+                        
+                        // עדכן את התג בפינה של התמונה
+                        const cornerBadge = projectCard.querySelector('.absolute.top-3.right-3 > div');
+                        if (cornerBadge) {
+                            cornerBadge.className = 'bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1';
+                            cornerBadge.innerHTML = `
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                זמין לצפייה`;
+                        }
                     }
-                }, 500);
+                }
                 
                 showSuccess('המנוי לדף הופעל בהצלחה! כעת ניתן לצפות בדף');
                 
+                // רענן את הדשבורד לאחר שניה
+                setTimeout(() => {
+                    console.log('🔄 Reloading projects...');
+                    loadProjects();
+                }, 1000);
+                
             } catch (error) {
-                console.error('Page subscription error:', error);
+                console.error('❌ Page subscription error:', error);
                 showError('שגיאה בהפעלת המנוי לדף');
             }
         }
@@ -2995,43 +3030,8 @@
                                 userId: currentUser.id
                             };
                             
-                            // טען metadata אם קיים (SYNCHRONOUSLY update the project object)
-                            const metadataUrl = `/pages/${currentUser.id}/${page.fileName}_data/metadata.json`;
-                            fetch(metadataUrl)
-                                .then(response => response.json())
-                                .then(metadata => {
-                                    console.log(`📋 Loaded metadata for ${page.fileName}:`, metadata);
-                                    if (metadata.pageType) {
-                                        // עדכן את האובייקט ב-projects array
-                                        const idx = projects.findIndex(p => p.id === `local_${page.fileName}`);
-                                        if (idx !== -1) {
-                                            projects[idx].pageType = metadata.pageType;
-                                            console.log(`✅ Set pageType="${metadata.pageType}" for project index ${idx}`);
-                                        }
-                                        
-                                        // עדכן גם את projectObj (למקרה שזה עדיין בזיכרון)
-                                        projectObj.pageType = metadata.pageType;
-                                        
-                                        // עדכן את הכפתור בממשק
-                                        const projectCard = document.querySelector(`[data-project-id="local_${page.fileName}"]`);
-                                        if (projectCard) {
-                                            const manageBtn = projectCard.querySelector('[data-action="manage"] .manage-button-text');
-                                            if (manageBtn) {
-                                                if (metadata.pageType === 'store') {
-                                                    manageBtn.textContent = 'ניהול חנות';
-                                                } else if (metadata.pageType === 'event') {
-                                                    manageBtn.textContent = 'ניהול מוזמנים';
-                                                } else {
-                                                    manageBtn.textContent = 'ניהול';
-                                                }
-                                                console.log('✅ Updated button text to:', manageBtn.textContent);
-                                            }
-                                        }
-                                    }
-                                })
-                                .catch(err => {
-                                    console.warn(`⚠️ Could not load metadata for ${page.fileName}:`, err);
-                                });
+                            // Set pageType from metadata file path (sync, no fetch needed)
+                            // We'll load it lazily when clicking manage button
                             
                             return projectObj;
                         });
@@ -3066,10 +3066,14 @@
                     const hasHtmlContent = (project.html_content && project.html_content.trim() !== '') || project.local_url;
                     
                     // בדוק אם הדף הזה יש לו מנוי פעיל - USE project.id!
-                    const pageSubscription = localStorage.getItem(`page_subscription_${project.id}`);
+                    const storageKey = `page_subscription_${project.id}`;
+                    const pageSubscription = localStorage.getItem(storageKey);
                     const hasPageSubscription = pageSubscription && JSON.parse(pageSubscription).isActive;
                     
-                    console.log(`📄 Page ${project.id}: subscription=${hasPageSubscription}`);
+                    console.log(`📄 Page ID: ${project.id}`);
+                    console.log(`🔑 Storage key: ${storageKey}`);
+                    console.log(`📦 Subscription data: ${pageSubscription}`);
+                    console.log(`✅ Has active subscription: ${hasPageSubscription}`);
                     
                     // דפים חדשים מתחילים ללא מנוי (אין מנוי ב-localStorage)
                     const finalHasSubscription = hasPageSubscription;
@@ -3230,16 +3234,35 @@
         }
 
         async function viewProject(projectId) {
+            console.log('👁️ viewProject called with:', projectId);
+            
+            try {
             // בדוק אם זה דף מקומי
             if (projectId.startsWith('local_')) {
                 const fileName = projectId.replace('local_', '');
+                    
+                    if (!currentUser || !currentUser.id) {
+                        console.error('❌ currentUser not defined!');
+                        alert('שגיאה: משתמש לא מחובר');
+                        return;
+                    }
+                    
                 const url = `/pages/${currentUser.id}/${fileName}`;
+                    console.log('🌐 Opening URL:', url);
                 
                 // פתח בחלון חדש
                 const newWindow = window.open(url, '_blank');
-                if (!newWindow) {
-                    showError('פתיחת חלון חדש נכשלה. בדוק חוסם פופ-אפים.');
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                        console.warn('⚠️ Popup blocked, trying same tab');
+                        window.location.href = url;
+                    } else {
+                        console.log('✅ Page opened in new tab');
+                    }
+                    return;
                 }
+            } catch (error) {
+                console.error('❌ Error in viewProject:', error);
+                alert('שגיאה בפתיחת הדף: ' + error.message);
                 return;
             }
             
@@ -3345,7 +3368,7 @@
             dropdown.classList.toggle('show');
         }
         
-        function manageProject(projectId) {
+        async function manageProject(projectId) {
             console.log('🔍 manageProject called with:', projectId);
             
             // חלץ את שם הקובץ והמשתמש
@@ -3355,7 +3378,6 @@
             const project = projects.find(p => p.id === projectId);
             
             console.log('📦 Project object:', project);
-            console.log('📝 Project pageType:', project?.pageType);
             
             // Try to get userId from multiple sources
             let userId = currentUser?.id;
@@ -3380,39 +3402,47 @@
                 return;
             }
             
-            // Determine management URL based on pageType (from metadata)
+            // Load pageType from metadata if not already loaded
+            let pageType = project?.pageType;
+            
+            if (!pageType) {
+                try {
+                    const metadataUrl = `/pages/${userId}/${fileName}_data/metadata.json`;
+                    const response = await fetch(metadataUrl);
+                    if (response.ok) {
+                        const metadata = await response.json();
+                        pageType = metadata.pageType;
+                        console.log('📋 Loaded pageType from metadata:', pageType);
+                    }
+                } catch (err) {
+                    console.log('⚠️ No metadata, using default');
+                }
+            }
+            
+            // Determine management URL based on pageType
             let managementUrl;
             
-            if (project?.pageType === 'event') {
-                // אירועים - פתח ממשק ניהול מוזמנים
+            if (pageType === 'event') {
                 managementUrl = `/event-admin.html?eventId=${fileName}&userId=${userId}`;
                 console.log('🎉 Opening EVENT management');
-            } else if (project?.pageType === 'store') {
-                // חנות - פתח ממשק ניהול חנות
+            } else if (pageType === 'store') {
                 managementUrl = `/admin.html?page=${fileName}&userId=${userId}`;
                 console.log('🛒 Opening STORE management');
             } else {
-                // ברירת מחדל - נסה לזהות לפי שם
-                const buttonText = getManagementButtonText(project);
-                console.log('⚙️ No pageType, using buttonText:', buttonText);
-                
-                if (buttonText === 'ניהול מוזמנים') {
-                    managementUrl = `/event-admin.html?eventId=${fileName}&userId=${userId}`;
-                } else if (buttonText === 'ניהול חנות') {
-                    managementUrl = `/admin.html?page=${fileName}&userId=${userId}`;
-                } else {
-                    managementUrl = `/page-management.html?page=${fileName}&userId=${userId}`;
-                }
+                managementUrl = `/leads-admin.html?page=${fileName}&userId=${userId}`;
+                console.log('📋 Opening LEADS management (landing page)');
             }
             
             console.log('🌐 Opening:', managementUrl);
             
-            // TEMPORARY: Open in same tab for debugging
-            window.location.href = managementUrl;
+            // Open in new tab
+            const newWindow = window.open(managementUrl, '_blank');
             
-            // TODO: After confirming it works, switch back to:
-            // const newWindow = window.open(managementUrl, '_blank');
-            // if (!newWindow) window.location.href = managementUrl;
+            // Fallback: if popup blocked, open in same tab
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                console.warn('⚠️ Popup blocked, opening in same tab');
+                window.location.href = managementUrl;
+            }
         }
         
         // סגור תפריטים כשלוחצים מחוץ להם
@@ -3659,3 +3689,4 @@
 
 </body>
 </html>
+

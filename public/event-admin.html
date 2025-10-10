@@ -8,8 +8,30 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            direction: rtl;
+            text-align: right;
+            background: #f5f7fa;
         }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .stat-card p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        .stat-card.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .stat-card.red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        
         .guest-card {
             background: white;
             border-radius: 12px;
@@ -26,436 +48,252 @@
         .guest-card.confirmed { border-right-color: #10b981; }
         .guest-card.pending { border-right-color: #f59e0b; }
         .guest-card.declined { border-right-color: #ef4444; }
-        .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-        .stat-box.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-        .stat-box.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-        .stat-box.red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-        .table-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 25px;
-        }
-        .table-box {
+        
+        .gift-card {
             background: white;
-            border: 3px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .table-box:hover {
-            border-color: #8b5cf6;
-            transform: scale(1.05);
-        }
-        .table-box.occupied {
-            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-            color: white;
-            border-color: #6d28d9;
-        }
-        .tab-btn {
-            padding: 15px 30px;
-            background: #f3f4f6;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            border-radius: 10px 10px 0 0;
-        }
-        .tab-btn.active {
-            background: white;
-            color: #8b5cf6;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-right: 4px solid #ec4899;
         }
     </style>
 </head>
-<body class="p-8">
-    <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-4xl font-bold text-gray-900">🎉 ניהול אירוע</h1>
-                <p class="text-gray-600 mt-2" id="event-title">חתונת יוסי ושרה - 15 במאי 2025</p>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="window.location.href='/event-invitation.html'" class="bg-pink-500 text-white px-6 py-3 rounded-xl hover:bg-pink-600 font-bold">
-                    💌 צפה בהזמנה
-                </button>
-                <button onclick="exportGuests()" class="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 font-bold">
-                    📊 ייצא Excel
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="grid grid-cols-4 gap-6 mb-8">
-        <div class="stat-box">
-            <div class="text-5xl font-bold" id="total">0</div>
-            <div class="mt-2">סה"כ מוזמנים</div>
-        </div>
-        <div class="stat-box green">
-            <div class="text-5xl font-bold" id="confirmed">0</div>
-            <div class="mt-2">✓ אישרו</div>
-        </div>
-        <div class="stat-box orange">
-            <div class="text-5xl font-bold" id="pending">0</div>
-            <div class="mt-2">⏳ ממתינים</div>
-        </div>
-        <div class="stat-box red">
-            <div class="text-5xl font-bold" id="declined">0</div>
-            <div class="mt-2">✗ לא יגיעו</div>
-        </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="flex gap-2 p-4 bg-gray-50">
-            <button class="tab-btn active" onclick="switchTab('guests')">👥 רשימת מוזמנים</button>
-            <button class="tab-btn" onclick="switchTab('tables')">🪑 סידור שולחנות</button>
-            <button class="tab-btn" onclick="switchTab('gifts')">🎁 מתנות</button>
-        </div>
-
-        <!-- Tab 1: Guests -->
-        <div id="tab-guests" class="tab-content active p-8">
-            <div class="flex justify-between mb-6">
-                <h2 class="text-2xl font-bold">רשימת מוזמנים</h2>
-                <div class="flex gap-3">
-                    <input type="text" id="search" placeholder="🔍 חפש..." class="px-4 py-2 border-2 rounded-lg" onkeyup="filterGuests()">
-                    <select id="filter" class="px-4 py-2 border-2 rounded-lg" onchange="filterGuests()">
-                        <option value="all">הכל</option>
-                        <option value="confirmed">אישרו</option>
-                        <option value="pending">ממתינים</option>
-                        <option value="declined">לא יגיעו</option>
-                    </select>
-                    <button onclick="openAddGuest()" class="bg-purple-500 text-white px-6 py-2 rounded-xl hover:bg-purple-600 font-bold">
-                        ➕ הוסף מוזמן
-                    </button>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">🎉 ניהול אירוע</h1>
+                        <p class="text-gray-600" id="event-name">טוען...</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="window.location.href='/'" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                            🏠 דף הבית
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div id="guests-list"></div>
-        </div>
+        </header>
 
-        <!-- Tab 2: Tables -->
-        <div id="tab-tables" class="tab-content p-8">
-            <div class="flex justify-between mb-6">
-                <h2 class="text-2xl font-bold">סידור שולחנות</h2>
-                <div class="flex gap-3 items-center">
-                    <input type="number" id="num-tables" value="10" min="1" max="50" class="w-24 px-4 py-2 border-2 rounded-lg">
-                    <span class="font-semibold">שולחנות</span>
-                    <input type="number" id="seats-per-table" value="8" min="1" max="20" class="w-24 px-4 py-2 border-2 rounded-lg">
-                    <span class="font-semibold">מקומות</span>
-                    <button onclick="autoArrange()" class="bg-purple-500 text-white px-6 py-2 rounded-xl hover:bg-purple-600 font-bold">
-                        ✨ סדר אוטומטי
-                    </button>
+        <!-- Stats -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <h3 id="total-guests">0</h3>
+                    <p>סה"כ מוזמנים</p>
+                </div>
+                <div class="stat-card green">
+                    <h3 id="confirmed-guests">0</h3>
+                    <p>✓ אישרו הגעה</p>
+                </div>
+                <div class="stat-card orange">
+                    <h3 id="pending-guests">0</h3>
+                    <p>⏳ ממתינים</p>
+                </div>
+                <div class="stat-card red">
+                    <h3 id="declined-guests">0</h3>
+                    <p>✗ לא יגיעו</p>
                 </div>
             </div>
-            <div id="tables-grid" class="table-grid"></div>
-        </div>
 
-        <!-- Tab 3: Gifts -->
-        <div id="tab-gifts" class="tab-content p-8">
-            <div class="flex justify-between mb-6">
-                <h2 class="text-2xl font-bold">רשימת מתנות</h2>
-                <button onclick="openAddGift()" class="bg-purple-500 text-white px-6 py-2 rounded-xl hover:bg-purple-600 font-bold">
-                    ➕ הוסף מתנה
-                </button>
+            <!-- Guests Section -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">👥 רשימת מוזמנים</h2>
+                    <div class="flex gap-3">
+                        <input type="text" id="search-guest" placeholder="🔍 חפש מוזמן..." class="px-4 py-2 border-2 rounded-lg">
+                        <select id="filter-status" class="px-4 py-2 border-2 rounded-lg">
+                            <option value="all">הכל</option>
+                            <option value="confirmed">✓ אישרו</option>
+                            <option value="pending">⏳ ממתינים</option>
+                            <option value="declined">✗ לא יגיעו</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="guests-list" class="space-y-3">
+                    <p class="text-center text-gray-500 py-8">טוען מוזמנים...</p>
+                </div>
             </div>
-            <div id="gifts-list"></div>
-        </div>
-    </div>
 
-    <!-- Modal Add Guest -->
-    <div id="modal-guest" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;" onclick="if(event.target===this) closeModal()">
-        <div style="background:white; max-width:500px; margin:100px auto; padding:40px; border-radius:20px;">
-            <h3 class="text-2xl font-bold mb-6">הוסף מוזמן חדש</h3>
-            <input type="text" id="new-name" placeholder="שם מלא *" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-            <input type="tel" id="new-phone" placeholder="טלפון" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-            <input type="email" id="new-email" placeholder="אימייל" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-            <input type="number" id="new-plus" placeholder="מספר מלווים" value="0" min="0" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-            <textarea id="new-notes" placeholder="הערות" class="w-full px-4 py-3 border-2 rounded-lg mb-4" rows="3"></textarea>
-            <div class="flex gap-3">
-                <button onclick="saveGuest()" class="flex-1 bg-purple-500 text-white px-6 py-3 rounded-xl hover:bg-purple-600 font-bold">שמור</button>
-                <button onclick="closeModal()" class="flex-1 bg-gray-300 px-6 py-3 rounded-xl hover:bg-gray-400 font-bold">ביטול</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Add Gift -->
-    <div id="modal-gift" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;" onclick="if(event.target===this) closeModal()">
-        <div style="background:white; max-width:500px; margin:100px auto; padding:40px; border-radius:20px;">
-            <h3 class="text-2xl font-bold mb-6">הוסף מתנה</h3>
-            <input type="text" id="gift-name" placeholder="שם המתנה *" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-            <select id="gift-category" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-                <option value="household">כלי בית</option>
-                <option value="electronics">אלקטרוניקה</option>
-                <option value="decor">עיצוב</option>
-                <option value="other">אחר</option>
-            </select>
-            <input type="url" id="gift-link" placeholder="קישור (אופציונלי)" class="w-full px-4 py-3 border-2 rounded-lg mb-4">
-            <div class="flex gap-3">
-                <button onclick="saveGift()" class="flex-1 bg-purple-500 text-white px-6 py-3 rounded-xl hover:bg-purple-600 font-bold">שמור</button>
-                <button onclick="closeModal()" class="flex-1 bg-gray-300 px-6 py-3 rounded-xl hover:bg-gray-400 font-bold">ביטול</button>
+            <!-- Gifts Section -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">🎁 מתנות שהתקבלו</h2>
+                <div id="gifts-list" class="space-y-3">
+                    <p class="text-center text-gray-500 py-8">טוען מתנות...</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Get event/page info from URL
-        function getEventIdFromUrl() {
+        let allGuests = [];
+        let allGifts = [];
+        let eventInfo = {};
+
+        function getEventInfo() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('eventId');
+            eventInfo = {
+                eventId: urlParams.get('eventId') || urlParams.get('page'),
+                userId: urlParams.get('userId')
+            };
+            console.log('📋 Event info from URL:', eventInfo);
+            return eventInfo;
         }
 
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const eventId = getEventIdFromUrl();
-            if (eventId) {
-                const eventName = decodeURIComponent(eventId).split('_').slice(0, -1).join(' ');
-                document.getElementById('event-title').textContent = eventName;
-            }
-            updateStats();
-            renderGuests();
-            renderGifts();
-        });
-
-        let guests = [
-            {id:1, name:'יוסי כהן', phone:'050-1234567', email:'yossi@example.com', status:'confirmed', plus:1, table:1, notes:''},
-            {id:2, name:'שרה לוי', phone:'052-7654321', email:'sara@example.com', status:'pending', plus:0, table:0, notes:''},
-            {id:3, name:'דוד ישראלי', phone:'054-9876543', email:'david@example.com', status:'confirmed', plus:2, table:1, notes:'צמחוני'},
-            {id:4, name:'מרים אברהם', phone:'053-1112233', email:'miriam@example.com', status:'declined', plus:0, table:0, notes:''},
-        ];
-
-        let gifts = [
-            {id:1, name:'סט סירים', category:'household', claimed:false, by:null, link:''},
-            {id:2, name:'מיקסר', category:'electronics', claimed:true, by:'יוסי כהן', link:''},
-        ];
-
-        function updateStats() {
-            const total = guests.reduce((sum, g) => sum + 1 + g.plus, 0);
-            const confirmed = guests.filter(g => g.status === 'confirmed').reduce((sum, g) => sum + 1 + g.plus, 0);
-            const pending = guests.filter(g => g.status === 'pending').length;
-            const declined = guests.filter(g => g.status === 'declined').length;
+        async function loadEventData() {
+            console.log('🔍 loadEventData called');
+            const info = getEventInfo();
             
-            document.getElementById('total').textContent = total;
-            document.getElementById('confirmed').textContent = confirmed;
-            document.getElementById('pending').textContent = pending;
-            document.getElementById('declined').textContent = declined;
+            if (!info.eventId || !info.userId) {
+                console.warn('⚠️ Missing eventId or userId in URL!');
+                return;
+            }
+
+            // Update event name
+            document.getElementById('event-name').textContent = decodeURIComponent(info.eventId).replace('_html', '').replace(/_/g, ' ');
+
+            console.log(`📊 Fetching event data for: ${info.eventId}`);
+            
+            try {
+                // Load RSVPs (guests)
+                const rsvpUrl = `/api/event/${info.eventId}/rsvps?userId=${info.userId}`;
+                console.log('🌐 RSVP API URL:', rsvpUrl);
+                
+                const rsvpResponse = await fetch(rsvpUrl);
+                const rsvpData = await rsvpResponse.json();
+                
+                console.log('✅ RSVP data received:', rsvpData);
+                allGuests = rsvpData.rsvps || [];
+                
+                // Load gifts/purchases
+                const giftsUrl = `/api/analytics/page/${info.eventId}?userId=${info.userId}`;
+                console.log('🌐 Gifts API URL:', giftsUrl);
+                
+                const giftsResponse = await fetch(giftsUrl);
+                const giftsData = await giftsResponse.json();
+                
+                console.log('✅ Gifts data received:', giftsData);
+                allGifts = giftsData.purchases || [];
+                
+                // Render
+                renderGuests(allGuests);
+                renderGifts(allGifts);
+                updateStats();
+                
+                console.log('✅ Event dashboard updated');
+            } catch (error) {
+                console.error('❌ Error loading event data:', error);
+            }
         }
 
-        function renderGuests() {
-            const html = guests.map(g => `
-                <div class="guest-card ${g.status}">
-                    <div class="flex justify-between">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold mb-2">${g.name}</h3>
-                            <div class="text-sm text-gray-600">
-                                ${g.phone ? `📱 ${g.phone}<br>` : ''}
-                                ${g.email ? `📧 ${g.email}<br>` : ''}
-                                ${g.plus > 0 ? `👥 +${g.plus} מלווים<br>` : ''}
-                                ${g.table > 0 ? `🪑 שולחן ${g.table}<br>` : ''}
-                                ${g.notes ? `📝 ${g.notes}` : ''}
-                            </div>
+        function renderGuests(guests) {
+            const container = document.getElementById('guests-list');
+            if (!guests || guests.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">אין מוזמנים עדיין</p>';
+                return;
+            }
+            
+            container.innerHTML = guests.map(guest => `
+                <div class="guest-card ${guest.status}">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-lg">${guest.name}</div>
+                            <div class="text-sm text-gray-600">${guest.phone || ''}</div>
+                            <div class="text-xs text-gray-500">${new Date(guest.createdAt).toLocaleString('he-IL')}</div>
                         </div>
                         <div class="text-left">
-                            <span class="inline-block px-4 py-2 rounded-full text-sm font-bold ${
-                                g.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                g.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                                'bg-red-100 text-red-700'
+                            <span class="px-4 py-2 rounded-full font-bold ${
+                                guest.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                guest.status === 'declined' ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'
                             }">
-                                ${g.status === 'confirmed' ? '✓ אישר' : g.status === 'pending' ? '⏳ ממתין' : '✗ לא יגיע'}
+                                ${guest.status === 'confirmed' ? '✓ מגיע' : guest.status === 'declined' ? '✗ לא מגיע' : '⏳ ממתין'}
                             </span>
-                            <div class="mt-3">
-                                <button onclick="deleteGuest(${g.id})" class="text-2xl hover:scale-125 transition">🗑️</button>
-                            </div>
+                            ${guest.guests ? `<div class="text-sm text-gray-600 mt-2">👨‍👩‍👧‍👦 ${guest.guests} אורחים</div>` : ''}
                         </div>
                     </div>
+                    ${guest.message ? `<div class="mt-3 p-3 bg-gray-50 rounded-lg text-sm">"${guest.message}"</div>` : ''}
                 </div>
             `).join('');
-            document.getElementById('guests-list').innerHTML = html || '<p class="text-center text-gray-500 py-12 text-xl">אין מוזמנים עדיין</p>';
         }
 
-        function renderTables() {
-            const numTables = parseInt(document.getElementById('num-tables').value);
-            const seatsPerTable = parseInt(document.getElementById('seats-per-table').value);
+        function renderGifts(gifts) {
+            const container = document.getElementById('gifts-list');
+            if (!gifts || gifts.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">אין מתנות עדיין</p>';
+                return;
+            }
             
-            let html = '';
-            for (let i = 1; i <= numTables; i++) {
-                const tableGuests = guests.filter(g => g.table === i && g.status === 'confirmed');
-                const occupied = tableGuests.reduce((sum, g) => sum + 1 + g.plus, 0);
-                
-                html += `
-                    <div class="table-box ${occupied > 0 ? 'occupied' : ''}" onclick="showTableDetails(${i})">
-                        <div class="text-4xl font-bold mb-2">🪑 ${i}</div>
-                        <div class="text-lg font-semibold">${occupied}/${seatsPerTable}</div>
-                        ${tableGuests.length > 0 ? `<div class="text-xs mt-2 opacity-80">${tableGuests.length} מוזמנים</div>` : ''}
-                    </div>
-                `;
-            }
-            document.getElementById('tables-grid').innerHTML = html;
-        }
-
-        function showTableDetails(tableNum) {
-            const tableGuests = guests.filter(g => g.table === tableNum && g.status === 'confirmed');
-            if (tableGuests.length === 0) {
-                alert(`שולחן ${tableNum} - פנוי`);
-            } else {
-                const list = tableGuests.map(g => `• ${g.name}${g.plus > 0 ? ` (+${g.plus})` : ''}`).join('\n');
-                alert(`🪑 שולחן ${tableNum}\n\n${list}`);
-            }
-        }
-
-        function renderGifts() {
-            const html = gifts.map(g => `
-                <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-xl p-6 mb-4">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold">🎁 ${g.name}</h3>
-                            <p class="text-sm text-gray-600">${g.category === 'household' ? 'כלי בית' : g.category === 'electronics' ? 'אלקטרוניקה' : g.category === 'decor' ? 'עיצוב' : 'אחר'}</p>
-                            ${g.link ? `<a href="${g.link}" target="_blank" class="text-blue-600 text-sm hover:underline">🔗 קישור למוצר</a>` : ''}
-                        </div>
-                        <div>
-                            ${g.claimed ? 
-                                `<span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-bold">✓ נתבע ע"י ${g.by}</span>` :
-                                `<button onclick="claimGift(${g.id})" class="bg-purple-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-purple-600">תבע מתנה</button>`
-                            }
-                        </div>
+            const totalGifts = gifts.reduce((sum, g) => sum + g.total, 0);
+            
+            container.innerHTML = `
+                <div class="bg-pink-50 border-2 border-pink-200 rounded-lg p-4 mb-6">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-pink-600">₪${totalGifts.toLocaleString()}</div>
+                        <div class="text-pink-700 font-semibold">סה"כ מתנות שהתקבלו</div>
                     </div>
                 </div>
-            `).join('');
-            document.getElementById('gifts-list').innerHTML = html || '<p class="text-center text-gray-500 py-12 text-xl">אין מתנות ברשימה</p>';
+                ${gifts.map(gift => `
+                    <div class="gift-card">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-lg">${gift.customerName}</div>
+                                <div class="text-sm text-gray-600">${gift.customerPhone || ''}</div>
+                                <div class="text-xs text-gray-500">${new Date(gift.createdAt).toLocaleString('he-IL')}</div>
+                            </div>
+                            <div class="text-2xl font-bold text-pink-600">₪${gift.total}</div>
+                        </div>
+                        ${gift.products && gift.products.length > 0 ? 
+                            `<div class="mt-2 text-sm text-gray-700">
+                                ${gift.products.map(p => `• ${p.name}`).join('<br>')}
+                            </div>` : ''}
+                    </div>
+                `).join('')}
+            `;
         }
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('tab-' + tab).classList.add('active');
-            if (tab === 'tables') renderTables();
+        function updateStats() {
+            const confirmed = allGuests.filter(g => g.status === 'confirmed').length;
+            const pending = allGuests.filter(g => g.status === 'pending' || !g.status).length;
+            const declined = allGuests.filter(g => g.status === 'declined').length;
+            
+            document.getElementById('total-guests').textContent = allGuests.length;
+            document.getElementById('confirmed-guests').textContent = confirmed;
+            document.getElementById('pending-guests').textContent = pending;
+            document.getElementById('declined-guests').textContent = declined;
         }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEventData();
+            
+            // Setup filters
+            document.getElementById('search-guest')?.addEventListener('input', filterGuests);
+            document.getElementById('filter-status')?.addEventListener('change', filterGuests);
+        });
 
         function filterGuests() {
-            const search = document.getElementById('search').value.toLowerCase();
-            const filter = document.getElementById('filter').value;
-            const filtered = guests.filter(g => {
-                const matchSearch = g.name.toLowerCase().includes(search) || (g.phone && g.phone.includes(search));
-                const matchFilter = filter === 'all' || g.status === filter;
-                return matchSearch && matchFilter;
-            });
-            const html = filtered.map(g => `
-                <div class="guest-card ${g.status}">
-                    <div class="flex justify-between">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold mb-2">${g.name}</h3>
-                            <div class="text-sm text-gray-600">
-                                ${g.phone ? `📱 ${g.phone}<br>` : ''}
-                                ${g.plus > 0 ? `👥 +${g.plus} מלווים<br>` : ''}
-                                ${g.table > 0 ? `🪑 שולחן ${g.table}` : ''}
-                            </div>
-                        </div>
-                        <span class="inline-block px-4 py-2 rounded-full text-sm font-bold ${
-                            g.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                            g.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                            'bg-red-100 text-red-700'
-                        }">
-                            ${g.status === 'confirmed' ? '✓ אישר' : g.status === 'pending' ? '⏳ ממתין' : '✗ לא יגיע'}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-            document.getElementById('guests-list').innerHTML = html;
-        }
-
-        function openAddGuest() { document.getElementById('modal-guest').style.display = 'flex'; }
-        function openAddGift() { document.getElementById('modal-gift').style.display = 'flex'; }
-        function closeModal() {
-            document.getElementById('modal-guest').style.display = 'none';
-            document.getElementById('modal-gift').style.display = 'none';
-        }
-
-        function saveGuest() {
-            const name = document.getElementById('new-name').value;
-            if (!name) return alert('יש להזין שם');
-            guests.push({
-                id: Math.max(...guests.map(g => g.id)) + 1,
-                name, phone: document.getElementById('new-phone').value,
-                email: document.getElementById('new-email').value,
-                status: 'pending', plus: parseInt(document.getElementById('new-plus').value) || 0,
-                table: 0, notes: document.getElementById('new-notes').value
-            });
-            closeModal();
-            ['new-name','new-phone','new-email','new-notes'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('new-plus').value = '0';
-            updateStats(); renderGuests();
-        }
-
-        function saveGift() {
-            const name = document.getElementById('gift-name').value;
-            if (!name) return alert('יש להזין שם מתנה');
-            gifts.push({
-                id: Math.max(...gifts.map(g => g.id)) + 1,
-                name, category: document.getElementById('gift-category').value,
-                link: document.getElementById('gift-link').value, claimed: false, by: null
-            });
-            closeModal();
-            document.getElementById('gift-name').value = '';
-            document.getElementById('gift-link').value = '';
-            renderGifts();
-        }
-
-        function deleteGuest(id) {
-            if (confirm('למחוק מוזמן?')) {
-                guests = guests.filter(g => g.id !== id);
-                updateStats(); renderGuests();
+            const search = document.getElementById('search-guest')?.value?.toLowerCase() || '';
+            const status = document.getElementById('filter-status')?.value || 'all';
+            
+            let filtered = allGuests;
+            
+            if (status !== 'all') {
+                filtered = filtered.filter(g => g.status === status);
             }
-        }
-
-        function claimGift(id) {
-            const name = prompt('מי תובע את המתנה?');
-            if (name) {
-                gifts.find(g => g.id === id).claimed = true;
-                gifts.find(g => g.id === id).by = name;
-                renderGifts();
+            
+            if (search) {
+                filtered = filtered.filter(g => 
+                    g.name?.toLowerCase().includes(search) ||
+                    g.phone?.includes(search)
+                );
             }
+            
+            renderGuests(filtered);
         }
-
-        function autoArrange() {
-            const seatsPerTable = parseInt(document.getElementById('seats-per-table').value);
-            let table = 1, seats = 0;
-            guests.filter(g => g.status === 'confirmed').forEach(g => {
-                const size = 1 + g.plus;
-                if (seats + size > seatsPerTable) { table++; seats = 0; }
-                g.table = table; seats += size;
-            });
-            renderGuests(); renderTables();
-            alert('✨ השולחנות סודרו אוטומטית!');
-        }
-
-        function exportGuests() {
-            const csv = ['שם,טלפון,אימייל,סטטוס,מלווים,שולחן,הערות',
-                ...guests.map(g => `${g.name},${g.phone},${g.email},${g.status},${g.plus},${g.table},"${g.notes}"`)
-            ].join('\n');
-            const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'guests.csv';
-            link.click();
-        }
-
-        updateStats(); renderGuests(); renderGifts();
     </script>
 </body>
 </html>
-
