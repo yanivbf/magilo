@@ -1,0 +1,2026 @@
+{
+  "users": {
+    "user_1759868515022_keewlnt6u": {
+      "id": "user_1759868515022_keewlnt6u",
+      "name": "משתמש חדש",
+      "email": "",
+      "phone": "",
+      "wallet": 0,
+      "purchases": [
+        "purchase_1759931173151_ohn6g4n2m",
+        "purchase_1759936452916_arehmdcpu",
+        "purchase_1759937938785_qfviwzh0e",
+        "purchase_1759942395034_y6zyhofgo",
+        "purchase_1759942924727_qsosms2mi",
+        "purchase_1759946790701_je7mo2z4i",
+        "purchase_1759947207387_omx71o7aa",
+        "purchase_1759948634315_wtbhj2kiz",
+        "purchase_1759953792077_bk35dtaeq",
+        "purchase_1759954105303_sr1znrje4",
+        "purchase_1760024770581_n92gm3ao8"
+      ],
+      "createdAt": "2025-10-08T13:46:13.157Z",
+      "lastActive": "2025-10-09T15:46:10.600Z"
+    },
+    "fae06b49-1239-4ba5-93db-244ce2851fb4": {
+      "id": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "name": "משתמש חדש",
+      "email": "",
+      "phone": "",
+      "wallet": 0,
+      "purchases": [
+        "purchase_1760070895019_oesy0zffs",
+        "purchase_1760071067594_9wt5vbspk",
+        "purchase_1760071083729_ahrqbnjni",
+        "purchase_1760072255527_a2b8gl7p7",
+        "purchase_1760072916960_xsgcbmtcj",
+        "purchase_1760072931485_8b0az8zq7",
+        "purchase_1760073441841_g2f8n4kpw",
+        "purchase_1760074359835_ejg6kry7k",
+        "purchase_1760075153289_slvkko16k",
+        "purchase_1760075732612_i23wilj7r",
+        "purchase_1760082908809_137owz9ov"
+      ],
+      "createdAt": "2025-10-10T04:34:55.026Z",
+      "lastActive": "2025-10-10T07:55:08.834Z"
+    },
+    "3ed25bfd-680d-4c09-a027-1a846170c13e": {
+      "id": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "name": "משתמש חדש",
+      "email": "",
+      "phone": "",
+      "wallet": 0,
+      "purchases": [
+        "purchase_1760084198545_yn82utbbz",
+        "purchase_1760085251800_0epjah0dg",
+        "purchase_1760085326485_yge6x5e3k",
+        "purchase_1760085928395_b40h96t5l",
+        "purchase_1760086590831_86z5obxya",
+        "purchase_1760086775059_3cx3mmiji",
+        "purchase_1760088379578_qb3y9bkyf",
+        "purchase_1760088533718_brbjmuw3g"
+      ],
+      "createdAt": "2025-10-10T08:16:38.563Z",
+      "lastActive": "2025-10-10T09:28:53.731Z"
+    }
+  },
+  "purchases": {
+    "purchase_1759931173151_ohn6g4n2m": {
+      "id": "purchase_1759931173151_ohn6g4n2m",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+      "pageName": "store_1759930724867",
+      "products": [
+        {
+          "id": "p_1759931086896_i8j2yl4qc",
+          "name": "ספר תהילים מפואר",
+          "price": 89,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          "id": "p_1759931095298_l9jkta08u",
+          "name": "סידור תפילה לכל ימות השנה",
+          "price": 75,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1627993074092-2b62d26f03d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          "id": "p_1759931099638_k3hfnn0h8",
+          "name": "חומש בראשית עם פירושים",
+          "price": 120,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1582234057039-b9d9c22d0d0f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        }
+      ],
+      "total": 319,
+      "paymentMethod": "credit",
+      "status": "completed",
+      "createdAt": "2025-10-08T13:46:13.151Z",
+      "completedAt": "2025-10-08T13:46:13.151Z"
+    },
+    "purchase_1759936452916_arehmdcpu": {
+      "id": "purchase_1759936452916_arehmdcpu",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+      "pageName": "store_1759930724867",
+      "products": [
+        {
+          "id": "p_1759936433475_izr3pqu12",
+          "name": "ספר תהילים מפואר",
+          "price": 89,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        }
+      ],
+      "total": 124,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T15:14:12.918Z",
+      "completedAt": "2025-10-08T15:14:12.918Z"
+    },
+    "purchase_1759937938785_qfviwzh0e": {
+      "id": "purchase_1759937938785_qfviwzh0e",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+      "pageName": "store_1759930724867",
+      "products": [
+        {
+          "id": "p_1759937910817_445cf58dl",
+          "name": "זוהר הקדוש - כרך א",
+          "price": 180,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          "id": "p_1759937914417_hbfaanwws",
+          "name": "פרקי אבות עם פירוש מודרני",
+          "price": 65,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        }
+      ],
+      "total": 280,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T15:38:58.785Z",
+      "completedAt": "2025-10-08T15:38:58.785Z"
+    },
+    "purchase_1759942395034_y6zyhofgo": {
+      "id": "purchase_1759942395034_y6zyhofgo",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+      "pageName": "store_1759930724867",
+      "products": [
+        {
+          "id": "p_1759942382474_xxl4hibnq",
+          "name": "זוהר הקדוש - כרך א",
+          "price": 180,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        }
+      ],
+      "total": 215,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T16:53:15.035Z",
+      "completedAt": "2025-10-08T16:53:15.036Z"
+    },
+    "purchase_1759942924727_qsosms2mi": {
+      "id": "purchase_1759942924727_qsosms2mi",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+      "pageName": "store_1759930724867",
+      "products": [
+        {
+          "id": "p_1759942904601_qjm4eziql",
+          "name": "סידור תפילה לכל ימות השנה",
+          "price": 75,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1627993074092-2b62d26f03d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+        }
+      ],
+      "total": 110,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T17:02:04.727Z",
+      "completedAt": "2025-10-08T17:02:04.727Z"
+    },
+    "purchase_1759946790701_je7mo2z4i": {
+      "id": "purchase_1759946790701_je7mo2z4i",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "אביה_סנדביץ_1759946734487_html",
+      "pageName": "store_1759946577605",
+      "products": [
+        {
+          "id": "p_1759946768549_3w14fko86",
+          "name": "סנדוויץ גבינת עיזים וריבה",
+          "price": 42,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1628170275685-3002f2323a63?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 77,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T18:06:30.701Z",
+      "completedAt": "2025-10-08T18:06:30.701Z"
+    },
+    "purchase_1759947207387_omx71o7aa": {
+      "id": "purchase_1759947207387_omx71o7aa",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "אביה_סנדביץ_1759946734487_html",
+      "pageName": "store_1759946577605",
+      "products": [
+        {
+          "id": "p_1759947166760_g55bcwghx",
+          "name": "סנדוויץ גבינה קלאסי",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1551065912-87006857f12e?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": "p_1759947173337_xtqr59612",
+          "name": "סנדוויץ גבינת עיזים וריבה",
+          "price": 42,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1628170275685-3002f2323a63?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 112,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T18:13:27.387Z",
+      "completedAt": "2025-10-08T18:13:27.387Z"
+    },
+    "purchase_1759948634315_wtbhj2kiz": {
+      "id": "purchase_1759948634315_wtbhj2kiz",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "אביה_סנדביץ_1759946734487_html",
+      "pageName": "store_1759946577605",
+      "products": [
+        {
+          "id": "p_1759948617410_bc5de7xny",
+          "name": "סנדוויץ גבינת עיזים וריבה",
+          "price": 42,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1628170275685-3002f2323a63?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 77,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T18:37:14.315Z",
+      "completedAt": "2025-10-08T18:37:14.315Z"
+    },
+    "purchase_1759953792077_bk35dtaeq": {
+      "id": "purchase_1759953792077_bk35dtaeq",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "רוני_מקרוני__1759953721348_html",
+      "pageName": "store_1759953704001",
+      "products": [
+        {
+          "id": "p_1759953773091_wf25xhuwp",
+          "name": "בולונז פיקנטי",
+          "price": 68,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1563379926895-bd290637346d"
+        }
+      ],
+      "total": 103,
+      "paymentMethod": "bit",
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T20:03:12.077Z",
+      "completedAt": "2025-10-08T20:03:12.077Z"
+    },
+    "purchase_1759954105303_sr1znrje4": {
+      "id": "purchase_1759954105303_sr1znrje4",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "רוני_מקרוני__1759953721348_html",
+      "pageName": "store_1759953704001",
+      "products": [
+        {
+          "id": "p_1759954078484_rksioaot9",
+          "name": "בולונז פיקנטי",
+          "price": 68,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1563379926895-bd290637346d"
+        }
+      ],
+      "total": 103,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "4443333",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-08T20:08:25.303Z",
+      "completedAt": "2025-10-08T20:08:25.303Z"
+    },
+    "purchase_1760024770581_n92gm3ao8": {
+      "id": "purchase_1760024770581_n92gm3ao8",
+      "userId": "user_1759868515022_keewlnt6u",
+      "storeId": "יהלומי_יניב_1760024356359_html",
+      "pageName": "store_1760024327962",
+      "products": [
+        {
+          "id": "p_1760024750322_kmlqrp8e8",
+          "name": "טבעת אירוסים ניצוץ האהבה",
+          "price": 14800,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1616715000578-832103328e7e?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": "p_1760024755273_uquuw5nka",
+          "name": "טבעת אירוסים הבטחת עולם",
+          "price": 13950,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1596245132200-c049d5a71142?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 28785,
+      "paymentMethod": "bit",
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-09T15:46:10.581Z",
+      "completedAt": "2025-10-09T15:46:10.589Z"
+    },
+    "purchase_1760070895019_oesy0zffs": {
+      "id": "purchase_1760070895019_oesy0zffs",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+      "products": [
+        {
+          "id": 1760070864681,
+          "name": "פרליני קרמל מלוח",
+          "price": 40,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+        },
+        {
+          "id": 1760070872871,
+          "name": "טראפלס שוקולד לבן",
+          "price": 35,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1564993175245-ef75796e6a14?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMGNob2NvbGF0ZSUyMHRydWZmbGVzfGVufDB8fHx8MTcwODE4NTYyNnww&ixlib=rb-4.0.3&q=80&w=1080"
+        }
+      ],
+      "total": 145,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T04:34:55.019Z",
+      "completedAt": "2025-10-10T04:34:55.019Z"
+    },
+    "purchase_1760071067594_9wt5vbspk": {
+      "id": "purchase_1760071067594_9wt5vbspk",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+      "products": [
+        {
+          "id": 1760071062432,
+          "name": "פרליני קרמל מלוח",
+          "price": 40,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+        }
+      ],
+      "total": 75,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T04:37:47.594Z",
+      "completedAt": "2025-10-10T04:37:47.594Z"
+    },
+    "purchase_1760071083729_ahrqbnjni": {
+      "id": "purchase_1760071083729_ahrqbnjni",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+      "products": [
+        {
+          "id": 1760071073023,
+          "name": "פרליני קרמל מלוח",
+          "price": 40,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+        }
+      ],
+      "total": 75,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T04:38:03.729Z",
+      "completedAt": "2025-10-10T04:38:03.729Z"
+    },
+    "purchase_1760072255527_a2b8gl7p7": {
+      "id": "purchase_1760072255527_a2b8gl7p7",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+      "products": [
+        {
+          "id": 1760072235445,
+          "name": "פרליני אשליות מתוקות",
+          "price": 60,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+        },
+        {
+          "id": 1760072238166,
+          "name": "טבלת סוריאליזם מריר",
+          "price": 55,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+        }
+      ],
+      "total": 175,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T04:57:35.527Z",
+      "completedAt": "2025-10-10T04:57:35.527Z"
+    },
+    "purchase_1760072916960_xsgcbmtcj": {
+      "id": "purchase_1760072916960_xsgcbmtcj",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+      "products": [
+        {
+          "id": 1760072858797,
+          "name": "פרליני אשליות מתוקות",
+          "price": 60,
+          "quantity": 4,
+          "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+        },
+        {
+          "id": 1760072870535,
+          "name": "טבלת סוריאליזם מריר",
+          "price": 55,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+        },
+        {
+          "id": 1760072873717,
+          "name": "מוס אופוריה שוקולד",
+          "price": 50,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1588698943725-3b9e5d4e1a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBtb3Vzc2V8ZW58MHx8fHwxNzE3MzY0ODc5fDA&ixlib=rb-4.0.3&q=80&w=1080"
+        }
+      ],
+      "total": 380,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T05:08:36.960Z",
+      "completedAt": "2025-10-10T05:08:36.960Z"
+    },
+    "purchase_1760072931485_8b0az8zq7": {
+      "id": "purchase_1760072931485_8b0az8zq7",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+      "products": [
+        {
+          "id": 1760072858797,
+          "name": "פרליני אשליות מתוקות",
+          "price": 60,
+          "quantity": 3,
+          "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+        },
+        {
+          "id": 1760072870535,
+          "name": "טבלת סוריאליזם מריר",
+          "price": 55,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+        },
+        {
+          "id": 1760072873717,
+          "name": "מוס אופוריה שוקולד",
+          "price": 50,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1588698943725-3b9e5d4e1a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBtb3Vzc2V8ZW58MHx8fHwxNzE3MzY0ODc5fDA&ixlib=rb-4.0.3&q=80&w=1080"
+        }
+      ],
+      "total": 285,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T05:08:51.485Z",
+      "completedAt": "2025-10-10T05:08:51.485Z"
+    },
+    "purchase_1760073441841_g2f8n4kpw": {
+      "id": "purchase_1760073441841_g2f8n4kpw",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760073388731",
+      "products": [
+        {
+          "id": 1760073421474,
+          "name": "כוח תפוז קומיקס",
+          "price": 11.5,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1550993047-97d8b51ce5ce?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 46.5,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T05:17:21.842Z",
+      "completedAt": "2025-10-10T05:17:21.842Z"
+    },
+    "purchase_1760074359835_ejg6kry7k": {
+      "id": "purchase_1760074359835_ejg6kry7k",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760074282979",
+      "products": [
+        {
+          "id": 1760074334135,
+          "name": "מקלות שוקולד פיסטוק לבן",
+          "price": 40,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1594916817293-1002e20b33c1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760074337158,
+          "name": "פרלינים פיסטוק מריר",
+          "price": 45,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1579758782337-658b6c00d604?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760074340510,
+          "name": "שוקולד פיסטוק קלאסי",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1616782570179-c56a73c15383?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 155,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T05:32:39.835Z",
+      "completedAt": "2025-10-10T05:32:39.835Z"
+    },
+    "purchase_1760075153289_slvkko16k": {
+      "id": "purchase_1760075153289_slvkko16k",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760075120546",
+      "products": [
+        {
+          "id": 1760075142948,
+          "name": "חלבה וניל קלאסית",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+        }
+      ],
+      "total": 70,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T05:45:53.289Z",
+      "completedAt": "2025-10-10T05:45:53.289Z"
+    },
+    "purchase_1760075732612_i23wilj7r": {
+      "id": "purchase_1760075732612_i23wilj7r",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760075120546",
+      "products": [
+        {
+          "id": 1760075160087,
+          "name": "חלבה קפה ואגוזים",
+          "price": 40,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+        },
+        {
+          "id": 1760075165381,
+          "name": "חלבה וניל קלאסית",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+        },
+        {
+          "id": 1760075720703,
+          "name": "חלבה פיסטוק",
+          "price": 45,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+        }
+      ],
+      "total": 155,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T05:55:32.613Z",
+      "completedAt": "2025-10-10T05:55:32.613Z"
+    },
+    "purchase_1760082908809_137owz9ov": {
+      "id": "purchase_1760082908809_137owz9ov",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760073388731",
+      "products": [
+        {
+          "id": 1760082886057,
+          "name": "טיל אנרגיה אדום",
+          "price": 12.9,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1579294025066-6b22b10a2f7f?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760082889987,
+          "name": "ניצוץ לימוני גיבור",
+          "price": 10,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1582234036686-2c1a89b0d4b9?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760082892470,
+          "name": "כוח תפוז קומיקס",
+          "price": 11.5,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1550993047-97d8b51ce5ce?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 69.4,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T07:55:08.809Z",
+      "completedAt": "2025-10-10T07:55:08.810Z"
+    },
+    "purchase_1760084198545_yn82utbbz": {
+      "id": "purchase_1760084198545_yn82utbbz",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_%D7%99%D7%95%D7%91%D7%9C_1760084132705",
+      "products": [
+        {
+          "id": 1760084186810,
+          "name": "סוכריות פירות יער אורגניות",
+          "price": 25,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+        }
+      ],
+      "total": 60,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T08:16:38.545Z",
+      "completedAt": "2025-10-10T08:16:38.545Z"
+    },
+    "purchase_1760085251800_0epjah0dg": {
+      "id": "purchase_1760085251800_0epjah0dg",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760084132705",
+      "products": [
+        {
+          "id": 1760085242263,
+          "name": "סוכריות פירות יער אורגניות",
+          "price": 25,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+        }
+      ],
+      "total": 60,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T08:34:11.801Z",
+      "completedAt": "2025-10-10T08:34:11.801Z"
+    },
+    "purchase_1760085326485_yge6x5e3k": {
+      "id": "purchase_1760085326485_yge6x5e3k",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760084132705",
+      "products": [
+        {
+          "id": 1760085297434,
+          "name": "מרמלדת ג'ינג'ר וכורכום",
+          "price": 22.5,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1610444654519-9c5c24976783?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+        },
+        {
+          "id": 1760085309720,
+          "name": "ליקריץ טבעי ללא סוכר",
+          "price": 18,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1587373898144-8c01d4a8e2e9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+        }
+      ],
+      "total": 98,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T08:35:26.485Z",
+      "completedAt": "2025-10-10T08:35:26.485Z"
+    },
+    "purchase_1760085928395_b40h96t5l": {
+      "id": "purchase_1760085928395_b40h96t5l",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760084132705",
+      "products": [
+        {
+          "id": 1760085918547,
+          "name": "סוכריות פירות יער אורגניות",
+          "price": 25,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+        }
+      ],
+      "total": 60,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T08:45:28.395Z",
+      "completedAt": "2025-10-10T08:45:28.395Z"
+    },
+    "purchase_1760086590831_86z5obxya": {
+      "id": "purchase_1760086590831_86z5obxya",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760086537516",
+      "products": [
+        {
+          "id": 1760086568917,
+          "name": "מקלות אנרגיה טבעיים",
+          "price": 18,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1582270966779-c5c798ce0e9c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 53,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T08:56:30.831Z",
+      "completedAt": "2025-10-10T09:17:18.564Z"
+    },
+    "purchase_1760086775059_3cx3mmiji": {
+      "id": "purchase_1760086775059_3cx3mmiji",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760086537516",
+      "products": [
+        {
+          "id": 1760086762280,
+          "name": "ממתק פירות טרופי",
+          "price": 25,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1579612086208-16e538c366e6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 60,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "completed",
+      "createdAt": "2025-10-10T08:59:35.059Z",
+      "completedAt": "2025-10-10T09:17:21.422Z"
+    },
+    "purchase_1760088379578_qb3y9bkyf": {
+      "id": "purchase_1760088379578_qb3y9bkyf",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760086537516",
+      "products": [
+        {
+          "id": 1760088354847,
+          "name": "ממתק פירות טרופי",
+          "price": 25,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1579612086208-16e538c366e6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 85,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "processing",
+      "createdAt": "2025-10-10T09:26:19.579Z"
+    },
+    "purchase_1760088533718_brbjmuw3g": {
+      "id": "purchase_1760088533718_brbjmuw3g",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_יובל_1760086537516",
+      "products": [
+        {
+          "id": 1760088481513,
+          "name": "חטיפי פירות יבשים",
+          "price": 22,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1534065609664-df839c4e2358?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760088485605,
+          "name": "מסטיקי מנטה טבעיים",
+          "price": 15,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1580956961138-0dd8ff851241?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760088491246,
+          "name": "חטיפי חלבון פריכים",
+          "price": 20,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1535497258079-668b20df8496?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760088497800,
+          "name": "ג'לי ויטמינים בטעמים",
+          "price": 28,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1582057390234-7a1a2b163e77?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 183,
+      "customerName": "ציון",
+      "customerPhone": "076555555",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T09:28:53.718Z"
+    }
+  },
+  "products": {},
+  "stores": {},
+  "analytics": {
+    "totalSales": 32594.9,
+    "totalUsers": 0,
+    "totalProducts": 0,
+    "dailySales": {
+      "2025-10-08": 1520,
+      "2025-10-09": 28785,
+      "2025-10-10": 2289.9
+    },
+    "monthlySales": {
+      "2025-10": 32594.9
+    },
+    "topProducts": [
+      {
+        "id": "p_1760024750322_kmlqrp8e8",
+        "name": "טבעת אירוסים ניצוץ האהבה",
+        "sales": 1,
+        "revenue": 14800
+      },
+      {
+        "id": "p_1760024755273_uquuw5nka",
+        "name": "טבעת אירוסים הבטחת עולם",
+        "sales": 1,
+        "revenue": 13950
+      },
+      {
+        "id": 1760072858797,
+        "name": "פרליני אשליות מתוקות",
+        "sales": 7,
+        "revenue": 420
+      },
+      {
+        "id": "p_1759937910817_445cf58dl",
+        "name": "זוהר הקדוש - כרך א",
+        "sales": 1,
+        "revenue": 180
+      },
+      {
+        "id": "p_1759942382474_xxl4hibnq",
+        "name": "זוהר הקדוש - כרך א",
+        "sales": 1,
+        "revenue": 180
+      },
+      {
+        "id": "p_1759931099638_k3hfnn0h8",
+        "name": "חומש בראשית עם פירושים",
+        "sales": 1,
+        "revenue": 120
+      },
+      {
+        "id": 1760072235445,
+        "name": "פרליני אשליות מתוקות",
+        "sales": 2,
+        "revenue": 120
+      },
+      {
+        "id": 1760072870535,
+        "name": "טבלת סוריאליזם מריר",
+        "sales": 2,
+        "revenue": 110
+      },
+      {
+        "id": 1760072873717,
+        "name": "מוס אופוריה שוקולד",
+        "sales": 2,
+        "revenue": 100
+      },
+      {
+        "id": "p_1759931086896_i8j2yl4qc",
+        "name": "ספר תהילים מפואר",
+        "sales": 1,
+        "revenue": 89
+      },
+      {
+        "id": "p_1759936433475_izr3pqu12",
+        "name": "ספר תהילים מפואר",
+        "sales": 1,
+        "revenue": 89
+      },
+      {
+        "id": "p_1759931095298_l9jkta08u",
+        "name": "סידור תפילה לכל ימות השנה",
+        "sales": 1,
+        "revenue": 75
+      },
+      {
+        "id": "p_1759942904601_qjm4eziql",
+        "name": "סידור תפילה לכל ימות השנה",
+        "sales": 1,
+        "revenue": 75
+      },
+      {
+        "id": 1760070872871,
+        "name": "טראפלס שוקולד לבן",
+        "sales": 2,
+        "revenue": 70
+      },
+      {
+        "id": "p_1759953773091_wf25xhuwp",
+        "name": "בולונז פיקנטי",
+        "sales": 1,
+        "revenue": 68
+      },
+      {
+        "id": "p_1759954078484_rksioaot9",
+        "name": "בולונז פיקנטי",
+        "sales": 1,
+        "revenue": 68
+      },
+      {
+        "id": "p_1759937914417_hbfaanwws",
+        "name": "פרקי אבות עם פירוש מודרני",
+        "sales": 1,
+        "revenue": 65
+      },
+      {
+        "id": 1760088497800,
+        "name": "ג'לי ויטמינים בטעמים",
+        "sales": 2,
+        "revenue": 56
+      },
+      {
+        "id": 1760072238166,
+        "name": "טבלת סוריאליזם מריר",
+        "sales": 1,
+        "revenue": 55
+      },
+      {
+        "id": 1760088354847,
+        "name": "ממתק פירות טרופי",
+        "sales": 2,
+        "revenue": 50
+      },
+      {
+        "id": 1760074337158,
+        "name": "פרלינים פיסטוק מריר",
+        "sales": 1,
+        "revenue": 45
+      },
+      {
+        "id": 1760075720703,
+        "name": "חלבה פיסטוק",
+        "sales": 1,
+        "revenue": 45
+      },
+      {
+        "id": 1760085297434,
+        "name": "מרמלדת ג'ינג'ר וכורכום",
+        "sales": 2,
+        "revenue": 45
+      },
+      {
+        "id": "p_1759946768549_3w14fko86",
+        "name": "סנדוויץ גבינת עיזים וריבה",
+        "sales": 1,
+        "revenue": 42
+      },
+      {
+        "id": "p_1759947173337_xtqr59612",
+        "name": "סנדוויץ גבינת עיזים וריבה",
+        "sales": 1,
+        "revenue": 42
+      },
+      {
+        "id": "p_1759948617410_bc5de7xny",
+        "name": "סנדוויץ גבינת עיזים וריבה",
+        "sales": 1,
+        "revenue": 42
+      },
+      {
+        "id": 1760070864681,
+        "name": "פרליני קרמל מלוח",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
+        "id": 1760071062432,
+        "name": "פרליני קרמל מלוח",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
+        "id": 1760071073023,
+        "name": "פרליני קרמל מלוח",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
+        "id": 1760074334135,
+        "name": "מקלות שוקולד פיסטוק לבן",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
+        "id": 1760075160087,
+        "name": "חלבה קפה ואגוזים",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
+        "id": 1760088491246,
+        "name": "חטיפי חלבון פריכים",
+        "sales": 2,
+        "revenue": 40
+      },
+      {
+        "id": "p_1759947166760_g55bcwghx",
+        "name": "סנדוויץ גבינה קלאסי",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760074340510,
+        "name": "שוקולד פיסטוק קלאסי",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760075142948,
+        "name": "חלבה וניל קלאסית",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760075165381,
+        "name": "חלבה וניל קלאסית",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760088485605,
+        "name": "מסטיקי מנטה טבעיים",
+        "sales": 2,
+        "revenue": 30
+      },
+      {
+        "id": 1760084186810,
+        "name": "סוכריות פירות יער אורגניות",
+        "sales": 1,
+        "revenue": 25
+      },
+      {
+        "id": 1760085242263,
+        "name": "סוכריות פירות יער אורגניות",
+        "sales": 1,
+        "revenue": 25
+      },
+      {
+        "id": 1760085918547,
+        "name": "סוכריות פירות יער אורגניות",
+        "sales": 1,
+        "revenue": 25
+      },
+      {
+        "id": 1760086762280,
+        "name": "ממתק פירות טרופי",
+        "sales": 1,
+        "revenue": 25
+      },
+      {
+        "id": 1760088481513,
+        "name": "חטיפי פירות יבשים",
+        "sales": 1,
+        "revenue": 22
+      },
+      {
+        "id": 1760085309720,
+        "name": "ליקריץ טבעי ללא סוכר",
+        "sales": 1,
+        "revenue": 18
+      },
+      {
+        "id": 1760086568917,
+        "name": "מקלות אנרגיה טבעיים",
+        "sales": 1,
+        "revenue": 18
+      },
+      {
+        "id": 1760082886057,
+        "name": "טיל אנרגיה אדום",
+        "sales": 1,
+        "revenue": 12.9
+      },
+      {
+        "id": 1760073421474,
+        "name": "כוח תפוז קומיקס",
+        "sales": 1,
+        "revenue": 11.5
+      },
+      {
+        "id": 1760082892470,
+        "name": "כוח תפוז קומיקס",
+        "sales": 1,
+        "revenue": 11.5
+      },
+      {
+        "id": 1760082889987,
+        "name": "ניצוץ לימוני גיבור",
+        "sales": 1,
+        "revenue": 10
+      }
+    ],
+    "recentPurchases": [
+      {
+        "id": "purchase_1760088533718_brbjmuw3g",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760086537516",
+        "products": [
+          {
+            "id": 1760088481513,
+            "name": "חטיפי פירות יבשים",
+            "price": 22,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1534065609664-df839c4e2358?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760088485605,
+            "name": "מסטיקי מנטה טבעיים",
+            "price": 15,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1580956961138-0dd8ff851241?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760088491246,
+            "name": "חטיפי חלבון פריכים",
+            "price": 20,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1535497258079-668b20df8496?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760088497800,
+            "name": "ג'לי ויטמינים בטעמים",
+            "price": 28,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1582057390234-7a1a2b163e77?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 183,
+        "customerName": "ציון",
+        "customerPhone": "076555555",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T09:28:53.718Z"
+      },
+      {
+        "id": "purchase_1760088379578_qb3y9bkyf",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760086537516",
+        "products": [
+          {
+            "id": 1760088354847,
+            "name": "ממתק פירות טרופי",
+            "price": 25,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1579612086208-16e538c366e6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 85,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T09:26:19.579Z"
+      },
+      {
+        "id": "purchase_1760086775059_3cx3mmiji",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760086537516",
+        "products": [
+          {
+            "id": 1760086762280,
+            "name": "ממתק פירות טרופי",
+            "price": 25,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1579612086208-16e538c366e6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 60,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T08:59:35.059Z",
+        "completedAt": "2025-10-10T08:59:35.059Z"
+      },
+      {
+        "id": "purchase_1760086590831_86z5obxya",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760086537516",
+        "products": [
+          {
+            "id": 1760086568917,
+            "name": "מקלות אנרגיה טבעיים",
+            "price": 18,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1582270966779-c5c798ce0e9c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 53,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T08:56:30.831Z",
+        "completedAt": "2025-10-10T08:56:30.831Z"
+      },
+      {
+        "id": "purchase_1760085928395_b40h96t5l",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760084132705",
+        "products": [
+          {
+            "id": 1760085918547,
+            "name": "סוכריות פירות יער אורגניות",
+            "price": 25,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+          }
+        ],
+        "total": 60,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T08:45:28.395Z",
+        "completedAt": "2025-10-10T08:45:28.395Z"
+      },
+      {
+        "id": "purchase_1760085326485_yge6x5e3k",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760084132705",
+        "products": [
+          {
+            "id": 1760085297434,
+            "name": "מרמלדת ג'ינג'ר וכורכום",
+            "price": 22.5,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1610444654519-9c5c24976783?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+          },
+          {
+            "id": 1760085309720,
+            "name": "ליקריץ טבעי ללא סוכר",
+            "price": 18,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1587373898144-8c01d4a8e2e9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+          }
+        ],
+        "total": 98,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T08:35:26.485Z",
+        "completedAt": "2025-10-10T08:35:26.485Z"
+      },
+      {
+        "id": "purchase_1760085251800_0epjah0dg",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_יובל_1760084132705",
+        "products": [
+          {
+            "id": 1760085242263,
+            "name": "סוכריות פירות יער אורגניות",
+            "price": 25,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+          }
+        ],
+        "total": 60,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T08:34:11.801Z",
+        "completedAt": "2025-10-10T08:34:11.801Z"
+      },
+      {
+        "id": "purchase_1760084198545_yn82utbbz",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_%D7%99%D7%95%D7%91%D7%9C_1760084132705",
+        "products": [
+          {
+            "id": 1760084186810,
+            "name": "סוכריות פירות יער אורגניות",
+            "price": 25,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+          }
+        ],
+        "total": 60,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T08:16:38.545Z",
+        "completedAt": "2025-10-10T08:16:38.545Z"
+      },
+      {
+        "id": "purchase_1760082908809_137owz9ov",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760073388731",
+        "products": [
+          {
+            "id": 1760082886057,
+            "name": "טיל אנרגיה אדום",
+            "price": 12.9,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1579294025066-6b22b10a2f7f?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760082889987,
+            "name": "ניצוץ לימוני גיבור",
+            "price": 10,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1582234036686-2c1a89b0d4b9?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760082892470,
+            "name": "כוח תפוז קומיקס",
+            "price": 11.5,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1550993047-97d8b51ce5ce?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 69.4,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T07:55:08.809Z",
+        "completedAt": "2025-10-10T07:55:08.810Z"
+      },
+      {
+        "id": "purchase_1760075732612_i23wilj7r",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760075120546",
+        "products": [
+          {
+            "id": 1760075160087,
+            "name": "חלבה קפה ואגוזים",
+            "price": 40,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+          },
+          {
+            "id": 1760075165381,
+            "name": "חלבה וניל קלאסית",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+          },
+          {
+            "id": 1760075720703,
+            "name": "חלבה פיסטוק",
+            "price": 45,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+          }
+        ],
+        "total": 155,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T05:55:32.613Z",
+        "completedAt": "2025-10-10T05:55:32.613Z"
+      },
+      {
+        "id": "purchase_1760075153289_slvkko16k",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760075120546",
+        "products": [
+          {
+            "id": 1760075142948,
+            "name": "חלבה וניל קלאסית",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1627407062279-b14115e57d19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+          }
+        ],
+        "total": 70,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T05:45:53.289Z",
+        "completedAt": "2025-10-10T05:45:53.289Z"
+      },
+      {
+        "id": "purchase_1760074359835_ejg6kry7k",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760074282979",
+        "products": [
+          {
+            "id": 1760074334135,
+            "name": "מקלות שוקולד פיסטוק לבן",
+            "price": 40,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1594916817293-1002e20b33c1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760074337158,
+            "name": "פרלינים פיסטוק מריר",
+            "price": 45,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1579758782337-658b6c00d604?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760074340510,
+            "name": "שוקולד פיסטוק קלאסי",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1616782570179-c56a73c15383?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 155,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T05:32:39.835Z",
+        "completedAt": "2025-10-10T05:32:39.835Z"
+      },
+      {
+        "id": "purchase_1760073441841_g2f8n4kpw",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760073388731",
+        "products": [
+          {
+            "id": 1760073421474,
+            "name": "כוח תפוז קומיקס",
+            "price": 11.5,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1550993047-97d8b51ce5ce?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 46.5,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T05:17:21.842Z",
+        "completedAt": "2025-10-10T05:17:21.842Z"
+      },
+      {
+        "id": "purchase_1760072931485_8b0az8zq7",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+        "products": [
+          {
+            "id": 1760072858797,
+            "name": "פרליני אשליות מתוקות",
+            "price": 60,
+            "quantity": 3,
+            "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+          },
+          {
+            "id": 1760072870535,
+            "name": "טבלת סוריאליזם מריר",
+            "price": 55,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+          },
+          {
+            "id": 1760072873717,
+            "name": "מוס אופוריה שוקולד",
+            "price": 50,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1588698943725-3b9e5d4e1a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBtb3Vzc2V8ZW58MHx8fHwxNzE3MzY0ODc5fDA&ixlib=rb-4.0.3&q=80&w=1080"
+          }
+        ],
+        "total": 285,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T05:08:51.485Z",
+        "completedAt": "2025-10-10T05:08:51.485Z"
+      },
+      {
+        "id": "purchase_1760072916960_xsgcbmtcj",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+        "products": [
+          {
+            "id": 1760072858797,
+            "name": "פרליני אשליות מתוקות",
+            "price": 60,
+            "quantity": 4,
+            "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+          },
+          {
+            "id": 1760072870535,
+            "name": "טבלת סוריאליזם מריר",
+            "price": 55,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+          },
+          {
+            "id": 1760072873717,
+            "name": "מוס אופוריה שוקולד",
+            "price": 50,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1588698943725-3b9e5d4e1a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBtb3Vzc2V8ZW58MHx8fHwxNzE3MzY0ODc5fDA&ixlib=rb-4.0.3&q=80&w=1080"
+          }
+        ],
+        "total": 380,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T05:08:36.960Z",
+        "completedAt": "2025-10-10T05:08:36.960Z"
+      },
+      {
+        "id": "purchase_1760072255527_a2b8gl7p7",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+        "products": [
+          {
+            "id": 1760072235445,
+            "name": "פרליני אשליות מתוקות",
+            "price": 60,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+          },
+          {
+            "id": 1760072238166,
+            "name": "טבלת סוריאליזם מריר",
+            "price": 55,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+          }
+        ],
+        "total": 175,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T04:57:35.527Z",
+        "completedAt": "2025-10-10T04:57:35.527Z"
+      },
+      {
+        "id": "purchase_1760071083729_ahrqbnjni",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+        "products": [
+          {
+            "id": 1760071073023,
+            "name": "פרליני קרמל מלוח",
+            "price": 40,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+          }
+        ],
+        "total": 75,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T04:38:03.729Z",
+        "completedAt": "2025-10-10T04:38:03.729Z"
+      },
+      {
+        "id": "purchase_1760071067594_9wt5vbspk",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+        "products": [
+          {
+            "id": 1760071062432,
+            "name": "פרליני קרמל מלוח",
+            "price": 40,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+          }
+        ],
+        "total": 75,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T04:37:47.594Z",
+        "completedAt": "2025-10-10T04:37:47.594Z"
+      },
+      {
+        "id": "purchase_1760070895019_oesy0zffs",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+        "products": [
+          {
+            "id": 1760070864681,
+            "name": "פרליני קרמל מלוח",
+            "price": 40,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+          },
+          {
+            "id": 1760070872871,
+            "name": "טראפלס שוקולד לבן",
+            "price": 35,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1564993175245-ef75796e6a14?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMGNob2NvbGF0ZSUyMHRydWZmbGVzfGVufDB8fHx8MTcwODE4NTYyNnww&ixlib=rb-4.0.3&q=80&w=1080"
+          }
+        ],
+        "total": 145,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "completed",
+        "createdAt": "2025-10-10T04:34:55.019Z",
+        "completedAt": "2025-10-10T04:34:55.019Z"
+      },
+      {
+        "id": "purchase_1760024770581_n92gm3ao8",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "יהלומי_יניב_1760024356359_html",
+        "pageName": "store_1760024327962",
+        "products": [
+          {
+            "id": "p_1760024750322_kmlqrp8e8",
+            "name": "טבעת אירוסים ניצוץ האהבה",
+            "price": 14800,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1616715000578-832103328e7e?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": "p_1760024755273_uquuw5nka",
+            "name": "טבעת אירוסים הבטחת עולם",
+            "price": 13950,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1596245132200-c049d5a71142?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 28785,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-09T15:46:10.581Z",
+        "completedAt": "2025-10-09T15:46:10.589Z"
+      },
+      {
+        "id": "purchase_1759954105303_sr1znrje4",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "רוני_מקרוני__1759953721348_html",
+        "pageName": "store_1759953704001",
+        "products": [
+          {
+            "id": "p_1759954078484_rksioaot9",
+            "name": "בולונז פיקנטי",
+            "price": 68,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1563379926895-bd290637346d"
+          }
+        ],
+        "total": 103,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "4443333",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T20:08:25.303Z",
+        "completedAt": "2025-10-08T20:08:25.303Z"
+      },
+      {
+        "id": "purchase_1759953792077_bk35dtaeq",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "רוני_מקרוני__1759953721348_html",
+        "pageName": "store_1759953704001",
+        "products": [
+          {
+            "id": "p_1759953773091_wf25xhuwp",
+            "name": "בולונז פיקנטי",
+            "price": 68,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1563379926895-bd290637346d"
+          }
+        ],
+        "total": 103,
+        "paymentMethod": "bit",
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T20:03:12.077Z",
+        "completedAt": "2025-10-08T20:03:12.077Z"
+      },
+      {
+        "id": "purchase_1759948634315_wtbhj2kiz",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "אביה_סנדביץ_1759946734487_html",
+        "pageName": "store_1759946577605",
+        "products": [
+          {
+            "id": "p_1759948617410_bc5de7xny",
+            "name": "סנדוויץ גבינת עיזים וריבה",
+            "price": 42,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1628170275685-3002f2323a63?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 77,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T18:37:14.315Z",
+        "completedAt": "2025-10-08T18:37:14.315Z"
+      },
+      {
+        "id": "purchase_1759947207387_omx71o7aa",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "אביה_סנדביץ_1759946734487_html",
+        "pageName": "store_1759946577605",
+        "products": [
+          {
+            "id": "p_1759947166760_g55bcwghx",
+            "name": "סנדוויץ גבינה קלאסי",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1551065912-87006857f12e?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": "p_1759947173337_xtqr59612",
+            "name": "סנדוויץ גבינת עיזים וריבה",
+            "price": 42,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1628170275685-3002f2323a63?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 112,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T18:13:27.387Z",
+        "completedAt": "2025-10-08T18:13:27.387Z"
+      },
+      {
+        "id": "purchase_1759946790701_je7mo2z4i",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "אביה_סנדביץ_1759946734487_html",
+        "pageName": "store_1759946577605",
+        "products": [
+          {
+            "id": "p_1759946768549_3w14fko86",
+            "name": "סנדוויץ גבינת עיזים וריבה",
+            "price": 42,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1628170275685-3002f2323a63?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 77,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T18:06:30.701Z",
+        "completedAt": "2025-10-08T18:06:30.701Z"
+      },
+      {
+        "id": "purchase_1759942924727_qsosms2mi",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+        "pageName": "store_1759930724867",
+        "products": [
+          {
+            "id": "p_1759942904601_qjm4eziql",
+            "name": "סידור תפילה לכל ימות השנה",
+            "price": 75,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1627993074092-2b62d26f03d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          }
+        ],
+        "total": 110,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T17:02:04.727Z",
+        "completedAt": "2025-10-08T17:02:04.727Z"
+      },
+      {
+        "id": "purchase_1759942395034_y6zyhofgo",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+        "pageName": "store_1759930724867",
+        "products": [
+          {
+            "id": "p_1759942382474_xxl4hibnq",
+            "name": "זוהר הקדוש - כרך א",
+            "price": 180,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          }
+        ],
+        "total": 215,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T16:53:15.035Z",
+        "completedAt": "2025-10-08T16:53:15.036Z"
+      },
+      {
+        "id": "purchase_1759937938785_qfviwzh0e",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+        "pageName": "store_1759930724867",
+        "products": [
+          {
+            "id": "p_1759937910817_445cf58dl",
+            "name": "זוהר הקדוש - כרך א",
+            "price": 180,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          },
+          {
+            "id": "p_1759937914417_hbfaanwws",
+            "name": "פרקי אבות עם פירוש מודרני",
+            "price": 65,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          }
+        ],
+        "total": 280,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T15:38:58.785Z",
+        "completedAt": "2025-10-08T15:38:58.785Z"
+      },
+      {
+        "id": "purchase_1759936452916_arehmdcpu",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+        "pageName": "store_1759930724867",
+        "products": [
+          {
+            "id": "p_1759936433475_izr3pqu12",
+            "name": "ספר תהילים מפואר",
+            "price": 89,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          }
+        ],
+        "total": 124,
+        "paymentMethod": "bit",
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "completed",
+        "createdAt": "2025-10-08T15:14:12.918Z",
+        "completedAt": "2025-10-08T15:14:12.918Z"
+      },
+      {
+        "id": "purchase_1759931173151_ohn6g4n2m",
+        "userId": "user_1759868515022_keewlnt6u",
+        "storeId": "%D7%A8%D7%91%D7%99_%D7%99%D7%A0%D7%99%D7%91_1759931050086_html",
+        "pageName": "store_1759930724867",
+        "products": [
+          {
+            "id": "p_1759931086896_i8j2yl4qc",
+            "name": "ספר תהילים מפואר",
+            "price": 89,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1596707323530-9a2c3008e3b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          },
+          {
+            "id": "p_1759931095298_l9jkta08u",
+            "name": "סידור תפילה לכל ימות השנה",
+            "price": 75,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1627993074092-2b62d26f03d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          },
+          {
+            "id": "p_1759931099638_k3hfnn0h8",
+            "name": "חומש בראשית עם פירושים",
+            "price": 120,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1582234057039-b9d9c22d0d0f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
+          }
+        ],
+        "total": 319,
+        "paymentMethod": "credit",
+        "status": "completed",
+        "createdAt": "2025-10-08T13:46:13.151Z",
+        "completedAt": "2025-10-08T13:46:13.151Z"
+      }
+    ]
+  }
+}

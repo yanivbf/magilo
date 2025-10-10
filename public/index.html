@@ -145,7 +145,7 @@
             padding: 0.25rem 0.5rem;
             border-radius: 9999px;
         }
-        
+
         /* Tooltip styles */
         [data-tooltip] {
             position: relative;
@@ -191,6 +191,26 @@
         .status-processing {
             background-color: #fef3c7;
             color: #92400e;
+        }
+        
+        /* Dropdown Menu Styles */
+        .dropdown-menu {
+            min-width: 180px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .dropdown-menu.show {
+            display: block;
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -944,6 +964,7 @@
         let subscriptionData = null;
         let subscriptionTimer = null;
         let currentPageForSubscription = null;
+        let projects = []; // Global projects array for manageProject access
 
         // --- Admin Variables ---
         const ADMIN_USER_ID = 'fae06b49-1239-4ba5-93db-244ce2851fb4'; // המנהל הנוכחי
@@ -2857,14 +2878,16 @@
         async function loadProjects() {
             console.log('loadProjects התחיל');
             console.log('currentUser:', currentUser);
-            if (!currentUser) {
-                console.error('currentUser לא מוגדר!');
-                projectsList.innerHTML = '<div class="text-center py-16 col-span-full">שגיאה: משתמש לא מחובר</div>';
-                return;
-            }
+            
             const projectsList = document.getElementById('projects-list');
             if (!projectsList) {
                 console.error('לא נמצא projects-list element');
+                return;
+            }
+            
+            if (!currentUser) {
+                console.error('currentUser לא מוגדר!');
+                projectsList.innerHTML = '<div class="text-center py-16 col-span-full">שגיאה: משתמש לא מחובר</div>';
                 return;
             }
             projectsList.innerHTML = `
@@ -2879,7 +2902,7 @@
             `;
             console.log('הוספתי loader');
             
-            let projects = [];
+            projects = []; // Reset global projects array
             let supabaseError = null;
             
             // נסה לטעון מ-Supabase
@@ -2958,7 +2981,7 @@
                                 }
                             }
                             
-                            return {
+                            const projectObj = {
                             id: `local_${page.fileName}`,
                                 name: cleanName,
                                 description: 'דף נחיתה מקצועי',
@@ -2967,8 +2990,50 @@
                             status: 'completed',
                             created_at: new Date().toISOString(),
                             local_file: page.fileName,
-                            local_url: page.url
+                            local_url: page.url,
+                                user_id: currentUser.id,
+                                userId: currentUser.id
                             };
+                            
+                            // טען metadata אם קיים (SYNCHRONOUSLY update the project object)
+                            const metadataUrl = `/pages/${currentUser.id}/${page.fileName}_data/metadata.json`;
+                            fetch(metadataUrl)
+                                .then(response => response.json())
+                                .then(metadata => {
+                                    console.log(`📋 Loaded metadata for ${page.fileName}:`, metadata);
+                                    if (metadata.pageType) {
+                                        // עדכן את האובייקט ב-projects array
+                                        const idx = projects.findIndex(p => p.id === `local_${page.fileName}`);
+                                        if (idx !== -1) {
+                                            projects[idx].pageType = metadata.pageType;
+                                            console.log(`✅ Set pageType="${metadata.pageType}" for project index ${idx}`);
+                                        }
+                                        
+                                        // עדכן גם את projectObj (למקרה שזה עדיין בזיכרון)
+                                        projectObj.pageType = metadata.pageType;
+                                        
+                                        // עדכן את הכפתור בממשק
+                                        const projectCard = document.querySelector(`[data-project-id="local_${page.fileName}"]`);
+                                        if (projectCard) {
+                                            const manageBtn = projectCard.querySelector('[data-action="manage"] .manage-button-text');
+                                            if (manageBtn) {
+                                                if (metadata.pageType === 'store') {
+                                                    manageBtn.textContent = 'ניהול חנות';
+                                                } else if (metadata.pageType === 'event') {
+                                                    manageBtn.textContent = 'ניהול מוזמנים';
+                                                } else {
+                                                    manageBtn.textContent = 'ניהול';
+                                                }
+                                                console.log('✅ Updated button text to:', manageBtn.textContent);
+                                            }
+                                        }
+                                    }
+                                })
+                                .catch(err => {
+                                    console.warn(`⚠️ Could not load metadata for ${page.fileName}:`, err);
+                                });
+                            
+                            return projectObj;
                         });
                         console.log('נטענו דפים מקומיים:', projects.length);
                     }
@@ -3000,12 +3065,11 @@
                     
                     const hasHtmlContent = (project.html_content && project.html_content.trim() !== '') || project.local_url;
                     
-                    // בדוק אם הדף הזה יש לו מנוי פעיל
-                    const fileName = project.local_file || project.id.replace('local_', '');
-                    const pageSubscription = localStorage.getItem(`page_subscription_${fileName}`);
+                    // בדוק אם הדף הזה יש לו מנוי פעיל - USE project.id!
+                    const pageSubscription = localStorage.getItem(`page_subscription_${project.id}`);
                     const hasPageSubscription = pageSubscription && JSON.parse(pageSubscription).isActive;
                     
-                    console.log(`Page ${project.id}: subscription=${pageSubscription}, hasSubscription=${hasPageSubscription}`);
+                    console.log(`📄 Page ${project.id}: subscription=${hasPageSubscription}`);
                     
                     // דפים חדשים מתחילים ללא מנוי (אין מנוי ב-localStorage)
                     const finalHasSubscription = hasPageSubscription;
@@ -3018,26 +3082,57 @@
                     const pageUrl = project.local_url || (project.html_content ? '#' : '');
                     
         const actionButtons = `
-            <button onclick="editProject('${project.id}')" class="bg-blue-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-600 transition shadow-sm" style="min-width: 60px;">
-                ערוך
-            </button>
-            <button onclick="deleteProject('${project.id}')" class="bg-red-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-red-600 transition shadow-sm" style="min-width: 60px;">
-                מחק
-            </button>
-            ${hasHtmlContent && finalHasSubscription ?
-                `<button onclick="viewProject('${project.id}')" class="bg-green-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-600 transition shadow-sm" style="min-width: 60px;">
-                    צפה
-                </button>` :
-                hasHtmlContent && !finalHasSubscription ?
-                `<button onclick="openPageSubscriptionModal('${fileName}')" class="bg-yellow-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-yellow-600 transition shadow-sm" style="min-width: 60px;">
-                    מנוי
-                </button>` : ''
-            }
-            ${pageUrl && finalHasSubscription ?
-                `<button onclick="copyToClipboard('${window.location.origin}${pageUrl}')" class="bg-purple-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-purple-600 transition shadow-sm" style="min-width: 60px;">
-                    העתק קישור
-                </button>` : ''
-            }
+            <div class="flex items-center justify-between gap-2 w-full">
+                <div class="flex items-center gap-2 flex-wrap flex-1">
+                    ${hasHtmlContent && finalHasSubscription ?
+                        `<button onclick="viewProject('${project.id}')" class="bg-green-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-600 transition shadow-sm" style="min-width: 60px;">
+                            צפה
+                        </button>` :
+                        hasHtmlContent && !finalHasSubscription ?
+                        `<button onclick="openPageSubscriptionModal('${project.id}')" class="bg-yellow-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-yellow-600 transition shadow-sm" style="min-width: 80px;">
+                            הפעל מנוי
+                        </button>` : ''
+                    }
+                    ${pageUrl && finalHasSubscription ?
+                        `<button onclick="copyToClipboard('${window.location.origin}${pageUrl}')" class="bg-purple-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-purple-600 transition shadow-sm" style="min-width: 60px;">
+                            העתק קישור
+                        </button>` : ''
+                    }
+                </div>
+                
+                <!-- כפתור תפריט -->
+                <div class="relative dropdown-container">
+                    <button onclick="toggleDropdown(event, '${project.id}')" class="bg-gray-700 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-800 transition shadow-sm flex items-center gap-1" style="min-width: 60px;">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                    </svg>
+                </button>
+                    
+                    <!-- תפריט נפתח -->
+                    <div id="dropdown-${project.id}" class="dropdown-menu hidden absolute left-0 bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50" style="min-width: 150px;">
+                        <button onclick="editProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        ערוך
+                        </button>
+                        ${hasHtmlContent ?
+                            `<button data-action="manage" onclick="manageProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span class="manage-button-text">ניהול...</span>
+                            </button>` : ''
+                        }
+                        <button onclick="deleteProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        מחק
+                        </button>
+                    </div>
+                </div>
+            </div>
         `;
                     
                     projectCard.innerHTML = `
@@ -3173,6 +3268,162 @@
             window.location.href = `/page-creator?edit=${projectId}&redirectUrl=${encodeURIComponent(window.location.href)}`;
         }
 
+        function updateManagementButton(projectCard, pageType) {
+            const manageButton = projectCard.querySelector('[data-action="manage"]');
+            if (manageButton) {
+                if (pageType === 'store') {
+                    manageButton.textContent = '🛒 ניהול חנות';
+                } else if (pageType === 'event') {
+                    manageButton.textContent = '🎉 ניהול מוזמנים';
+                } else {
+                    manageButton.textContent = '⚙️ ניהול';
+                }
+            }
+        }
+
+        function getManagementButtonText(project) {
+            // First check if pageType was auto-detected
+            if (project.pageType === 'store') {
+                return 'ניהול חנות';
+            }
+            if (project.pageType === 'event') {
+                return 'ניהול מוזמנים';
+            }
+            
+            // Fallback: Detect page type from name or description  
+            const name = (project.name || '').toLowerCase();
+            const desc = (project.description || '').toLowerCase();
+            const fileName = (project.local_file || project.id || '').toLowerCase();
+            const combined = name + ' ' + desc + ' ' + fileName;
+            
+            // Store detection - ALL products/shops
+            if (combined.includes('חנות') || combined.includes('מוצר') || combined.includes('קניה') || 
+                combined.includes('store') || combined.includes('shop') || combined.includes('מקרוני') ||
+                combined.includes('צעצוע') || combined.includes('ספרים') || combined.includes('ממתק') ||
+                combined.includes('פיצ') || combined.includes('pizza') || combined.includes('מסעד') ||
+                combined.includes('בייגל') || combined.includes('bagel') || combined.includes('מאפה') ||
+                combined.includes('לחם') || combined.includes('קפה') || combined.includes('משקה') ||
+                combined.includes('בגד') || combined.includes('נעל') || combined.includes('אופנה') ||
+                combined.includes('אלקטרוניקה') || combined.includes('מחשב') || combined.includes('טלפון') ||
+                combined.includes('יהלומי') || combined.includes('יהלום') || combined.includes('תכשיט') || combined.includes('שעון') ||
+                combined.includes('זהב') || combined.includes('כסף') || combined.includes('jewelry') ||
+                combined.includes('מכולת') || combined.includes('סופר') || combined.includes('market') ||
+                combined.includes('וילונות') || combined.includes('רהיט') || combined.includes('עיצוב פנים') ||
+                combined.includes('צמח') || combined.includes('פרח') || combined.includes('גינה') ||
+                combined.includes('candy') || combined.includes('sweet') || combined.includes('chocolate')) {
+                return 'ניהול חנות';
+            }
+            // Event detection - EXPANDED
+            if (combined.includes('אירוע') || combined.includes('כנס') || combined.includes('מפגש') || 
+                combined.includes('מוזמן') || combined.includes('חתונה') || combined.includes('בר מצוה') ||
+                combined.includes('בת מצוה') || combined.includes('הזמנה') || combined.includes('event') ||
+                combined.includes('wedding') || combined.includes('invitation') || combined.includes('חינה') ||
+                combined.includes('מסיבה') || combined.includes('יום הולדת')) {
+                return 'ניהול מוזמנים';
+            }
+            // Course detection
+            if (combined.includes('קורס') || combined.includes('לימוד') || combined.includes('הדרכה') ||
+                combined.includes('course') || combined.includes('workshop')) {
+                return 'ניהול קורס';
+            }
+            // Default
+            return 'ניהול';
+        }
+        
+        function toggleDropdown(event, projectId) {
+            event.stopPropagation();
+            
+            // סגור כל התפריטים הפתוחים
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if (menu.id !== `dropdown-${projectId}`) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // פתח/סגור את התפריט הנוכחי
+            const dropdown = document.getElementById(`dropdown-${projectId}`);
+            dropdown.classList.toggle('show');
+        }
+        
+        function manageProject(projectId) {
+            console.log('🔍 manageProject called with:', projectId);
+            
+            // חלץ את שם הקובץ והמשתמש
+            const fileName = projectId.startsWith('local_') ? projectId.replace('local_', '') : projectId;
+            
+            // מצא את הפרויקט כדי לקבל את ה-userId שלו
+            const project = projects.find(p => p.id === projectId);
+            
+            console.log('📦 Project object:', project);
+            console.log('📝 Project pageType:', project?.pageType);
+            
+            // Try to get userId from multiple sources
+            let userId = currentUser?.id;
+            if (!userId && project?.userId) {
+                userId = project.userId;
+            }
+            if (!userId && project?.user_id) {
+                userId = project.user_id;
+            }
+            // If still no userId, extract from URL
+            if (!userId && project?.local_url) {
+                const urlMatch = project.local_url.match(/\/pages\/([^\/]+)\//);
+                if (urlMatch) {
+                    userId = urlMatch[1];
+                }
+            }
+            
+            console.log('👤 userId:', userId, '📄 fileName:', fileName);
+            
+            if (!userId) {
+                alert('שגיאה: לא ניתן לזהות את המשתמש.');
+                return;
+            }
+            
+            // Determine management URL based on pageType (from metadata)
+            let managementUrl;
+            
+            if (project?.pageType === 'event') {
+                // אירועים - פתח ממשק ניהול מוזמנים
+                managementUrl = `/event-admin.html?eventId=${fileName}&userId=${userId}`;
+                console.log('🎉 Opening EVENT management');
+            } else if (project?.pageType === 'store') {
+                // חנות - פתח ממשק ניהול חנות
+                managementUrl = `/admin.html?page=${fileName}&userId=${userId}`;
+                console.log('🛒 Opening STORE management');
+            } else {
+                // ברירת מחדל - נסה לזהות לפי שם
+                const buttonText = getManagementButtonText(project);
+                console.log('⚙️ No pageType, using buttonText:', buttonText);
+                
+                if (buttonText === 'ניהול מוזמנים') {
+                    managementUrl = `/event-admin.html?eventId=${fileName}&userId=${userId}`;
+                } else if (buttonText === 'ניהול חנות') {
+                    managementUrl = `/admin.html?page=${fileName}&userId=${userId}`;
+                } else {
+                    managementUrl = `/page-management.html?page=${fileName}&userId=${userId}`;
+                }
+            }
+            
+            console.log('🌐 Opening:', managementUrl);
+            
+            // TEMPORARY: Open in same tab for debugging
+            window.location.href = managementUrl;
+            
+            // TODO: After confirming it works, switch back to:
+            // const newWindow = window.open(managementUrl, '_blank');
+            // if (!newWindow) window.location.href = managementUrl;
+        }
+        
+        // סגור תפריטים כשלוחצים מחוץ להם
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown-container')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
         async function deleteProject(projectId) {
             if (!confirm('האם אתה בטוח שברצונך למחוק את דף הנחיתה? הפעולה לא ניתנת לביטול.')) return;
             
@@ -3229,7 +3480,7 @@
             errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
             errorDiv.textContent = message;
             document.body.appendChild(errorDiv);
-            
+
             setTimeout(() => {
                 errorDiv.remove();
             }, 5000);

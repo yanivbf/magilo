@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מרכז הניהול - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            text-align: right;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-align: center;
+            min-width: 300px;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+        
+        .card-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .card-description {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        
+        .card-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        
+        .card-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .card.store {
+            border-top: 5px solid #10b981;
+        }
+        
+        .card.event {
+            border-top: 5px solid #ec4899;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto px-4">
+        <h1 class="text-5xl font-bold text-white text-center mb-4">🎯 מרכז הניהול</h1>
+        <p class="text-white/90 text-center mb-12 text-xl">בחר את סוג הניהול שאתה רוצה</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Store Management -->
+            <div class="card store" onclick="window.location.href='/admin.html'">
+                <div class="card-icon">🛒</div>
+                <h2 class="card-title">ניהול חנות</h2>
+                <p class="card-description">
+                    מכירות, הזמנות, מוצרים פופולריים,<br>
+                    סטטיסטיקות ואנליטיקס
+                </p>
+                <div class="card-button">
+                    כניסה לניהול החנות →
+                </div>
+                <div class="mt-4 text-sm text-gray-500">
+                    ✓ מעקב מכירות<br>
+                    ✓ ניהול מוצרים<br>
+                    ✓ דוחות ואנליטיקס
+                </div>
+            </div>
+
+            <!-- Event Management -->
+            <div class="card event" onclick="window.location.href='/event-guests.html'">
+                <div class="card-icon">🎉</div>
+                <h2 class="card-title">ניהול אירועים</h2>
+                <p class="card-description">
+                    מוזמנים, אישורי הגעה,<br>
+                    סידור שולחנות ומתנות
+                </p>
+                <div class="card-button">
+                    כניסה לניהול אירועים →
+                </div>
+                <div class="mt-4 text-sm text-gray-500">
+                    ✓ ניהול מוזמנים<br>
+                    ✓ סידור שולחנות<br>
+                    ✓ רשימת מתנות
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="mt-12 text-center">
+            <div class="bg-white/20 backdrop-blur-lg rounded-xl p-6 inline-block">
+                <h3 class="text-white font-bold text-xl mb-4">קישורים מהירים</h3>
+                <div class="flex gap-4 justify-center">
+                    <a href="/event-invitation.html" class="text-white hover:text-pink-200 transition">
+                        💌 תצוגת הזמנה
+                    </a>
+                    <span class="text-white/50">|</span>
+                    <a href="/page-creator.html" class="text-white hover:text-purple-200 transition">
+                        ✨ יצירת דף חדש
+                    </a>
+                    <span class="text-white/50">|</span>
+                    <a href="/" class="text-white hover:text-blue-200 transition">
+                        🏠 דף הבית
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

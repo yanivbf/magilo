@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הזמנה לאירוע</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            text-align: right;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .invitation-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            margin: 40px auto;
+            overflow: hidden;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .countdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .countdown-item {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .countdown-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .countdown-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .rsvp-form {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+        
+        .event-details {
+            padding: 40px;
+            background: #f9fafb;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-icon {
+            font-size: 2rem;
+        }
+        
+        
+        .success-message {
+            display: none;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            margin: 20px;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="invitation-card">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="text-4xl font-bold mb-3" id="event-name">חתונת יוסי ושרה</h1>
+            <p class="text-xl opacity-90" id="event-tagline">אתם מוזמנים לחגוג איתנו!</p>
+            
+            <!-- Countdown Timer -->
+            <div class="countdown" id="countdown">
+                <div class="countdown-item">
+                    <span class="countdown-number" id="days">00</span>
+                    <span class="countdown-label">ימים</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="hours">00</span>
+                    <span class="countdown-label">שעות</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="minutes">00</span>
+                    <span class="countdown-label">דקות</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="seconds">00</span>
+                    <span class="countdown-label">שניות</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Details -->
+        <div class="event-details">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">פרטי האירוע</h2>
+            
+            <div class="detail-item">
+                <div class="detail-icon">📅</div>
+                <div>
+                    <div class="font-semibold text-gray-800">תאריך ושעה</div>
+                    <div class="text-gray-600" id="event-datetime">יום שלישי, 15 במאי 2025, 19:00</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon">📍</div>
+                <div>
+                    <div class="font-semibold text-gray-800">מיקום</div>
+                    <div class="text-gray-600" id="event-location">אולם אירועים גן העיר, רחוב הפרחים 123, תל אביב</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon">🎉</div>
+                <div>
+                    <div class="font-semibold text-gray-800">קוד לבוש</div>
+                    <div class="text-gray-600">חגיגי</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="success-message">
+            <div class="text-3xl mb-3">✓</div>
+            <h3 class="text-2xl font-bold mb-2">תודה רבה!</h3>
+            <p class="text-lg mb-2">אישור ההגעה שלך התקבל בהצלחה</p>
+            <div class="bg-white/20 rounded-lg p-4 mt-4 text-sm">
+                <p>✅ הפרטים נשלחו למארגן האירוע</p>
+                <p class="mt-1">📧 תקבל/י אישור נוסף במייל</p>
+                <p class="mt-1">💌 נתראה באירוע!</p>
+            </div>
+        </div>
+
+        <!-- RSVP Form -->
+        <div class="rsvp-form" id="rsvp-form">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">אישור הגעה</h2>
+            
+            <form onsubmit="submitRSVP(event)">
+                <div class="form-group">
+                    <label class="form-label">שם מלא *</label>
+                    <input type="text" id="guest-name" class="form-input" placeholder="הזן את שמך המלא" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">מספר טלפון *</label>
+                    <input type="tel" id="guest-phone" class="form-input" placeholder="050-1234567" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">כתובת אימייל (אופציונלי)</label>
+                    <input type="email" id="guest-email" class="form-input" placeholder="example@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">מספר מלווים</label>
+                    <select id="guest-plus" class="form-input">
+                        <option value="0">רק אני</option>
+                        <option value="1">+1 מלווה</option>
+                        <option value="2">+2 מלווים</option>
+                        <option value="3">+3 מלווים</option>
+                        <option value="4">+4 מלווים</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">הערות מיוחדות (אופציונלי)</label>
+                    <textarea id="guest-notes" class="form-input" rows="3" placeholder="למשל: אלרגיות מזון, צרכים מיוחדים..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    ✓ אשר הגעה
+                </button>
+                
+                <button type="button" onclick="declineRSVP()" class="btn btn-secondary">
+                    ✗ לא אוכל להגיע
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Event configuration (would come from database)
+        const eventConfig = {
+            name: "חתונת יוסי ושרה",
+            date: "2025-05-15T19:00:00",
+            location: "אולם אירועים גן העיר, רחוב הפרחים 123, תל אביב",
+            whatsapp: "972501234567",
+            eventId: getEventIdFromUrl()
+        };
+
+        // Get event ID from URL
+        function getEventIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('eventId') || 'demo';
+        }
+
+        // Countdown timer
+        function updateCountdown() {
+            const eventDate = new Date(eventConfig.date).getTime();
+            const now = new Date().getTime();
+            const distance = eventDate - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+
+            if (distance < 0) {
+                document.getElementById('countdown').innerHTML = '<div class="text-center text-2xl">האירוע התקיים! 🎉</div>';
+            }
+        }
+
+        // Submit RSVP
+        async function submitRSVP(event) {
+            event.preventDefault();
+            
+            const rsvpData = {
+                eventId: eventConfig.eventId,
+                name: document.getElementById('guest-name').value,
+                phone: document.getElementById('guest-phone').value,
+                email: document.getElementById('guest-email').value,
+                plusOnes: parseInt(document.getElementById('guest-plus').value),
+                notes: document.getElementById('guest-notes').value,
+                status: 'confirmed',
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                // Send to server
+                const response = await fetch(`/api/events/${eventConfig.eventId}/rsvp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(rsvpData)
+                });
+
+                if (response.ok) {
+                    // Show success message
+                    document.getElementById('rsvp-form').style.display = 'none';
+                    document.getElementById('success-message').classList.add('show');
+                    
+                    // אישור ההגעה נשמר במערכת - המארגן יקבל התראה
+                    console.log('RSVP saved successfully:', rsvpData);
+                }
+            } catch (error) {
+                console.error('Error submitting RSVP:', error);
+                alert('אירעה שגיאה. אנא נסה שוב או צור קשר בוואטסאפ.');
+            }
+        }
+
+        // Decline RSVP
+        async function declineRSVP() {
+            const name = document.getElementById('guest-name').value;
+            const phone = document.getElementById('guest-phone').value;
+            
+            if (!name || !phone) {
+                alert('אנא מלא שם ומספר טלפון');
+                return;
+            }
+
+            const rsvpData = {
+                eventId: eventConfig.eventId,
+                name: name,
+                phone: phone,
+                status: 'declined',
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                await fetch(`/api/events/${eventConfig.eventId}/rsvp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(rsvpData)
+                });
+
+                document.getElementById('rsvp-form').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-4xl mb-4">💔</div>
+                        <h3 class="text-2xl font-bold mb-3">חבל מאוד!</h3>
+                        <p class="text-gray-600">נקווה לראותך בהזדמנות הבאה</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error declining RSVP:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            
+            // Update event details from config
+            document.getElementById('event-name').textContent = eventConfig.name;
+            document.getElementById('event-location').textContent = eventConfig.location;
+            
+            const eventDate = new Date(eventConfig.date);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = eventDate.toLocaleDateString('he-IL', options);
+            const timeStr = eventDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('event-datetime').textContent = `${dateStr}, ${timeStr}`;
+        });
+    </script>
+</body>
+</html>
+

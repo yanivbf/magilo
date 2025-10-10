@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoPage - יוצר דפים אוטומטי</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Load external modules -->
+    <script src="templates/page-templates.js"></script>
+    <script src="styles/available-sections.js"></script>
+    <script src="scripts/main-functions.js"></script>
+    <script src="scripts/store-functions.js"></script>
+    
+    <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .option-card { 
+            transition: all 0.3s ease-in-out; 
+        }
+        
+        .option-card.selected { 
+            transform: scale(1.03); 
+            box-shadow: 0 0 0 3px #8b5cf6; 
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Store Management Dashboard Styles */
+        .dashboard-nav-btn {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .dashboard-nav-btn:hover {
+            color: #374151;
+            background: #f9fafb;
+        }
+        .dashboard-nav-btn.active {
+            color: #8b5cf6;
+            border-bottom-color: #8b5cf6;
+            background: #f9fafb;
+        }
+        .dashboard-section {
+            min-height: 400px;
+        }
+        #store-management-dashboard {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 min-h-screen">
+    
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">AutoPage</h1>
+                    <span class="ml-2 text-sm text-gray-500">יוצר דפים אוטומטי</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <select id="language-selector" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                        <option value="he">עברית</option>
+                        <option value="en">English</option>
+                        <option value="ar">العربية</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    
+                    <button id="auth-btn" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm hover:bg-purple-700 transition">
+                        התחבר
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Type Selection View -->
+        <div id="type-selection-view" class="space-y-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">בחר סוג דף</h2>
+                <p class="text-gray-600">בחר את סוג הדף שברצונך ליצור</p>
+            </div>
+            
+            <div id="template-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Templates will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Form View -->
+        <div id="form-view" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <form id="details-form" class="space-y-6">
+                    
+                    <!-- Page Type Info -->
+                    <div class="text-center border-b pb-4">
+                        <h2 id="page-type-title" class="text-2xl font-bold text-gray-900 mb-2"></h2>
+                        <p id="page-type-description" class="text-gray-600"></p>
+                    </div>
+                    
+                    <!-- Main Name Field -->
+                    <div>
+                        <label id="mainNameLabel" for="mainName" class="block text-sm font-medium text-gray-700 mb-2">
+                            שם הדף
+                        </label>
+                        <input type="text" id="mainName" name="mainName" required 
+                               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <!-- Dynamic Fields Container -->
+                    <div id="dynamic-fields">
+                        <!-- Dynamic fields will be loaded here -->
+                    </div>
+                    
+                    <!-- Design Style Selection -->
+                    <fieldset id="design-style-fieldset" class="border border-gray-300 rounded-lg p-4">
+                        <legend class="text-lg font-semibold text-gray-900 px-2">סגנון עיצוב</legend>
+                        <div id="design-selection-container">
+                            <!-- Design styles will be loaded here -->
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Submit Button -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" id="back-to-type-btn" 
+                                class="w-1/3 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg hover:bg-slate-300 transition">
+                            חזור
+                        </button>
+                        <button type="submit" 
+                                class="w-2/3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-3 px-8 rounded-lg hover:opacity-90 transition-transform duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                            <span id="button-text">צור דף</span>
+                            <div id="button-loader" class="loader w-6 h-6 rounded-full border-4 border-white hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Generation View -->
+        <div id="generation-view" class="hidden">
+            <div class="text-center p-8">
+                <div class="loader mx-auto mb-4"></div>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-2">יוצר את הדף שלך...</h2>
+                <p class="text-gray-600">זה יכול לקחת כמה רגעים</p>
+            </div>
+        </div>
+
+        <!-- Preview View -->
+        <div id="preview-view" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">תצוגה מקדימה</h2>
+                    <div class="flex gap-2">
+                        <!-- Store Management Button (only for online stores) -->
+                        <button id="store-management-btn" 
+                                class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition hidden">
+                            <i data-lucide="settings"></i> ניהול חנות
+                        </button>
+                        <button id="back-to-form-btn" 
+                                class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition">
+                            חזור לעריכה
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="preview-container" class="hidden">
+                    <iframe id="preview-iframe" 
+                            class="w-full h-[800px] border border-gray-300 rounded-lg"
+                            sandbox="allow-scripts allow-same-origin">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <div id="tools-fab" class="fixed bottom-6 right-6 hidden">
+        <button class="bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition">
+            <i data-lucide="settings"></i>
+        </button>
+    </div>
+
+    <!-- Tools Menu -->
+    <div id="tools-menu" class="fixed bottom-20 right-6 bg-white rounded-lg shadow-lg p-4 hidden">
+        <div class="space-y-2">
+            <button id="save-page-btn" class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+                שמור דף
+            </button>
+            <button id="download-page-btn" class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+                הורד דף
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+            <p id="modal-message" class="text-gray-900 mb-4"></p>
+            <button id="modal-close-btn" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                סגור
+            </button>
+        </div>
+    </div>
+
+    <!-- Store Management Dashboard -->
+    <div id="store-management-dashboard" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 h-5/6 max-w-7xl overflow-hidden">
+            <!-- Dashboard Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-pink-500 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold">ניהול חנות דיגיטלית</h1>
+                    <button id="close-dashboard-btn" class="text-white hover:text-gray-200 text-2xl">×</button>
+                </div>
+            </div>
+            
+            <!-- Dashboard Navigation -->
+            <div class="bg-gray-100 border-b">
+                <nav class="flex space-x-8 px-6">
+                    <button class="dashboard-nav-btn active" data-section="dashboard">דשבורד</button>
+                    <button class="dashboard-nav-btn" data-section="orders">הזמנות</button>
+                    <button class="dashboard-nav-btn" data-section="customers">לקוחות</button>
+                    <button class="dashboard-nav-btn" data-section="products">מוצרים</button>
+                    <button class="dashboard-nav-btn" data-section="media">תמונות</button>
+                    <button class="dashboard-nav-btn" data-section="analytics">סטטיסטיקות</button>
+                    <button class="dashboard-nav-btn" data-section="users">משתמשים</button>
+                </nav>
+            </div>
+            
+            <!-- Dashboard Content -->
+            <div class="p-6 h-full overflow-y-auto">
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="dashboard-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-2">מכירות היום</h3>
+                            <p class="text-3xl font-bold">₪2,450</p>
+                            <p class="text-blue-100">+12% מהאתמול</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-2">הזמנות חדשות</h3>
+                            <p class="text-3xl font-bold">23</p>
+                            <p class="text-green-100">+8% מהשבוע</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-2">לקוחות חדשים</h3>
+                            <p class="text-3xl font-bold">156</p>
+                            <p class="text-purple-100">+15% מהחודש</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-2">הכנסות החודש</h3>
+                            <p class="text-3xl font-bold">₪45,200</p>
+                            <p class="text-orange-100">+22% מהחודש הקודם</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">סטטיסטיקות מהירות</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-2">מוצרים פופולריים</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex justify-between"><span>מוצר A</span><span class="text-green-600">+15 מכירות</span></li>
+                                    <li class="flex justify-between"><span>מוצר B</span><span class="text-green-600">+12 מכירות</span></li>
+                                    <li class="flex justify-between"><span>מוצר C</span><span class="text-green-600">+8 מכירות</span></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-2">התראות</h4>
+                                <ul class="space-y-2">
+                                    <li class="text-red-600">⚠️ מלאי נמוך - מוצר D</li>
+                                    <li class="text-yellow-600">⚠️ הזמנה ממתינה לטיפול</li>
+                                    <li class="text-green-600">✅ מכירה חדשה - ₪250</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Orders Section -->
+                <div id="orders-section" class="dashboard-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-semibold">הזמנות</h3>
+                        <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                            ייצא דוח
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מספר הזמנה</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">לקוח</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">סכום</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">תאריך</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">סטטוס</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#12345</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ישראל ישראלי</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₪250</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            הושלם
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-purple-600 hover:text-purple-900">צפה</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Other sections placeholder -->
+                <div id="customers-section" class="dashboard-section hidden">
+                    <h3 class="text-2xl font-semibold mb-6">לקוחות</h3>
+                    <p class="text-gray-600">ממשק ניהול לקוחות יפותח בקרוב...</p>
+                </div>
+                
+                <div id="products-section" class="dashboard-section hidden">
+                    <h3 class="text-2xl font-semibold mb-6">מוצרים</h3>
+                    <p class="text-gray-600">ממשק ניהול מוצרים יפותח בקרוב...</p>
+                </div>
+                
+                <div id="media-section" class="dashboard-section hidden">
+                    <h3 class="text-2xl font-semibold mb-6">תמונות</h3>
+                    <p class="text-gray-600">ממשק ניהול תמונות יפותח בקרוב...</p>
+                </div>
+                
+                <div id="analytics-section" class="dashboard-section hidden">
+                    <h3 class="text-2xl font-semibold mb-6">סטטיסטיקות</h3>
+                    <p class="text-gray-600">ממשק סטטיסטיקות מפורט יפותח בקרוב...</p>
+                </div>
+                
+                <div id="users-section" class="dashboard-section hidden">
+                    <h3 class="text-2xl font-semibold mb-6">משתמשים</h3>
+                    <p class="text-gray-600">ממשק ניהול משתמשים יפותח בקרוב...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JavaScript -->
+    <script>
+        // Global variables
+        let state = {
+            selectedPageType: null,
+            selectedStyle: null,
+            currentLanguage: 'he'
+        };
+
+            // UI elements
+        const ui = {
+            typeSelectionView: document.getElementById('type-selection-view'),
+            formView: document.getElementById('form-view'),
+            previewView: document.getElementById('preview-view'),
+            templateGrid: document.getElementById('template-grid'),
+            detailsForm: document.getElementById('details-form'),
+            pageTypeTitle: document.getElementById('page-type-title'),
+            pageTypeDescription: document.getElementById('page-type-description'),
+            mainNameLabel: document.getElementById('mainNameLabel'),
+            dynamicFieldsContainer: document.getElementById('dynamic-fields'),
+            designSelectionContainer: document.getElementById('design-selection-container'),
+            previewContainer: document.getElementById('preview-container'),
+            previewIframe: document.getElementById('preview-iframe'),
+            backToFormBtn: document.getElementById('back-to-form-btn'),
+            storeManagementBtn: document.getElementById('store-management-btn'),
+            toolsFab: document.getElementById('tools-fab'),
+            toolsMenu: document.getElementById('tools-menu'),
+            savePageBtn: document.getElementById('save-page-btn'),
+            downloadPageBtn: document.getElementById('download-page-btn'),
+            customModal: document.getElementById('custom-modal'),
+            modalMessage: document.getElementById('modal-message'),
+            modalCloseBtn: document.getElementById('modal-close-btn'),
+            generateBtnText: document.getElementById('button-text'),
+            generateBtnLoader: document.getElementById('button-loader'),
+            generationView: document.getElementById('generation-view'),
+            storeManagementDashboard: document.getElementById('store-management-dashboard'),
+            closeDashboardBtn: document.getElementById('close-dashboard-btn')
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            loadTemplates();
+            loadDesignStyles();
+            setupEventListeners();
+        });
+
+        // Load templates
+        function loadTemplates() {
+            ui.templateGrid.innerHTML = Object.entries(pageTemplates).map(([key, templateData]) => {
+                const template = templateData.t[state.currentLanguage] || templateData.t['he'];
+                return `
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow" 
+                         onclick="selectTemplate('${key}')">
+                        <img src="${templateData.img}" alt="${template.title}" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">${template.title}</h3>
+                            <p class="text-gray-600 text-sm">${template.description}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load design styles
+        function loadDesignStyles() {
+            // Load the design styles HTML
+            fetch('styles/design-styles.html')
+                .then(response => response.text())
+                .then(html => {
+                    ui.designSelectionContainer.innerHTML = html;
+                    setupStyleSelection();
+                })
+                .catch(error => console.error('Error loading design styles:', error));
+        }
+
+        // Select template
+        function selectTemplate(templateKey) {
+            state.selectedPageType = templateKey;
+            const template = pageTemplates[templateKey];
+            const templateInfo = template.t[state.currentLanguage] || template.t['he'];
+            
+            ui.pageTypeTitle.textContent = templateInfo.title;
+            ui.pageTypeDescription.textContent = templateInfo.description;
+            
+            // Show/hide store management button based on template type
+            if (templateKey === 'onlineStore') {
+                ui.storeManagementBtn.classList.remove('hidden');
+            } else {
+                ui.storeManagementBtn.classList.add('hidden');
+            }
+            
+            // Load dynamic fields
+            loadDynamicFields(template.fields);
+            
+            switchView(ui.typeSelectionView, ui.formView);
+        }
+
+        // Load dynamic fields
+        function loadDynamicFields(fields) {
+            const fieldHTML = {
+                websiteLink: `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="websiteLink" class="block text-sm font-medium text-gray-700 mb-2">קישור ראשי</label>
+                            <input type="url" id="websiteLink" name="websiteLink" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label for="additionalLink" class="block text-sm font-medium text-gray-700 mb-2">קישור נוסף</label>
+                            <input type="url" id="additionalLink" name="additionalLink" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                    </div>
+                `,
+                productManagement: `
+                    <fieldset class="border border-gray-300 rounded-lg p-4">
+                        <legend class="text-lg font-semibold text-gray-900 px-2">ניהול מוצרים</legend>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input type="checkbox" name="enableCart" id="enableCart" 
+                                       class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600" checked>
+                                <label for="enableCart" class="ms-2 block text-sm text-gray-900">הפעל עגלת קניות</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" name="enableProductManagement" id="enableProductManagement" 
+                                       class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600">
+                                <label for="enableProductManagement" class="ms-2 block text-sm text-gray-900">הפעל ניהול מוצרים (הוספה/הסרה)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" name="enableQuickBuy" id="enableQuickBuy" 
+                                       class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600" checked>
+                                <label for="enableQuickBuy" class="ms-2 block text-sm text-gray-900">הפעל קנייה מהירה</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                `
+            };
+
+            ui.dynamicFieldsContainer.innerHTML = fields.map(field => fieldHTML[field] || '').join('');
+        }
+
+        // Setup style selection
+        function setupStyleSelection() {
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    state.selectedStyle = card.dataset.value;
+                });
+            });
+        }
+
+        // Switch views
+        function switchView(from, to) {
+            from.classList.add('hidden');
+            to.classList.remove('hidden');
+        }
+
+        // Set loading state
+        function setLoading(loading) {
+            if (loading) {
+                ui.generateBtnText.style.display = 'none';
+                ui.generateBtnLoader.classList.remove('hidden');
+            } else {
+                ui.generateBtnText.style.display = 'block';
+                ui.generateBtnLoader.classList.add('hidden');
+            }
+        }
+
+        // Show modal
+        function showModal(message) {
+            ui.modalMessage.textContent = message;
+            ui.customModal.classList.remove('hidden');
+        }
+
+        // Save page functionality
+        async function handleSavePage() {
+            const finalHtml = window.generatedPageHTML || ui.previewIframe.srcdoc;
+            
+            if (!finalHtml) {
+                alert('אין דף לשמירה');
+                return;
+            }
+            
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) {
+                alert('יש להתחבר כדי לשמור');
+                return;
+            }
+            
+            const fileName = `${document.getElementById('mainName').value}_${Date.now()}_html`;
+            
+            try {
+                const response = await fetch('/api/save-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        fileName: fileName,
+                        htmlContent: finalHtml
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('הדף נשמר בהצלחה!');
+                } else {
+                    alert('שגיאה בשמירת הדף');
+                }
+            } catch (error) {
+                console.error('Error saving page:', error);
+                alert('שגיאה בשמירת הדף');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Form submission
+            ui.detailsForm.addEventListener('submit', handleFormSubmit);
+            
+            // Save and download buttons
+            ui.savePageBtn.addEventListener('click', handleSavePage);
+            ui.downloadPageBtn.addEventListener('click', () => {
+                const finalHtml = window.generatedPageHTML || ui.previewIframe.srcdoc;
+                const blob = new Blob([finalHtml], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${document.getElementById('mainName').value || 'page'}.html`;
+                a.click();
+            });
+            
+            // Back buttons
+            document.getElementById('back-to-type-btn').addEventListener('click', () => {
+                switchView(ui.formView, ui.typeSelectionView);
+            });
+            
+            ui.backToFormBtn.addEventListener('click', () => {
+                switchView(ui.previewView, ui.formView);
+            });
+            
+            // Modal
+            ui.modalCloseBtn.addEventListener('click', () => {
+                ui.customModal.classList.add('hidden');
+            });
+            
+            // Tools FAB
+            ui.toolsFab.addEventListener('click', () => {
+                ui.toolsMenu.classList.toggle('hidden');
+                ui.toolsFab.classList.toggle('active');
+            });
+            
+            // Store Management Dashboard
+            ui.storeManagementBtn.addEventListener('click', () => {
+                ui.storeManagementDashboard.classList.remove('hidden');
+            });
+            
+            ui.closeDashboardBtn.addEventListener('click', () => {
+                ui.storeManagementDashboard.classList.add('hidden');
+            });
+            
+            // Dashboard Navigation
+            document.querySelectorAll('.dashboard-nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.dashboard-nav-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.dashboard-section').forEach(section => {
+                        section.classList.add('hidden');
+                    });
+                    const sectionId = btn.getAttribute('data-section') + '-section';
+                    document.getElementById(sectionId).classList.remove('hidden');
+                });
+            });
+            
+            // Close dashboard when clicking outside
+            ui.storeManagementDashboard.addEventListener('click', (e) => {
+                if (e.target.id === 'store-management-dashboard') {
+                    ui.storeManagementDashboard.classList.add('hidden');
+                }
+            });
+        }
+
+        // Placeholder functions (to be implemented)
+        function createMasterPrompt(data) {
+            const template = pageTemplates[data.pageType];
+            const structurePrompt = template.structurePrompt;
+            
+            let additionalScripts = '';
+            
+            // JavaScript will be injected automatically by injectStoreScripts function
+            
+            return `Create a ${data.style} styled ${data.pageType} page.
+            
+            ${structurePrompt}
+            
+            IMPORTANT: Return ONLY valid HTML. Start with <!DOCTYPE html> or <html> and end with </html>. Keep it under 800 lines.`;
+        }
+
+        function addLanguageToPageData(data) {
+            data.language = state.currentLanguage;
+            return data;
+        }
+
+        function getTranslation(key) {
+            // Simple translation function
+            const translations = {
+                'modal_error_style': 'אנא בחר עיצוב',
+                'gen_error_title': 'שגיאה ביצירת הדף',
+                'gen_error_details': 'אירעה שגיאה בעת יצירת הדף. אנא נסה שוב.'
+            };
+            return translations[key] || key;
+        }
+
+        // Dashboard navigation
+        function navigateToSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            // Update navigation active state
+            document.querySelectorAll('.dashboard-nav-item').forEach(item => {
+                item.classList.remove('bg-purple-100', 'text-purple-700');
+                item.classList.add('text-gray-700', 'hover:bg-gray-100');
+            });
+            
+            const activeItem = document.querySelector(`[onclick="navigateToSection('${sectionId}')"]`);
+            if (activeItem) {
+                activeItem.classList.add('bg-purple-100', 'text-purple-700');
+                activeItem.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            }
+            
+            // Load data for specific sections
+            if (sectionId === 'orders-section') {
+                updateOrdersDisplay();
+            }
+        }
+        
+        // Update orders display with real data
+        function updateOrdersDisplay() {
+            const ordersSection = document.getElementById('orders-section');
+            if (!ordersSection) return;
+            
+            const orders = JSON.parse(localStorage.getItem('storeOrders') || '[]');
+            
+            if (orders.length === 0) {
+                ordersSection.innerHTML = `
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-semibold">הזמנות</h3>
+                        <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                            ייצא דוח
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-8 text-center">
+                        <div class="text-gray-400 text-6xl mb-4">📦</div>
+                        <h4 class="text-lg font-medium text-gray-900 mb-2">אין הזמנות עדיין</h4>
+                        <p class="text-gray-500">הזמנות יופיעו כאן לאחר ביצוע קניות</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const ordersTable = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-semibold">הזמנות (${orders.length})</h3>
+                    <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700" onclick="exportOrders()">
+                        ייצא דוח
+                    </button>
+                </div>
+                
+                <div class="bg-white border rounded-lg overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מספר הזמנה</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">לקוח</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מוצרים</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">סכום</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">תאריך</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">סטטוס</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            ${orders.map(order => `
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.id}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <div>
+                                            <div class="font-medium">${order.customer.name}</div>
+                                            <div class="text-xs text-gray-400">${order.customer.email}</div>
+                                            <div class="text-xs text-gray-400">${order.customer.phone}</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">
+                                        ${order.items.map(item => `${item.name} x${item.quantity}`).join(', ')}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₪${order.total}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <div>${order.date}</div>
+                                        <div class="text-xs text-gray-400">${order.time}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(order.status)}">
+                                            ${order.status}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="viewOrderDetails('${order.id}')" class="text-purple-600 hover:text-purple-900 mr-3">צפה</button>
+                                        <button onclick="updateOrderStatus('${order.id}')" class="text-green-600 hover:text-green-900">עדכן</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            ordersSection.innerHTML = ordersTable;
+        }
+        
+        // Get status CSS class
+        function getStatusClass(status) {
+            switch(status) {
+                case 'ממתין לטיפול': return 'bg-yellow-100 text-yellow-800';
+                case 'בעיבוד': return 'bg-blue-100 text-blue-800';
+                case 'נשלח': return 'bg-green-100 text-green-800';
+                case 'הושלם': return 'bg-gray-100 text-gray-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        // View order details
+        function viewOrderDetails(orderId) {
+            const orders = JSON.parse(localStorage.getItem('storeOrders') || '[]');
+            const order = orders.find(o => o.id === orderId);
+            
+            if (!order) return;
+            
+            const details = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold">פרטי הזמנה ${order.id}</h3>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">×</button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-medium">פרטי לקוח:</h4>
+                                <p>שם: ${order.customer.name}</p>
+                                <p>אימייל: ${order.customer.email}</p>
+                                <p>טלפון: ${order.customer.phone}</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium">מוצרים:</h4>
+                                ${order.items.map(item => `
+                                    <div class="flex justify-between">
+                                        <span>${item.name} x${item.quantity}</span>
+                                        <span>₪${item.price * item.quantity}</span>
+                                    </div>
+                                `).join('')}
+                                <hr class="my-2">
+                                <div class="flex justify-between font-bold">
+                                    <span>סה"כ:</span>
+                                    <span>₪${order.total}</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium">פרטי תשלום:</h4>
+                                <p>כרטיס: ****${order.customer.cardNumber.slice(-4)}</p>
+                                <p>סטטוס תשלום: ${order.paymentStatus}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', details);
+        }
+        
+        // Update order status
+        function updateOrderStatus(orderId) {
+            const orders = JSON.parse(localStorage.getItem('storeOrders') || '[]');
+            const order = orders.find(o => o.id === orderId);
+            
+            if (!order) return;
+            
+            const statuses = ['ממתין לטיפול', 'בעיבוד', 'נשלח', 'הושלם'];
+            const currentIndex = statuses.indexOf(order.status);
+            const nextIndex = (currentIndex + 1) % statuses.length;
+            
+            order.status = statuses[nextIndex];
+            localStorage.setItem('storeOrders', JSON.stringify(orders));
+            updateOrdersDisplay();
+            
+            alert(`סטטוס ההזמנה עודכן ל: ${order.status}`);
+        }
+        
+        // Export orders
+        function exportOrders() {
+            const orders = JSON.parse(localStorage.getItem('storeOrders') || '[]');
+            
+            if (orders.length === 0) {
+                alert('אין הזמנות לייצוא');
+                return;
+            }
+            
+            // Create CSV content
+            const csvContent = [
+                ['מספר הזמנה', 'שם לקוח', 'אימייל', 'טלפון', 'מוצרים', 'סכום', 'תאריך', 'סטטוס'].join(','),
+                ...orders.map(order => [
+                    order.id,
+                    order.customer.name,
+                    order.customer.email,
+                    order.customer.phone,
+                    order.items.map(item => `${item.name} x${item.quantity}`).join('; '),
+                    order.total,
+                    order.date,
+                    order.status
+                ].join(','))
+            ].join('\n');
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+        
+        // Global function for updating admin dashboard
+        window.updateAdminDashboard = function() {
+            updateOrdersDisplay();
+        };
+    </script>
+</body>
+</html>
