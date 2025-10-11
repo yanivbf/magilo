@@ -78,7 +78,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Add CSP headers to prevent the Chrome DevTools error
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'self' https:; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:;");
+  res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'self' https:; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com;");
   next();
 });
 
@@ -399,7 +399,7 @@ app.post('/api/upload-image', upload.single('image'), (req, res) => {
 // Save page content
 app.post('/api/save-page', async (req, res) => {
   try {
-    const { userId, fileName, content } = req.body;
+    const { userId, fileName, content, pageType, pageName } = req.body;
     
     if (!userId || !fileName || !content) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -407,6 +407,22 @@ app.post('/api/save-page', async (req, res) => {
 
     const filePath = path.join('output', userId, fileName);
     await fs.writeFile(filePath, content);
+
+    // Save metadata with pageType
+    if (pageType || pageName) {
+      const metadataDir = path.join('output', userId, `${fileName.replace('.html', '')}_data`);
+      await fs.ensureDir(metadataDir);
+      
+      const metadata = {
+        pageType: pageType || 'other',
+        pageName: pageName || '',
+        lastUpdated: new Date().toISOString()
+      };
+      
+      const metadataPath = path.join(metadataDir, 'metadata.json');
+      await fs.writeJSON(metadataPath, metadata, { spaces: 2 });
+      console.log('✅ Saved metadata:', metadata);
+    }
 
     res.json({ success: true, message: 'Page saved successfully' });
 
@@ -435,12 +451,36 @@ app.get('/api/pages/:userId', async (req, res) => {
     
     // Filter only actual HTML files, not _data folders
     const htmlFiles = files.filter(file => {
-      // Check if it's a file (ends with _html) and not a directory (_html_data)
-      return file.endsWith('_html') && !file.includes('_data');
+      // Check if it's a file (ends with .html or _html) and not a directory (_html_data)
+      return (file.endsWith('.html') || file.endsWith('_html')) && !file.includes('_data');
     });
-    console.log('HTML files found:', htmlFiles);
     
-    const pages = htmlFiles.map(file => {
+    // Also find pages that have only _data folders (historical pages)
+    const dataFolders = files.filter(file => file.endsWith('_html_data') || file.endsWith('_data'));
+    const pagesFromDataFolders = dataFolders
+      .map(folder => {
+        // Remove _html_data or _data suffix to get the original filename
+        let baseName = folder.replace('_html_data', '').replace('_data', '');
+        // Check if this HTML file doesn't already exist in htmlFiles
+        if (!htmlFiles.includes(baseName) && 
+            !htmlFiles.includes(baseName + '.html') && 
+            !htmlFiles.includes(baseName + '_html')) {
+          // Return the base name as if it's an HTML file
+          return baseName.endsWith('_html') ? baseName : baseName + '_html';
+        }
+        return null;
+      })
+      .filter(Boolean);
+    
+    // Combine actual HTML files with pages found from data folders
+    // Remove duplicates
+    const allPagesSet = new Set([...htmlFiles, ...pagesFromDataFolders]);
+    const allPages = Array.from(allPagesSet);
+    console.log('HTML files found:', htmlFiles);
+    console.log('Pages from data folders:', pagesFromDataFolders);
+    console.log('Total unique pages:', allPages.length);
+    
+    const pages = await Promise.all(allPages.map(async file => {
       // נקה את שם הקובץ להצגה
       let cleanTitle = file.replace('.html', '').replace(/_/g, ' ').replace(/^_+/, '');
       
@@ -449,15 +489,47 @@ app.get('/api/pages/:userId', async (req, res) => {
         cleanTitle = 'דף נחיתה';
       }
       
+      // Load metadata if exists
+      let pageType = null;
+      try {
+        // Remove both .html and _html suffixes
+        const fileNameBase = file.replace('.html', '').replace(/_html$/, '');
+        const metadataPath = path.join(userDir, `${fileNameBase}_data`, 'metadata.json');
+        if (await fs.pathExists(metadataPath)) {
+          const metadata = await fs.readJSON(metadataPath);
+          pageType = metadata.pageType;
+          console.log(`📋 Loaded metadata for ${file}: pageType=${pageType}`);
+        } else {
+          // Try alternative path with _html_data
+          const altMetadataPath = path.join(userDir, `${file}_data`, 'metadata.json');
+          if (await fs.pathExists(altMetadataPath)) {
+            const metadata = await fs.readJSON(altMetadataPath);
+            pageType = metadata.pageType;
+            console.log(`📋 Loaded metadata (alt) for ${file}: pageType=${pageType}`);
+          }
+        }
+      } catch (err) {
+        console.log(`No metadata for ${file}:`, err.message);
+      }
+      
+      // Check if actual HTML file exists
+      const htmlFilePath = path.join(userDir, file);
+      const hasHtmlFile = await fs.pathExists(htmlFilePath);
+      
       return {
         fileName: file,
         title: cleanTitle,
-        url: `/pages/${userId}/${encodeURIComponent(file)}`
+        url: `/pages/${userId}/${encodeURIComponent(file)}`,
+        pageType: pageType, // Add pageType to response
+        hasHtmlFile: hasHtmlFile // Indicate if HTML file exists
       };
-    });
+    }));
 
-    console.log('Returning pages:', pages);
-    res.json({ pages });
+    // Filter out pages without HTML files (historical pages)
+    const validPages = pages.filter(p => p.hasHtmlFile === true);
+    
+    console.log('Returning pages:', validPages.length, 'valid pages out of', pages.length, 'total');
+    res.json({ pages: validPages });
 
   } catch (error) {
     console.error('Error getting pages:', error);
@@ -506,56 +578,120 @@ app.delete('/api/delete-page', async (req, res) => {
     }
 
     const userDir = path.join('output', userId);
-    const filePath = path.join(userDir, fileName);
     
-    console.log('Deleting file:', filePath);
+    // Decode URL-encoded fileName
+    const decodedFileName = decodeURIComponent(fileName);
+    const filePath = path.join(userDir, decodedFileName);
     
-    // בדוק אם הקובץ קיים
-    if (!await fs.pathExists(filePath)) {
-      return res.status(404).json({ error: 'File not found' });
+    console.log('Deleting page:', decodedFileName);
+    console.log('File path:', filePath);
+    
+    let deletedSomething = false;
+    
+    // מחק את קובץ ה-HTML אם קיים
+    if (await fs.pathExists(filePath)) {
+      await fs.remove(filePath);
+      console.log('✅ Deleted HTML file');
+      deletedSomething = true;
+    } else {
+      console.log('⚠️ HTML file not found, will try to delete data folders');
     }
     
-    // מחק את הקובץ
-    await fs.remove(filePath);
+    // מחק את תיקיות הנתונים (_data folders)
+    const fileNameBase = decodedFileName.replace('.html', '').replace(/_html$/, '');
+    
+    // Try to delete _data folder
+    const dataDir1 = path.join(userDir, `${fileNameBase}_data`);
+    if (await fs.pathExists(dataDir1)) {
+      await fs.remove(dataDir1);
+      console.log('✅ Deleted _data folder:', dataDir1);
+      deletedSomething = true;
+    }
+    
+    // Try to delete _html_data folder
+    const dataDir2 = path.join(userDir, `${fileNameBase}_html_data`);
+    if (await fs.pathExists(dataDir2)) {
+      await fs.remove(dataDir2);
+      console.log('✅ Deleted _html_data folder:', dataDir2);
+      deletedSomething = true;
+    }
+    
+    // Try to delete alternative _html_data folder (for files ending with _html)
+    const dataDir3 = path.join(userDir, `${decodedFileName}_data`);
+    if (await fs.pathExists(dataDir3)) {
+      await fs.remove(dataDir3);
+      console.log('✅ Deleted alternative _data folder:', dataDir3);
+      deletedSomething = true;
+    }
     
     // מחק את תיקיית התמונות הספציפית לדף הזה
-    const pageName = fileName.replace('.html', '');
-    const pageImagesDir = path.join(userDir, 'images', pageName);
-    
+    const pageImagesDir = path.join(userDir, 'images', fileNameBase);
     if (await fs.pathExists(pageImagesDir)) {
-      console.log('Deleting page-specific images directory:', pageImagesDir);
       await fs.remove(pageImagesDir);
-      console.log('Deleted page images directory:', pageImagesDir);
+      console.log('✅ Deleted page images folder');
+      deletedSomething = true;
     }
     
-    // מחק גם תמונות כלליות אם הן קיימות
-    const generalImagesDir = path.join(userDir, 'images');
-    if (await fs.pathExists(generalImagesDir)) {
-      const imageFiles = await fs.readdir(generalImagesDir);
-      console.log('Found general images to delete:', imageFiles);
+    // Check if we deleted anything
+    if (!deletedSomething) {
+      console.log('❌ Nothing was deleted - page not found');
+      return res.status(404).json({ error: 'Page not found (no HTML file or data folders)' });
+    }
+    
+    // Clean up database.json
+    try {
+      const db = loadDatabase();
+      const pageId = fileNameBase;
       
-      // מחק את כל התמונות הכלליות
-      for (const imageFile of imageFiles) {
-        const imagePath = path.join(generalImagesDir, imageFile);
-        await fs.remove(imagePath);
-        console.log('Deleted general image:', imagePath);
-      }
-      
-      // אם התיקייה ריקה, מחק אותה
-      try {
-        const remainingFiles = await fs.readdir(generalImagesDir);
-        if (remainingFiles.length === 0) {
-          await fs.remove(generalImagesDir);
-          console.log('Deleted empty general images directory:', generalImagesDir);
+      // Delete purchases related to this page
+      let deletedPurchases = 0;
+      Object.keys(db.purchases).forEach(purchaseId => {
+        const purchase = db.purchases[purchaseId];
+        if (purchase.storeId === pageId || purchase.storeId === decodedFileName || 
+            purchase.pageName === pageId || purchase.pageName === decodedFileName) {
+          delete db.purchases[purchaseId];
+          deletedPurchases++;
         }
-      } catch (err) {
-        // התיקייה כבר נמחקה או אין גישה אליה
-        console.log('General images directory already deleted or inaccessible');
+      });
+      
+      // Delete leads (event guests) related to this page
+      let deletedLeads = 0;
+      if (db.leads) {
+        Object.keys(db.leads).forEach(leadId => {
+          const lead = db.leads[leadId];
+          if (lead.eventId === pageId || lead.eventId === decodedFileName || 
+              lead.pageId === pageId || lead.pageId === decodedFileName) {
+            delete db.leads[leadId];
+            deletedLeads++;
+          }
+        });
       }
+      
+      // Update user purchases array
+      if (db.users[userId] && db.users[userId].purchases) {
+        const originalLength = db.users[userId].purchases.length;
+        db.users[userId].purchases = db.users[userId].purchases.filter(purchaseId => {
+          return db.purchases[purchaseId]; // Keep only purchases that still exist
+        });
+        const removedCount = originalLength - db.users[userId].purchases.length;
+        console.log(`🗑️ Removed ${removedCount} purchases from user's purchase list`);
+      }
+      
+      // Recalculate analytics
+      db.analytics.totalSales = Object.values(db.purchases).reduce((sum, p) => sum + (p.total || 0), 0);
+      db.analytics.recentPurchases = Object.values(db.purchases)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 50);
+      
+      saveDatabase(db);
+      console.log(`🧹 Cleaned database: ${deletedPurchases} purchases, ${deletedLeads} leads removed`);
+    } catch (dbError) {
+      console.error('⚠️ Error cleaning database:', dbError);
+      // Don't fail the request if DB cleanup fails
     }
     
-    console.log('File deleted successfully:', fileName);
-    res.json({ success: true, message: 'File deleted successfully' });
+    console.log('✅ Page deleted successfully:', decodedFileName);
+    res.json({ success: true, message: 'Page deleted successfully' });
 
   } catch (error) {
     console.error('Error deleting page:', error);
@@ -1646,6 +1782,7 @@ app.get('/api/analytics/page/:pageName', async (req, res) => {
                     name: purchase.customerName || 'לקוח',
                     phone: purchase.customerPhone || '',
                     email: purchase.customerEmail || '',
+                    address: purchase.customerAddress || '',
                     purchaseCount: 0,
                     totalSpent: 0
                 };
@@ -1931,6 +2068,221 @@ app.get('/api/user/:userId/purchases', (req, res) => {
         res.status(500).json({ error: 'Failed to get user purchases' });
     }
 });
+
+// Upload image (replaces old image)
+app.post('/api/upload-image', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No image uploaded' });
+        }
+        
+        const { userId, pageName, oldImageUrl } = req.body;
+        
+        if (!userId || !pageName) {
+            return res.status(400).json({ error: 'Missing userId or pageName' });
+        }
+        
+        // Delete old image if exists
+        if (oldImageUrl) {
+            try {
+                const oldImagePath = path.join(__dirname, oldImageUrl.replace(/^\//, ''));
+                if (await fs.pathExists(oldImagePath)) {
+                    await fs.remove(oldImagePath);
+                    console.log('🗑️ Deleted old image:', oldImagePath);
+                }
+            } catch (deleteError) {
+                console.warn('⚠️ Could not delete old image:', deleteError);
+            }
+        }
+        
+        // Return new image URL
+        const imageUrl = `/pages/${userId}/images/${pageName}/${req.file.filename}`;
+        
+        console.log('✅ Image uploaded:', imageUrl);
+        res.json({ url: imageUrl, fileName: req.file.originalname });
+        
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        res.status(500).json({ error: 'Failed to upload image' });
+    }
+});
+
+// Upload expense file (invoice/receipt)
+app.post('/api/upload-expense-file', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        
+        const { userId, storeId, oldFileUrl } = req.body;
+        
+        if (!userId || !storeId) {
+            return res.status(400).json({ error: 'Missing userId or storeId' });
+        }
+        
+        // Delete old expense file if exists
+        if (oldFileUrl) {
+            try {
+                const oldFilePath = path.join(__dirname, 'output', oldFileUrl.replace('/expenses/', ''));
+                if (await fs.pathExists(oldFilePath)) {
+                    await fs.remove(oldFilePath);
+                    console.log('🗑️ Deleted old expense file:', oldFilePath);
+                }
+            } catch (deleteError) {
+                console.warn('⚠️ Could not delete old expense file:', deleteError);
+            }
+        }
+        
+        // Move file to expenses folder
+        const expensesDir = path.join('output', userId, storeId + '_expenses');
+        await fs.ensureDir(expensesDir);
+        
+        const fileName = Date.now() + '_' + req.file.originalname;
+        const destPath = path.join(expensesDir, fileName);
+        
+        await fs.move(req.file.path, destPath);
+        
+        // Return file URL
+        const fileUrl = `/expenses/${userId}/${storeId}_expenses/${fileName}`;
+        
+        console.log('✅ Expense file uploaded:', fileUrl);
+        res.json({ url: fileUrl, fileName: req.file.originalname });
+        
+    } catch (error) {
+        console.error('Error uploading expense file:', error);
+        res.status(500).json({ error: 'Failed to upload file' });
+    }
+});
+
+// Clean orphaned data (leads/purchases for deleted pages)
+app.post('/api/clean-orphaned-data', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ error: 'Missing userId' });
+        }
+        
+        const db = loadDatabase();
+        const userDir = path.join('output', userId);
+        
+        // Get list of existing pages (HTML files + _html_data folders)
+        let existingPages = new Set();
+        
+        if (await fs.pathExists(userDir)) {
+            const files = await fs.readdir(userDir);
+            
+            // Add HTML files
+            files.filter(f => f.endsWith('_html')).forEach(f => existingPages.add(f));
+            
+            // Add pages from _data folders
+            files.filter(f => f.endsWith('_html_data')).forEach(f => {
+                existingPages.add(f.replace('_data', ''));
+            });
+        }
+        
+        console.log('📋 Existing pages:', Array.from(existingPages));
+        
+        // Clean purchases
+        let deletedPurchases = 0;
+        Object.keys(db.purchases).forEach(purchaseId => {
+            const purchase = db.purchases[purchaseId];
+            if (purchase.userId === userId) {
+                const pageExists = Array.from(existingPages).some(page => 
+                    purchase.storeId === page || 
+                    purchase.storeId === page.replace('_html', '') ||
+                    purchase.pageName === page ||
+                    purchase.pageName === page.replace('_html', '')
+                );
+                
+                if (!pageExists) {
+                    delete db.purchases[purchaseId];
+                    deletedPurchases++;
+                }
+            }
+        });
+        
+        // Clean leads
+        let deletedLeads = 0;
+        if (db.leads) {
+            Object.keys(db.leads).forEach(leadId => {
+                const lead = db.leads[leadId];
+                if (lead.userId === userId) {
+                    const pageExists = Array.from(existingPages).some(page => 
+                        lead.eventId === page || 
+                        lead.eventId === page.replace('_html', '') ||
+                        lead.pageId === page ||
+                        lead.pageId === page.replace('_html', '')
+                    );
+                    
+                    if (!pageExists) {
+                        delete db.leads[leadId];
+                        deletedLeads++;
+                    }
+                }
+            });
+        }
+        
+        // Update user purchases array
+        if (db.users[userId] && db.users[userId].purchases) {
+            const originalLength = db.users[userId].purchases.length;
+            db.users[userId].purchases = db.users[userId].purchases.filter(purchaseId => {
+                return db.purchases[purchaseId];
+            });
+            const removedCount = originalLength - db.users[userId].purchases.length;
+            console.log(`🗑️ Removed ${removedCount} orphaned purchases from user's list`);
+        }
+        
+        // Recalculate analytics
+        db.analytics.totalSales = Object.values(db.purchases).reduce((sum, p) => sum + (p.total || 0), 0);
+        db.analytics.recentPurchases = Object.values(db.purchases)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 50);
+        
+        saveDatabase(db);
+        
+        console.log(`🧹 Cleaned orphaned data: ${deletedPurchases} purchases, ${deletedLeads} leads`);
+        res.json({ 
+            success: true, 
+            message: `נוקו ${deletedPurchases} קניות ו-${deletedLeads} מוזמנים יתומים`,
+            deletedPurchases,
+            deletedLeads
+        });
+        
+    } catch (error) {
+        console.error('Error cleaning orphaned data:', error);
+        res.status(500).json({ error: 'Failed to clean data' });
+    }
+});
+
+// Delete expense file
+app.post('/api/delete-expense-file', async (req, res) => {
+    try {
+        const { fileUrl, userId, storeId } = req.body;
+        
+        if (!fileUrl) {
+            return res.status(400).json({ error: 'Missing fileUrl' });
+        }
+        
+        const filePath = path.join(__dirname, 'output', fileUrl.replace('/expenses/', ''));
+        
+        if (await fs.pathExists(filePath)) {
+            await fs.remove(filePath);
+            console.log('🗑️ Deleted expense file:', filePath);
+            res.json({ success: true, message: 'File deleted successfully' });
+        } else {
+            console.warn('⚠️ Expense file not found:', filePath);
+            res.json({ success: false, message: 'File not found' });
+        }
+        
+    } catch (error) {
+        console.error('Error deleting expense file:', error);
+        res.status(500).json({ error: 'Failed to delete file' });
+    }
+});
+
+// Serve expense files
+app.use('/expenses', express.static('output'));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

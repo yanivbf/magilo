@@ -60,10 +60,23 @@
         "purchase_1760086590831_86z5obxya",
         "purchase_1760086775059_3cx3mmiji",
         "purchase_1760088379578_qb3y9bkyf",
-        "purchase_1760088533718_brbjmuw3g"
+        "purchase_1760088533718_brbjmuw3g",
+        "purchase_1760116533885_id7elqmen",
+        "purchase_1760116571213_9lerj4orm",
+        "purchase_1760117270972_5ike0y5sw",
+        "purchase_1760118194266_sihez1503",
+        "purchase_1760118599608_ht9mh20ex",
+        "purchase_1760132258437_64dcnbt65",
+        "purchase_1760141162385_lxfayw2yw",
+        "purchase_1760141271760_vizlcjry7",
+        "purchase_1760144098467_9f03e8j7z",
+        "purchase_1760157603096_w523t64zs",
+        "purchase_1760159844538_tcbuabepm",
+        "purchase_1760159946881_bi6y5ve58",
+        "purchase_1760162754750_qsek9abzv"
       ],
       "createdAt": "2025-10-10T08:16:38.563Z",
-      "lastActive": "2025-10-10T09:28:53.731Z"
+      "lastActive": "2025-10-11T06:05:54.760Z"
     }
   },
   "purchases": {
@@ -948,23 +961,359 @@
       "customerEmail": "",
       "customerAddress": "לא צוין",
       "shipping": false,
-      "status": "new",
+      "status": "processing",
       "createdAt": "2025-10-10T14:02:53.350Z"
+    },
+    "purchase_1760116533885_id7elqmen": {
+      "id": "purchase_1760116533885_id7elqmen",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_ייניב_1760116470596",
+      "products": [
+        {
+          "id": 1760116516612,
+          "name": "פרלינים בעבודת יד",
+          "price": 75,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1575825020120-2f162c9c7e09?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 110,
+      "customerName": "ציון",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T17:15:33.885Z"
+    },
+    "purchase_1760116571213_9lerj4orm": {
+      "id": "purchase_1760116571213_9lerj4orm",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_ייניב_1760116470596",
+      "products": [
+        {
+          "id": 1760116560871,
+          "name": "טבלת שוקולד מריר 85%",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1510344583150-13f59e663a76?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 70,
+      "customerName": "ציון",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T17:16:11.213Z"
+    },
+    "purchase_1760117270972_5ike0y5sw": {
+      "id": "purchase_1760117270972_5ike0y5sw",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_ייניב_1760116470596",
+      "products": [
+        {
+          "id": 1760117259519,
+          "name": "טבלת שוקולד מריר 85%",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1510344583150-13f59e663a76?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 70,
+      "customerName": "ציון",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T17:27:50.972Z"
+    },
+    "purchase_1760118194266_sihez1503": {
+      "id": "purchase_1760118194266_sihez1503",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_ייניב_1760116470596",
+      "products": [
+        {
+          "id": 1760118166787,
+          "name": "פרלינים בעבודת יד",
+          "price": 75,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1575825020120-2f162c9c7e09?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760118173394,
+          "name": "טבלת שוקולד מריר 85%",
+          "price": 35,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1510344583150-13f59e663a76?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        },
+        {
+          "id": 1760118180677,
+          "name": "מארז טעימות שוקולד גורמה",
+          "price": 120,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1549419149-a1d2f63810f3?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 265,
+      "customerName": "ציון",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T17:43:14.266Z"
+    },
+    "purchase_1760118599608_ht9mh20ex": {
+      "id": "purchase_1760118599608_ht9mh20ex",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "ממתקי_ייניב_1760116470596",
+      "products": [
+        {
+          "id": 1760118582757,
+          "name": "פרלינים בעבודת יד",
+          "price": 75,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1575825020120-2f162c9c7e09?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 110,
+      "customerName": "ציון",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T17:49:59.608Z"
+    },
+    "purchase_1760132258437_64dcnbt65": {
+      "id": "purchase_1760132258437_64dcnbt65",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_פריסטייל_1760131114129",
+      "products": [
+        {
+          "id": 1760132213715,
+          "name": "טראפל מנגו-פסיפלורה",
+          "price": 42,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1628108174415-32e7d730a84e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
+        }
+      ],
+      "total": 119,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-10T21:37:38.437Z"
+    },
+    "purchase_1760141162385_lxfayw2yw": {
+      "id": "purchase_1760141162385_lxfayw2yw",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_כעיכה_1760140366379",
+      "products": [
+        {
+          "id": 1760140468969,
+          "name": "פרלינים צבעוניים",
+          "price": 49,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1582234032549-ee4b0d063071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+        },
+        {
+          "id": 1760140474150,
+          "name": "עוגיות שוקולד צ'יפס פריכות",
+          "price": 28,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1558235306-dd99cf76f9d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+        },
+        {
+          "id": 1760140764455,
+          "name": "מקרונים במבחר טעמים",
+          "price": 55,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1581451801646-c2306f971b7f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+        }
+      ],
+      "total": 216,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-11T00:06:02.385Z"
+    },
+    "purchase_1760141271760_vizlcjry7": {
+      "id": "purchase_1760141271760_vizlcjry7",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_כעיכה_1760140366379",
+      "products": [
+        {
+          "id": 1760141234747,
+          "name": "בראוניז פאדג'",
+          "price": 42,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1563214539-7c85828a5067?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+        }
+      ],
+      "total": 77,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-11T00:07:51.760Z"
+    },
+    "purchase_1760144098467_9f03e8j7z": {
+      "id": "purchase_1760144098467_9f03e8j7z",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_כעיכה_1760140366379",
+      "products": [
+        {
+          "id": 1760144064856,
+          "name": "מקרונים במבחר טעמים",
+          "price": 55,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1581451801646-c2306f971b7f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+        }
+      ],
+      "total": 90,
+      "customerName": "מיה",
+      "customerPhone": "4443333",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-11T00:54:58.467Z"
+    },
+    "purchase_1760157603096_w523t64zs": {
+      "id": "purchase_1760157603096_w523t64zs",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_יניב_1760122549721",
+      "products": [
+        {
+          "id": 1760157368552,
+          "name": "שוקולד טרופי",
+          "price": 45,
+          "quantity": 2,
+          "image": ""
+        },
+        {
+          "id": 1760157552708,
+          "name": "שוקולד חורף",
+          "price": 42,
+          "quantity": 1,
+          "image": ""
+        },
+        {
+          "id": 1760157564814,
+          "name": "שוקולד עננים",
+          "price": 37,
+          "quantity": 1,
+          "image": ""
+        }
+      ],
+      "total": 204,
+      "customerName": "יניב",
+      "customerPhone": "0505378108",
+      "customerEmail": "",
+      "customerAddress": "לא צוין",
+      "shipping": false,
+      "status": "new",
+      "createdAt": "2025-10-11T04:40:03.097Z"
+    },
+    "purchase_1760159844538_tcbuabepm": {
+      "id": "purchase_1760159844538_tcbuabepm",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_יניב_1760122549721",
+      "products": [
+        {
+          "id": 1760157762219,
+          "name": "שוקולד אביב",
+          "price": 35,
+          "quantity": 2,
+          "image": ""
+        }
+      ],
+      "total": 105,
+      "customerName": "מיה",
+      "customerPhone": "0538377366",
+      "customerEmail": "ehaleiameleh@gmail.com",
+      "customerAddress": "בר אילן 70 תל אביב",
+      "shipping": true,
+      "status": "new",
+      "createdAt": "2025-10-11T05:17:24.538Z"
+    },
+    "purchase_1760159946881_bi6y5ve58": {
+      "id": "purchase_1760159946881_bi6y5ve58",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_יניב_1760122549721",
+      "products": [
+        {
+          "id": 1760159896001,
+          "name": "שוקולד אביב",
+          "price": 35,
+          "quantity": 1,
+          "image": ""
+        },
+        {
+          "id": 1760159899837,
+          "name": "שוקולד קיץ",
+          "price": 40,
+          "quantity": 1,
+          "image": ""
+        }
+      ],
+      "total": 110,
+      "customerName": "מיה",
+      "customerPhone": "0538377366",
+      "customerEmail": "ehaleiameleh@gmail.com",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "new",
+      "createdAt": "2025-10-11T05:19:06.881Z"
+    },
+    "purchase_1760162754750_qsek9abzv": {
+      "id": "purchase_1760162754750_qsek9abzv",
+      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+      "storeId": "שוקולד_יניב_1760122549721",
+      "products": [
+        {
+          "id": 1760162736144,
+          "name": "שוקולד אביב",
+          "price": 35,
+          "quantity": 1,
+          "image": ""
+        }
+      ],
+      "total": 70,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerEmail": "britolam1@gmail.com",
+      "customerAddress": "בר אילן 50 נתניה",
+      "shipping": true,
+      "status": "new",
+      "createdAt": "2025-10-11T06:05:54.750Z"
     }
   },
   "products": {},
   "stores": {},
   "analytics": {
-    "totalSales": 32915.9,
+    "totalSales": 34531.9,
     "totalUsers": 0,
     "totalProducts": 0,
     "dailySales": {
       "2025-10-08": 1520,
       "2025-10-09": 28785,
-      "2025-10-10": 2610.9
+      "2025-10-10": 3354.9,
+      "2025-10-11": 872
     },
     "monthlySales": {
-      "2025-10": 32915.9
+      "2025-10": 34531.9
     },
     "topProducts": [
       {
@@ -1016,6 +1365,12 @@
         "revenue": 120
       },
       {
+        "id": 1760118180677,
+        "name": "מארז טעימות שוקולד גורמה",
+        "sales": 1,
+        "revenue": 120
+      },
+      {
         "id": 1760072870535,
         "name": "טבלת סוריאליזם מריר",
         "sales": 2,
@@ -1026,6 +1381,18 @@
         "name": "מוס אופוריה שוקולד",
         "sales": 2,
         "revenue": 100
+      },
+      {
+        "id": 1760140468969,
+        "name": "פרלינים צבעוניים",
+        "sales": 2,
+        "revenue": 98
+      },
+      {
+        "id": 1760157368552,
+        "name": "שוקולד טרופי",
+        "sales": 2,
+        "revenue": 90
       },
       {
         "id": "p_1759931086896_i8j2yl4qc",
@@ -1040,6 +1407,12 @@
         "revenue": 89
       },
       {
+        "id": 1760132213715,
+        "name": "טראפל מנגו-פסיפלורה",
+        "sales": 2,
+        "revenue": 84
+      },
+      {
         "id": "p_1759931095298_l9jkta08u",
         "name": "סידור תפילה לכל ימות השנה",
         "sales": 1,
@@ -1052,8 +1425,32 @@
         "revenue": 75
       },
       {
+        "id": 1760116516612,
+        "name": "פרלינים בעבודת יד",
+        "sales": 1,
+        "revenue": 75
+      },
+      {
+        "id": 1760118166787,
+        "name": "פרלינים בעבודת יד",
+        "sales": 1,
+        "revenue": 75
+      },
+      {
+        "id": 1760118582757,
+        "name": "פרלינים בעבודת יד",
+        "sales": 1,
+        "revenue": 75
+      },
+      {
         "id": 1760070872871,
         "name": "טראפלס שוקולד לבן",
+        "sales": 2,
+        "revenue": 70
+      },
+      {
+        "id": 1760157762219,
+        "name": "שוקולד אביב",
         "sales": 2,
         "revenue": 70
       },
@@ -1084,6 +1481,18 @@
       {
         "id": 1760072238166,
         "name": "טבלת סוריאליזם מריר",
+        "sales": 1,
+        "revenue": 55
+      },
+      {
+        "id": 1760140764455,
+        "name": "מקרונים במבחר טעמים",
+        "sales": 1,
+        "revenue": 55
+      },
+      {
+        "id": 1760144064856,
+        "name": "מקרונים במבחר טעמים",
         "sales": 1,
         "revenue": 55
       },
@@ -1136,6 +1545,18 @@
         "revenue": 42
       },
       {
+        "id": 1760141234747,
+        "name": "בראוניז פאדג'",
+        "sales": 1,
+        "revenue": 42
+      },
+      {
+        "id": 1760157552708,
+        "name": "שוקולד חורף",
+        "sales": 1,
+        "revenue": 42
+      },
+      {
         "id": 1760070864681,
         "name": "פרליני קרמל מלוח",
         "sales": 1,
@@ -1178,6 +1599,18 @@
         "revenue": 40
       },
       {
+        "id": 1760159899837,
+        "name": "שוקולד קיץ",
+        "sales": 1,
+        "revenue": 40
+      },
+      {
+        "id": 1760157564814,
+        "name": "שוקולד עננים",
+        "sales": 1,
+        "revenue": 37
+      },
+      {
         "id": "p_1759947166760_g55bcwghx",
         "name": "סנדוויץ גבינה קלאסי",
         "sales": 1,
@@ -1208,10 +1641,46 @@
         "revenue": 35
       },
       {
+        "id": 1760116560871,
+        "name": "טבלת שוקולד מריר 85%",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760117259519,
+        "name": "טבלת שוקולד מריר 85%",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760118173394,
+        "name": "טבלת שוקולד מריר 85%",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760159896001,
+        "name": "שוקולד אביב",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
+        "id": 1760162736144,
+        "name": "שוקולד אביב",
+        "sales": 1,
+        "revenue": 35
+      },
+      {
         "id": 1760088485605,
         "name": "מסטיקי מנטה טבעיים",
         "sales": 2,
         "revenue": 30
+      },
+      {
+        "id": 1760140474150,
+        "name": "עוגיות שוקולד צ'יפס פריכות",
+        "sales": 1,
+        "revenue": 28
       },
       {
         "id": 1760084186810,
@@ -1282,6 +1751,341 @@
     ],
     "recentPurchases": [
       {
+        "id": "purchase_1760162754750_qsek9abzv",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_יניב_1760122549721",
+        "products": [
+          {
+            "id": 1760162736144,
+            "name": "שוקולד אביב",
+            "price": 35,
+            "quantity": 1,
+            "image": ""
+          }
+        ],
+        "total": 70,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerEmail": "britolam1@gmail.com",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "new",
+        "createdAt": "2025-10-11T06:05:54.750Z"
+      },
+      {
+        "id": "purchase_1760159946881_bi6y5ve58",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_יניב_1760122549721",
+        "products": [
+          {
+            "id": 1760159896001,
+            "name": "שוקולד אביב",
+            "price": 35,
+            "quantity": 1,
+            "image": ""
+          },
+          {
+            "id": 1760159899837,
+            "name": "שוקולד קיץ",
+            "price": 40,
+            "quantity": 1,
+            "image": ""
+          }
+        ],
+        "total": 110,
+        "customerName": "מיה",
+        "customerPhone": "0538377366",
+        "customerEmail": "ehaleiameleh@gmail.com",
+        "customerAddress": "בר אילן 50 נתניה",
+        "shipping": true,
+        "status": "new",
+        "createdAt": "2025-10-11T05:19:06.881Z"
+      },
+      {
+        "id": "purchase_1760159844538_tcbuabepm",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_יניב_1760122549721",
+        "products": [
+          {
+            "id": 1760157762219,
+            "name": "שוקולד אביב",
+            "price": 35,
+            "quantity": 2,
+            "image": ""
+          }
+        ],
+        "total": 105,
+        "customerName": "מיה",
+        "customerPhone": "0538377366",
+        "customerEmail": "ehaleiameleh@gmail.com",
+        "customerAddress": "בר אילן 70 תל אביב",
+        "shipping": true,
+        "status": "new",
+        "createdAt": "2025-10-11T05:17:24.538Z"
+      },
+      {
+        "id": "purchase_1760157603096_w523t64zs",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_יניב_1760122549721",
+        "products": [
+          {
+            "id": 1760157368552,
+            "name": "שוקולד טרופי",
+            "price": 45,
+            "quantity": 2,
+            "image": ""
+          },
+          {
+            "id": 1760157552708,
+            "name": "שוקולד חורף",
+            "price": 42,
+            "quantity": 1,
+            "image": ""
+          },
+          {
+            "id": 1760157564814,
+            "name": "שוקולד עננים",
+            "price": 37,
+            "quantity": 1,
+            "image": ""
+          }
+        ],
+        "total": 204,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-11T04:40:03.097Z"
+      },
+      {
+        "id": "purchase_1760144098467_9f03e8j7z",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_כעיכה_1760140366379",
+        "products": [
+          {
+            "id": 1760144064856,
+            "name": "מקרונים במבחר טעמים",
+            "price": 55,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1581451801646-c2306f971b7f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+          }
+        ],
+        "total": 90,
+        "customerName": "מיה",
+        "customerPhone": "4443333",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-11T00:54:58.467Z"
+      },
+      {
+        "id": "purchase_1760141271760_vizlcjry7",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_כעיכה_1760140366379",
+        "products": [
+          {
+            "id": 1760141234747,
+            "name": "בראוניז פאדג'",
+            "price": 42,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1563214539-7c85828a5067?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+          }
+        ],
+        "total": 77,
+        "customerName": "יניב",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-11T00:07:51.760Z"
+      },
+      {
+        "id": "purchase_1760141162385_lxfayw2yw",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_כעיכה_1760140366379",
+        "products": [
+          {
+            "id": 1760140468969,
+            "name": "פרלינים צבעוניים",
+            "price": 49,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1582234032549-ee4b0d063071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+          },
+          {
+            "id": 1760140474150,
+            "name": "עוגיות שוקולד צ'יפס פריכות",
+            "price": 28,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1558235306-dd99cf76f9d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+          },
+          {
+            "id": 1760140764455,
+            "name": "מקרונים במבחר טעמים",
+            "price": 55,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1581451801646-c2306f971b7f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80"
+          }
+        ],
+        "total": 216,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-11T00:06:02.385Z"
+      },
+      {
+        "id": "purchase_1760132258437_64dcnbt65",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "שוקולד_פריסטייל_1760131114129",
+        "products": [
+          {
+            "id": 1760132213715,
+            "name": "טראפל מנגו-פסיפלורה",
+            "price": 42,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1628108174415-32e7d730a84e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
+          }
+        ],
+        "total": 119,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T21:37:38.437Z"
+      },
+      {
+        "id": "purchase_1760118599608_ht9mh20ex",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_ייניב_1760116470596",
+        "products": [
+          {
+            "id": 1760118582757,
+            "name": "פרלינים בעבודת יד",
+            "price": 75,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1575825020120-2f162c9c7e09?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 110,
+        "customerName": "ציון",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T17:49:59.608Z"
+      },
+      {
+        "id": "purchase_1760118194266_sihez1503",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_ייניב_1760116470596",
+        "products": [
+          {
+            "id": 1760118166787,
+            "name": "פרלינים בעבודת יד",
+            "price": 75,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1575825020120-2f162c9c7e09?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760118173394,
+            "name": "טבלת שוקולד מריר 85%",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1510344583150-13f59e663a76?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          },
+          {
+            "id": 1760118180677,
+            "name": "מארז טעימות שוקולד גורמה",
+            "price": 120,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1549419149-a1d2f63810f3?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 265,
+        "customerName": "ציון",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T17:43:14.266Z"
+      },
+      {
+        "id": "purchase_1760117270972_5ike0y5sw",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_ייניב_1760116470596",
+        "products": [
+          {
+            "id": 1760117259519,
+            "name": "טבלת שוקולד מריר 85%",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1510344583150-13f59e663a76?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 70,
+        "customerName": "ציון",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T17:27:50.972Z"
+      },
+      {
+        "id": "purchase_1760116571213_9lerj4orm",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_ייניב_1760116470596",
+        "products": [
+          {
+            "id": 1760116560871,
+            "name": "טבלת שוקולד מריר 85%",
+            "price": 35,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1510344583150-13f59e663a76?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 70,
+        "customerName": "ציון",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T17:16:11.213Z"
+      },
+      {
+        "id": "purchase_1760116533885_id7elqmen",
+        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+        "storeId": "ממתקי_ייניב_1760116470596",
+        "products": [
+          {
+            "id": 1760116516612,
+            "name": "פרלינים בעבודת יד",
+            "price": 75,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1575825020120-2f162c9c7e09?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 110,
+        "customerName": "ציון",
+        "customerPhone": "0505378108",
+        "customerEmail": "",
+        "customerAddress": "לא צוין",
+        "shipping": false,
+        "status": "new",
+        "createdAt": "2025-10-10T17:15:33.885Z"
+      },
+      {
         "id": "purchase_1760104973347_zjn5b231u",
         "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
         "storeId": "ממתקי_1760071310076",
@@ -1314,7 +2118,7 @@
         "customerEmail": "",
         "customerAddress": "לא צוין",
         "shipping": false,
-        "status": "new",
+        "status": "processing",
         "createdAt": "2025-10-10T14:02:53.350Z"
       },
       {
@@ -1336,8 +2140,9 @@
         "customerEmail": "",
         "customerAddress": "לא צוין",
         "shipping": false,
-        "status": "new",
-        "createdAt": "2025-10-10T13:19:51.213Z"
+        "status": "completed",
+        "createdAt": "2025-10-10T13:19:51.213Z",
+        "completedAt": "2025-10-10T13:55:48.826Z"
       },
       {
         "id": "purchase_1760088533718_brbjmuw3g",
@@ -1401,7 +2206,7 @@
         "customerEmail": "",
         "customerAddress": "לא צוין",
         "shipping": false,
-        "status": "new",
+        "status": "processing",
         "createdAt": "2025-10-10T09:26:19.579Z"
       },
       {
@@ -1424,7 +2229,7 @@
         "shipping": false,
         "status": "completed",
         "createdAt": "2025-10-10T08:59:35.059Z",
-        "completedAt": "2025-10-10T08:59:35.059Z"
+        "completedAt": "2025-10-10T09:17:21.422Z"
       },
       {
         "id": "purchase_1760086590831_86z5obxya",
@@ -1446,7 +2251,7 @@
         "shipping": false,
         "status": "completed",
         "createdAt": "2025-10-10T08:56:30.831Z",
-        "completedAt": "2025-10-10T08:56:30.831Z"
+        "completedAt": "2025-10-10T09:17:18.564Z"
       },
       {
         "id": "purchase_1760085928395_b40h96t5l",

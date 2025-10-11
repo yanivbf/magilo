@@ -7,7 +7,31 @@ const pageTemplates = {
 
         fields: ['websiteLink'],
 
-        structurePrompt: `Build a landing page with only the following sections, in this order: 1. A simple Header containing the provided external links ('Main Link', 'Additional External Link') as text links or small buttons on the side. 2. Hero Section (id="home") with a headline, description, and a central CTA button. 3. Benefits section (id="benefits") with 3 key benefits. 4. Contact form section (id="contact").`,
+        structurePrompt: `Build a high-converting landing page with the following sections (you have creative freedom in the exact layout and order):
+
+**REQUIRED SECTIONS:**
+1. **Header** (id="header"): Minimal header with logo/business name and provided external links ('Main Link', 'Additional External Link'). Keep it clean and unobtrusive.
+
+2. **Hero Section** (id="home"): The main conversion area. Choose ONE of these hero layouts randomly:
+   - Option A: Split-screen (50/50 text and image)
+   - Option B: Centered with full-width background
+   - Option C: Diagonal split with overlapping elements
+   - Option D: Text overlay on full-screen image
+   Include: Headline (value proposition), subheadline, primary CTA button, trust indicator (e.g., "Join 1000+ happy customers")
+
+3. **Benefits/Features Section** (id="benefits"): Show 3-4 key benefits. Choose ONE layout:
+   - Option A: Card grid with icons
+   - Option B: Alternating left-right with images
+   - Option C: Timeline format
+   - Option D: Icon + text in horizontal rows
+
+4. **Social Proof** (id="testimonials"): Add 3 realistic testimonials with names and optional avatar placeholders
+
+5. **Contact Form** (id="contact"): Beautiful form with name, email, phone, message. Style should match the chosen design style perfectly.
+
+6. **Footer**: Minimal footer with business info and links
+
+**CREATIVE FREEDOM**: Vary the visual treatment, animations, colors, and exact positioning while maintaining these core sections.`,
 
         t: {
 
@@ -33,7 +57,37 @@ const pageTemplates = {
 
         fields: ['websiteLink'],
 
-         structurePrompt: `Build a brand page with only the following sections, in this order: 1. Header with a logo and navigation. In the navigation, include internal links to relevant sections (About, Services, Contact) and also the provided external links ('Main Link', 'Additional External Link'). If button text is provided, use it. The external links should be prominent, perhaps as buttons. 2. Hero Section (id="home"). 3. About section (id="about"). 4. Services section (id="services"). 5. Contact section (id="contact"). 6. Footer.`,
+         structurePrompt: `Build an impressive, professional brand/business page that showcases the company beautifully. You have creative freedom in layout choices.
+
+**REQUIRED SECTIONS:**
+1. **Header**: Logo/business name + navigation. Include internal links (About, Services, Contact) AND external links ('Main Link', 'Additional External Link') as prominent buttons.
+
+2. **Hero Section** (id="home"): Make a bold first impression. Choose ONE hero style:
+   - Option A: Full-screen with video background placeholder
+   - Option B: Split-screen with tagline and brand image
+   - Option C: Centered with animated gradient background
+   - Option D: Asymmetric layout with overlapping elements
+   - Option E: Multi-layered with parallax effect
+
+3. **About Section** (id="about"): Tell the brand story. Choose ONE:
+   - Option A: Text + image split
+   - Option B: Timeline of company history
+   - Option C: Stats showcase (years in business, clients served, etc.)
+   - Option D: Founder/team introduction with photos
+
+4. **Services/What We Do** (id="services"): Showcase offerings. Choose ONE:
+   - Option A: Icon grid with descriptions
+   - Option B: Accordion/tabs format
+   - Option C: Card carousel
+   - Option D: Bento grid with varied card sizes
+
+5. **Social Proof**: Testimonials, client logos, or case studies
+
+6. **Contact Section** (id="contact"): Form + info, beautifully styled
+
+7. **Footer**: Comprehensive with links, social media, legal
+
+**MAKE IT MEMORABLE**: This should feel like a premium brand website.`,
 
         t: {
 
@@ -191,7 +245,30 @@ const pageTemplates = {
 
         fields: ['eventDetails'],
 
-        structurePrompt: `Build an event invitation with the following sections: 1. Hero Section (id="home") with the event name and date. 2. Countdown timer (id="countdown-timer") with elements having IDs: days, hours, minutes, seconds. **Very important**: The display order for Hebrew should be right-to-left: days, hours, minutes, seconds. 3. Event details (id="details") with location, time, and additional information. 4. RSVP form (id="rsvp"). 
+        structurePrompt: `Build a beautiful, elegant event invitation page. You have creative freedom to choose the layout style, but must include these sections:
+
+**REQUIRED SECTIONS:**
+1. **Hero Section** (id="home"): Event name, date, and a romantic/elegant visual. Choose ONE hero style:
+   - Option A: Full-screen background image with overlay and centered text
+   - Option B: Split-screen with image on one side, details on the other
+   - Option C: Animated gradient background with floating decorative elements
+   - Option D: Elegant border frame design with central content
+
+2. **Countdown Timer** (id="countdown-timer"): Beautiful, animated countdown with elements having IDs: days, hours, minutes, seconds. 
+   **CRITICAL**: For Hebrew, display order MUST be RIGHT-TO-LEFT: days, hours, minutes, seconds.
+   Style variations: 
+   - Circular timers with animations
+   - Card-based counters with shadows
+   - Minimalist numbers with labels
+   - Decorative boxes with icons
+
+3. **Event Details** (id="details"): Location, time, dress code, etc. Choose ONE layout:
+   - Option A: Timeline format with icons
+   - Option B: Card grid with details
+   - Option C: Accordion/collapsible sections
+   - Option D: Simple list with elegant typography
+
+4. **RSVP Form** (id="rsvp"): Inviting form that matches the elegant theme. 
 
 **ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
 <meta name="page-type" content="event">
@@ -312,19 +389,71 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 
         fields: ['productManagement'],
 
-        structurePrompt: `Build a ${data.style} online store HTML page with these requirements:
+        structurePrompt: `Build a stunning, professional online store with ${data.style} design aesthetic. Create a store that looks like it was designed by a top e-commerce agency.
 
 **ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
 <meta name="page-type" content="store">
 
-1. Header with ${data.mainName || 'Store Name'} logo
-2. Product catalog section with 6 product cards
-3. Each product card MUST have a button with onclick="addToCart('ProductName', price, 'imageURL')"
-4. Include these exact empty divs for JavaScript: <div id="cart-sidebar"></div> and <span id="cart-count"></span>
-5. DO NOT include any "ניהול" or "Management" buttons
-6. Add contact form at bottom
+**REQUIRED SECTIONS:**
+1. **Header** (sticky navigation): 
+   - Store logo/name: ${data.mainName || 'Store Name'}
+   - Clean, modern navigation links
+   - ⚠️ DO NOT ADD CART ICON TO HEADER - the cart button is separate (see section 4)
+   - ⚠️ DO NOT ADD <span id="cart-count"> to header - it's in the fixed button
+   
+2. **Hero Section**: Choose ONE compelling hero layout:
+   - Option A: Full-width banner with featured product + "Shop Now" CTA
+   - Option B: Split-screen with promotional text and product image
+   - Option C: Slider with 2-3 featured products
+   - Option D: Grid showcase of bestsellers
 
-CRITICAL: Return complete valid HTML starting with <!DOCTYPE html> and ending with </html>. Max 500 lines.`,
+3. **Product Catalog** (id="products"): Display ${data.productCount || 6} beautiful product cards. Each card MUST include:
+   - High-quality product image (use Unsplash food/product images)
+   - Product name (be creative based on ${data.mainName})
+   - Price display (₪XX format)
+   - "הוסף לעגלה" button with: onclick="addToCart('ProductName', price, 'imageURL', event)" (CRITICAL: include 'event' parameter!)
+   - Hover effects (scale, shadow, etc.)
+   - Choose ONE grid layout:
+     * Option A: Classic grid (3 columns)
+     * Option B: Masonry layout
+     * Option C: Featured + grid (1 large + smaller ones)
+     * Option D: Carousel/slider format
+
+4. **Cart Placeholders** (⚠️ CRITICAL - ONLY ADD THESE SIMPLE PLACEHOLDERS ⚠️):
+   
+   ⚠️⚠️⚠️ DO NOT CREATE CART HTML - ONLY PLACEHOLDERS ⚠️⚠️⚠️
+   ⚠️⚠️⚠️ THE JAVASCRIPT WILL BUILD THE CART AUTOMATICALLY ⚠️⚠️⚠️
+   
+   **ADD THESE EXACT 3 LINES ONLY - NOTHING MORE:**
+   
+<div id="cart-sidebar"></div>
+<div id="cart-overlay"></div>
+<div id="cart-button-placeholder"></div>
+   
+   **ABSOLUTELY FORBIDDEN:**
+   - ❌ DO NOT add ANY cart icons to the header/navigation
+   - ❌ DO NOT add ANY floating buttons
+   - ❌ DO NOT add ANY badges or counters
+   - ❌ DO NOT add ANY inline styles to these divs
+   - ❌ DO NOT add ANY content inside these divs
+   - ❌ DO NOT create <button> for cart
+   - ❌ DO NOT add cart-related elements anywhere else in the page
+   
+   **ONLY THESE 3 EMPTY DIVS - THE REST IS HANDLED BY JAVASCRIPT**
+
+5. **Trust Indicators**:
+   - Delivery info, secure payment badges, return policy
+
+6. **Contact/Footer**: Store hours, contact info, social media
+
+**VISUAL EXCELLENCE:**
+- Product cards must be gorgeous with hover effects
+- Use consistent spacing and alignment
+- Add "Sale" or "New" badges where appropriate
+- Beautiful checkout button in cart
+- Mobile-responsive grid (1 col on mobile, 2-3 on desktop)
+
+CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete valid HTML starting with <!DOCTYPE html>.`,
 
         t: {
 

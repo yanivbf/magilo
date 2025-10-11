@@ -3071,15 +3071,84 @@ Based on all data, write full marketing copy for all required sections in the Bl
 **LANGUAGE ENFORCEMENT**: If you generate any text in a different language than ${data.languageName}, the page will be rejected. Every single word, character, and symbol must be in ${data.languageName} language.
 
 
-## 4. Art Direction Task
+## 4. Art Direction & Creative Excellence Task
 
-* **Main Image Directive:**
+**YOU ARE A WORLD-CLASS CREATIVE DIRECTOR**. This page must look like it was created by a leading creative agency (Pentagram, Ogilvy, R/GA level). Every pixel must be intentional and beautiful.
 
-  * **If 'Use as Background Image' is 'Yes'**: The main image (from Unsplash) **must** be used as a \`background-image\` for the main Hero section. To ensure readability, you **must** add a separate div element as an overlay with a semi-transparent black background (e.g., \`class="absolute inset-0 bg-black/50 bg-overlay"\`) between the background image and the content. **It is important to add the 'bg-overlay' class**.
+### Visual Style Implementation for "${s(data.style)}":
 
-  * **If 'Use as Background Image' is 'No'**: Place the image as a standard \`<img>\` element.
+**CRITICAL DESIGN REQUIREMENTS:**
+1. **Typography Excellence:**
+   - Use modern, professional Google Fonts (Heebo/Rubik for Hebrew, Inter/Poppins for English)
+   - Clear hierarchy: Hero (48-72px), H2 (36-48px), H3 (24-32px), body (16-18px)
+   - Line height 1.6-1.8 for readability
+   - Letter spacing optimized for the chosen font
+
+2. **Color Palette Strategy:**
+   - Create a cohesive 5-color palette based on "${s(data.style)}"
+   - Primary color for CTA buttons and key elements
+   - Secondary color for accents
+   - Neutral grays for text and backgrounds
+   - Use Tailwind's color system intelligently
+   - Add gradients where appropriate (bg-gradient-to-r, bg-gradient-to-br)
+
+3. **Spacing & Layout:**
+   - Generous white space (py-16, py-24 for sections)
+   - Consistent padding (px-4, px-6, px-8)
+   - Maximum content width: max-w-7xl mx-auto
+   - Grid systems: grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+   - Gap between elements: gap-6, gap-8, gap-12
+
+4. **Visual Effects & Modern Touches:**
+   - Subtle shadows: shadow-md, shadow-lg, shadow-2xl
+   - Smooth transitions: transition-all duration-300
+   - Hover effects: hover:scale-105, hover:shadow-xl
+   - Rounded corners: rounded-lg, rounded-xl, rounded-2xl
+   - Backdrop blur for overlays: backdrop-blur-sm
+   - Gradient overlays where appropriate
+
+5. **Imagery:**
+   - **If 'Use as Background Image' is 'Yes'**: Use as hero background with overlay
+   - **If 'Use as Background Image' is 'No'**: Place as prominent \`<img>\` element
+   - Find 3-5 additional high-quality Unsplash images for sections
+   - Use object-cover and aspect-ratio for perfect sizing
+   - Add subtle image filters if they enhance the ${s(data.style)} aesthetic
+
+6. **Micro-interactions:**
+   - Buttons must have: shadow, hover:scale, active states
+   - Links must have underline effects or color changes
+   - Form inputs must have focus:ring effects
+   - Cards must lift on hover (hover:-translate-y-2)
+
+7. **Section-Specific Design:**
+   - Hero: Full viewport height (min-h-screen), centered content, compelling CTA
+   - Benefits/Features: Cards or icons with descriptions, use grid layout
+   - Testimonials: Cards with quotes, author photos, ratings
+   - Contact: Form with beautiful styling, clear labels, helpful placeholders
+   - Footer: Clean, organized, with all links and social media
+
+**STYLE-SPECIFIC GUIDELINES:**
+- **Minimalist/Minimalist Pro**: Clean whites, subtle grays, thin lines, abundant space, San-serif fonts
+- **Modern**: Bold colors, sharp edges, gradients, contemporary feel
+- **Luxury**: Gold accents, elegant fonts (serif), rich colors, sophisticated spacing
+- **Vintage/Retro**: Warm tones, aged paper textures, classic typography
+- **Neon/Aurora**: Vibrant gradients, glowing effects, dark backgrounds, bold colors
+- **Claymorphism**: Soft shadows, muted colors, rounded corners, depth
+- **Bento Grid**: Card-based layout, organized sections, clean borders
+- **Gothic**: Dark palette, dramatic fonts, medieval touches
+- **Comic/Pop Art**: Bold outlines, primary colors, playful elements
+- **Art Nouveau**: Organic curves, floral elements, elegant lines
+- **Bauhaus**: Geometric shapes, primary colors, functional design
+- **Casual**: Friendly colors, approachable design, relaxed spacing
 
 * **Default Image:** You must find a suitable, high-quality image from Unsplash.
+
+⚠️⚠️⚠️ **CRITICAL IMAGE RULES - MUST FOLLOW:** ⚠️⚠️⚠️
+- ✅ ALWAYS use Unsplash URLs (https://images.unsplash.com/...)
+- ❌ NEVER EVER use base64 encoded images (data:image/...)
+- ❌ NEVER use placeholder images (via.placeholder.com)
+- ❌ NEVER generate images yourself
+- ✅ ALL images MUST be from Unsplash with proper URLs
 
 
 
@@ -3115,6 +3184,22 @@ ${finalStructurePrompt}
 * **Responsiveness:** Perfect.
 
 * **Links:** All links must work. Phone should link to tel: and WhatsApp. Email to mailto:. External links should open in a new tab (target="_blank").
+
+* **YouTube Video Integration:**
+  - If YouTube URL is provided: ${cleanYoutubeEmbedUrl || 'Not provided'}
+  - Display mode: ${s(data.youtubeDisplayMode) || 'Embed'}
+  - **If Display Mode is "Embed":**
+    * Create a dedicated video section (id="video-section")
+    * Use full \`<iframe>\` embed with proper aspect ratio (16:9)
+    * \`<iframe width="100%" height="auto" style="aspect-ratio: 16/9;" src="${cleanYoutubeEmbedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\`
+    * Center the video with proper padding
+    * Add subtle shadow or border to make it stand out
+  - **If Display Mode is "Link":**
+    * Add a prominent "Watch on YouTube" button/link
+    * Use red YouTube branding color (#FF0000)
+    * Link opens in new tab: \`target="_blank"\`
+    * Add YouTube icon SVG
+  - **If no YouTube URL provided:** Skip video section entirely
 
 * **Contact Form:** Must include JavaScript for form submission to WhatsApp or Email:
 document.getElementById('contact-form').addEventListener('submit', function(e) {
@@ -3232,9 +3317,143 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
             * All navigation elements
 
 
-## 7. Final Command
+## 7. Creative Excellence Standards
+
+**MAKE IT STUNNING - AGENCY-LEVEL QUALITY:**
+
+1. **Modern Web Design Trends 2024:**
+   - Use glassmorphism where appropriate (backdrop-filter: blur)
+   - Implement smooth scroll animations (scroll-behavior: smooth)
+   - Add subtle parallax effects for depth
+   - Use CSS Grid and Flexbox masterfully
+   - Implement dark mode toggle if it enhances the design
+   
+2. **Advanced Tailwind Techniques:**
+   - Combine multiple utilities creatively (bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500)
+   - Use arbitrary values when needed ([clip-path:polygon(...)])
+   - Implement responsive design breakpoints perfectly (sm: md: lg: xl: 2xl:)
+   - Use group-hover for interactive cards
+   - Apply peer utilities for form validation states
+
+3. **Visual Hierarchy:**
+   - Clear F-pattern or Z-pattern for eye flow
+   - Important elements should "pop" (larger, colorful, shadowed)
+   - Secondary elements should recede (smaller, muted, less contrast)
+   - Use size, color, AND spacing to create hierarchy
+
+4. **Emotional Design:**
+   - **Landing Page**: Trustworthy, professional, action-oriented
+   - **Event/Wedding**: Elegant, romantic, celebratory
+   - **Store**: Appetizing, trustworthy, easy to navigate
+   - **Brand Page**: Authoritative, memorable, impressive
+   - Match colors and imagery to evoke the right emotions
+
+5. **CTAs That Convert:**
+   - Primary CTA: Large (px-8 py-4), bold color, strong shadow, clear text
+   - Use action verbs: "התחל עכשיו", "הזמן כעת", "קבל הצעה"
+   - Add urgency or value: "הצטרף ל-1000+ לקוחות מרוצים"
+   - Multiple CTAs throughout the page (above fold, mid-page, footer)
+
+6. **Page-Type Specific Excellence:**
+   
+   **For Landing Pages:**
+   - Attention-grabbing hero with clear value proposition
+   - 3-5 benefit boxes with icons
+   - Social proof (testimonials, logos, numbers)
+   - Urgent CTA with contrast color
+   - Trust indicators (security badges, guarantees)
+   
+   **For Event/Wedding Pages:**
+   - Romantic, elegant typography (serif fonts)
+   - Countdown timer with beautiful styling
+   - Photo gallery or slideshow
+   - RSVP form that's inviting and easy
+   - Pastel or gold color accents
+   - Decorative elements (borders, dividers)
+   
+   **For Store/Product Pages:**
+   - Clean product displays with hover effects
+   - Price prominently displayed
+   - "Add to Cart" buttons that stand out
+   - Product grid with consistent card design
+   - Trust badges (secure checkout, free shipping)
+   - Shopping cart icon in header
+   
+   **For Brand/Portfolio Pages:**
+   - Bold hero statement about the brand
+   - Project/work showcase with hover reveals
+   - About section with personality
+   - Skills or services grid
+   - Contact form that matches brand aesthetics
+
+7. **Random Variation:**
+   - For each page type, you have creative freedom to choose from 3-5 different layout variations
+   - Vary the hero section design (left-align, center, split-screen, full-background)
+   - Alternate between card grids, masonry layouts, and list formats
+   - Change section order slightly while maintaining logic
+   - Use different animation patterns (fade-in, slide-up, scale)
+
+* **Main Image Directive:**
+
+  * **If 'Use as Background Image' is 'Yes'**: The main image (from Unsplash) **must** be used as a \`background-image\` for the main Hero section. To ensure readability, you **must** add a separate div element as an overlay with a semi-transparent black background (e.g., \`class="absolute inset-0 bg-black/50 bg-overlay"\`) between the background image and the content. **It is important to add the 'bg-overlay' class**.
+
+  * **If 'Use as Background Image' is 'No'**: Place the image as a standard \`<img>\` element.
+
+* **Default Image:** You must find a suitable, high-quality image from Unsplash.
+
+⚠️⚠️⚠️ **CRITICAL IMAGE RULES - MUST FOLLOW:** ⚠️⚠️⚠️
+- ✅ ALWAYS use Unsplash URLs (https://images.unsplash.com/...)
+- ❌ NEVER EVER use base64 encoded images (data:image/...)
+- ❌ NEVER use placeholder images (via.placeholder.com)
+- ❌ NEVER generate images yourself
+- ✅ ALL images MUST be from Unsplash with proper URLs
+
+
+
+## 8. Design Variations & Uniqueness
+
+**CRITICAL**: Each time you generate a page, make it UNIQUE. Don't create cookie-cutter templates.
+
+**For "${s(data.style)}" style, implement ONE of these color scheme variations:**
+
+**Minimalist Pro variations:**
+- Variation A: Pure B&W with one accent color (blue, green, or purple)
+- Variation B: Soft grays with pastel accent
+- Variation C: White with bold typography and minimal color
+
+**Modern variations:**
+- Variation A: Blue-purple gradient theme
+- Variation B: Teal-cyan contemporary
+- Variation C: Dark mode with neon accents
+
+**Luxury variations:**
+- Variation A: Gold + deep navy
+- Variation B: Rose gold + charcoal
+- Variation C: Silver + burgundy
+
+**Event/Wedding variations:**
+- Variation A: Blush pink + gold
+- Variation B: Sage green + cream
+- Variation C: Lavender + silver
+- Variation D: Coral + ivory
+
+**Store variations:**
+- Variation A: Fresh & clean (white + one brand color)
+- Variation B: Warm & inviting (earth tones)
+- Variation C: Bold & modern (bright colors, high contrast)
+
+**Layout Variations:** For each section, randomly choose from 2-3 different layout options to create diversity.
+
+## 9. Final Command
 
 Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>\`.
+
+**REMEMBER**: 
+- This must be STUNNING - worthy of an award-winning creative agency
+- Every element should be polished and professional
+- Make it UNIQUE - no two pages should look identical
+- Follow the ${s(data.style)} aesthetic but interpret it creatively
+- The page should convert visitors into customers/leads/guests
 
 `;
 
@@ -4657,6 +4876,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 html_content: finalHtml,
 
                 template_type: state.selectedPageType,
+                
+                pageType: state.selectedPageType === 'onlineStore' ? 'store' : state.selectedPageType,
 
                 status: 'completed'
 

@@ -938,6 +938,17 @@
                                             </label>
                                         </div>
                                     </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">ניקוי נתונים</label>
+                                        <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                                            <p class="text-sm text-gray-700 mb-3">
+                                                🧹 נקה נתונים יתומים (קניות ומוזמנים מדפים שנמחקו)
+                                            </p>
+                                            <button onclick="cleanOrphanedData()" class="bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-700">
+                                                🗑️ נקה נתונים יתומים
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="flex justify-end">
                                         <button class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
                                             שמור הגדרות
@@ -953,10 +964,27 @@
     </div>
 
     <script>
+        // --- Performance Optimization for Edge ---
+        // Disable console.log in production for better Edge performance
+        const isEdge = navigator.userAgent.indexOf('Edg') > -1;
+        if (isEdge) {
+            // Completely disable console in Edge
+            console.log = function() {};
+            console.info = function() {};
+            console.debug = function() {};
+            console.warn = function() {};
+            
+            // Add timeout protection for all async operations
+            window.EDGE_TIMEOUT = 5000; // 5 seconds max for any operation
+            
+            // Disable all animations in Edge
+            document.documentElement.style.setProperty('--animation-duration', '0s');
+        }
+        
         // --- הגדרות ---
         const supabaseUrl = 'https://osoqfadqohqcauawzmmq.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zb3FmYWRxb2hxY2F1YXd6bW1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2OTIzMjMsImV4cCI6MjA3MzI2ODMyM30.TBLmKIntYGSfBm2StItfWm87-ebojV_NbaKNcYNWMPg';
-        const googleClientId = '962311085001-vprul5vgv7o025n9mvunfm7tjhcc5pg8.apps.googleusercontent.com';
+        const googleClientId = '589919062235-o6ohhnon54a12dav2lg24goh1m4ks43p.apps.googleusercontent.com';
 
         const { createClient } = supabase;
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
@@ -969,6 +997,10 @@
         // --- Admin Variables ---
         const ADMIN_USER_ID = 'fae06b49-1239-4ba5-93db-244ce2851fb4'; // המנהל הנוכחי
         let isAdmin = false;
+        let adminTimeInterval = null; // Prevent memory leak from multiple intervals
+        let isDashboardLoading = false; // Prevent multiple simultaneous dashboard loads
+        let loadProjectsTimeout = null; // Debounce loadProjects calls
+        let isLoadingProjects = false; // Prevent concurrent loadProjects calls
 
         // --- User Session Management ---
         function saveCurrentUser(user) {
@@ -1066,6 +1098,11 @@
                     localStorage.setItem(`subscription_${currentUser.id}`, JSON.stringify(subscriptionData));
                     // updateSubscriptionUI(); // לא נדרש יותר
                     showError('המנוי שלך פג. אנא חדש את המנוי להמשך השימוש.');
+                    // Clear interval when subscription expires
+                    if (subscriptionTimer) {
+                        clearInterval(subscriptionTimer);
+                        subscriptionTimer = null;
+                    }
                     return;
                 }
 
@@ -1077,6 +1114,10 @@
             }
 
             updateCountdown();
+            // Clear previous interval to prevent memory leak
+            if (subscriptionTimer) {
+                clearInterval(subscriptionTimer);
+            }
             subscriptionTimer = setInterval(updateCountdown, 60000); // עדכון כל דקה
         }
 
@@ -1685,11 +1726,20 @@
             adminPanel.classList.remove('hidden');
             loadAdminData();
             updateAdminTime();
-            setInterval(updateAdminTime, 1000); // עדכן כל שנייה
+            // Clear previous interval to prevent memory leak
+            if (adminTimeInterval) {
+                clearInterval(adminTimeInterval);
+            }
+            adminTimeInterval = setInterval(updateAdminTime, 1000); // עדכן כל שנייה
         }
 
         function closeAdminPanelHandler() {
             adminPanel.classList.add('hidden');
+            // Clear interval when closing to prevent memory leak
+            if (adminTimeInterval) {
+                clearInterval(adminTimeInterval);
+                adminTimeInterval = null;
+            }
         }
 
         function updateAdminTime() {
@@ -2828,6 +2878,13 @@
                 return;
             }
             
+            // Prevent multiple simultaneous loads
+            if (isDashboardLoading) {
+                console.log("Dashboard already loading, skipping...");
+                return;
+            }
+            isDashboardLoading = true;
+            
             loginView.classList.add('hidden');
             dashboardView.classList.remove('hidden');
             document.body.classList.add('bg-gray-50');
@@ -2905,24 +2962,157 @@
             // המתן קצת לפני טעינת הפרויקטים
             setTimeout(() => {
             loadProjects();
+            isDashboardLoading = false; // Release lock after projects loaded
             }, 200);
             console.log("======================");
         }
         
+        // --- Helper Functions ---
+        async function detectPageType(project) {
+            // PRIORITY 1: Check if pageType is already in project metadata (from server)
+            if (project.pageType === 'onlineStore' || project.pageType === 'store') {
+                console.log(`✅ Using metadata pageType: store (from ${project.fileName})`);
+                return 'store';
+            }
+            if (project.pageType === 'event') {
+                console.log(`✅ Using metadata pageType: event (from ${project.fileName})`);
+                return 'event';
+            }
+            
+            // Detect page type based on name, metadata, or content
+            const name = (project.name || '').toLowerCase();
+            const fileName = (project.fileName || project.local_file || '').toLowerCase();
+            const description = (project.description || '').toLowerCase();
+            
+            // Event page keywords (הזמנה, חתונה, אירוע)
+            const eventKeywords = ['חתונה', 'אירוע', 'הזמנה', 'בר מצווה', 'בת מצווה', 'חינה', 'ברית', 'wedding', 'event'];
+            const isEventByName = eventKeywords.some(keyword => 
+                name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
+            );
+            
+            // Store page keywords - EXPANDED LIST
+            const storeKeywords = [
+                'חנות', 'מוצר', 'קטלוג', 'ממתק', 'מכירה', 'קניה', 'מחיר', 'עגלה',
+                'store', 'shop', 'product', 'catalog', 'buy', 'cart', 'price',
+                'sweet', 'candy', 'food', 'bakery', 'מאפה', 'קונדיטוריה'
+            ];
+            const isStoreByName = storeKeywords.some(keyword => 
+                name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
+            );
+            
+            // Try to detect by checking page content (only if HTML file exists)
+            let isStoreByContent = false;
+            let isEventByContent = false;
+            
+            // Skip content checking for pages without HTML files
+            if (project.hasHtmlFile !== false) {
+                try {
+                    // Fetch the page to check its content
+                    const pageUrl = `/users/${project.userId || currentUser?.id}/${fileName}`;
+                    const response = await fetch(pageUrl);
+                    if (response.ok) {
+                    const htmlContent = await response.text();
+                    const lowerContent = htmlContent.toLowerCase();
+                    
+                    // Check for store indicators in content
+                    const hasAddToCart = lowerContent.includes('addtocart') || 
+                                        lowerContent.includes('הוסף לעגלה') ||
+                                        lowerContent.includes('add to cart');
+                    const hasCartElement = lowerContent.includes('cart-sidebar') || 
+                                          lowerContent.includes('shopping-cart') ||
+                                          lowerContent.includes('עגלת קניות');
+                    const hasPrice = (lowerContent.match(/₪\d+/g) || []).length > 3;
+                    
+                    isStoreByContent = hasAddToCart || hasCartElement || (hasPrice && lowerContent.includes('product'));
+                    
+                    // Check for event indicators
+                    const hasRSVP = lowerContent.includes('rsvp') || lowerContent.includes('אישור הגעה');
+                    const hasEventDate = lowerContent.includes('תאריך האירוע') || lowerContent.includes('event date');
+                    
+                    isEventByContent = hasRSVP || hasEventDate;
+                    
+                    console.log('🔍 Page type detection:', {
+                        fileName,
+                        isStoreByName,
+                        isStoreByContent,
+                        isEventByName,
+                        isEventByContent,
+                        hasAddToCart,
+                        hasCartElement
+                    });
+                    }
+                } catch (error) {
+                    console.log('Could not fetch page content for type detection:', error);
+                }
+            } else {
+                console.log('⏩ Skipping content check for page without HTML file:', fileName);
+            }
+            
+            // PRIORITY 2: Content-based detection
+            if (isEventByContent || isEventByName) {
+                console.log(`✅ Detected event from ${isEventByContent ? 'content' : 'name'}`);
+                return 'event';
+            }
+            if (isStoreByContent || isStoreByName) {
+                console.log(`✅ Detected store from ${isStoreByContent ? 'content' : 'name'}`);
+                return 'store';
+            }
+            
+            console.log(`ℹ️ No specific type detected for ${fileName}, defaulting to 'other'`);
+            return 'other';
+        }
+        
+        function getManageButtonText(pageType) {
+            switch(pageType) {
+                case 'event': return 'ניהול מוזמנים';
+                case 'store': 
+                case 'onlineStore': return 'ניהול חנות';
+                default: return 'ניהול';
+            }
+        }
+        
+        function getManageUrl(pageType, fileName, userId) {
+            switch(pageType) {
+                case 'event': return `/event-admin.html?page=${fileName}&userId=${userId}`;
+                case 'store':
+                case 'onlineStore': return `/page-management.html?page=${fileName}&userId=${userId}`;
+                default: return `/leads-admin.html?page=${fileName}&userId=${userId}`;
+            }
+        }
+        
         // --- פרויקטים ---
         async function loadProjects() {
+            // Prevent concurrent calls - CRITICAL for Edge performance
+            if (isLoadingProjects) {
+                console.log('⚠️ loadProjects already running, skipping...');
+                return;
+            }
+            isLoadingProjects = true;
+            
+            // Edge: Force timeout after 5 seconds
+            if (isEdge) {
+                setTimeout(() => {
+                    if (isLoadingProjects) {
+                        console.error('⏰ loadProjects timeout - forcing unlock');
+                        isLoadingProjects = false;
+                    }
+                }, window.EDGE_TIMEOUT || 5000);
+            }
+            
             console.log('loadProjects התחיל');
             console.log('currentUser:', currentUser);
             
             const projectsList = document.getElementById('projects-list');
             if (!projectsList) {
                 console.error('לא נמצא projects-list element');
+                isLoadingProjects = false;
                 return;
             }
             
             if (!currentUser) {
                 console.error('currentUser לא מוגדר!');
                 projectsList.innerHTML = '<div class="text-center py-16 col-span-full">שגיאה: משתמש לא מחובר</div>';
+                isLoadingProjects = false;
                 return;
             }
             projectsList.innerHTML = `
@@ -2952,6 +3142,59 @@
                 if (!error && supabaseProjects) {
                     projects = supabaseProjects;
                     console.log('נטענו מ-Supabase:', projects.length, 'פרויקטים');
+                    
+                    // Try to enrich Supabase projects with pageType from local API
+                    try {
+                        const localResponse = await fetch(`/api/pages/${currentUser.id}`);
+                        const localData = await localResponse.json();
+                        
+                        if (localData.pages && localData.pages.length > 0) {
+                            // Create a map of fileName -> pageType
+                            const pageTypeMap = {};
+                            localData.pages.forEach(page => {
+                                if (page.pageType) {
+                                    pageTypeMap[page.fileName] = page.pageType;
+                                }
+                            });
+                            
+                            // Enrich Supabase projects with pageType
+                            projects.forEach(project => {
+                                // Try to match by various fields
+                                let matchingPageType = pageTypeMap[project.local_file] || 
+                                                      pageTypeMap[project.id];
+                                
+                                // If no match, try fuzzy matching by name
+                                if (!matchingPageType) {
+                                    const projectName = (project.name || '').toLowerCase();
+                                    for (const [fileName, pageType] of Object.entries(pageTypeMap)) {
+                                        const cleanFileName = fileName.replace(/_html$/, '').replace(/\.html$/, '').replace(/_/g, ' ').toLowerCase();
+                                        if (projectName.includes(cleanFileName) || cleanFileName.includes(projectName)) {
+                                            matchingPageType = pageType;
+                                            console.log(`🔍 Fuzzy matched: "${projectName}" ↔ "${cleanFileName}" → ${pageType}`);
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                // If still no match and it's a store-like name, default to 'store'
+                                if (!matchingPageType) {
+                                    const projectName = (project.name || '').toLowerCase();
+                                    const storeKeywords = ['ממתק', 'שוקולד', 'חנות', 'מכירה', 'store', 'shop', 'sweet', 'שעונ'];
+                                    if (storeKeywords.some(kw => projectName.includes(kw))) {
+                                        matchingPageType = 'store';
+                                        console.log(`🏪 Auto-detected as store by name: ${project.name}`);
+                                    }
+                                }
+                                
+                                if (matchingPageType) {
+                                    project.pageType = matchingPageType;
+                                    console.log(`✅ Enriched project with pageType: ${matchingPageType} for ${project.name}`);
+                                }
+                            });
+                        }
+                    } catch (enrichErr) {
+                        console.log('Could not enrich with local pageTypes:', enrichErr);
+                    }
                 } else {
                     console.log('שגיאה ב-Supabase:', error);
                     supabaseError = error;
@@ -2974,39 +3217,9 @@
                             // חלץ שם נקי מתוך שם הקובץ
                             let cleanName = page.title || 'דף נחיתה';
                             
-                            // נסה לחלץ את שם האתר מתוך תוכן הקובץ
-                            if (page.fileName && page.url) {
-                                // קריאה אסינכרונית של הקובץ לחילוץ הכותרת
-                                fetch(page.url)
-                                    .then(response => response.text())
-                                    .then(html => {
-                                        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-                                        if (titleMatch && titleMatch[1]) {
-                                            const extractedTitle = titleMatch[1].trim();
-                                            if (extractedTitle && extractedTitle !== 'דף נחיתה' && extractedTitle.length > 3) {
-                                                // עדכן את השם בריבוע
-                                                setTimeout(() => {
-                                                    const projectElement = document.querySelector(`[data-project-id="local_${page.fileName}"]`);
-                                                    if (projectElement) {
-                                                        const nameElement = projectElement.querySelector('h3');
-                                                        if (nameElement) {
-                                                            nameElement.textContent = extractedTitle;
-                                                        }
-                                                    }
-                                                }, 100);
-                                            }
-                                        }
-                                    })
-                                    .catch(err => {
-                                        // אם לא הצלחנו לקרוא את הקובץ, נסה לחלץ מהשם
-                                        if (page.fileName && page.fileName.includes('_')) {
-                                            const namePart = page.fileName.split('_')[0];
-                                            if (namePart && namePart !== 'page' && namePart !== 'דף' && namePart.length > 2) {
-                                                cleanName = decodeURIComponent(namePart);
-                                            }
-                                        }
-                                    });
-                            }
+                            // DISABLED: Removed multiple fetch requests that caused Edge to freeze
+                            // Instead, we extract title from filename only
+                            // This prevents dozens of simultaneous HTTP requests
                             
                             // אם יש שם קובץ עם timestamp, נסה לחלץ שם יותר טוב
                             if (page.fileName && page.fileName.includes('_')) {
@@ -3027,11 +3240,11 @@
                             local_file: page.fileName,
                             local_url: page.url,
                                 user_id: currentUser.id,
-                                userId: currentUser.id
+                                userId: currentUser.id,
+                                pageType: page.pageType // CRITICAL: Pass pageType from server!
                             };
                             
-                            // Set pageType from metadata file path (sync, no fetch needed)
-                            // We'll load it lazily when clicking manage button
+                            console.log(`✅ Local page loaded with pageType: ${page.pageType} for ${page.fileName}`);
                             
                             return projectObj;
                         });
@@ -3051,8 +3264,15 @@
             if (projects && projects.length > 0) {
                 console.log('מציג', projects.length, 'פרויקטים');
                 projectsList.innerHTML = '';
+                
                 projects.forEach((project, index) => {
                     console.log(`מציג פרויקט ${index + 1}:`, project.name);
+                    
+                    // Use pageType from server (already detected and saved)
+                    const pageType = project.pageType || 'other';
+                    const manageButtonText = getManageButtonText(pageType);
+                    console.log(`📋 Page type: ${pageType} → Button text: "${manageButtonText}" for ${project.name}`);
+                    
                     const creationDate = new Date(project.created_at).toLocaleDateString('he-IL');
                     const projectCard = document.createElement('div');
                     projectCard.className = 'bg-white p-4 rounded-xl border border-gray-200 shadow-md hover:shadow-lg hover:border-indigo-400 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden backdrop-blur-sm bg-white/95';
@@ -3121,11 +3341,11 @@
                         ערוך
                         </button>
                         ${hasHtmlContent ?
-                            `<button data-action="manage" onclick="manageProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2">
+                            `<button data-action="manage" data-page-type="${pageType}" onclick="manageProject('${project.id}', '${pageType}')" class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                 </svg>
-                                <span class="manage-button-text">ניהול...</span>
+                                <span class="manage-button-text">${manageButtonText}</span>
                             </button>` : ''
                         }
                         <button onclick="deleteProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
@@ -3151,8 +3371,8 @@
                                             style="pointer-events: none; transform: scale(0.6) translateX(65%); transform-origin: top left; width: 166.67%; height: 166.67%;"
                                             title="תצוגה מקדימה של ${project.name}"
                                             loading="lazy"
-                                            onload="console.log('Preview loaded for:', '${project.name}')"
-                                            onerror="console.log('Preview error for:', '${project.name}')">
+                                            importance="low"
+                                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms">
                                         </iframe>
                                     </div>
                                 ` : `
@@ -3194,7 +3414,7 @@
                         <div class="p-4 flex-1 flex flex-col" style="min-height: 0; overflow: hidden;">
                             <!-- כותרת וסטטוס -->
                             <div class="mb-3 flex-shrink-0">
-                                    <h3 class="font-semibold text-lg text-gray-800 mb-2 truncate" style="min-height: 24px;">${project.name}</h3>
+                                    <h3 class="font-semibold text-lg text-gray-800 mb-2" style="min-height: 24px;">${project.name}</h3>
                                 <p class="text-sm text-gray-500 mb-3 line-clamp-2" style="min-height: 32px;">${project.description || 'דף נחיתה מקצועי'}</p>
                                 <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
                                     <span>נוצר: ${creationDate}</span>
@@ -3231,6 +3451,9 @@
                     </div>
                 `;
             }
+            
+            // Release lock after loading completes
+            isLoadingProjects = false;
         }
 
         async function viewProject(projectId) {
@@ -3294,7 +3517,7 @@
         function updateManagementButton(projectCard, pageType) {
             const manageButton = projectCard.querySelector('[data-action="manage"]');
             if (manageButton) {
-                if (pageType === 'store') {
+                if (pageType === 'store' || pageType === 'onlineStore') {
                     manageButton.textContent = '🛒 ניהול חנות';
                 } else if (pageType === 'event') {
                     manageButton.textContent = '🎉 ניהול מוזמנים';
@@ -3306,7 +3529,7 @@
 
         function getManagementButtonText(project) {
             // First check if pageType was auto-detected
-            if (project.pageType === 'store') {
+            if (project.pageType === 'store' || project.pageType === 'onlineStore') {
                 return 'ניהול חנות';
             }
             if (project.pageType === 'event') {
@@ -3368,8 +3591,8 @@
             dropdown.classList.toggle('show');
         }
         
-        async function manageProject(projectId) {
-            console.log('🔍 manageProject called with:', projectId);
+        async function manageProject(projectId, detectedPageType = null) {
+            console.log('🔍 manageProject called with:', projectId, 'pageType:', detectedPageType);
             
             // חלץ את שם הקובץ והמשתמש
             const fileName = projectId.startsWith('local_') ? projectId.replace('local_', '') : projectId;
@@ -3402,8 +3625,8 @@
                 return;
             }
             
-            // Load pageType from metadata if not already loaded
-            let pageType = project?.pageType;
+            // Use detected page type or load from metadata
+            let pageType = detectedPageType || project?.pageType;
             
             if (!pageType) {
                 try {
@@ -3422,15 +3645,20 @@
             // Determine management URL based on pageType
             let managementUrl;
             
+            console.log('🔍 FINAL pageType for routing:', pageType, 'Type:', typeof pageType);
+            
             if (pageType === 'event') {
-                managementUrl = `/event-admin.html?eventId=${fileName}&userId=${userId}`;
-                console.log('🎉 Opening EVENT management');
-            } else if (pageType === 'store') {
-                managementUrl = `/admin.html?page=${fileName}&userId=${userId}`;
-                console.log('🛒 Opening STORE management');
+                // דף אירוע/הזמנה → ניהול מוזמנים
+                managementUrl = `/event-guests.html?eventId=${fileName}&userId=${userId}`;
+                console.log('🎉 Opening EVENT management (guests)');
+            } else if (pageType === 'store' || pageType === 'onlineStore') {
+                // דף חנות → ניהול חנות
+                managementUrl = `/page-management.html?page=${fileName}&userId=${userId}`;
+                console.log('🛒 Opening STORE management for:', fileName);
             } else {
+                // דפים אחרים → ניהול לידים
                 managementUrl = `/leads-admin.html?page=${fileName}&userId=${userId}`;
-                console.log('📋 Opening LEADS management (landing page)');
+                console.log('📋 Opening LEADS management (pageType was:', pageType, ')');
             }
             
             console.log('🌐 Opening:', managementUrl);
@@ -3453,6 +3681,34 @@
                 });
             }
         });
+
+        async function cleanOrphanedData() {
+            if (!confirm('🧹 האם לנקות נתונים יתומים (קניות ומוזמנים מדפים שנמחקו)?')) return;
+            
+            try {
+                const response = await fetch('/api/clean-orphaned-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess(data.message);
+                    console.log('✅ Cleaned:', data);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'שגיאה בניקוי נתונים');
+                }
+            } catch (error) {
+                console.error('Error cleaning data:', error);
+                showError('שגיאה בניקוי נתונים: ' + error.message);
+            }
+        }
 
         async function deleteProject(projectId) {
             if (!confirm('האם אתה בטוח שברצונך למחוק את דף הנחיתה? הפעולה לא ניתנת לביטול.')) return;
@@ -3498,6 +3754,23 @@
         }
 
         async function signOut() {  
+            // Clear all intervals to prevent memory leaks
+            if (subscriptionTimer) {
+                clearInterval(subscriptionTimer);
+                subscriptionTimer = null;
+            }
+            if (adminTimeInterval) {
+                clearInterval(adminTimeInterval);
+                adminTimeInterval = null;
+            }
+            
+            // Clear user data
+            clearCurrentUser();
+            currentUser = null;
+            subscriptionData = null;
+            isAdmin = false;
+            
+            // Sign out from Supabase
             await supabaseClient.auth.signOut();  
         }
 
@@ -3570,22 +3843,29 @@
 
         // --- מאזינים לאירועים ---
         supabaseClient.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event);
             if (event === 'SIGNED_OUT') {
                 currentUser = null;
                 clearCurrentUser();
                 isAdmin = false;
+                isDashboardLoading = false; // Reset dashboard lock
                 dashboardView.classList.add('hidden');
                 loginView.classList.remove('hidden');
                 document.body.classList.remove('bg-gray-50');
                 if (!document.getElementById('googleSignInBtn').onclick) {
                    initGoogleSignIn();
                 }
-            } else if (event === 'SIGNED_IN') {
+            } else if (event === 'SIGNED_IN' && session) {
+                // Only update if not already showing dashboard
+                if (dashboardView.classList.contains('hidden')) {
                 currentUser = session.user;
                 saveCurrentUser(currentUser);
                 setTimeout(() => {
                 showDashboard();
                 }, 100);
+                } else {
+                    console.log('Dashboard already shown, skipping SIGNED_IN handler');
+                }
             }
         });
     </script>
