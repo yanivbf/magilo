@@ -78,7 +78,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Add CSP headers to prevent the Chrome DevTools error
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'self' https:; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com;");
+  res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src 'self' https:; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://accounts.google.com;");
   next();
 });
 
@@ -295,6 +295,29 @@ app.post('/api/create-page', async (req, res) => {
       console.log('🛒 Page has purchase capability - cart & checkout available');
     }
     
+    // 📊 DEBUG: Log HTML length before fixEventPageWhatsApp
+    console.log('📊 HTML length BEFORE fixEventPageWhatsApp:', pageHtml.length);
+    console.log('📊 First 500 chars:', pageHtml.substring(0, 500));
+    console.log('📊 Last 500 chars:', pageHtml.substring(pageHtml.length - 500));
+    console.log('📊 Has <body>?', pageHtml.includes('<body'));
+    console.log('📊 Has </body>?', pageHtml.includes('</body>'));
+    
+    // ✅ INJECT universal data extractor for ALL page types BEFORE saving
+    pageHtml = injectPageDataExtractor(pageHtml, pageType);
+    
+    // ✅ FIX WhatsApp code in event pages BEFORE saving
+    pageHtml = fixEventPageWhatsApp(pageHtml, pageType);
+    
+    // ✅ FIX Store page issues (cart, bubbles) BEFORE saving
+    if (pageType === 'store') {
+      pageHtml = fixStorePageIssues(pageHtml);
+    }
+    
+    // 📊 DEBUG: Log HTML length after fixes
+    console.log('📊 HTML length AFTER fixes:', pageHtml.length);
+    console.log('📊 First 500 chars after:', pageHtml.substring(0, 500));
+    console.log('📊 Last 500 chars after:', pageHtml.substring(pageHtml.length - 500));
+    
     // Save HTML file
     const filePath = path.join(userDir, fileName);
     await fs.writeFile(filePath, pageHtml);
@@ -397,25 +420,588 @@ app.post('/api/upload-image', upload.single('image'), (req, res) => {
 });
 
 // Save page content
+// ✅ UNIVERSAL FUNCTION - Inject page data extractor for ALL page types
+function injectPageDataExtractor(html, pageType) {
+  console.log(`📊 Injecting universal data extractor for ${pageType} page...`);
+  
+  // Check if already injected
+  if (html.includes('function extractPageData()')) {
+    console.log('⏭️ Data extractor already exists');
+    return html;
+  }
+  
+  // Universal data extraction function - works for ALL page types
+  const dataExtractorScript = `
+<script>
+// 📊 UNIVERSAL PAGE DATA EXTRACTOR - AUTO-GENERATED
+function extractPageData() {
+  const data = {};
+  
+  // For STORES: Extract products
+  if (document.querySelector('.product-card, [class*="product"]')) {
+    const products = [];
+    const productCards = document.querySelectorAll('.product-card, [class*="product"], .card, .item, section > div');
+    productCards.forEach(card => {
+      const nameEl = card.querySelector('h1, h2, h3, h4, .title, [class*="title"], [class*="name"]');
+      const priceEl = card.querySelector('[class*="price"], .cost') || 
+                     Array.from(card.querySelectorAll('*')).find(el => el.textContent.includes('₪') && !el.querySelector('*'));
+      if (nameEl && priceEl) {
+        const priceMatch = priceEl.textContent.match(/(\\d+(?:[.,]\\d+)?)/);
+        if (priceMatch) {
+          products.push({
+            name: nameEl.textContent.trim().replace(/\\s+/g, ' '),
+            price: parseFloat(priceMatch[1].replace(',', '.')),
+            description: (card.querySelector('p, .desc, [class*="desc"]') || {textContent: ''}).textContent.trim().substring(0, 200)
+          });
+        }
+      }
+    });
+    data.products = products;
+    console.log(\`🛒 Extracted \${products.length} products\`, products);
+  }
+  
+  // For ALL pages: Extract general content
+  data.pageContent = {
+    title: document.title || document.querySelector('h1')?.textContent || '',
+    headings: Array.from(document.querySelectorAll('h1, h2, h3')).map(h => h.textContent.trim()).filter(t => t),
+    sections: Array.from(document.querySelectorAll('section, .section, [class*="section"]')).length
+  };
+  
+  console.log('📊 Page data extracted:', data);
+  return data;
+}
+
+// Alias for backward compatibility
+function extractProductsFromPage() {
+  const data = extractPageData();
+  return data.products || [];
+}
+</script>`;
+  
+  // Inject before </body>
+  if (html.includes('</body>')) {
+    html = html.replace('</body>', dataExtractorScript + '\n</body>');
+    console.log('✅ Universal data extractor injected successfully');
+  } else {
+    console.log('⚠️ No </body> tag found, appending at end');
+    html += dataExtractorScript;
+  }
+  
+  return html;
+}
+
+// Function to fix STORE pages (cart, bubbles, etc.)
+function fixStorePageIssues(html) {
+  console.log('🛒 Fixing store page issues...');
+  let fixedCount = 0;
+  
+  // 1. FIX: Remove ALL content and attributes from cart placeholders
+  // The cart-sidebar, cart-overlay, and cart-button-placeholder should be COMPLETELY EMPTY
+  // The JavaScript (store-checkout.js) will build them
+  
+  // ⚔️ AGGRESSIVE FIX: Find and replace ALL variations of cart elements
+  // This will match cart-sidebar with any attributes (class, style, etc.) and any content
+  // It will replace everything with a clean, empty div
+  
+  // Step 1: Remove any existing cart elements (handles all attribute orders)
+  const cartPatterns = [
+    // cart-sidebar - all variations
+    /<div[^>]*\s+id=["']cart-sidebar["'][^>]*>[\s\S]*?<\/div>/gi,
+    /<div\s+id=["']cart-sidebar["'][^>]*>[\s\S]*?<\/div>/gi,
+    
+    // cart-overlay - all variations
+    /<div[^>]*\s+id=["']cart-overlay["'][^>]*>[\s\S]*?<\/div>/gi,
+    /<div\s+id=["']cart-overlay["'][^>]*>[\s\S]*?<\/div>/gi,
+    
+    // cart-button-placeholder - all variations
+    /<div[^>]*\s+id=["']cart-button-placeholder["'][^>]*>[\s\S]*?<\/div>/gi,
+    /<div\s+id=["']cart-button-placeholder["'][^>]*>[\s\S]*?<\/div>/gi,
+    
+    // cart-backdrop - all variations
+    /<div[^>]*\s+id=["']cart-backdrop["'][^>]*>[\s\S]*?<\/div>/gi,
+    /<div\s+id=["']cart-backdrop["'][^>]*>[\s\S]*?<\/div>/gi,
+  ];
+  
+  // Apply all patterns
+  for (const pattern of cartPatterns) {
+    if (html.match(pattern)) {
+      const matches = html.match(pattern);
+      for (const match of matches) {
+        // Determine which type of cart element this is
+        if (match.includes('cart-sidebar')) {
+          html = html.replace(match, '<div id="cart-sidebar"></div>');
+          console.log('✅ Cleaned cart-sidebar (AGGRESSIVE MODE)');
+          fixedCount++;
+        } else if (match.includes('cart-overlay')) {
+          html = html.replace(match, '<div id="cart-overlay"></div>');
+          console.log('✅ Cleaned cart-overlay (AGGRESSIVE MODE)');
+          fixedCount++;
+        } else if (match.includes('cart-button-placeholder')) {
+          html = html.replace(match, '<div id="cart-button-placeholder"></div>');
+          console.log('✅ Cleaned cart-button-placeholder (AGGRESSIVE MODE)');
+          fixedCount++;
+        } else if (match.includes('cart-backdrop')) {
+          html = html.replace(match, '<div id="cart-backdrop"></div>');
+          console.log('✅ Cleaned cart-backdrop (AGGRESSIVE MODE)');
+          fixedCount++;
+        }
+      }
+    }
+  }
+  
+  // Step 2: Extra aggressive cleanup - remove any remaining cart icons/buttons in header
+  html = html.replace(/<button[^>]*cart[^>]*>[\s\S]*?<\/button>/gi, '');
+  console.log('✅ Removed any cart buttons from header');
+  
+  // 2. FIX: Ensure bubbles have correct z-index and are clickable
+  // Find WhatsApp bubble and ensure it has proper styling
+  const whatsappBubbleRegex = /<a[^>]*href=["']https?:\/\/wa\.me\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
+  html = html.replace(whatsappBubbleRegex, (match) => {
+    // Ensure z-index is high enough and pointer-events are enabled
+    let fixed = match.replace(/z-index:\s*\d+/gi, 'z-index: 10000');
+    if (!fixed.includes('z-index')) {
+      fixed = fixed.replace(/style=["']/, 'style="z-index: 10000; ');
+    }
+    fixed = fixed.replace(/pointer-events:\s*none/gi, '');
+    return fixed;
+  });
+  
+  // 3. FIX: Ensure AI bot bubble is clickable
+  // Look for bot button/div with purple background
+  const botBubbleRegex = /<(?:button|div)[^>]*(?:background[^>]*#8B5CF6|#8B5CF6[^>]*background)[^>]*>([\s\S]*?)<\/(?:button|div)>/gi;
+  html = html.replace(botBubbleRegex, (match) => {
+    let fixed = match.replace(/z-index:\s*\d+/gi, 'z-index: 10000');
+    if (!fixed.includes('z-index')) {
+      fixed = fixed.replace(/style=["']/, 'style="z-index: 10000; ');
+    }
+    fixed = fixed.replace(/pointer-events:\s*none/gi, '');
+    return fixed;
+  });
+  
+  // 4. FIX: Add AGGRESSIVE CSS to FORCE cart closed and bubbles visible
+  const fixCSS = `
+<style id="store-page-fixes">
+  /* ⚔️ AGGRESSIVE FIX: Force cart to start CLOSED - multiple rules for maximum compatibility */
+  #cart-sidebar { 
+    right: -450px !important; 
+    transform: translateX(0) !important;
+    display: block !important;
+  }
+  
+  #cart-sidebar.open { 
+    right: 0 !important; 
+  }
+  
+  #cart-overlay, #cart-backdrop { 
+    opacity: 0 !important; 
+    pointer-events: none !important;
+    display: block !important;
+  }
+  
+  #cart-overlay.open, #cart-backdrop.open { 
+    opacity: 1 !important; 
+    pointer-events: all !important; 
+  }
+  
+  /* Force empty cart elements to have no content */
+  #cart-sidebar:empty::before,
+  #cart-overlay:empty::before,
+  #cart-backdrop:empty::before,
+  #cart-button-placeholder:empty::before {
+    content: '' !important;
+  }
+  
+  /* Ensure floating bubbles are ALWAYS clickable and visible */
+  a[href*="wa.me"], 
+  [id*="whatsapp"], 
+  [id*="bot"], 
+  [style*="#8B5CF6"],
+  [style*="25D366"] {
+    z-index: 10000 !important;
+    pointer-events: all !important;
+    cursor: pointer !important;
+  }
+  
+  /* Ensure bubbles don't hide behind cart */
+  #floating-cart-icon {
+    z-index: 9998 !important;
+  }
+  
+  /* Remove duplicate cart elements */
+  header [id*="cart"]:not(#floating-cart-icon),
+  nav [id*="cart"]:not(#floating-cart-icon),
+  header button[id*="cart"]:not(#floating-cart-icon),
+  nav button[id*="cart"]:not(#floating-cart-icon) {
+    display: none !important;
+  }
+</style>`;
+  
+  if (!html.includes('store-page-fixes')) {
+    if (html.includes('</head>')) {
+      html = html.replace('</head>', fixCSS + '\n</head>');
+      console.log('✅ Added store page fix CSS');
+      fixedCount++;
+    }
+  }
+  
+  console.log(`🛒 Fixed ${fixedCount} store page issues`);
+  return html;
+}
+
+// Function to fix WhatsApp code in event pages
+function fixEventPageWhatsApp(html, pageType) {
+  console.log(`🔍 fixEventPageWhatsApp called with pageType: "${pageType}"`);
+  
+  if (pageType !== 'event') {
+    console.log(`⏭️ Skipping fix - pageType is "${pageType}", not "event"`);
+    return html;
+  }
+  
+  console.log('🔧 Fixing WhatsApp code in event page...');
+  let fixedCount = 0;
+  
+  // 1. Remove WhatsApp floating bubble
+  const wa1 = html;
+  html = html.replace(/<a[^>]*wa\.me[^>]*>[\s\S]*?<\/a>/gi, '');
+  html = html.replace(/<!--\s*WhatsApp Floating Bubble\s*-->[\s\S]*?<\/a>/gi, '');
+  if (html !== wa1) fixedCount++;
+  
+  // 2. Remove ANY JavaScript that mentions WhatsApp or wa.me
+  const wa2 = html;
+  html = html.replace(/const\s+whatsappUrl\s*=[\s\S]*?;/gi, '');
+  html = html.replace(/let\s+whatsappUrl\s*=[\s\S]*?;/gi, '');
+  html = html.replace(/var\s+whatsappUrl\s*=[\s\S]*?;/gi, '');
+  html = html.replace(/window\.open\([^)]*wa\.me[^)]*\);?/gi, '');
+  html = html.replace(/location\.href\s*=\s*[^;]*wa\.me[^;]*;/gi, '');
+  if (html !== wa2) fixedCount++;
+  
+  // 3. Fix RSVP form submission - inject the correct handler
+  // NEW APPROACH: Don't try to delete existing scripts (too risky), just inject our script at the end
+  const rsvpFormFix = `
+<script>
+// ✅ RSVP Form - API Submission (Server-Fixed - Overrides any existing handlers)
+(function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const rsvpForm = document.getElementById('rsvp-form');
+            if (!rsvpForm) {
+                console.log('⚠️ RSVP form not found on this page');
+                return;
+            }
+            
+        // Remove all existing submit listeners by cloning the form
+        const newForm = rsvpForm.cloneNode(true);
+        rsvpForm.parentNode.replaceChild(newForm, rsvpForm);
+        
+        newForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+            e.stopPropagation();
+            console.log('📝 RSVP Form submitted (server-fixed handler)');
+                
+                const eventId = window.location.pathname.split('/').pop().replace('.html', '').replace('_html', '');
+                const userId = window.location.pathname.split('/')[2];
+                
+                const name = document.getElementById('rsvp-name').value;
+                const phone = document.getElementById('rsvp-phone').value;
+                const email = document.getElementById('rsvp-email') ? document.getElementById('rsvp-email').value : '';
+                
+                // Check if user selected "לא מגיע" (declined)
+                const statusYes = document.getElementById('rsvp-status-yes');
+                const statusNo = document.getElementById('rsvp-status-no');
+                const status = statusYes && statusYes.checked ? 'confirmed' : (statusNo && statusNo.checked ? 'declined' : 'confirmed');
+                
+                // Only count guests if confirmed, otherwise 0
+                const guests = status === 'confirmed' ? (
+                    document.getElementById('rsvp-guests') ? parseInt(document.getElementById('rsvp-guests').value) || 1 : 
+                    document.getElementById('guest-count') ? parseInt(document.getElementById('guest-count').value) || 1 : 1
+                ) : 0;
+                
+                const notes = document.getElementById('rsvp-notes') ? document.getElementById('rsvp-notes').value : '';
+                
+                console.log('📤 Sending RSVP to API...', { eventId, userId, name, guests, status });
+                
+                try {
+                    const response = await fetch('/api/rsvp', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            eventId, userId, name, phone, email, guests,
+                            status: status,
+                            message: notes
+                        })
+                    });
+                    
+                    console.log('📥 API Response:', response.status, response.ok);
+                    
+                    if (response.ok) {
+                    console.log('✅ RSVP recorded successfully!');
+                    
+                    // הצג הודעת הצלחה ברורה
+                        const successDiv = document.getElementById('rsvp-success') || document.getElementById('rsvp-message');
+                        if (successDiv) {
+                        successDiv.innerHTML = '<div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 16px; text-align: center; font-size: 24px; font-weight: bold; box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3); margin: 20px 0;"><div style="font-size: 48px; margin-bottom: 10px;">✅</div>תודה רבה ' + name + '!<br>אישור ההגעה נשלח בהצלחה 🎉</div>';
+                            successDiv.classList.remove('hidden', 'text-red-600', 'text-red-500', 'text-red-400');
+                            successDiv.classList.add('text-green-500', 'block');
+                            successDiv.style.display = 'block';
+                        successDiv.style.visibility = 'visible';
+                        successDiv.style.opacity = '1';
+                    }
+                    
+                    // הצג גם alert לוודא שהמשתמש רואה
+                    alert('✅ תודה רבה ' + name + '!\\n\\nאישור ההגעה נשלח בהצלחה 🎉\\n\\nנתראה באירוע!');
+                    
+                    // נקה את הטופס
+                    newForm.reset();
+                    
+                    // גלול חזרה לראש הדף אחרי שנייה
+                    setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 1500);
+                    } else {
+                        console.error('❌ API Error:', response.status);
+                    alert('אירעה שגיאה בשליחת האישור. נסה שוב.');
+                    }
+                } catch (error) {
+                    console.error('❌ RSVP Error:', error);
+                alert('אירעה שגיאה בשליחת האישור. נסה שוב.');
+                }
+            });
+        });
+})();
+    </script>`;
+  
+  const wa3 = html;
+  // Inject the script before </body> if there's an RSVP form
+    if (html.includes('id="rsvp-form"') || html.includes("id='rsvp-form'")) {
+      if (html.includes('</body>')) {
+        html = html.replace('</body>', rsvpFormFix + '\n</body>');
+        fixedCount++;
+        console.log('✅ Injected RSVP form handler before </body>');
+    } else if (html.includes('</html>')) {
+      html = html.replace('</html>', rsvpFormFix + '\n</html>');
+      fixedCount++;
+      console.log('✅ Injected RSVP form handler before </html>');
+    }
+  }
+  
+  // 4. Add WhatsApp bubble if missing (for event pages)
+  const whatsappBubbleHTML = `
+<!-- WhatsApp Floating Bubble -->
+<a href="https://wa.me/9724443333?text=היי,%20אני%20מעוניין%20בפרטים%20נוספים" 
+   target="_blank" 
+   style="position: fixed; bottom: 20px; left: 20px; width: 64px; height: 64px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); z-index: 9999; transition: transform 0.3s ease;"
+   onmouseover="this.style.transform='scale(1.1)'"
+   onmouseout="this.style.transform='scale(1)'">
+   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.488"/>
+   </svg>
+</a>`;
+
+  if (!html.includes('wa.me') && !html.includes('WhatsApp') && html.includes('</body>')) {
+    html = html.replace('</body>', whatsappBubbleHTML + '\n</body>');
+    fixedCount++;
+    console.log('✅ Added WhatsApp bubble');
+  }
+  
+  // 5. Remove "Contact Form" section from event pages (they use WhatsApp bubble instead)
+  // Try multiple patterns to catch different variations
+  const contactFormPatterns = [
+    // By ID - exact match
+    /<section[^>]*\sid=["']contact-form["'][^>]*>[\s\S]*?<\/section>/gi,
+    /<section[^>]*\sid=["']contact-form-section["'][^>]*>[\s\S]*?<\/section>/gi,
+    /<section[^>]*\sid=["']contact["'][^>]*>[\s\S]*?<\/section>/gi,
+    /<div[^>]*\sid=["']contact-form-section["'][^>]*>[\s\S]*?<\/div>/gi,
+    // By class
+    /<section[^>]*class=["'][^"']*contact-form[^"']*["'][^>]*>[\s\S]*?<\/section>/gi,
+    // By heading text (Hebrew variations + English)
+    /<section[^>]*>[\s\S]*?<h[1-6][^>]*>(?:צור קשר|צרו קשר|יצירת קשר|Contact(?:\s+(?:Us|Form))?)<\/h[1-6]>[\s\S]*?<\/section>/gi
+  ];
+  
+  contactFormPatterns.forEach((pattern, index) => {
+    if (html.match(pattern)) {
+      html = html.replace(pattern, '');
+      fixedCount++;
+      console.log(`✅ Removed contact form section (pattern ${index + 1})`);
+    }
+  });
+  
+  // Also remove the contact form JavaScript
+  const contactFormJsPatterns = [
+    /<script[\s\S]*?getElementById\(['"]contact-form['"]\)[\s\S]*?<\/script>/gi,
+    /<script[\s\S]*?getElementById\(["']contact-form-section["']\)[\s\S]*?<\/script>/gi,
+    // Script that mentions "contact form" in comments
+    /<script>[\s\S]*?\/\/\s*(?:Contact Form|טופס צור קשר)[\s\S]*?<\/script>/gi
+  ];
+  
+  contactFormJsPatterns.forEach((pattern, index) => {
+    if (html.match(pattern)) {
+      html = html.replace(pattern, '');
+      console.log(`✅ Removed contact form JavaScript (pattern ${index + 1})`);
+    }
+  });
+  
+  // Remove form elements with id="contact-form"
+  const formPattern = /<form[^>]*id=["']contact-form["'][^>]*>[\s\S]*?<\/form>/gi;
+  if (html.match(formPattern)) {
+    html = html.replace(formPattern, '');
+    fixedCount++;
+    console.log('✅ Removed contact form element');
+  }
+  
+  // 6. Manage Guests button removed - users access it via dashboard only
+  // No need to add it to the public event page
+  
+  // 7. Remove any alert/confirm messages about WhatsApp
+  const wa4 = html;
+  html = html.replace(/alert\([^)]*[וו]אטס[אא]פ[^)]*\);?/gi, '');
+  html = html.replace(/alert\([^)]*WhatsApp[^)]*\);?/gi, '');
+  if (html !== wa4) fixedCount++;
+  
+  // 8. Fix countdown timer - remove dir attribute, change to grid-cols-4, add seconds
+  if (html.includes('id="countdown-timer"')) {
+    // Fix grid-cols-3 to grid-cols-4
+    html = html.replace(/grid-cols-3/gi, 'grid-cols-4');
+    
+    // Remove dir="ltr" or dir="rtl" from countdown grid container (let Hebrew RTL be natural)
+    html = html.replace(/(<div[^>]*class="[^"]*grid[^"]*grid-cols-[^"]*"[^>]*)\s*dir="(?:ltr|rtl)"/gi, '$1');
+    
+    // Add a script to fix countdown: add seconds if missing AND reverse order for RTL
+    const countdownFixScript = `
+<script>
+// Fix countdown timer - ensure seconds are present and order is reversed for RTL
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const countdownSection = document.getElementById('countdown-timer');
+        if (!countdownSection) return;
+        
+        // Find the grid container
+        const gridContainer = countdownSection.querySelector('.grid, [class*="grid-cols"]');
+        if (!gridContainer) return;
+        
+        // Get all countdown boxes
+        const days = document.getElementById('days');
+        const hours = document.getElementById('hours');
+        const minutes = document.getElementById('minutes');
+        let seconds = document.getElementById('seconds');
+        
+        // Add seconds if missing
+        if (!seconds && minutes) {
+            console.log('⏰ Adding missing seconds to countdown timer');
+            const minutesBox = minutes.closest('.countdown-box, div[class*="countdown"]');
+            if (minutesBox && minutesBox.parentElement) {
+                const secondsBox = minutesBox.cloneNode(true);
+                const secondsNum = secondsBox.querySelector('#minutes, [id*="minutes"]');
+                const secondsLabel = secondsBox.querySelector('span');
+                if (secondsNum && secondsLabel) {
+                    secondsNum.id = 'seconds';
+                    secondsNum.textContent = '00';
+                    secondsLabel.textContent = 'שניות';
+                    minutesBox.parentElement.appendChild(secondsBox);
+                    seconds = secondsNum;
+                }
+            }
+        }
+        
+        // Reverse order for RTL: seconds → minutes → hours → days
+        if (days && hours && minutes && seconds) {
+            const daysBox = days.closest('.countdown-box, div[class*="countdown"]');
+            const hoursBox = hours.closest('.countdown-box, div[class*="countdown"]');
+            const minutesBox = minutes.closest('.countdown-box, div[class*="countdown"]');
+            const secondsBox = seconds.closest('.countdown-box, div[class*="countdown"]');
+            
+            if (daysBox && hoursBox && minutesBox && secondsBox && gridContainer) {
+                console.log('⏰ Reversing countdown order for RTL display');
+                gridContainer.innerHTML = '';
+                gridContainer.appendChild(secondsBox);
+                gridContainer.appendChild(minutesBox);
+                gridContainer.appendChild(hoursBox);
+                gridContainer.appendChild(daysBox);
+            }
+        }
+    });
+})();
+</script>`;
+    
+    if (html.includes('</body>')) {
+      html = html.replace('</body>', countdownFixScript + '\n</body>');
+    }
+    
+    console.log('✅ Fixed countdown timer (3→4 cols, removed dir, reversed order for RTL)');
+    fixedCount++;
+  }
+  
+  // 9. Remove accessibility BUBBLES (floating widgets) - users should use top bar button instead
+  const accessibilityBubblePatterns = [
+    // Floating accessibility widget/bubble
+    /<div[^>]*(?:accessibility-widget|accessibility-bubble|accessibility-menu|נגישות)[^>]*style="[^"]*(?:position:\s*fixed|position:fixed)[^"]*"[^>]*>[\s\S]*?<\/div>/gi,
+    /<button[^>]*(?:accessibility-widget|accessibility-bubble|accessibility-menu|נגישות)[^>]*style="[^"]*(?:position:\s*fixed|position:fixed)[^"]*"[^>]*>[\s\S]*?<\/button>/gi,
+    // By class name with fixed position
+    /<div[^>]*class="[^"]*(?:accessibility-widget|accessibility-bubble|accessibility-floating|נגישות)[^"]*"[^>]*>[\s\S]*?<\/div>/gi
+  ];
+  
+  accessibilityBubblePatterns.forEach((pattern, index) => {
+    const beforeRemoval = html;
+    html = html.replace(pattern, '');
+    if (html !== beforeRemoval) {
+      console.log(`✅ Removed accessibility floating bubble (pattern ${index + 1})`);
+      fixedCount++;
+    }
+  });
+  
+  // Remove accessibility JavaScript that creates floating widgets
+  const accessibilityJsPattern = /<script[\s\S]*?(?:accessibility|נגישות)[\s\S]*?(?:position.*fixed|floating)[\s\S]*?<\/script>/gi;
+  const beforeJsRemoval = html;
+  html = html.replace(accessibilityJsPattern, '');
+  if (html !== beforeJsRemoval) {
+    console.log('✅ Removed accessibility floating widget script');
+    fixedCount++;
+  }
+  
+  // 9.5. AI Bot is ALLOWED - do NOT remove it (only accessibility bubble should be removed)
+  
+  // 10. Add "All Rights Reserved - Created by AutoPage" copyright
+  const copyrightText = `
+    <div style="text-align: center; padding: 15px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 13px; margin-top: 30px;">
+        <p style="margin: 0; font-weight: 500;">
+            ✨ כל הזכויות שמורות - נוצר על ידי <strong>AutoPage</strong> ✨
+        </p>
+        <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.9;">
+            יצירת דפי נחיתה מתקדמים בקלות | <a href="http://localhost:3002" style="color: white; text-decoration: underline;">www.autopage.co.il</a>
+        </p>
+    </div>`;
+  
+  if (html.includes('</body>') && !html.includes('נוצר על ידי AutoPage')) {
+    html = html.replace('</body>', copyrightText + '\n</body>');
+    console.log('✅ Added AutoPage copyright notice');
+    fixedCount++;
+  }
+  
+  console.log(`✅ WhatsApp code fixed! (${fixedCount} changes made)`);
+  return html;
+}
+
 app.post('/api/save-page', async (req, res) => {
   try {
-    const { userId, fileName, content, pageType, pageName } = req.body;
+    let { userId, fileName, content, pageType, pageName } = req.body;
     
     if (!userId || !fileName || !content) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Fix WhatsApp code for event pages
+    content = fixEventPageWhatsApp(content, pageType);
+
     const filePath = path.join('output', userId, fileName);
     await fs.writeFile(filePath, content);
 
     // Save metadata with pageType
-    if (pageType || pageName) {
+    if (pageType || pageName || req.body.expectedGuests) {
       const metadataDir = path.join('output', userId, `${fileName.replace('.html', '')}_data`);
       await fs.ensureDir(metadataDir);
       
       const metadata = {
         pageType: pageType || 'other',
         pageName: pageName || '',
+        expectedGuests: parseInt(req.body.expectedGuests) || 0,
         lastUpdated: new Date().toISOString()
       };
       
@@ -491,6 +1077,7 @@ app.get('/api/pages/:userId', async (req, res) => {
       
       // Load metadata if exists
       let pageType = null;
+      let expectedGuests = 0;
       try {
         // Remove both .html and _html suffixes
         const fileNameBase = file.replace('.html', '').replace(/_html$/, '');
@@ -498,14 +1085,16 @@ app.get('/api/pages/:userId', async (req, res) => {
         if (await fs.pathExists(metadataPath)) {
           const metadata = await fs.readJSON(metadataPath);
           pageType = metadata.pageType;
-          console.log(`📋 Loaded metadata for ${file}: pageType=${pageType}`);
+          expectedGuests = metadata.expectedGuests || 0;
+          console.log(`📋 Loaded metadata for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}`);
         } else {
           // Try alternative path with _html_data
           const altMetadataPath = path.join(userDir, `${file}_data`, 'metadata.json');
           if (await fs.pathExists(altMetadataPath)) {
             const metadata = await fs.readJSON(altMetadataPath);
             pageType = metadata.pageType;
-            console.log(`📋 Loaded metadata (alt) for ${file}: pageType=${pageType}`);
+            expectedGuests = metadata.expectedGuests || 0;
+            console.log(`📋 Loaded metadata (alt) for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}`);
           }
         }
       } catch (err) {
@@ -521,6 +1110,7 @@ app.get('/api/pages/:userId', async (req, res) => {
         title: cleanTitle,
         url: `/pages/${userId}/${encodeURIComponent(file)}`,
         pageType: pageType, // Add pageType to response
+        expectedGuests: expectedGuests, // Add expected guests for table calculations
         hasHtmlFile: hasHtmlFile // Indicate if HTML file exists
       };
     }));
@@ -540,7 +1130,7 @@ app.get('/api/pages/:userId', async (req, res) => {
 // Update page endpoint
 app.put('/api/update-page', async (req, res) => {
   try {
-    const { userId, fileName, htmlContent } = req.body;
+    let { userId, fileName, htmlContent } = req.body;
     
     if (!userId || !fileName || !htmlContent) {
       return res.status(400).json({ error: 'Missing userId, fileName, or htmlContent' });
@@ -554,6 +1144,49 @@ app.put('/api/update-page', async (req, res) => {
     // בדוק אם הקובץ קיים
     if (!await fs.pathExists(filePath)) {
       return res.status(404).json({ error: 'File not found' });
+    }
+    
+    // 🔧 CRITICAL FIX: Determine page type and apply fixEventPageWhatsApp
+    let pageType = 'general';
+    
+    // Try to detect page type from metadata
+    const dataFolderName = fileName.replace('.html', '').replace('_html', '_html_data');
+    const metadataPath = path.join(userDir, dataFolderName, 'metadata.json');
+    
+    if (await fs.pathExists(metadataPath)) {
+      try {
+        const metadata = await fs.readJson(metadataPath);
+        pageType = metadata.pageType || 'general';
+        console.log('📋 Detected pageType from metadata:', pageType);
+      } catch (err) {
+        console.warn('⚠️ Could not read metadata, detecting from HTML...');
+      }
+    }
+    
+    // Fallback: detect from HTML
+    if (pageType === 'general') {
+      if (htmlContent.includes('page-type') && htmlContent.includes('content="event"')) {
+        pageType = 'event';
+      }
+    }
+    
+    console.log(`🎯 Final pageType for update: ${pageType}`);
+    
+    // ✅ INJECT universal data extractor for ALL page types BEFORE saving
+    htmlContent = injectPageDataExtractor(htmlContent, pageType);
+    
+    // Apply fixEventPageWhatsApp for event pages BEFORE saving
+    if (pageType === 'event') {
+      console.log('🔧 Applying fixEventPageWhatsApp BEFORE saving...');
+      htmlContent = fixEventPageWhatsApp(htmlContent, pageType);
+      console.log('✅ fixEventPageWhatsApp applied successfully');
+    }
+    
+    // Apply fixStorePageIssues for store pages BEFORE saving
+    if (pageType === 'store') {
+      console.log('🔧 Applying fixStorePageIssues BEFORE saving...');
+      htmlContent = fixStorePageIssues(htmlContent);
+      console.log('✅ fixStorePageIssues applied successfully');
     }
     
     // עדכן את הקובץ
@@ -1902,8 +2535,16 @@ app.post('/api/order/:orderId/status', async (req, res) => {
 // Save RSVP
 app.post('/api/rsvp', async (req, res) => {
     try {
+        console.log('🎉 RSVP Request received!');
+        console.log('📥 Body:', JSON.stringify(req.body, null, 2));
+        
         const db = loadDatabase();
         const { eventId, userId, name, phone, email, guests, status, message } = req.body;
+        
+        if (!eventId || !userId) {
+            console.error('❌ Missing eventId or userId!', { eventId, userId });
+            return res.status(400).json({ error: 'Missing eventId or userId' });
+        }
         
         const rsvpId = 'rsvp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
@@ -1925,23 +2566,115 @@ app.post('/api/rsvp', async (req, res) => {
         db.rsvps[rsvpId] = rsvp;
         saveDatabase(db);
         
-        // Save to event-specific data folder
+        // Save to event-specific data folder (as leads.json for guest management)
         if (userId && eventId) {
-            const cleanEventId = eventId.replace(/_html$/, '');
-            const eventDataDir = path.join('output', userId, cleanEventId + '_data');
-            const rsvpsFile = path.join(eventDataDir, 'rsvps.json');
+            console.log('💾 Saving RSVP - eventId:', eventId, 'userId:', userId);
+            
+            // Decode URL encoding (e.g., %D7%97 -> ח)
+            const decodedEventId = decodeURIComponent(eventId);
+            console.log('🔓 Decoded eventId:', decodedEventId);
+            
+            // Clean eventId - remove _html suffix if present
+            const cleanEventId = decodedEventId.replace(/_html$/, '');
+            
+            // ALWAYS use _html_data folder (this is where the page creator saves metadata)
+            const eventDataDir = path.join('output', userId, cleanEventId + '_html_data');
+            const leadsFile = path.join(eventDataDir, 'leads.json');
+            
+            console.log('📂 Saving to folder:', eventDataDir);
             
             await fs.ensureDir(eventDataDir);
+            console.log('📂 Saving to folder:', eventDataDir);
             
-            let rsvps = [];
-            if (await fs.pathExists(rsvpsFile)) {
-                const fileContent = await fs.readFile(rsvpsFile, 'utf8');
-                rsvps = JSON.parse(fileContent);
+            // Convert RSVP to lead format
+            // IMPORTANT: guests field now contains TOTAL people count (including the person themselves)
+            // So if someone says "2 people", guests = 2, which means plus = 1 (1 companion)
+            const totalPeople = parseInt(rsvp.guests) || 0;
+            
+            // Map status to Hebrew
+            let hebrewStatus = 'ממתין';
+            if (rsvp.status === 'confirmed') hebrewStatus = 'מאושר';
+            if (rsvp.status === 'declined') hebrewStatus = 'לא מגיע';
+            
+            const lead = {
+                id: rsvpId,
+                name: rsvp.name,
+                phone: rsvp.phone,
+                email: rsvp.email,
+                plus: rsvp.status === 'confirmed' ? Math.max(0, totalPeople - 1) : 0, // Only count companions if confirmed
+                status: hebrewStatus,
+                table: 0, // Will be assigned later
+                notes: rsvp.message || '',
+                gift: '',
+                giftAmount: 0,
+                createdAt: rsvp.createdAt
+            };
+            
+            console.log('👤 Lead data:', lead);
+            
+            let leads = [];
+            if (await fs.pathExists(leadsFile)) {
+                const fileContent = await fs.readFile(leadsFile, 'utf8');
+                const data = JSON.parse(fileContent);
+                leads = Array.isArray(data) ? data : Object.values(data);
+                console.log('📋 Existing leads:', leads.length);
             }
             
-            rsvps.push(rsvp);
-            await fs.writeFile(rsvpsFile, JSON.stringify(rsvps, null, 2));
-            console.log('✅ RSVP saved to event folder');
+            // חיפוש מוזמן קיים לפי שם או טלפון
+            const cleanPhone = (phone || '').replace(/[^\d]/g, '');
+            console.log('🔍 מחפש מוזמן קיים...');
+            console.log('📱 טלפון שהתקבל:', phone, '➡️ נקי:', cleanPhone);
+            console.log('👤 שם שהתקבל:', name);
+            console.log('📋 סה"כ מוזמנים ברשימה:', leads.length);
+            
+            const existingGuestIndex = leads.findIndex(g => {
+                const guestPhone = (g.phone || '').replace(/[^\d]/g, '');
+                console.log(`  🔎 בודק: "${g.name}" | טלפון: ${g.phone} ➡️ נקי: ${guestPhone}`);
+                
+                // התאמה לפי טלפון (אם קיים)
+                if (cleanPhone && guestPhone && cleanPhone === guestPhone) {
+                    console.log(`  ✅ התאמה לפי טלפון! ${cleanPhone} === ${guestPhone}`);
+                    return true;
+                }
+                // או התאמה לפי שם מדויק
+                if (name && g.name && g.name.trim().toLowerCase() === name.trim().toLowerCase()) {
+                    console.log(`  ✅ התאמה לפי שם! "${name.trim().toLowerCase()}" === "${g.name.trim().toLowerCase()}"`);
+                    return true;
+                }
+                return false;
+            });
+            
+            console.log('🎯 תוצאת חיפוש: index =', existingGuestIndex);
+            
+            if (existingGuestIndex !== -1) {
+                // מוזמן קיים - עדכן את הסטטוס והפרטים
+                console.log('✅ מצאתי מוזמן קיים! מעדכן סטטוס...');
+                console.log('   📝 לפני עדכון:', JSON.stringify(leads[existingGuestIndex]));
+                
+                // Update status based on RSVP
+                leads[existingGuestIndex].status = hebrewStatus; // מאושר / לא מגיע / ממתין
+                leads[existingGuestIndex].name = rsvp.name || leads[existingGuestIndex].name; // עדכן שם
+                leads[existingGuestIndex].phone = rsvp.phone || leads[existingGuestIndex].phone;
+                leads[existingGuestIndex].email = rsvp.email || leads[existingGuestIndex].email;
+                // Convert total people to companions (subtract 1), but only if confirmed
+                const totalPeopleUpdate = parseInt(rsvp.guests) || 0;
+                leads[existingGuestIndex].plus = rsvp.status === 'confirmed' ? Math.max(0, totalPeopleUpdate - 1) : 0;
+                if (rsvp.message) {
+                    leads[existingGuestIndex].notes = (leads[existingGuestIndex].notes ? leads[existingGuestIndex].notes + ' | ' : '') + rsvp.message;
+                }
+                leads[existingGuestIndex].updatedAt = new Date().toISOString();
+                
+                console.log('   📝 אחרי עדכון:', JSON.stringify(leads[existingGuestIndex]));
+                console.log('✅ עדכנתי מוזמן:', leads[existingGuestIndex].name);
+            } else {
+                // מוזמן חדש - הוסף לרשימה
+                console.log('➕ מוזמן חדש - מוסיף לרשימה');
+            leads.push(lead);
+            }
+            
+            await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2));
+            console.log('✅ RSVP saved to leads.json! Total leads:', leads.length);
+            console.log('✅ File path:', leadsFile);
         }
         
         res.json({ success: true, rsvp });
@@ -2154,6 +2887,238 @@ app.post('/api/upload-expense-file', upload.single('file'), async (req, res) => 
     }
 });
 
+// Get leads for specific event page
+app.get('/api/get-leads', async (req, res) => {
+    try {
+        const { userId, pageId } = req.query;
+        
+        if (!userId || !pageId) {
+            return res.status(400).json({ error: 'Missing userId or pageId' });
+        }
+        
+        // Load leads from leads.json file
+        const leadsFile = path.join('output', userId, pageId.replace('_html', '') + '_html_data', 'leads.json');
+        
+        let leads = [];
+        if (await fs.pathExists(leadsFile)) {
+            const data = await fs.readJson(leadsFile);
+            leads = Array.isArray(data) ? data : Object.values(data);
+        }
+        
+        console.log(`✅ Loaded ${leads.length} leads for ${pageId}`);
+        res.json({ leads });
+        
+    } catch (error) {
+        console.error('Error getting leads:', error);
+        res.status(500).json({ error: 'Failed to get leads' });
+    }
+});
+
+// Add guests to event
+app.post('/api/add-guests', async (req, res) => {
+    try {
+        const { userId, pageId, guests, replaceAll } = req.body;
+        
+        if (!userId || !pageId || !guests || !Array.isArray(guests)) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const leadsFile = path.join('output', userId, pageId.replace('_html', '') + '_html_data', 'leads.json');
+        
+        // Load existing leads OR start fresh if replaceAll
+        let leads = [];
+        if (!replaceAll && await fs.pathExists(leadsFile)) {
+            const data = await fs.readJson(leadsFile);
+            leads = Array.isArray(data) ? data : Object.values(data);
+        }
+        
+        // Add new guests
+        const timestamp = Date.now();
+        for (const guest of guests) {
+            leads.push({
+                id: `guest_${timestamp}_${Math.random().toString(36).substr(2, 9)}`,
+                name: guest.name,
+                phone: guest.phone,
+                email: '',
+                plus: 0,
+                status: 'ממתין', // Pending
+                table: 0,
+                notes: '',
+                gift: '',
+                giftAmount: 0,
+                invitationSent: false,
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        // Save leads
+        await fs.ensureDir(path.dirname(leadsFile));
+        await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2));
+        
+        const action = replaceAll ? 'Replaced' : 'Added';
+        console.log(`✅ ${action} ${guests.length} guests to ${pageId} (Total: ${leads.length})`);
+        res.json({ success: true, count: guests.length, total: leads.length });
+        
+    } catch (error) {
+        console.error('Error adding guests:', error);
+        res.status(500).json({ error: 'Failed to add guests: ' + error.message });
+    }
+});
+
+// Update expected guests limit
+app.post('/api/update-expected-guests', async (req, res) => {
+    try {
+        const { userId, pageId, expectedGuests } = req.body;
+        
+        if (!userId || !pageId || expectedGuests === undefined) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const cleanPageId = pageId.replace('_html', '');
+        const metadataPath = path.join('output', userId, cleanPageId + '_html_data', 'metadata.json');
+        
+        // Load existing metadata
+        let metadata = {};
+        if (await fs.pathExists(metadataPath)) {
+            metadata = await fs.readJson(metadataPath);
+        }
+        
+        // Update expected guests
+        metadata.expectedGuests = parseInt(expectedGuests);
+        metadata.lastUpdated = new Date().toISOString();
+        
+        // Save metadata
+        await fs.ensureDir(path.dirname(metadataPath));
+        await fs.writeJson(metadataPath, metadata, { spaces: 2 });
+        
+        console.log(`✅ Updated expected guests for ${pageId} to ${expectedGuests}`);
+        res.json({ success: true, expectedGuests: metadata.expectedGuests });
+        
+    } catch (error) {
+        console.error('Error updating expected guests:', error);
+        res.status(500).json({ error: 'Failed to update expected guests: ' + error.message });
+    }
+});
+
+// Update single guest table assignment
+app.post('/api/update-guest-table', async (req, res) => {
+    try {
+        const { userId, pageId, guestId, table } = req.body;
+        
+        if (!userId || !pageId || !guestId || table === undefined) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const cleanPageId = pageId.replace('_html', '');
+        const leadsFile = path.join('output', userId, cleanPageId + '_html_data', 'leads.json');
+        
+        if (!await fs.pathExists(leadsFile)) {
+            return res.status(404).json({ error: 'Leads file not found' });
+        }
+        
+        // Load leads
+        const data = await fs.readJson(leadsFile);
+        let leads = Array.isArray(data) ? data : Object.values(data);
+        
+        // Find and update guest
+        const guestIndex = leads.findIndex(g => g.id === guestId);
+        if (guestIndex === -1) {
+            return res.status(404).json({ error: 'Guest not found' });
+        }
+        
+        leads[guestIndex].table = parseInt(table);
+        leads[guestIndex].updatedAt = new Date().toISOString();
+        
+        // Save leads
+        await fs.writeJson(leadsFile, leads, { spaces: 2 });
+        
+        console.log(`✅ Updated table for guest ${guestId} to table ${table}`);
+        res.json({ success: true });
+        
+    } catch (error) {
+        console.error('Error updating guest table:', error);
+        res.status(500).json({ error: 'Failed to update table: ' + error.message });
+    }
+});
+
+// Save all table assignments
+app.post('/api/save-all-tables', async (req, res) => {
+    try {
+        const { userId, pageId, guests: guestUpdates } = req.body;
+        
+        if (!userId || !pageId || !Array.isArray(guestUpdates)) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const cleanPageId = pageId.replace('_html', '');
+        const leadsFile = path.join('output', userId, cleanPageId + '_html_data', 'leads.json');
+        
+        if (!await fs.pathExists(leadsFile)) {
+            return res.status(404).json({ error: 'Leads file not found' });
+        }
+        
+        // Load leads
+        const data = await fs.readJson(leadsFile);
+        let leads = Array.isArray(data) ? data : Object.values(data);
+        
+        // Update all tables
+        guestUpdates.forEach(update => {
+            const guestIndex = leads.findIndex(g => g.id === update.id);
+            if (guestIndex !== -1) {
+                leads[guestIndex].table = parseInt(update.table);
+                leads[guestIndex].updatedAt = new Date().toISOString();
+            }
+        });
+        
+        // Save leads
+        await fs.writeJson(leadsFile, leads, { spaces: 2 });
+        
+        console.log(`✅ Saved table assignments for ${guestUpdates.length} guests`);
+        res.json({ success: true });
+        
+    } catch (error) {
+        console.error('Error saving table assignments:', error);
+        res.status(500).json({ error: 'Failed to save tables: ' + error.message });
+    }
+});
+
+// Mark invitation as sent
+app.post('/api/mark-invitation-sent', async (req, res) => {
+    try {
+        const { userId, pageId, guestId } = req.body;
+        
+        if (!userId || !pageId || !guestId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const leadsFile = path.join('output', userId, pageId.replace('_html', '') + '_html_data', 'leads.json');
+        
+        if (!await fs.pathExists(leadsFile)) {
+            return res.status(404).json({ error: 'Leads file not found' });
+        }
+        
+        // Load leads
+        const data = await fs.readJson(leadsFile);
+        let leads = Array.isArray(data) ? data : Object.values(data);
+        
+        // Find and update guest
+        const guest = leads.find(l => l.id === guestId);
+        if (guest) {
+            guest.invitationSent = true;
+            guest.invitationSentAt = new Date().toISOString();
+        }
+        
+        // Save leads
+        await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2));
+        
+        res.json({ success: true });
+        
+    } catch (error) {
+        console.error('Error marking invitation as sent:', error);
+        res.status(500).json({ error: 'Failed to mark invitation' });
+    }
+});
+
 // Clean orphaned data (leads/purchases for deleted pages)
 app.post('/api/clean-orphaned-data', async (req, res) => {
     try {
@@ -2255,6 +3220,83 @@ app.post('/api/clean-orphaned-data', async (req, res) => {
     }
 });
 
+// Fix all old event pages - remove WhatsApp and add API submission
+app.post('/api/fix-old-event-pages', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ error: 'Missing userId' });
+        }
+        
+        const userDir = path.join('output', userId);
+        
+        if (!await fs.pathExists(userDir)) {
+            return res.status(404).json({ error: 'User directory not found' });
+        }
+        
+        const files = await fs.readdir(userDir);
+        const htmlFiles = files.filter(f => f.endsWith('_html'));
+        
+        let fixedCount = 0;
+        let skippedCount = 0;
+        
+        console.log(`🔧 Starting to fix ${htmlFiles.length} pages...`);
+        
+        for (const fileName of htmlFiles) {
+            const filePath = path.join(userDir, fileName);
+            const dataDir = path.join(userDir, fileName + '_data');
+            const metadataFile = path.join(dataDir, 'metadata.json');
+            
+            // Check if it's an event page
+            let pageType = 'generic';
+            if (await fs.pathExists(metadataFile)) {
+                try {
+                    const metadata = JSON.parse(await fs.readFile(metadataFile, 'utf8'));
+                    pageType = metadata.pageType || 'generic';
+                } catch (e) {
+                    console.log(`⚠️ Could not read metadata for ${fileName}`);
+                }
+            }
+            
+            if (pageType !== 'event') {
+                skippedCount++;
+                continue;
+            }
+            
+            // Read the HTML file
+            let htmlContent = await fs.readFile(filePath, 'utf8');
+            
+            // Fix the WhatsApp code
+            const fixedHtml = fixEventPageWhatsApp(htmlContent, pageType);
+            
+            // Only save if something changed
+            if (fixedHtml !== htmlContent) {
+                await fs.writeFile(filePath, fixedHtml, 'utf8');
+                console.log(`✅ Fixed: ${fileName}`);
+                fixedCount++;
+            } else {
+                console.log(`⏭️ Already fixed: ${fileName}`);
+                skippedCount++;
+            }
+        }
+        
+        console.log(`\n🎉 Fixed ${fixedCount} event pages, skipped ${skippedCount} pages`);
+        
+        res.json({ 
+            success: true, 
+            message: `תוקנו ${fixedCount} דפי אירוע, דילגנו על ${skippedCount} דפים`,
+            fixedCount,
+            skippedCount,
+            totalPages: htmlFiles.length
+        });
+        
+    } catch (error) {
+        console.error('Error fixing old event pages:', error);
+        res.status(500).json({ error: 'Failed to fix pages: ' + error.message });
+    }
+});
+
 // Delete expense file
 app.post('/api/delete-expense-file', async (req, res) => {
     try {
@@ -2278,6 +3320,346 @@ app.post('/api/delete-expense-file', async (req, res) => {
     } catch (error) {
         console.error('Error deleting expense file:', error);
         res.status(500).json({ error: 'Failed to delete file' });
+    }
+});
+
+// Update bot actions in all pages
+app.get('/api/update-bot-actions', async (req, res) => {
+  try {
+    console.log('🤖 Starting to update bot actions in all pages...');
+    const outputDir = 'output';
+    
+    if (!await fs.pathExists(outputDir)) {
+      return res.json({ message: 'No output directory found', updated: 0 });
+    }
+    
+    let updatedCount = 0;
+    const userDirs = await fs.readdir(outputDir);
+    
+    const newBotActions = `} else if (data.action === 'scroll_to_products') {
+        console.log('📜 Bot requested to scroll to products');
+        
+        // Find the products section and scroll to it
+        const productSection = document.querySelector('[class*="product"], .products, #products, section:has(.product-card)');
+        if (productSection) {
+          productSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          console.log('✅ Scrolled to products section');
+        } else {
+          console.warn('⚠️ Products section not found');
+        }
+        
+        // Display the message
+        addBotMessage(data.message || 'הנה המוצרים שלנו! 🛍️');
+      } else if (data.action === 'scroll_to_product' && data.product_name) {
+        console.log('📜 Bot requested to scroll to specific product:', data.product_name);
+        
+        // Find the specific product card
+        const allProducts = document.querySelectorAll('.product-card, [class*="product"]');
+        let targetProduct = null;
+        
+        for (const product of allProducts) {
+          const nameEl = product.querySelector('h1, h2, h3, h4, [class*="title"], [class*="name"]');
+          if (nameEl && nameEl.textContent.trim().toLowerCase().includes(data.product_name.toLowerCase())) {
+            targetProduct = product;
+            break;
+          }
+        }
+        
+        if (targetProduct) {
+          targetProduct.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight the product briefly
+          targetProduct.style.transition = 'all 0.3s ease';
+          targetProduct.style.boxShadow = '0 0 30px rgba(102, 126, 234, 0.8)';
+          targetProduct.style.transform = 'scale(1.05)';
+          setTimeout(() => {
+            targetProduct.style.boxShadow = '';
+            targetProduct.style.transform = '';
+          }, 2000);
+          console.log('✅ Scrolled to product:', data.product_name);
+        } else {
+          console.warn('⚠️ Product not found:', data.product_name);
+        }
+        
+        addBotMessage(data.message || 'הנה המוצר! 🎯');
+      } else if (data.action === 'fill_contact_form' && data.name && data.phone) {
+        console.log('📝 Bot requested to fill contact form');
+        
+        // Find the contact form
+        const forms = document.querySelectorAll('form');
+        let contactForm = null;
+        
+        for (const form of forms) {
+          const inputs = form.querySelectorAll('input, textarea');
+          const hasName = Array.from(inputs).some(inp => inp.name?.includes('name') || inp.placeholder?.includes('שם'));
+          const hasPhone = Array.from(inputs).some(inp => inp.name?.includes('phone') || inp.placeholder?.includes('טלפון'));
+          
+          if (hasName && hasPhone) {
+            contactForm = form;
+            break;
+          }
+        }
+        
+        if (contactForm) {
+          // Fill the form
+          const nameInput = contactForm.querySelector('input[name*="name"], input[placeholder*="שם"]');
+          const phoneInput = contactForm.querySelector('input[name*="phone"], input[type="tel"], input[placeholder*="טלפון"]');
+          const messageInput = contactForm.querySelector('textarea, input[name*="message"], input[placeholder*="הודעה"]');
+          
+          if (nameInput) nameInput.value = data.name;
+          if (phoneInput) phoneInput.value = data.phone;
+          if (messageInput && data.message_text) messageInput.value = data.message_text;
+          
+          // Scroll to the form
+          contactForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Highlight the form briefly
+          contactForm.style.transition = 'all 0.3s ease';
+          contactForm.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.8)';
+          setTimeout(() => {
+            contactForm.style.boxShadow = '';
+          }, 2000);
+          
+          console.log('✅ Contact form filled');
+        } else {
+          console.warn('⚠️ Contact form not found');
+        }
+        
+        addBotMessage(data.message || 'מילאתי את הטופס בשבילך! ✅');
+      } else if (data.action === 'open_whatsapp') {
+        console.log('💬 Bot requested to open WhatsApp');
+        
+        // Find and click the WhatsApp bubble
+        const whatsappBubble = document.querySelector('[id*="whatsapp"], [class*="whatsapp"], a[href*="wa.me"]');
+        if (whatsappBubble) {
+          whatsappBubble.click();
+          console.log('✅ Opened WhatsApp');
+        } else {
+          console.warn('⚠️ WhatsApp bubble not found');
+        }
+        
+        addBotMessage(data.message || 'פותח את WhatsApp... 💬');
+      } else if (data.action === 'scroll_to_section' && data.section_name) {
+        console.log('📜 Bot requested to scroll to section:', data.section_name);
+        
+        // Try to find the section by various methods
+        const sectionName = data.section_name.toLowerCase();
+        let targetSection = null;
+        
+        // Method 1: By ID
+        targetSection = document.getElementById(sectionName);
+        
+        // Method 2: By heading text
+        if (!targetSection) {
+          const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+          for (const heading of headings) {
+            if (heading.textContent.toLowerCase().includes(sectionName)) {
+              targetSection = heading.closest('section') || heading.parentElement;
+              break;
+            }
+          }
+        }
+        
+        // Method 3: By section with matching text
+        if (!targetSection) {
+          const sections = document.querySelectorAll('section, .section, [class*="section"]');
+          for (const section of sections) {
+            if (section.textContent.toLowerCase().includes(sectionName)) {
+              targetSection = section;
+              break;
+            }
+          }
+        }
+        
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          console.log('✅ Scrolled to section:', data.section_name);
+        } else {
+          console.warn('⚠️ Section not found:', data.section_name);
+        }
+        
+        addBotMessage(data.message || 'הנה החלק שחיפשת! 📍');
+      } else if (data.action === 'highlight_element' && data.element_text) {
+        console.log('✨ Bot requested to highlight element:', data.element_text);
+        
+        // Find element by text content
+        const allElements = document.querySelectorAll('button, a, h1, h2, h3, h4, .btn, [class*="button"]');
+        let targetElement = null;
+        
+        for (const el of allElements) {
+          if (el.textContent.toLowerCase().includes(data.element_text.toLowerCase())) {
+            targetElement = el;
+            break;
+          }
+        }
+        
+        if (targetElement) {
+          // Scroll to element
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Create pulsing highlight effect
+          const originalBoxShadow = targetElement.style.boxShadow;
+          const originalTransform = targetElement.style.transform;
+          let pulseCount = 0;
+          
+          const pulseInterval = setInterval(() => {
+            if (pulseCount % 2 === 0) {
+              targetElement.style.boxShadow = '0 0 40px rgba(234, 179, 8, 1)';
+              targetElement.style.transform = 'scale(1.1)';
+            } else {
+              targetElement.style.boxShadow = '0 0 20px rgba(234, 179, 8, 0.5)';
+              targetElement.style.transform = 'scale(1)';
+            }
+            pulseCount++;
+            
+            if (pulseCount >= 6) {
+              clearInterval(pulseInterval);
+              targetElement.style.boxShadow = originalBoxShadow;
+              targetElement.style.transform = originalTransform;
+            }
+          }, 400);
+          
+          console.log('✅ Highlighted element');
+        } else {
+          console.warn('⚠️ Element not found:', data.element_text);
+        }
+        
+        addBotMessage(data.message || 'הנה מה שחיפשת! ✨');
+      } else {
+        // Regular message - display as is
+        addBotMessage(data.message || data.response || 'מצטערת, לא הצלחתי להבין');
+      }`;
+    
+    for (const userId of userDirs) {
+      const userDir = path.join(outputDir, userId);
+      const stat = await fs.stat(userDir);
+      
+      if (!stat.isDirectory()) continue;
+      
+      const files = await fs.readdir(userDir);
+      
+      for (const file of files) {
+        // Only fix HTML files
+        if (!file.endsWith('.html') && !file.endsWith('_html')) continue;
+        
+        const filePath = path.join(userDir, file);
+        const fileStats = await fs.stat(filePath);
+        
+        if (!fileStats.isFile()) continue;
+        
+        console.log(`🤖 Updating bot actions in: ${file}`);
+        
+        let html = await fs.readFile(filePath, 'utf-8');
+        const originalHtml = html;
+        
+        // Find and replace the old bot action handler
+        const oldActionPattern = /\} else if \(data\.action === 'scroll_to_products'\) \{[\s\S]*?\} else \{[\s\S]*?addBotMessage\(data\.message \|\| data\.response \|\| 'מצטערת, לא הצלחתי להבין'\);[\s\S]*?\}/;
+        
+        if (oldActionPattern.test(html)) {
+          html = html.replace(oldActionPattern, newBotActions);
+          
+          await fs.writeFile(filePath, html);
+          console.log(`✅ Updated: ${file}`);
+          updatedCount++;
+        } else {
+          console.log(`⏭️ Skipped (pattern not found): ${file}`);
+        }
+      }
+    }
+    
+    console.log(`🎉 Updated ${updatedCount} pages with new bot actions`);
+    res.json({ 
+      success: true, 
+      message: `Updated ${updatedCount} pages with new bot actions`, 
+      updated: updatedCount 
+    });
+    
+  } catch (error) {
+    console.error('Error updating bot actions:', error);
+    res.status(500).json({ error: 'Failed to update bot actions: ' + error.message });
+  }
+});
+
+// Fix old store pages (cart, bubbles, etc.)
+app.get('/api/fix-old-store-pages', async (req, res) => {
+  try {
+    console.log('🛒 Starting to fix old store pages...');
+    const outputDir = 'output';
+    
+    if (!await fs.pathExists(outputDir)) {
+      return res.json({ message: 'No output directory found', fixed: 0 });
+    }
+    
+    let fixedCount = 0;
+    const userDirs = await fs.readdir(outputDir);
+    
+    for (const userId of userDirs) {
+      const userDir = path.join(outputDir, userId);
+      const stat = await fs.stat(userDir);
+      
+      if (!stat.isDirectory()) continue;
+      
+      const files = await fs.readdir(userDir);
+      
+      for (const file of files) {
+        // Only fix HTML files
+        if (!file.endsWith('.html') && !file.endsWith('_html')) continue;
+        
+        const filePath = path.join(userDir, file);
+        const fileStats = await fs.stat(filePath);
+        
+        if (!fileStats.isFile()) continue;
+        
+        // Check if this is a store page
+        const metadataFolder = file.replace('.html', '').replace(/_html$/, '_html_data');
+        const metadataPath = path.join(userDir, metadataFolder, 'metadata.json');
+        
+        let isStore = false;
+        if (await fs.pathExists(metadataPath)) {
+          const metadata = await fs.readJson(metadataPath);
+          isStore = metadata.pageType === 'store';
+        }
+        
+        if (!isStore) {
+          // Fallback: check HTML content for store indicators
+          let html = await fs.readFile(filePath, 'utf-8');
+          if (html.includes('page-type') && html.includes('content="store"')) {
+            isStore = true;
+          } else if (html.includes('addToCart') || html.includes('cart-sidebar') || html.includes('store-checkout.js')) {
+            isStore = true;
+          }
+        }
+        
+        if (!isStore) continue;
+        
+        console.log(`🛒 Fixing store page: ${file}`);
+        
+        let html = await fs.readFile(filePath, 'utf-8');
+        const originalHtml = html;
+        
+        // Apply all store fixes
+        html = fixStorePageIssues(html);
+        
+        // Only save if something changed
+        if (html !== originalHtml) {
+          await fs.writeFile(filePath, html);
+          console.log(`✅ Fixed: ${file}`);
+          fixedCount++;
+        } else {
+          console.log(`⏭️ Skipped (no changes needed): ${file}`);
+        }
+      }
+    }
+    
+    console.log(`🎉 Fixed ${fixedCount} store pages`);
+    res.json({ 
+      success: true, 
+      message: `Fixed ${fixedCount} store pages`, 
+      fixed: fixedCount 
+    });
+    
+  } catch (error) {
+    console.error('Error fixing old store pages:', error);
+    res.status(500).json({ error: 'Failed to fix old store pages: ' + error.message });
     }
 });
 

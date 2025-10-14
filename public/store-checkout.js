@@ -47,7 +47,7 @@
     const existingCart = localStorage.getItem('cart_' + storeId);
     if (existingCart && window.sessionStorage.getItem('visited_' + storeId)) {
         try {
-            cart = JSON.parse(existingCart);
+        cart = JSON.parse(existingCart);
             window.cart = cart;
         } catch (e) {
             console.error('Failed to parse cart from localStorage:', e);
@@ -194,7 +194,7 @@
                 // Try to save again without images
                 cart.forEach(item => item.image = '');
                 try {
-                    localStorage.setItem('cart_' + storeId, JSON.stringify(cart));
+        localStorage.setItem('cart_' + storeId, JSON.stringify(cart));
                     console.log('✅ Cart saved without images');
                 } catch (e2) {
                     console.error('❌ Still failed, cart will not persist');
@@ -206,6 +206,30 @@
         // Show notification with product details
         console.log('✅ Product added successfully:', { name: actualName, price: actualPrice, cartSize: cart.length });
         alert(`✅ ${actualName}\nנוסף לעגלה בהצלחה!\n\nמחיר: ₪${actualPrice}\nכמות בעגלה: ${cart.length}`);
+        
+        // Auto-open cart and scroll to it
+        setTimeout(() => {
+            const sidebar = document.getElementById('cart-sidebar');
+            const backdrop = document.getElementById('cart-backdrop');
+            
+            if (sidebar && !sidebar.classList.contains('open')) {
+                sidebar.classList.add('open');
+                if (backdrop) backdrop.classList.add('open');
+                console.log('🛒 Auto-opened cart after adding product');
+                
+                // Scroll page to top for better cart visibility
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Scroll cart to top
+                setTimeout(() => {
+                    const cartContent = sidebar.querySelector('div');
+                    if (cartContent) {
+                        cartContent.scrollTop = 0;
+                    }
+                    console.log('📜 Auto-scrolled cart to top');
+                }, 100);
+            }
+        }, 100);
     };
     
     window.toggleCart = function() {
@@ -223,6 +247,18 @@
                 // Open cart
                 sidebar.classList.add('open');
                 if (backdrop) backdrop.classList.add('open');
+                
+                // Auto-scroll page to top for better cart visibility
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Auto-scroll to top of cart sidebar
+                setTimeout(() => {
+                    const cartContent = sidebar.querySelector('div');
+                    if (cartContent) {
+                        cartContent.scrollTop = 0;
+                    }
+                    console.log('📜 Auto-scrolled cart to top');
+                }, 100);
             }
         }
     };
@@ -295,23 +331,10 @@
         if (cartTotal) {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             if (cart.length > 0) {
+                // Only show the total, buttons are already in the sidebar
                 cartTotal.innerHTML = `
-                    <div style="margin-bottom: 15px;">
-                        <div style="font-size: 22px; font-weight: bold; color: #333; margin-bottom: 20px;">
-                            סה"כ לתשלום: <span style="color: #667eea;">₪${total.toFixed(2)}</span>
-                        </div>
-                        <button onclick="checkout()" 
-                                style="width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; margin-bottom: 10px;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.6)'"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.4)'">
-                            💳 המשך לתשלום
-                        </button>
-                        <button onclick="if(confirm('האם אתה בטוח שברצונך לרוקן את העגלה?')) clearCart()" 
-                                style="width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease;"
-                                onmouseover="this.style.background='#dc2626'"
-                                onmouseout="this.style.background='#ef4444'">
-                            🗑️ רוקן עגלה
-                        </button>
+                    <div style="font-size: 22px; font-weight: bold; color: #333; margin-bottom: 15px;">
+                        סה"כ לתשלום: <span style="color: #667eea;">₪${total.toFixed(2)}</span>
                     </div>
                 `;
             } else {
@@ -595,7 +618,7 @@
         
         // Reset cart sidebar content after animation
         setTimeout(() => {
-            cancelCheckout();
+        cancelCheckout();
         }, 500);
     };
     
@@ -605,19 +628,33 @@
             <div style="padding: 25px; height: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
                     <h3 style="margin: 0; font-size: 24px; font-weight: bold;">🛒 עגלת קניות</h3>
-                    <button onclick="toggleCart()" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999; line-height: 1;">×</button>
+                    <button id="cart-close-x" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999; line-height: 1;">×</button>
                 </div>
                 <div class="cart-items" style="min-height: 200px; max-height: calc(100vh - 400px); overflow-y: auto;"></div>
                 <div class="cart-total" style="margin: 25px 0; font-weight: bold; text-align: center; font-size: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;"></div>
-                <button onclick="clearCart()" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; margin-bottom: 10px; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+                <button id="cart-clear-btn" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; margin-bottom: 10px; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
                     🗑️ נקה עגלה
                 </button>
-                <button onclick="checkout()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <button id="cart-checkout-btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                     💳 המשך לתשלום
                 </button>
-                <button onclick="toggleCart()" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">סגור</button>
+                <button id="cart-close-btn" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">סגור</button>
             </div>
         `;
+        
+        // Reattach event listeners
+        setTimeout(() => {
+            const closeX = document.getElementById('cart-close-x');
+            const closeBtn = document.getElementById('cart-close-btn');
+            const clearBtn = document.getElementById('cart-clear-btn');
+            const checkoutBtn = document.getElementById('cart-checkout-btn');
+            
+            if (closeX) closeX.onclick = window.toggleCart;
+            if (closeBtn) closeBtn.onclick = window.toggleCart;
+            if (clearBtn) clearBtn.onclick = window.clearCart;
+            if (checkoutBtn) checkoutBtn.onclick = window.checkout;
+        }, 100);
+        
         updateCartDisplay();
     };
     
@@ -672,24 +709,37 @@
     
     // Set cart sidebar styles and content
     sidebar.className = '';
-    sidebar.style.cssText = 'position: fixed; top: 0; right: -450px; width: 450px; max-width: 100vw; height: 100vh; background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 99999; overflow-y: auto; font-family: Arial, sans-serif;';
-    sidebar.innerHTML = `
-        <div style="padding: 25px; height: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+        sidebar.style.cssText = 'position: fixed; top: 0; right: -450px; width: 450px; max-width: 100vw; height: 100vh; background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 99999; overflow-y: auto; font-family: Arial, sans-serif;';
+        sidebar.innerHTML = `
+            <div style="padding: 25px; height: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
                 <h3 style="margin: 0; font-size: 24px; font-weight: bold;">🛒 עגלת קניות</h3>
-                <button onclick="toggleCart()" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999; line-height: 1;">×</button>
-            </div>
+                <button id="cart-close-x" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999; line-height: 1;">×</button>
+                </div>
             <div class="cart-items" style="min-height: 200px; max-height: calc(100vh - 400px); overflow-y: auto;"></div>
-            <div class="cart-total" style="margin: 25px 0; font-weight: bold; text-align: center; font-size: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;"></div>
-            <button onclick="clearCart()" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; margin-bottom: 10px; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+                <div class="cart-total" style="margin: 25px 0; font-weight: bold; text-align: center; font-size: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;"></div>
+            <button id="cart-clear-btn" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; margin-bottom: 10px; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
                 🗑️ נקה עגלה
             </button>
-            <button onclick="checkout()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                💳 המשך לתשלום
-            </button>
-            <button onclick="toggleCart()" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">סגור</button>
-        </div>
-    `;
+            <button id="cart-checkout-btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    💳 המשך לתשלום
+                </button>
+            <button id="cart-close-btn" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">סגור</button>
+            </div>
+        `;
+        
+        // Attach event listeners to buttons
+        setTimeout(() => {
+            const closeX = document.getElementById('cart-close-x');
+            const closeBtn = document.getElementById('cart-close-btn');
+            const clearBtn = document.getElementById('cart-clear-btn');
+            const checkoutBtn = document.getElementById('cart-checkout-btn');
+            
+            if (closeX) closeX.onclick = window.toggleCart;
+            if (closeBtn) closeBtn.onclick = window.toggleCart;
+            if (clearBtn) clearBtn.onclick = window.clearCart;
+            if (checkoutBtn) checkoutBtn.onclick = window.checkout;
+        }, 100);
     
     // Build or rebuild overlay
     let backdrop = document.getElementById('cart-backdrop') || document.getElementById('cart-overlay');
@@ -700,10 +750,10 @@
     }
     
     backdrop.className = '';
-    backdrop.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 99998;';
-    backdrop.onclick = toggleCart;
-    
-    // Add CSS for open state
+        backdrop.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 99998;';
+        backdrop.onclick = toggleCart;
+        
+        // Add CSS for open state
     if (!document.getElementById('cart-styles')) {
         const style = document.createElement('style');
         style.id = 'cart-styles';

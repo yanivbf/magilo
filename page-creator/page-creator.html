@@ -985,6 +985,12 @@
     
                                 </button>
     
+                                <button id="delete-image-btn" class="tool-btn text-red-500 font-bold p-3 rounded-full hover:bg-red-700 hover:text-white transition" data-translate-title="tooltip_delete_image" style="display: none;">
+    
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+    
+                                </button>
+    
                                 <div class="color-picker-wrapper tool-btn text-white font-bold p-3 rounded-full hover:bg-gray-700 transition" data-translate-title="tooltip_text_color">
     
                                     <i data-lucide="type" class="w-5 h-5"></i>
@@ -1287,6 +1293,8 @@
                 tooltip_back_to_form: "חזור לטופס",
 
                 tooltip_upload_image: "העלה/החלף תמונה",
+                
+                tooltip_delete_image: "מחק תמונה",
 
                 tooltip_text_color: "שנה צבע טקסט",
 
@@ -2121,6 +2129,8 @@
             editToolsGroup: document.getElementById('edit-tools-group'),
 
             uploadImageBtn: document.getElementById('upload-image-btn'),
+            
+            deleteImageBtn: document.getElementById('delete-image-btn'),
 
             textColorPicker: document.getElementById('text-color-picker'),
 
@@ -2321,8 +2331,8 @@
                     'label_google_play_link': 'קישור Google Play',
                     'fieldset_event_details': 'פרטי האירוע',
                     'label_event_date': 'תאריך האירוע',
-                    'label_event_location': 'מיקום האירוע',
-                    'label_guest_count': 'כמות מוזמנים משוערת',
+                    'label_event_location': 'שם האולם / מקום האירוע',
+                    'label_event_address': 'כתובת המקום',
                     'gen_text_1': '🤖 הבוט החכם שלנו מתחיל ליצור את הדף שלך...',
                     'gen_text_2': '📝 מנתח את הפרטים שמילאת ויוצר תוכן מותאם אישית...',
                     'gen_text_3': '🎨 בוחר את העיצוב המושלם ומתאים את הצבעים והגופנים...',
@@ -2954,7 +2964,8 @@
 
             }
 
-            // הוסף טופס הרשמה חובה
+            // הוסף טופס צור קשר רק לדפים שאינם הזמנות (כי בהזמנות יש בועת WhatsApp)
+            if (data.pageType !== 'event') {
             const contactFormPrompt = `
 ## Contact Form Section (MANDATORY)
 Create a contact form section with ID "contact-form" that includes:
@@ -2973,6 +2984,7 @@ JavaScript functionality:
 - Use business contact details from form data`;
 
             finalStructurePrompt += contactFormPrompt;
+            }
 
 
 
@@ -3008,9 +3020,9 @@ JavaScript functionality:
 
 * Event Date: ${s(data.eventDate) || 'Not provided'}
 
-* Event Location: ${s(data.eventLocation) || 'Not provided'}
+* Event Location (Venue Name): ${s(data.eventLocation) || 'Not provided'}
 
-* Guest Count: ${s(data.guestCount) || 'Not provided'}
+* Event Address: ${s(data.eventAddress) || 'Not provided'}
 
 `;
 
@@ -3176,6 +3188,53 @@ Strictly follow this structure plan. IMPORTANT: The output language must be ${da
 ${finalStructurePrompt}
 
 
+## 5.5. 🚨🚨🚨 COUNTDOWN TIMER - COPY THIS CODE EXACTLY 🚨🚨🚨
+
+⚠️⚠️⚠️ THIS IS THE #1 REQUIREMENT - DO NOT DEVIATE FROM THIS CODE ⚠️⚠️⚠️
+
+IF your page includes a countdown timer, you MUST copy-paste this EXACT code with NO modifications:
+
+**VISUAL LAYOUT (what the user will see on screen - HEBREW RTL):**
+SECONDS (RIGHT) → MINUTES → HOURS → DAYS/ימים (LEFT)
+[שניות 00] [דקות 30] [שעות 10] [ימים 07]
+  ←RIGHT                                LEFT→
+
+**EXACT HTML CODE TO USE (COPY-PASTE THIS):**
+\`\`\`html
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div id="seconds" class="countdown-box p-8 flex flex-col items-center justify-center">
+        <span class="text-7xl font-bold">00</span>
+        <span class="text-2xl mt-2">שניות</span>
+    </div>
+    <div id="minutes" class="countdown-box p-8 flex flex-col items-center justify-center">
+        <span class="text-7xl font-bold">30</span>
+        <span class="text-2xl mt-2">דקות</span>
+    </div>
+    <div id="hours" class="countdown-box p-8 flex flex-col items-center justify-center">
+        <span class="text-7xl font-bold">10</span>
+        <span class="text-2xl mt-2">שעות</span>
+    </div>
+    <div id="days" class="countdown-box p-8 flex flex-col items-center justify-center">
+        <span class="text-7xl font-bold">07</span>
+        <span class="text-2xl mt-2">ימים</span>
+    </div>
+</div>
+\`\`\`
+
+**🚨 ABSOLUTE REQUIREMENTS - NO EXCEPTIONS:**
+1. ✅ Grid MUST have: class="grid grid-cols-1 md:grid-cols-4 gap-8" (NO dir attribute!)
+2. ✅ Order in HTML: seconds, minutes, hours, days (REVERSED for RTL display!)
+3. ✅ Each div MUST have the exact id: "seconds", "minutes", "hours", "days"
+4. ✅ Labels MUST be: "שניות", "דקות", "שעות", "ימים"
+5. ✅ ALL 4 boxes required - NOT 3, NOT 5, EXACTLY 4
+6. ✅ NO dir attribute - RTL will reverse the HTML order to display: ימים→שעות→דקות→שניות
+
+**❌ FORBIDDEN:**
+- Changing the order of boxes (must be: seconds, minutes, hours, days)
+- Adding dir="ltr" or dir="rtl" to the grid
+- Using grid-cols-3 (must be grid-cols-4)
+- Skipping any box (must have all 4 boxes)
+- Using different IDs or labels
 
 ## 6. Technical Checklist
 
@@ -3184,6 +3243,20 @@ ${finalStructurePrompt}
 * **Responsiveness:** Perfect.
 
 * **Links:** All links must work. Phone should link to tel: and WhatsApp. Email to mailto:. External links should open in a new tab (target="_blank").
+
+* **🚨 MANDATORY FLOATING BUBBLES & ACCESSIBILITY 🚨:**
+  - ✅ ALWAYS create ONE WhatsApp floating bubble (bottom-right, green, fixed position, with phone number)
+  - ✅ NEVER create accessibility bubble/widget - instead add "נגישות" button in the top navigation bar
+  - ✅ Accessibility button should open a simple menu with: font size controls, contrast toggle, readable font toggle
+  - ❌ DO NOT create floating accessibility bubble or widget
+  - ❌ DO NOT create multiple floating bubbles (only WhatsApp!)
+
+* **🚨 FORBIDDEN ELEMENTS 🚨:**
+  - ❌ DO NOT create "Back to Top" / "חזרה למעלה" button
+  - ❌ DO NOT add "© 2025" or "כל הזכויות שמורות" or "All Rights Reserved" text
+  - ❌ DO NOT add any copyright statements
+  - ❌ DO NOT create floating accessibility bubble (use top bar button instead!)
+  - These will be added automatically by the system - DO NOT include them in your HTML!
 
 * **YouTube Video Integration:**
   - If YouTube URL is provided: ${cleanYoutubeEmbedUrl || 'Not provided'}
@@ -3237,18 +3310,25 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
   </svg>
   When clicked, open a menu with all accessibility options (font size, contrast, screen reader, etc.).
 
-* **WhatsApp Bubble:** Always add a WhatsApp floating bubble on the left side of the page (position: fixed; bottom: 20px; left: 20px) with the phone number from the form data. Use green background (#25D366) and clear WhatsApp logo. Make it clickable with href="https://wa.me/[country_code][phone_number]?text=היי, אני מעוניין בשירות" target="_blank" to open WhatsApp directly with the message "היי, אני מעוניין בשירות". Use the full phone number from form data including country code (don't remove country code). Ensure the phone number is properly formatted (remove spaces, dashes, parentheses, and keep only digits, then add country code 972 for Israel). Use this clear WhatsApp SVG icon:
+* **🚨 WhatsApp Bubble - THE ONLY FLOATING ELEMENT 🚨:** 
+  - ✅ ALWAYS add ONE WhatsApp floating bubble on the left side of the page (position: fixed; bottom: 20px; left: 20px)
+  - ✅ Use green background (#25D366) and clear WhatsApp logo
+  - ✅ Make it clickable with href="https://wa.me/[country_code][phone_number]?text=היי, אני מעוניין בשירות" target="_blank"
+  - ✅ Use full phone number from form data including country code (972 for Israel)
+  - ✅ Properly format phone number (remove spaces, dashes, parentheses, keep only digits)
+  - ❌ DO NOT create ANY OTHER floating bubbles (no accessibility, no chatbots, ONLY WhatsApp!)
+  - Use this clear WhatsApp SVG icon:
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.488"/>
   </svg>
 
 * **AI Bot (סתיו):** Always add the AI bot widget on the right side of the page (position: fixed; bottom: 20px; right: 20px) with purple background (#8B5CF6) and clear robot head icon. The bot should introduce itself in the page language:
-  - Hebrew (he): "סתיו"
-  - Arabic (ar): "ستاف"
-  - English (en): "Stav"
-  - Spanish (es): "Stav"
-  - French (fr): "Stav"
-  The bot should help users with questions about the business. Use this clear robot head SVG icon:
+  - Hebrew (he): "שלום! אני סתיו, איך אני יכולה לעזור לך?"
+  - Arabic (ar): "مرحباً! أنا ستاف، كيف يمكنني مساعدتك؟"
+  - English (en): "Hello! I'm Stav, how can I help you?"
+  - Spanish (es): "¡Hola! Soy Stav, ¿cómo puedo ayudarte?"
+  - French (fr): "Bonjour! Je suis Stav, comment puis-je vous aider?"
+  Use this clear robot head SVG icon:
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.33 14.33 9 13.5 9H10.5C9.67 9 9 8.33 9 7.5V6.5L3 7V9L9 8.5V19C9 20.1 9.9 21 11 21H13C14.1 21 15 20.1 15 19V8.5L21 9ZM7.5 11C6.67 11 6 11.67 6 12.5S6.67 14 7.5 14 9 13.33 9 12.5 8.33 11 7.5 11ZM16.5 11C15.67 11 15 11.67 15 12.5S15.67 14 16.5 14 18 13.33 18 12.5 17.33 11 16.5 11Z"/>
     <circle cx="12" cy="12" r="2" fill="white"/>
@@ -3261,18 +3341,73 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
   - Message history area
   - Close button
   - Smooth animations for open/close
-  - **IMPORTANT: Clear chat history when:**
-    1. Page is in editing mode (when editor toolbar is visible)
-    2. Chat window is closed and reopened
-    3. Page is refreshed
-  - Use localStorage to store chat state: \`localStorage.setItem('chatHistory_${data.title || 'page'}', JSON.stringify([]))\` to clear history
-  - Check for editing mode: \`if (document.querySelector('.editor-toolbar')) { clearChatHistory(); }\`
-  - When the chat opens, show initial message based on page language:
-    * Hebrew (he): "שלום! אני סתיו, איך אני יכולה לעזור לך?"
-    * Arabic (ar): "مرحباً! أنا ستاف، كيف يمكنني مساعدتك؟"
-    * English (en): "Hello! I'm Stav, how can I help you?"
-    * Spanish (es): "¡Hola! Soy Stav, ¿cómo puedo ayudarte?"
-    * French (fr): "Bonjour! Je suis Stav, comment puis-je vous aider?"
+  - **🚨 CRITICAL - CHAT HISTORY MANAGEMENT 🚨:**
+    **YOU MUST USE A UNIQUE KEY FOR EACH PAGE TO PREVENT CHAT MIXING!**
+    
+    **CORRECT localStorage key (use page URL, NOT title):**
+    \`\`\`javascript
+    const CHAT_KEY = 'chatHistory_' + window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+    \`\`\`
+    
+    **❌ WRONG (causes chat mixing between pages):**
+    - \`chatHistory_\${title}\` - titles can be the same!
+    - \`chatHistory\` - will mix all chats!
+    
+    **✅ CORRECT (each page has its own chat):**
+    - \`chatHistory_output_userId_pageId_html\`
+    
+    **WHEN TO CLEAR CHAT HISTORY:**
+    1. ✅ **When chat bubble is closed** - ALWAYS clear on close!
+    2. ✅ **When page is in editing mode** - check for editor toolbar
+    3. ✅ **When page loads** - start fresh every time
+    
+    **IMPLEMENTATION:**
+    \`\`\`javascript
+    // On page load - clear old chat
+    document.addEventListener('DOMContentLoaded', function() {
+      const CHAT_KEY = 'chatHistory_' + window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+      localStorage.removeItem(CHAT_KEY);
+      console.log('🧹 Chat history cleared for this page');
+    });
+    
+    // When closing chat bubble - clear chat
+    function closeChatBubble() {
+      const CHAT_KEY = 'chatHistory_' + window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+      localStorage.removeItem(CHAT_KEY);
+      console.log('🧹 Chat history cleared on close');
+      // ... close the bubble
+    }
+    
+    // Check for editing mode
+    if (document.querySelector('.editor-toolbar')) {
+      const CHAT_KEY = 'chatHistory_' + window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+      localStorage.removeItem(CHAT_KEY);
+    }
+    \`\`\`
+  - **🚨 INITIAL MESSAGE - START FRESH:**
+    When the chat opens for the first time, show ONLY the initial greeting message.
+    DO NOT load any previous messages from localStorage.
+    Each page visit should start with a clean, empty chat.
+    
+    **ADD THIS CLEANUP CODE AT THE TOP OF YOUR SCRIPT:**
+    \`\`\`javascript
+    // 🧹 Clean up ALL old chat histories on page load
+    (function() {
+      // Remove all chatHistory keys from localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('chatHistory')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      if (keysToRemove.length > 0) {
+        console.log(\`🧹 Cleared \${keysToRemove.length} old chat histories\`);
+      }
+    })();
+    \`\`\`
+    
   - Typing indicator: Show "סתיו מקלידה..." in page language inside the message history area when waiting for bot response. Use this HTML structure: <div class="typing-indicator">סתיו מקלידה<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
   - When sending messages, include both page context data and user message in this format:
     {
@@ -3285,36 +3420,541 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
         "address": "Physical Address",
         "allPageData": "Complete page information"
       },
-      "user_message": "User's message here",
+      "user_message": "{{ $json.body.user_message }}",
+      "page_type": "${data.pageType || 'landing'}",
       "business_info": {
         "name": "Business Name from form data",
         "phone": "Full phone number from form data (without country code)", 
         "email": "Email Address from form data",
         "address": "Physical Address from form data"
-      }
+      },
+      "event_details": {
+        "eventDate": "${data.eventDate || ''}",
+        "eventTime": "${data.eventTime || ''}",
+        "eventLocation": "${data.eventLocation || ''}",
+        "eventAddress": "${data.eventAddress || ''}",
+        "eventType": "${data.eventType || data.pageType || ''}"
+      },
+      "page_details": {
+        "profession": "${data.profession || data.mainName || ''}",
+        "serviceType": "${data.serviceType || data.description || ''}",
+        "businessType": "${data.businessType || data.pageType || ''}",
+        "courseName": "${data.courseName || data.title || ''}",
+        "courseDescription": "${data.courseDescription || data.description || ''}"
+      },
+      "products": (typeof extractProductsFromPage === 'function' ? extractProductsFromPage() : [])
     }
+  - **🚨🚨🚨 CRITICAL - AUTO-GENERATED extractPageData() FUNCTION 🚨🚨🚨**
+    **THE SERVER AUTOMATICALLY INJECTS extractPageData() INTO ALL PAGES!**
+    **YOU MUST USE IT IN YOUR FETCH CODE!**
+    **DO NOT CREATE IT AGAIN - JUST CALL IT!**
+  - **🚨🚨🚨 CRITICAL FOR STORE PAGES - PRODUCT DATA EXTRACTION 🚨🚨🚨**
+    
+    **THE FUNCTION extractProductsFromPage() IS ALREADY IN THE PAGE!**
+    **Just call it in your fetch code:**
+    \`\`\`javascript
+    "products": (typeof extractProductsFromPage === 'function' ? extractProductsFromPage() : [])
+    \`\`\`
+    
+    **🚨 EXAMPLE OF COMPLETE FETCH:**
+    \`\`\`javascript
+    const messageData = {
+      context: { ... },
+      user_message: userMessage,
+      page_type: "store",
+      business_info: { ... },
+      products: extractProductsFromPage()  // ← CALL THE FUNCTION HERE
+    };
+    
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(messageData)
+    })
+    \`\`\`
+    
+    This ensures the bot ALWAYS extracts and sends REAL, UP-TO-DATE product information from the actual page EVERY time a message is sent.
+    
+  - **📋 COMPLETE WORKING EXAMPLE FOR STORE PAGES:**
+    See the detailed instructions above for extractProductsFromPage() function and how to call it in the bot's fetch code.
   - The bot will receive responses in this format:
     { "message": "Bot response text here" }
-          - Bot instructions: Always include business information in responses when relevant:
-            - Business name: {{ $json.body.business_info.name }}
-            - Phone number: {{ $json.body.business_info.phone }} (full number without country code, when asked for contact info)
-            - Email address: {{ $json.body.business_info.email }} (when asked for contact info)
-            - Physical address: {{ $json.body.business_info.address }} (when asked for location)
-            - If you don't have an answer, always recommend contacting the business through the page
+  - **🛒 FOR STORE PAGES - AUTOMATIC BOT ACTIONS:**
+    The bot can return JSON with an "action" field to trigger automatic actions:
+    
+    **Action 1: Add to Cart**
+    {
+      "message": "✅ Added 3 chocolates to cart!",
+      "action": "add_to_cart",
+      "product_name": "Chocolate",
+      "quantity": 3,
+      "price": 40
+    }
+    When the bot response includes "action": "add_to_cart", automatically call:
+    addToCart(product_name, price, '', null, quantity);
+    
+    **Action 2: Scroll to Products Area**
+    {
+      "message": "הנה המוצרים שלנו! 🛍️",
+      "action": "scroll_to_products"
+    }
+    When the bot response includes "action": "scroll_to_products", the page will automatically scroll to the products gallery.
+    
+    **Action 3: Scroll to Specific Product**
+    {
+      "message": "הנה שוקולד מריר! 🍫",
+      "action": "scroll_to_product",
+      "product_name": "שוקולד מריר"
+    }
+    When the bot response includes "action": "scroll_to_product", the page will scroll to and highlight that specific product.
+    
+    **Action 4: Fill Contact Form**
+    {
+      "message": "מילאתי את הטופס בשבילך! ✅",
+      "action": "fill_contact_form",
+      "name": "יניב",
+      "phone": "050-1234567",
+      "message_text": "אני מעוניין בשירות" (optional)
+    }
+    Automatically fills the contact form with the user's details from the conversation.
+    
+    **Action 5: Open WhatsApp**
+    {
+      "message": "פותח את WhatsApp... 💬",
+      "action": "open_whatsapp"
+    }
+    Automatically clicks the WhatsApp bubble to open a chat.
+    
+    **Action 6: Scroll to Section**
+    {
+      "message": "הנה המיקום! 📍",
+      "action": "scroll_to_section",
+      "section_name": "מיקום" (or "location", "gallery", "about", etc.)
+    }
+    Scrolls to a specific section of the page by name.
+    
+    **Action 7: Highlight Element**
+    {
+      "message": "הנה הכפתור! ✨",
+      "action": "highlight_element",
+      "element_text": "תשלום" (text to find in the element)
+    }
+    Finds and highlights (pulsing animation) a specific element on the page.
+    
+    This allows the bot to perform actions in the page while showing only the message to the user.
+    **🚨 CRITICAL - HANDLE BOT RESPONSES CORRECTLY WITH TIMEOUT & RETRY:**
+    After receiving the webhook response, parse it and check for actions.
+    **IMPORTANT:** Use AbortController with 30-second timeout to prevent bot from hanging:
+    \`\`\`javascript
+    // When receiving response from webhook (in your fetch().then())
+    // Add timeout and retry logic
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+    
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(messageData),
+      signal: controller.signal
+    })
+    .then(response => {
+      clearTimeout(timeoutId); // Clear timeout on successful response
+      return response.json();
+    })
+    .then(rawData => {
+      // Hide typing indicator
+      hideTypingIndicator();
+      
+      console.log('📥 Raw webhook response:', rawData);
+      
+      // ROBUST JSON PARSING - handle if response is wrapped in string
+      let data = rawData;
+      
+      // If data is a string, try to parse it as JSON
+      if (typeof rawData === 'string') {
+        try {
+          data = JSON.parse(rawData);
+          console.log('✅ Parsed string response as JSON:', data);
+        } catch (e) {
+          console.warn('⚠️ Response is string but not valid JSON, using as-is');
+        }
+      }
+      
+      // If data has a nested 'message' that's also JSON, parse it
+      if (data.message && typeof data.message === 'string' && data.message.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(data.message);
+          console.log('✅ Parsed nested JSON in message field');
+          data = parsed;
+        } catch (e) {
+          console.warn('⚠️ message field looks like JSON but failed to parse');
+        }
+      }
+      
+      console.log('📊 Final parsed data:', data);
+      
+      // Check if bot returned an action
+      if (data.action === 'add_to_cart' && data.product_name && data.price) {
+        console.log('🛒 Bot requested to add to cart:', data);
+        
+        // Add product to cart
+        if (typeof addToCart === 'function') {
+          const productName = data.product_name;
+          const price = parseFloat(data.price);
+          const quantity = parseInt(data.quantity) || 1;
+          
+          // Call the cart function
+          addToCart(productName, price, '', null, quantity);
+          
+          console.log(\`✅ Added \${quantity}x \${productName} to cart (₪\${price} each)\`);
+        } else {
+          console.warn('⚠️ addToCart function not found!');
+        }
+        
+        // Display ONLY the message, not the full JSON
+        addBotMessage(data.message || 'מוצר נוסף לעגלה!');
+      } else if (data.action === 'scroll_to_products') {
+        console.log('📜 Bot requested to scroll to products');
+        
+        // Find the products section and scroll to it
+        const productSection = document.querySelector('[class*="product"], .products, #products, section:has(.product-card)');
+        if (productSection) {
+          productSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          console.log('✅ Scrolled to products section');
+        } else {
+          console.warn('⚠️ Products section not found');
+        }
+        
+        // Display the message
+        addBotMessage(data.message || 'הנה המוצרים שלנו! 🛍️');
+      } else if (data.action === 'scroll_to_product' && data.product_name) {
+        console.log('📜 Bot requested to scroll to specific product:', data.product_name);
+        
+        // Find the specific product card
+        const allProducts = document.querySelectorAll('.product-card, [class*="product"]');
+        let targetProduct = null;
+        
+        for (const product of allProducts) {
+          const nameEl = product.querySelector('h1, h2, h3, h4, [class*="title"], [class*="name"]');
+          if (nameEl && nameEl.textContent.trim().toLowerCase().includes(data.product_name.toLowerCase())) {
+            targetProduct = product;
+            break;
+          }
+        }
+        
+        if (targetProduct) {
+          targetProduct.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight the product briefly
+          targetProduct.style.transition = 'all 0.3s ease';
+          targetProduct.style.boxShadow = '0 0 30px rgba(102, 126, 234, 0.8)';
+          targetProduct.style.transform = 'scale(1.05)';
+          setTimeout(() => {
+            targetProduct.style.boxShadow = '';
+            targetProduct.style.transform = '';
+          }, 2000);
+          console.log('✅ Scrolled to product:', data.product_name);
+        } else {
+          console.warn('⚠️ Product not found:', data.product_name);
+        }
+        
+        addBotMessage(data.message || 'הנה המוצר! 🎯');
+      } else if (data.action === 'fill_contact_form' && data.name && data.phone) {
+        console.log('📝 Bot requested to fill contact form');
+        
+        // Find the contact form
+        const forms = document.querySelectorAll('form');
+        let contactForm = null;
+        
+        for (const form of forms) {
+          const inputs = form.querySelectorAll('input, textarea');
+          const hasName = Array.from(inputs).some(inp => inp.name?.includes('name') || inp.placeholder?.includes('שם'));
+          const hasPhone = Array.from(inputs).some(inp => inp.name?.includes('phone') || inp.placeholder?.includes('טלפון'));
+          
+          if (hasName && hasPhone) {
+            contactForm = form;
+            break;
+          }
+        }
+        
+        if (contactForm) {
+          // Fill the form
+          const nameInput = contactForm.querySelector('input[name*="name"], input[placeholder*="שם"]');
+          const phoneInput = contactForm.querySelector('input[name*="phone"], input[type="tel"], input[placeholder*="טלפון"]');
+          const messageInput = contactForm.querySelector('textarea, input[name*="message"], input[placeholder*="הודעה"]');
+          
+          if (nameInput) nameInput.value = data.name;
+          if (phoneInput) phoneInput.value = data.phone;
+          if (messageInput && data.message_text) messageInput.value = data.message_text;
+          
+          // Scroll to the form
+          contactForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Highlight the form briefly
+          contactForm.style.transition = 'all 0.3s ease';
+          contactForm.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.8)';
+          setTimeout(() => {
+            contactForm.style.boxShadow = '';
+          }, 2000);
+          
+          console.log('✅ Contact form filled');
+        } else {
+          console.warn('⚠️ Contact form not found');
+        }
+        
+        addBotMessage(data.message || 'מילאתי את הטופס בשבילך! ✅');
+      } else if (data.action === 'open_whatsapp') {
+        console.log('💬 Bot requested to open WhatsApp');
+        
+        // Find and click the WhatsApp bubble
+        const whatsappBubble = document.querySelector('[id*="whatsapp"], [class*="whatsapp"], a[href*="wa.me"]');
+        if (whatsappBubble) {
+          whatsappBubble.click();
+          console.log('✅ Opened WhatsApp');
+        } else {
+          console.warn('⚠️ WhatsApp bubble not found');
+        }
+        
+        addBotMessage(data.message || 'פותח את WhatsApp... 💬');
+      } else if (data.action === 'scroll_to_section' && data.section_name) {
+        console.log('📜 Bot requested to scroll to section:', data.section_name);
+        
+        // Try to find the section by various methods
+        const sectionName = data.section_name.toLowerCase();
+        let targetSection = null;
+        
+        // Method 1: By ID
+        targetSection = document.getElementById(sectionName);
+        
+        // Method 2: By heading text
+        if (!targetSection) {
+          const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+          for (const heading of headings) {
+            if (heading.textContent.toLowerCase().includes(sectionName)) {
+              targetSection = heading.closest('section') || heading.parentElement;
+              break;
+            }
+          }
+        }
+        
+        // Method 3: By section with matching text
+        if (!targetSection) {
+          const sections = document.querySelectorAll('section, .section, [class*="section"]');
+          for (const section of sections) {
+            if (section.textContent.toLowerCase().includes(sectionName)) {
+              targetSection = section;
+              break;
+            }
+          }
+        }
+        
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          console.log('✅ Scrolled to section:', data.section_name);
+        } else {
+          console.warn('⚠️ Section not found:', data.section_name);
+        }
+        
+        addBotMessage(data.message || 'הנה החלק שחיפשת! 📍');
+      } else if (data.action === 'highlight_element' && data.element_text) {
+        console.log('✨ Bot requested to highlight element:', data.element_text);
+        
+        // Find element by text content
+        const allElements = document.querySelectorAll('button, a, h1, h2, h3, h4, .btn, [class*="button"]');
+        let targetElement = null;
+        
+        for (const el of allElements) {
+          if (el.textContent.toLowerCase().includes(data.element_text.toLowerCase())) {
+            targetElement = el;
+            break;
+          }
+        }
+        
+        if (targetElement) {
+          // Scroll to element
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Create pulsing highlight effect
+          const originalBoxShadow = targetElement.style.boxShadow;
+          const originalTransform = targetElement.style.transform;
+          let pulseCount = 0;
+          
+          const pulseInterval = setInterval(() => {
+            if (pulseCount % 2 === 0) {
+              targetElement.style.boxShadow = '0 0 40px rgba(234, 179, 8, 1)';
+              targetElement.style.transform = 'scale(1.1)';
+            } else {
+              targetElement.style.boxShadow = '0 0 20px rgba(234, 179, 8, 0.5)';
+              targetElement.style.transform = 'scale(1)';
+            }
+            pulseCount++;
+            
+            if (pulseCount >= 6) {
+              clearInterval(pulseInterval);
+              targetElement.style.boxShadow = originalBoxShadow;
+              targetElement.style.transform = originalTransform;
+            }
+          }, 400);
+          
+          console.log('✅ Highlighted element');
+        } else {
+          console.warn('⚠️ Element not found:', data.element_text);
+        }
+        
+        addBotMessage(data.message || 'הנה מה שחיפשת! ✨');
+      } else {
+        // Regular message - display as is
+        addBotMessage(data.message || data.response || 'מצטערת, לא הצלחתי להבין');
+      }
+    })
+    .catch(error => {
+      clearTimeout(timeoutId); // Clear timeout on error
+      console.error('Bot error:', error);
+      hideTypingIndicator();
+      
+      // Better error messages based on error type
+      if (error.name === 'AbortError') {
+        addBotMessage('⏱️ הבקשה ארכה יותר מדי. אנא נסה שוב.');
+      } else if (!navigator.onLine) {
+        addBotMessage('📡 אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.');
+      } else {
+        addBotMessage('מצטערת, קרתה שגיאה. נסה שוב בעוד כמה שניות.');
+      }
+    });
+    \`\`\`
+    
+    **🔑 KEY POINTS:**
+    1. ALWAYS use AbortController with 30-second timeout to prevent hanging
+    2. ALWAYS parse the response as JSON
+    3. Check for bot actions: \`data.action === 'add_to_cart'\` OR \`data.action === 'scroll_to_products'\`
+    4. If action exists:
+       - For 'add_to_cart': call addToCart() AND display ONLY data.message
+       - For 'scroll_to_products': scroll to products section AND display ONLY data.message
+    5. NEVER display the raw JSON to the user - ALWAYS display ONLY data.message
+    6. Use addBotMessage() or equivalent to display messages in the chat
+    7. Provide user-friendly error messages based on error type (timeout, network, general)
+    8. Clear timeout on both success and error
+    9. **🚨 CRITICAL:** Whether there's an action or not, ALWAYS show ONLY the message text, NEVER the full JSON object!
+  - **Bot System Instructions (Instructions for N8N):**
+    **שמך:** סתיו - עוזרת חכמה שנותנת שירות בדף
+    **אישיות:** שנונה, קצרה, עם נגיעות הומור ומקצועיות
+    **הנחיות:**
+    - קבלי את המשתמש בסבר פנים יפות
+    - הגידי את שמך רק אם תשאלי
+    - עני בקצרה על מה שנשאלת - תשובה לעניין וקצרה כמו אדם רגיל, רק על מה שנשאלת
+    - תוכלי לשוחח בקצרה על כל נושא אבל תמיד להחזיר את המשתמש לנושא העסק ולהניע לפעולה
+    - את בוט אוניברסלי - אם הממשק בשפה אחרת את עונה בשפת הממשק או בשפה שהמשתמש כותב
+    
+    **מידע עסקי (תפארי את העסק!):**
+    - שם העסק: {{ $json.body.business_info.name }}
+    - טלפון: {{ $json.body.business_info.phone }} (רק אם מבקשים)
+    - אימייל: {{ $json.body.business_info.email }} (רק אם מבקשים)
+    - כתובת: {{ $json.body.business_info.address }} (רק אם מבקשים)
+    - **אם אין לך תשובה - תמיד תמליצי על צור קשר בדף כאן**
+    
+    **📋 פרטי האירוע (אם זה דף אירוע):**
+    - תאריך: {{ $json.body.event_details.eventDate }}
+    - שעה: {{ $json.body.event_details.eventTime }}
+    - מקום: {{ $json.body.event_details.eventLocation }}
+    - כתובת: {{ $json.body.event_details.eventAddress }}
+    - סוג אירוע: {{ $json.body.event_details.eventType }}
+    
+    **💼 פרטי הדף/העסק:**
+    - מקצוע/תחום: {{ $json.body.page_details.profession }}
+    - סוג שירות: {{ $json.body.page_details.serviceType }}
+    - סוג עסק: {{ $json.body.page_details.businessType }}
+    - שם קורס: {{ $json.body.page_details.courseName }}
+    - תיאור קורס: {{ $json.body.page_details.courseDescription }}
+    
+    **🎯 זיהוי סוג הדף והתאמת תשובות:**
+    
+    **קודם כל - זהי את סוג הדף:**
+    - page_type: {{ $json.body.page_type }}
+    - businessType: {{ $json.body.page_details.businessType }}
+    - profession: {{ $json.body.page_details.profession }}
+    
+    **לפי סוג הדף, התאימי את התשובות:**
+    
+    1️⃣ **אם page_type = "event" או "wedding" (הזמנה לאירוע/חתונה):**
+       - **השתמשי בפרטי האירוע מ-event_details!**
+       - תני פרטים על: תאריך ({{ $json.body.event_details.eventDate }}), שעה ({{ $json.body.event_details.eventTime }}), מקום ({{ $json.body.event_details.eventLocation }})
+       - התמקדי ב: אישור הגעה, מיקום, קוד לבוש, שעות הגעה
+       - **תמיד הפני לטופס אישור הגעה:** "אפשר לאשר הגעה בטופס באתר!"
+    
+    2️⃣ **אם page_type = "onlineStore" או "store" (חנות מקוונת):**
+       - 🚨 **קיבלת רשימת מוצרים ב-{{ $json.body.products }}** - זוהי רשימה אמיתית מהדף!
+       - 🚨 **כל מוצר ברשימה מכיל:** name (שם), price (מחיר), description (תיאור)
+       
+       **🛒 זיהוי בקשות רכישה:**
+       - אם המשתמש מבקש להוסיף מוצר לעגלה (דוגמאות: "אני רוצה 3 שוקולדים", "תוסיף לי 2 עוגות", "הוסף קפה")
+       - **חפשי את המוצר ב-{{ $json.body.products }}** לפי שם
+       - **החזירי JSON עם פעולה:**
+       \`\`\`json
+       {
+         "message": "✅ מעולה! הוספתי לך [כמות] [שם מוצר] לעגלה 🛒\\nסה\\"כ: ₪[מחיר כפול כמות]",
+         "action": "add_to_cart",
+         "product_name": "[שם המוצר המדויק מהרשימה]",
+         "quantity": [מספר],
+         "price": [מחיר יחידה]
+       }
+       \`\`\`
+       
+       **✅ דוגמה:**
+       - משתמש: "אני רוצה 3 שוקולדים"
+       - את בודקת ב-{{ $json.body.products }} ומוצאת: {name: "שוקולד מריר", price: 40}
+       - **תחזירי:**
+       \`\`\`json
+       {
+         "message": "✅ מעולה! הוספתי לך 3 שוקולדים מרירים לעגלה 🛒\\nסה\\"כ: ₪120",
+         "action": "add_to_cart",
+         "product_name": "שוקולד מריר",
+         "quantity": 3,
+         "price": 40
+       }
+       \`\`\`
+       
+       **❌ אם המוצר לא קיים ברשימה:**
+       \`\`\`json
+       {
+         "message": "מצטערת, לא מצאתי את המוצר הזה. מוזמנים לעיין במוצרים הזמינים בדף! 😊"
+       }
+       \`\`\`
+       
+       **📋 שאלות על מוצרים (ללא הוספה):**
+       - אם המשתמש רק שואל על מחיר - **אל תוסיפי לעגלה**! רק תני מידע.
+       - "שוקולד מריר עולה ₪40 ליחידה. רוצה להוסיף לעגלה?"
+       
+       **📜 גלילה אוטומטית למוצרים:**
+       - אם המשתמש מבקש המלצות או לראות מוצרים (דוגמאות: "תראי לי מה יש", "מה יש בחנות", "המלצות", "תראי מוצרים")
+       - **החזירי JSON עם פעולת גלילה:**
+       \`\`\`json
+       {
+         "message": "הנה המוצרים שלנו! 🛍️ מוזמנים לעיין ואם משהו מעניין - אשמח לעזור להוסיף לעגלה! 😊",
+         "action": "scroll_to_products"
+       }
+       \`\`\`
+       - הדף **יגלול אוטומטית** לגלריית המוצרים והמשתמש יוכל לראות אותם!
+    
+    3️⃣ **אם page_type = "course" (קורס/הדרכה):**
+       - **השתמשי בפרטי הקורס:** שם ({{ $json.body.page_details.courseName }}), תיאור ({{ $json.body.page_details.courseDescription }})
+       - התמקדי ב: תוכן הקורס, הרשמה, מערכת שעות, תכנית לימודים
+       - "ההרשמה לקורס פתוחה - מוזמנים להירשם!"
+    
+    4️⃣ **אם page_type = "landing" או כרטיס ביקור (אינסטלטור, בעל מקצוע, נותן שירות):**
+       - **זהי את המקצוע:** {{ $json.body.page_details.profession }}
+       - **זהי את סוג השירות:** {{ $json.body.page_details.serviceType }}
+       - התאימי תשובות למקצוע (לדוגמה: אינסטלטור = שיפוצים, אינסטלציה, תיקונים)
+       - הפני לפרטי קשר: "מוזמנים ליצור קשר לתיאום פגישה/הצעת מחיר"
+       - תני מענה על: שעות פעילות, אזורי שירות, תעריפים (אם יש)
+    
+    **💡 חשוב:** תמיד התאימי את הטון, השפה והתוכן לסוג הדף הספציפי שאת נמצאת בו!
+
+* **Language & Localization:**
           - Default WhatsApp message: When user clicks WhatsApp bubble, send "היי, אני מעוניין בשירות" (this is the default message for all pages)
-          - WhatsApp phone number formatting: Extract phone number from form data, remove all non-digit characters (spaces, dashes, parentheses, etc.), then add the appropriate country code based on the selected language. Use country code: ${data.whatsappCountryCode}. Example: "050-123-4567" becomes "${data.whatsappCountryCode}501234567"
-          - Default Language: The page should be created in the language selected in the creation interface: ${data.language} (${data.languageName}). ALL content on the page (headings, text, buttons, forms, etc.) should be in this language.
-          - Country-specific formatting: Format phone numbers, addresses, and other locale-specific content according to the country: ${data.country}
-          - Page Direction: If the default language is Hebrew (he) or Arabic (ar), set the HTML dir attribute to "rtl". For all other languages, set it to "ltr".
-          - Complete Translation: The entire page content must be in the selected language, including:
-            * All headings and titles
-            * All text content
-            * All button labels
-            * All form labels
-            * All placeholder text
-            * All error messages
-            * All success messages
-            * All navigation elements
+  - WhatsApp phone number formatting: Extract phone number from form data, remove all non-digit characters (spaces, dashes, parentheses, etc.), then add the appropriate country code. Use country code: ${data.whatsappCountryCode}. Example: "050-123-4567" becomes "${data.whatsappCountryCode}501234567"
+  - Default Language: The page should be created in the language selected: ${data.language} (${data.languageName}). ALL content must be in this language.
+  - Country-specific formatting: Format phone numbers, addresses according to: ${data.country}
+  - Page Direction: If language is Hebrew (he) or Arabic (ar), set HTML dir="rtl". Otherwise dir="ltr".
+  - Complete Translation: Entire page must be in selected language (headings, text, buttons, forms, placeholders, messages, navigation)
 
 
 ## 7. Creative Excellence Standards
@@ -3633,19 +4273,14 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                         </div>
 
                         <div>
-                            <label for="eventLocation" class="block text-sm font-medium text-slate-700" data-translate-key="label_event_location">מיקום האירוע</label>
+                            <label for="eventLocation" class="block text-sm font-medium text-slate-700" data-translate-key="label_event_location">שם האולם / מקום האירוע</label>
                             <input type="text" name="eventLocation" id="eventLocation" class="mt-1 block w-full px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm" placeholder="למשל: אולם אירועים גן העיר">
                         </div>
 
                         <div>
-                            <label for="guestCount" class="block text-sm font-medium text-slate-700 mb-2" data-translate-key="label_guest_count">
-                                <span class="flex items-center gap-2">
-                                    👥 כמות מוזמנים משוערת
-                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">חדש!</span>
-                                </span>
-                            </label>
-                            <input type="number" name="guestCount" id="guestCount" min="1" class="mt-1 block w-full px-4 py-2 bg-white border-2 border-slate-300 rounded-md shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200" placeholder="הזן מספר מוזמנים משוער">
-                            <p class="text-xs text-gray-500 mt-1">מספר זה יעזור לתכנן את סידור השולחנות ולנהל את האישורים</p>
+                            <label for="eventAddress" class="block text-sm font-medium text-slate-700">כתובת המקום</label>
+                            <input type="text" name="eventAddress" id="eventAddress" class="mt-1 block w-full px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm" placeholder="למשל: רחוב הרצל 25, תל אביב">
+                            <p class="mt-1 text-sm text-slate-500">הכתובת תשמש למיקום ב-Google Maps בדף האירוע</p>
                         </div>
 
                         <div class="bg-blue-50 p-3 rounded-lg mt-4">
@@ -3717,6 +4352,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             ui.iframeImageUploader.addEventListener('change', handleImageUpload);
 
             ui.uploadImageBtn.addEventListener('click', handleUploadBtnClick);
+            
+            ui.deleteImageBtn.addEventListener('click', handleDeleteImage);
 
             ui.textColorPicker.addEventListener('input', (e) => { if (state.currentElementToEdit) state.currentElementToEdit.style.color = e.target.value; });
 
@@ -3940,7 +4577,29 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
             ui.guidanceBubble.classList.remove('hidden');
 
+            // Update description label based on page type
+            try {
+                const descriptionLabel = document.querySelector('label[for="description"]');
+                if (descriptionLabel && state.selectedPageType && state.currentLanguage) {
+                    if (state.selectedPageType === 'event') {
+                        descriptionLabel.textContent = state.currentLanguage === 'he' ? 'פרטי האירוע' : 'Event Details';
+                    } else {
+                        descriptionLabel.textContent = state.currentLanguage === 'he' ? 'תיאור העסק' : 'Business Description';
+                    }
+                }
 
+                // Update contact name label for events
+                const contactNameLabel = document.querySelector('label[for="contactName"]');
+                if (contactNameLabel && state.selectedPageType && state.currentLanguage) {
+                    if (state.selectedPageType === 'event') {
+                        contactNameLabel.textContent = state.currentLanguage === 'he' ? 'שם המארגן' : 'Organizer Name';
+                    } else {
+                        contactNameLabel.textContent = state.currentLanguage === 'he' ? 'שם איש קשר' : 'Contact Name';
+                    }
+                }
+            } catch (error) {
+                console.warn('Error updating labels:', error);
+            }
 
             createDynamicFields(pageTemplates[state.selectedPageType].fields);
 
@@ -4108,8 +4767,15 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 
 
                 ui.previewIframe.srcdoc = finalHtml;
+                
+                // Store in window for saving (CRITICAL for page saving!)
+                ui.previewIframe.contentWindow.generatedPageHTML = finalHtml;
 
                 ui.previewIframe.onload = () => {
+                    
+                    // Ensure generatedPageHTML is set AGAIN after iframe loads
+                    ui.previewIframe.contentWindow.generatedPageHTML = finalHtml;
+                    console.log('✅ generatedPageHTML stored in iframe window');
 
                     ui.previewContainer.classList.remove('hidden');
 
@@ -4165,9 +4831,6 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                                 <a href="/accessibility-statement.html?business=${encodeURIComponent(businessName)}&email=${encodeURIComponent(contactEmail)}&phone=${encodeURIComponent(contactPhone)}" style="color: #64748b; text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#64748b'">הצהרת נגישות</a>
                                 <span style="color: #cbd5e1;">|</span>
                                 <a href="/terms-of-service.html?business=${encodeURIComponent(businessName)}&email=${encodeURIComponent(contactEmail)}&phone=${encodeURIComponent(contactPhone)}&website=${encodeURIComponent(websiteUrl)}" style="color: #64748b; text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#64748b'">תנאי שירות</a>
-                            </div>
-                            <div style="color: #94a3b8; font-size: 12px;">
-                                © ${new Date().getFullYear()} ${businessName} - כל הזכויות שמורות
                             </div>
                             <div style="color: #94a3b8; font-size: 11px; margin-top: 5px;">
                                 יצירת קשר: <a href="mailto:${contactEmail}" style="color: #64748b; text-decoration: none;">${contactEmail}</a> | ${contactPhone}
@@ -4471,6 +5134,11 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     state.currentElementToEdit = null;
 
                 }
+                
+                // איפוס מצב תמונה והסתר כפתור מחיקה
+                state.elementToModifyForImage = null;
+                state.imageModificationType = null;
+                ui.deleteImageBtn.style.display = 'none';
 
                  ui.opacityControl.classList.add('hidden');
 
@@ -4515,6 +5183,9 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 state.elementToModifyForImage = target;
 
                 state.imageModificationType = 'src';
+                
+                // הצג כפתור מחיקה
+                ui.deleteImageBtn.style.display = 'block';
 
             } else if (backgroundHolder) {
 
@@ -4535,6 +5206,9 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     ui.opacitySlider.value = match && match[5] ? match[5] : 0.5;
 
                 }
+                
+                // הצג כפתור מחיקה
+                ui.deleteImageBtn.style.display = 'block';
 
             }
 
@@ -4668,6 +5342,39 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
         }
 
+
+        // מחיקת תמונה
+        function handleDeleteImage() {
+            if (!state.elementToModifyForImage) {
+                showModal("נא לבחור תמונה למחיקה");
+                return;
+            }
+
+            if (!confirm('האם אתה בטוח שברצונך למחוק את התמונה?')) {
+                return;
+            }
+
+            try {
+                // מחק תמונה לפי סוג
+                if (state.imageModificationType === 'src' && state.elementToModifyForImage.tagName === 'IMG') {
+                    // מחק src ושם placeholder
+                    state.elementToModifyForImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-size="24" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    state.elementToModifyForImage.alt = '';
+                } else if (state.imageModificationType === 'background') {
+                    // מחק background image
+                    state.elementToModifyForImage.style.backgroundImage = 'none';
+                    state.elementToModifyForImage.style.backgroundColor = '#f3f4f6'; // צבע רקע ניטרלי
+                }
+
+                showModal("✅ התמונה נמחקה בהצלחה");
+                setTimeout(hideModal, 1500);
+
+            } catch (error) {
+                console.error('Error deleting image:', error);
+                showModal("❌ שגיאה במחיקת התמונה: " + error.message);
+            }
+        }
+
         
 
         function resizeAndCompressImage(file, maxWidth = 1920, quality = 0.85) {
@@ -4774,15 +5481,45 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
             if(state.isEditing) toggleEditMode(false);
 
-            await new Promise(r => setTimeout(r, 100));
+            // Wait for iframe to fully reload - CRITICAL FOR SAVING ALL CONTENT
+            console.log('⏳ Waiting for iframe to fully reload...');
+            await new Promise(r => setTimeout(r, 3500)); // Increased to 3500ms for stability
+            
+            // Wait for iframe document to be in ready state
+            const iframeDoc = ui.previewIframe.contentWindow.document;
+            if (iframeDoc.readyState !== 'complete') {
+                console.log('⏳ Waiting for iframe to complete loading...');
+                await new Promise(resolve => {
+                    const handler = () => {
+                        console.log('✅ DOM loaded');
+                        resolve();
+                    };
+                    if (iframeDoc.readyState === 'loading') {
+                        iframeDoc.addEventListener('DOMContentLoaded', handler, { once: true });
+                    }
+                    setTimeout(resolve, 1500); // Longer fallback timeout
+                });
+            }
+            
+            // Extra wait to ensure all scripts and async content have loaded
+            console.log('⏳ Additional wait for async content...');
+            await new Promise(r => setTimeout(r, 1000));
+            console.log('✅ Iframe fully loaded, cloning document...');
 
 
 
-            const clonedDoc = ui.previewIframe.contentWindow.document.cloneNode(true);
+            const clonedDoc = iframeDoc.cloneNode(true);
 
             clonedDoc.querySelectorAll('[style*="outline"]').forEach(el => el.style.outline = '');
 
             let finalHtml = clonedDoc.documentElement.outerHTML;
+            
+            // Verify we have RSVP form if this is an event page
+            const hasRsvpForm = finalHtml.includes('id="rsvp-form"') || finalHtml.includes('rsvp-name');
+            console.log('📋 RSVP form present in saved HTML:', hasRsvpForm);
+            if (!hasRsvpForm && state.selectedPageType === 'event') {
+                console.warn('⚠️ WARNING: Event page missing RSVP form in final HTML!');
+            }
             
             // הוסף פונקציונליות חנות אם יש מוצרים או addToCart
             console.log('Saving page. selectedPageType:', state.selectedPageType);
@@ -5111,6 +5848,13 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     if (response.ok) {
                         const htmlContent = await response.text();
                         ui.previewIframe.srcdoc = htmlContent;
+                        
+                        // Store in iframe window for saving (CRITICAL!)
+                        ui.previewIframe.onload = () => {
+                            ui.previewIframe.contentWindow.generatedPageHTML = htmlContent;
+                            console.log('✅ generatedPageHTML stored (loaded from file)');
+                        };
+                        
                         ui.previewContainer.classList.remove('hidden');
                         ui.generationView.classList.add('hidden');
                         ui.toolsFab.classList.remove('hidden');
@@ -5140,6 +5884,13 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
                 // טען את הפרויקט לעריכה
                 ui.previewIframe.srcdoc = project.html_content;
+                
+                // Store in iframe window for saving (CRITICAL!)
+                ui.previewIframe.onload = () => {
+                    ui.previewIframe.contentWindow.generatedPageHTML = project.html_content;
+                    console.log('✅ generatedPageHTML stored (loaded from Supabase)');
+                };
+                
                 ui.previewContainer.classList.remove('hidden');
                 ui.generationView.classList.add('hidden');
                 ui.toolsFab.classList.remove('hidden');

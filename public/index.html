@@ -1611,21 +1611,46 @@
             google.accounts.id.initialize({
                 client_id: googleClientId,
                 callback: handleGoogleResponse,
+                auto_select: false,
+                cancel_on_tap_outside: false,
             });
             
-            document.getElementById('googleSignInBtn').onclick = () => {
-                console.log("Sign in button clicked!");
-                showLoading(true);
-                document.getElementById('googleSignInBtn').disabled = true;
-                google.accounts.id.prompt();
-            };
+            // Use renderButton instead of prompt() - more reliable
+            const buttonDiv = document.getElementById('googleSignInBtn');
             
-            console.log("Google Sign-In initialized");
+            // Hide the custom button and create a wrapper for Google's button
+            buttonDiv.style.display = 'none';
+            const googleButtonWrapper = document.createElement('div');
+            googleButtonWrapper.id = 'google-button-wrapper';
+            googleButtonWrapper.style.width = '100%';
+            buttonDiv.parentNode.insertBefore(googleButtonWrapper, buttonDiv.nextSibling);
+            
+            // Render Google's official button
+            google.accounts.id.renderButton(
+                googleButtonWrapper,
+                {
+                    theme: 'filled_blue',
+                    size: 'large',
+                    width: buttonDiv.offsetWidth || 350,
+                    text: 'signin_with',
+                    locale: 'he',
+                    logo_alignment: 'left'
+                }
+            );
+            
+            console.log("Google Sign-In button rendered");
         }
 
         async function handleGoogleResponse(response) {
             console.log("=== GOOGLE RESPONSE ===");
             console.log("Google credential:", response.credential);
+            
+            // Show loading immediately
+            showLoading(true);
+            const googleButtonWrapper = document.getElementById('google-button-wrapper');
+            if (googleButtonWrapper) {
+                googleButtonWrapper.style.display = 'none';
+            }
             
             try {
                 const { data, error } = await supabaseClient.auth.signInWithIdToken({
@@ -1637,30 +1662,38 @@
                 
                 if (error) {
                     console.error("Supabase auth error:", error);
-                    showError('שגיאה בהתחברות: ' + error.message);
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('googleSignInBtn').disabled = false;
+                    showError('שגיאה בהתחברות עם Google: ' + error.message);
+                    showLoading(false);
+                    if (googleButtonWrapper) {
+                        googleButtonWrapper.style.display = 'block';
+                    }
                 } else if (data && data.user) {
                     currentUser = data.user;
                     saveCurrentUser(currentUser);
-                    console.log("Google login successful!");
+                    console.log("✅ Google login successful!");
                     console.log("User ID:", currentUser.id);
                     console.log("User email:", currentUser.email);
                     console.log("User metadata:", currentUser?.user_metadata);
+                    
+                    showSuccess('התחברת בהצלחה! טוען את הדשבורד...');
                     setTimeout(() => {
                     showDashboard();
-                    }, 100);
+                    }, 800);
                 } else {
                     console.error("No user data in Google response");
-                    showError('שגיאה בהתחברות');
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('googleSignInBtn').disabled = false;
+                    showError('שגיאה: לא התקבלו נתוני משתמש מ-Google');
+                    showLoading(false);
+                    if (googleButtonWrapper) {
+                        googleButtonWrapper.style.display = 'block';
+                    }
                 }
             } catch (err) {
                 console.error("Google sign-in exception:", err);
-                showError('שגיאה בהתחברות');
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('googleSignInBtn').disabled = false;
+                showError('שגיאה בהתחברות: ' + (err.message || 'נסה שוב'));
+                showLoading(false);
+                if (googleButtonWrapper) {
+                    googleButtonWrapper.style.display = 'block';
+                }
             }
         }
         

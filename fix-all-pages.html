@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיקון כל הדפים - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <h1 class="text-4xl font-bold text-purple-600 mb-6 text-center">
+                🔧 תיקון אוטומטי לכל הדפים
+            </h1>
+            
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-bold text-blue-700 mb-3">מה יתוקן?</h2>
+                <ul class="space-y-2 text-blue-900">
+                    <li>✅ הסרת טופס "צור קשר" מדפי הזמנה</li>
+                    <li>✅ תיקון סדר השעון (ימים → שעות → דקות → שניות)</li>
+                    <li>✅ הוספת שניות לשעון</li>
+                    <li>✅ הוספת אפשרות "לא מגיע" בטופס RSVP</li>
+                    <li>✅ תיקון סקריפטים של WhatsApp</li>
+                </ul>
+            </div>
+            
+            <div id="status" class="mb-6 p-4 rounded-lg hidden"></div>
+            
+            <button onclick="fixAllPages()" id="fixBtn" 
+                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-8 rounded-xl text-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all">
+                🚀 תקן את כל הדפים עכשיו
+            </button>
+            
+            <div id="progress" class="mt-6 hidden">
+                <div class="bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="progressText" class="text-center mt-2 text-gray-600"></p>
+            </div>
+            
+            <div id="results" class="mt-6 hidden">
+                <h3 class="text-2xl font-bold text-green-600 mb-4">✅ התיקון הושלם!</h3>
+                <div id="resultsList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fixAllPages() {
+            const fixBtn = document.getElementById('fixBtn');
+            const status = document.getElementById('status');
+            const progress = document.getElementById('progress');
+            const results = document.getElementById('results');
+            
+            fixBtn.disabled = true;
+            fixBtn.textContent = '⏳ מתקן...';
+            
+            status.className = 'mb-6 p-4 rounded-lg bg-yellow-50 border-2 border-yellow-200';
+            status.textContent = '⏳ מתחיל תיקון...';
+            status.classList.remove('hidden');
+            
+            progress.classList.remove('hidden');
+            
+            try {
+                // Get user ID from Supabase session
+                const { createClient } = supabase;
+                const supabaseUrl = 'https://osoqfadqohqcauawzmmq.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zb3FmYWRxb2hxY2F1YXd6bW1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYyNjI1MDQsImV4cCI6MjA1MTgzODUwNH0.B3LQiD08yMo2K_EinKZqHr8WRZkOQQ01xKkwN73s7Ww';
+                const client = createClient(supabaseUrl, supabaseKey);
+                
+                const { data: { session } } = await client.auth.getSession();
+                
+                if (!session) {
+                    status.className = 'mb-6 p-4 rounded-lg bg-red-50 border-2 border-red-200';
+                    status.textContent = '❌ לא מחובר - אנא התחבר תחילה';
+                    fixBtn.disabled = false;
+                    fixBtn.textContent = '🚀 תקן את כל הדפים עכשיו';
+                    return;
+                }
+                
+                const userId = session.user.id;
+                
+                document.getElementById('progressText').textContent = 'שולח בקשה לתיקון...';
+                document.getElementById('progressBar').style.width = '30%';
+                
+                const response = await fetch('/api/fix-old-event-pages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId })
+                });
+                
+                document.getElementById('progressBar').style.width = '70%';
+                
+                const data = await response.json();
+                
+                document.getElementById('progressBar').style.width = '100%';
+                
+                if (response.ok) {
+                    status.className = 'mb-6 p-4 rounded-lg bg-green-50 border-2 border-green-200';
+                    status.textContent = `✅ ${data.message}`;
+                    
+                    results.classList.remove('hidden');
+                    document.getElementById('resultsList').innerHTML = `
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <p class="text-green-800 font-bold text-lg">📊 סטטיסטיקה:</p>
+                            <p class="text-green-700">• תוקנו: <span class="font-bold">${data.fixedCount || 0}</span> דפים</p>
+                            <p class="text-green-700">• דילגו: <span class="font-bold">${data.skippedCount || 0}</span> דפים (לא הזמנות או כבר מתוקנים)</p>
+                        </div>
+                    `;
+                } else {
+                    status.className = 'mb-6 p-4 rounded-lg bg-red-50 border-2 border-red-200';
+                    status.textContent = `❌ שגיאה: ${data.error || 'לא ניתן לתקן'}`;
+                }
+                
+            } catch (error) {
+                status.className = 'mb-6 p-4 rounded-lg bg-red-50 border-2 border-red-200';
+                status.textContent = `❌ שגיאה: ${error.message}`;
+            }
+            
+            fixBtn.disabled = false;
+            fixBtn.textContent = '🔄 תקן שוב';
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>
+
