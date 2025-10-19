@@ -31,11 +31,6 @@ const pageTemplates = {
 
 6. **Footer**: Minimal footer with business info and links
 
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-**✅ MUST INCLUDE:** Links to "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות" → /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-**❌ STRICTLY FORBIDDEN:** "© 2024", "© 2025", "כל הזכויות שמורות", "All Rights Reserved", any text with "זכויות" or "שמורות"
-- ✅ Footer should include: business name, contact info (if provided), social media icons, AND the 3 legal links
-
 **CREATIVE FREEDOM**: Vary the visual treatment, animations, colors, and exact positioning while maintaining these core sections.`,
 
         t: {
@@ -90,12 +85,7 @@ const pageTemplates = {
 
 6. **Contact Section** (id="contact"): Form + info, beautifully styled
 
-7. **Footer**: Comprehensive with links, social media
-
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-**✅ MUST INCLUDE:** Links to "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות" → /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-**❌ STRICTLY FORBIDDEN:** "© 2024", "© 2025", "כל הזכויות שמורות", "All Rights Reserved", any text with "זכויות" or "שמורות"
-- ✅ Footer should include: business name, contact info (if provided), social media icons, AND the 3 legal links
+7. **Footer**: Comprehensive with links, social media, legal
 
 **MAKE IT MEMORABLE**: This should feel like a premium brand website.`,
 
@@ -163,12 +153,7 @@ const pageTemplates = {
 
         fields: ['menuItems'],
 
-        structurePrompt: `Build a menu page with the following sections only: 1. Header (id="header") with the business name. 2. Category sections (e.g., 'Appetizers', 'Main Courses') and under each category, a grid of items based on the provided data. 3. Contact details and address as plain text (not links).
-
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-**✅ MUST INCLUDE:** Links to "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות" → /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-**❌ STRICTLY FORBIDDEN:** "© 2024", "© 2025", "כל הזכויות שמורות", "All Rights Reserved", any text with "זכויות" or "שמורות"
-- ✅ Footer should include: business name, contact info, AND the 3 legal links`,
+        structurePrompt: `Build a menu page with the following sections only: 1. Header (id="header") with the business name. 2. Category sections (e.g., 'Appetizers', 'Main Courses') and under each category, a grid of items based on the provided data. 3. Contact details and address as plain text (not links).`,
 
         t: {
 
@@ -238,12 +223,7 @@ const pageTemplates = {
 
         fields: [],
 
-        structurePrompt: `Build a digital business card designed as a single central card (id="vcard"). It must contain a picture, name, title, short description, and clear action buttons for contact.
-
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-**✅ MUST INCLUDE:** Links to "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות" → /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-**❌ STRICTLY FORBIDDEN:** "© 2024", "© 2025", "כל הזכויות שמורות", "All Rights Reserved", any text with "זכויות" or "שמורות"
-- ✅ Keep footer minimal - just the 3 legal links in small text at bottom`,
+        structurePrompt: `Build a digital business card designed as a single central card (id="vcard"). It must contain a picture, name, title, short description, and clear action buttons for contact.`,
 
         t: {
 
@@ -267,8 +247,6 @@ const pageTemplates = {
 
         structurePrompt: `Build a beautiful, elegant event invitation page. You have creative freedom to choose the layout style, but must include these sections:
 
-🚨 CRITICAL: DO NOT CREATE A "CONTACT FORM" OR "צור קשר" SECTION - Event pages use WhatsApp bubble instead! 🚨
-
 **REQUIRED SECTIONS:**
 1. **Hero Section** (id="home"): Event name, date, and a romantic/elegant visual. Choose ONE hero style:
    - Option A: Full-screen background image with overlay and centered text
@@ -276,60 +254,15 @@ const pageTemplates = {
    - Option C: Animated gradient background with floating decorative elements
    - Option D: Elegant border frame design with central content
 
-2. **Countdown Timer** (id="countdown-timer"): 
-   
-   🚨🚨🚨 ABSOLUTELY MANDATORY - YOU WILL BE PENALIZED IF YOU DON'T FOLLOW THIS 🚨🚨🚨
-   
-   **VISUAL RESULT (HEBREW RTL - SECONDS RIGHT, DAYS LEFT):**
-   SECONDS (RIGHT) → MINUTES → HOURS → DAYS/ימים (LEFT)
-   [שניות 00] [דקות 30] [שעות 10] [ימים 07]
-     ←RIGHT                                LEFT→
-   
-   **EXACT CODE TO COPY-PASTE:**
-   ```html
-   <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-       <div id="seconds" class="countdown-box p-8 flex flex-col items-center justify-center">
-           <span class="text-7xl font-bold">00</span>
-           <span class="text-2xl mt-2">שניות</span>
-       </div>
-       <div id="minutes" class="countdown-box p-8 flex flex-col items-center justify-center">
-           <span class="text-7xl font-bold">30</span>
-           <span class="text-2xl mt-2">דקות</span>
-       </div>
-       <div id="hours" class="countdown-box p-8 flex flex-col items-center justify-center">
-           <span class="text-7xl font-bold">10</span>
-           <span class="text-2xl mt-2">שעות</span>
-       </div>
-       <div id="days" class="countdown-box p-8 flex flex-col items-center justify-center">
-           <span class="text-7xl font-bold">07</span>
-           <span class="text-2xl mt-2">ימים</span>
-       </div>
-   </div>
-   ```
-   
-   **MANDATORY REQUIREMENTS (NO EXCEPTIONS):**
-   1. Grid MUST have: class="grid grid-cols-1 md:grid-cols-4 gap-8" (NO dir attribute!)
-   2. EXACTLY 4 boxes in this order: seconds, minutes, hours, days (REVERSED for RTL!)
-   3. IDs MUST be: "seconds", "minutes", "hours", "days"
-   4. Labels MUST be: "שניות", "דקות", "שעות", "ימים"
-   5. NO dir attribute - RTL will reverse HTML order to show: ימים→שעות→דקות→שניות
-   6. Update every second: setInterval(function, 1000)
-   
+2. **Countdown Timer** (id="countdown-timer"): Beautiful, animated countdown with elements having IDs: days, hours, minutes, seconds. 
+   **CRITICAL**: For Hebrew, display order MUST be RIGHT-TO-LEFT: days, hours, minutes, seconds.
    Style variations: 
    - Circular timers with animations
    - Card-based counters with shadows
    - Minimalist numbers with labels
    - Decorative boxes with icons
 
-3. **Event Details** (id="details"): 
-   **MUST INCLUDE:**
-   - 📍 Venue name (from Event Location field)
-   - 📍 Full address (from Event Address field) - if provided, include Google Maps link: https://www.google.com/maps/search/?api=1&query=[encoded address]
-   - 🕐 Event date and time
-   - 👔 Dress code (if mentioned)
-   - 🎁 Additional important details
-   
-   Choose ONE layout style:
+3. **Event Details** (id="details"): Location, time, dress code, etc. Choose ONE layout:
    - Option A: Timeline format with icons
    - Option B: Card grid with details
    - Option C: Accordion/collapsible sections
@@ -340,48 +273,17 @@ const pageTemplates = {
 **ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
 <meta name="page-type" content="event">
 
-**🚨🚨🚨 ABSOLUTELY CRITICAL - RSVP Form Requirements - THIS IS MANDATORY 🚨🚨🚨**
-
-**❌❌❌ FORBIDDEN - YOU WILL FAIL IF YOU DO THIS: ❌❌❌**
-- ❌ DO NOT create WhatsApp link (`https://wa.me/` or `whatsapp://`) - THIS IS STRICTLY FORBIDDEN
-- ❌ DO NOT create mailto: links - THIS IS STRICTLY FORBIDDEN
-- ❌ DO NOT use `window.open()` with WhatsApp/phone number - THIS IS STRICTLY FORBIDDEN
-- ❌ DO NOT concatenate message strings for WhatsApp - THIS IS STRICTLY FORBIDDEN
-- ❌ DO NOT write your own form submission code - USE THE CODE BELOW EXACTLY AS IS
-
-**✅✅✅ REQUIRED - YOU MUST DO THIS EXACTLY: ✅✅✅**
-- ✅ Form MUST have id="rsvp-form"
-- ✅ Form fields MUST have these EXACT IDs: id="rsvp-name", id="rsvp-phone", id="rsvp-email", id="rsvp-status", id="rsvp-guests", id="rsvp-notes"
-- ✅ MUST include radio buttons for attendance status BEFORE the guests field:
-    <label>האם תגיע לאירוע?</label>
-    <div>
-        <label><input type="radio" name="attendance" value="confirmed" id="rsvp-status-yes" checked> ✅ אני מגיע</label>
-        <label><input type="radio" name="attendance" value="declined" id="rsvp-status-no"> ❌ לא אוכל להגיע</label>
-    </div>
-- ✅ The rsvp-guests field MUST be a <select> dropdown with these EXACT options and label:
-    <label>כמה אנשים מגיעים?</label>
-    <select id="rsvp-guests">
-        <option value="1">1 אדם (רק אני)</option>
-        <option value="2">2 אנשים (זוג)</option>
-        <option value="3">3 אנשים</option>
-        <option value="4">4 אנשים</option>
-        <option value="5">5 אנשים</option>
-        <option value="6">6 אנשים</option>
-    </select>
-- ✅ The notes field (id="rsvp-notes") should have placeholder text: "הערות / סיבה (אם לא מגיע)"
-- ✅ MUST include this hidden success div BEFORE the closing </section>: 
-    <div id="rsvp-success" class="hidden text-center text-2xl font-bold text-green-400 mt-6">✅ תודה! אישור ההגעה נשלח בהצלחה</div>
-- ✅ MUST COPY-PASTE this EXACT JavaScript code at the end of your <script> tag (DO NOT MODIFY IT):
-
-// ✅ RSVP Form - DO NOT CHANGE THIS CODE
+**CRITICAL - RSVP Form Requirements:**
+- The RSVP form MUST send data to the API endpoint /api/rsvp using fetch() POST request
+- Form fields: name, phone, email, guests (number), message
+- After successful submission, show success message: "תודה! אישור ההגעה נשלח בהצלחה"
+- DO NOT use WhatsApp for RSVP - ONLY use the API endpoint
+- Include eventId and userId in the POST request (get from URL: window.location.pathname)
+Example code:
 document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const eventId = window.location.pathname.split('/').pop().replace('.html', '').replace('_html', '');
     const userId = window.location.pathname.split('/')[2];
-    const statusYes = document.getElementById('rsvp-status-yes');
-    const statusNo = document.getElementById('rsvp-status-no');
-    const status = statusYes && statusYes.checked ? 'confirmed' : (statusNo && statusNo.checked ? 'declined' : 'confirmed');
-    const guests = status === 'confirmed' ? (parseInt(document.getElementById('rsvp-guests').value) || 1) : 0;
     const response = await fetch('/api/rsvp', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -390,37 +292,16 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
             name: document.getElementById('rsvp-name').value,
             phone: document.getElementById('rsvp-phone').value,
             email: document.getElementById('rsvp-email').value,
-            guests: guests,
-            status: status,
-            message: document.getElementById('rsvp-notes').value || ''
+            guests: document.getElementById('rsvp-guests').value,
+            status: 'confirmed',
+            message: document.getElementById('rsvp-notes').value
         })
     });
     if (response.ok) {
         document.getElementById('rsvp-success').classList.remove('hidden');
         document.getElementById('rsvp-form').reset();
     }
-});
-
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-
-**✅ MUST INCLUDE (Required):**
-- ✅ Links to: "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות"
-- ✅ Link URLs: /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-- ✅ Event name and contact info (if provided)
-
-**❌❌❌ STRICTLY FORBIDDEN (DO NOT ADD): ❌❌❌**
-- ❌ "© 2024" or "© 2025" or any year with copyright symbol
-- ❌ "All Rights Reserved" in English
-- ❌ "כל הזכויות שמורות" in Hebrew
-- ❌ Any copyright notice or "rights reserved" text
-- ❌ Text containing the word "זכויות" (rights)
-- ❌ Text containing the word "שמורות" (reserved)
-
-**📋 CORRECT Footer Example:**
-<footer>
-    <p>חתונת יניב ודורין | liron@gmail.com</p>
-    <p><a href="/privacy-policy.html">מדיניות פרטיות</a> | <a href="/terms-of-service.html">תנאי שימוש</a> | <a href="/accessibility-statement.html">הצהרת נגישות</a></p>
-</footer>`,
+});`,
 
         t: {
 
@@ -442,20 +323,7 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 
         fields: ['courseDetails', 'websiteLink'],
 
-        structurePrompt: `Build a course page with the following sections: 
-1. Header with navigation containing the provided external links ('Main Link', 'Additional External Link'). 
-2. Hero Section (id="home") with the course name and a central promise. 
-3. Countdown timer (id="countdown-timer") with grid-cols-4 containing EXACTLY 4 elements with IDs: "days", "hours", "minutes", "seconds". 
-   🚨 MANDATORY: MUST include SECONDS (4 boxes total, NOT 3)! Use grid-cols-4 and NO dir="ltr". Update every 1000ms. 🚨
-4. "About the Course" section (id="about") with a detailed description. 
-5. "About the Instructor" section (id="instructor") with a **circular** image (class="rounded-full"), the instructor's name (from data), and a short description. 
-6. "Who is this course for" section (id="for-whom"). 
-7. Course details (id="details") - location. 
-8. A prominent registration button that leads to the provided registration link.
-
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-**✅ MUST INCLUDE:** Links to "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות" → /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-**❌ STRICTLY FORBIDDEN:** "© 2024", "© 2025", "כל הזכויות שמורות", "All Rights Reserved", any text with "זכויות" or "שמורות"`,
+        structurePrompt: `Build a course page with the following sections: 1. Header with navigation containing the provided external links ('Main Link', 'Additional External Link'). 2. Hero Section (id="home") with the course name and a central promise. 3. Countdown timer (id="countdown-timer") with elements having IDs: days, hours, minutes, seconds. **Very important**: The display order for Hebrew should be right-to-left: days, hours, minutes, seconds. 4. "About the Course" section (id="about") with a detailed description. 5. "About the Instructor" section (id="instructor") with a **circular** image (class="rounded-full"), the instructor's name (from data), and a short description. 6. "Who is this course for" section (id="for-whom"). 7. Course details (id="details") - location. 8. A prominent registration button that leads to the provided registration link.`,
 
         t: {
 
@@ -523,11 +391,6 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 
         structurePrompt: `Build a stunning, professional online store with ${data.style} design aesthetic. Create a store that looks like it was designed by a top e-commerce agency.
 
-**🚨🚨🚨 CRITICAL BEFORE YOU START 🚨🚨🚨**
-**THE CART SYSTEM IS HANDLED 100% BY JAVASCRIPT!**
-**YOU MUST NOT CREATE ANY CART HTML - ONLY 3 EMPTY DIVS!**
-**IF YOU CREATE CART CONTENT, THE ENTIRE STORE WILL BREAK!**
-
 **ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
 <meta name="page-type" content="store">
 
@@ -544,136 +407,44 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
    - Option C: Slider with 2-3 featured products
    - Option D: Grid showcase of bestsellers
 
-3. **Product Catalog** (id="products"): Display ${data.productCount || 6} beautiful product cards. 
-   
-   CRITICAL - EVERY PRODUCT CARD MUST HAVE AN ADD TO CART BUTTON
-   CRITICAL - EVERY PRODUCT CARD MUST HAVE AN ADD TO CART BUTTON
-   CRITICAL - EVERY PRODUCT CARD MUST HAVE AN ADD TO CART BUTTON
-   
-   Each card MUST include ALL of these elements:
+3. **Product Catalog** (id="products"): Display ${data.productCount || 6} beautiful product cards. Each card MUST include:
    - High-quality product image (use Unsplash food/product images)
-   - Product name in H3 tag (be creative based on ${data.mainName})
-   - Product description paragraph
-   - Price display in SPAN with class product-price (₪XX format)
-   - MANDATORY BUTTON: A button element with onclick="addToCart('ProductName', price, 'imageURL', event)"
-     Example: <button onclick="addToCart('קפה', 35, 'https://...', event)" class="bg-blue-600 text-white px-6 py-2 rounded">הוסף לעגלה</button>
+   - Product name (be creative based on ${data.mainName})
+   - Price display (₪XX format)
+   - "הוסף לעגלה" button with: onclick="addToCart('ProductName', price, 'imageURL', event)" (CRITICAL: include 'event' parameter!)
    - Hover effects (scale, shadow, etc.)
-   
-   THE BUTTON IS MANDATORY - WITHOUT IT THE STORE WILL NOT WORK
-   THE BUTTON IS MANDATORY - WITHOUT IT THE STORE WILL NOT WORK
-   THE BUTTON IS MANDATORY - WITHOUT IT THE STORE WILL NOT WORK
-   
-   Choose ONE grid layout:
+   - Choose ONE grid layout:
      * Option A: Classic grid (3 columns)
      * Option B: Masonry layout
      * Option C: Featured + grid (1 large + smaller ones)
      * Option D: Carousel/slider format
 
-4. **Cart Placeholders** (CRITICAL - ONLY ADD THESE SIMPLE PLACEHOLDERS):
+4. **Cart Placeholders** (⚠️ CRITICAL - ONLY ADD THESE SIMPLE PLACEHOLDERS ⚠️):
    
-   ===== STOP AND READ THIS 10 TIMES BEFORE PROCEEDING =====
+   ⚠️⚠️⚠️ DO NOT CREATE CART HTML - ONLY PLACEHOLDERS ⚠️⚠️⚠️
+   ⚠️⚠️⚠️ THE JAVASCRIPT WILL BUILD THE CART AUTOMATICALLY ⚠️⚠️⚠️
    
-   ABSOLUTE RULE - NO EXCEPTIONS ALLOWED
-   - DO NOT CREATE ANY CART HTML - ONLY 3 EMPTY DIVS
-   - THE JAVASCRIPT WILL BUILD EVERYTHING AUTOMATICALLY
-   - IF YOU ADD CONTENT THE CART WILL BE BROKEN AND STUCK OPEN
-   - IF YOU ADD CLASS OPEN THE CART WILL BE STUCK OPEN
-   - IF YOU ADD STYLES THE CART WILL NOT WORK
-   - IF YOU ADD ANY ATTRIBUTES THE CART WILL BREAK
+   **ADD THESE EXACT 3 LINES ONLY - NOTHING MORE:**
    
-   THIS IS THE ONLY CORRECT WAY - COPY EXACTLY AS SHOWN BELOW:
+<div id="cart-sidebar"></div>
+<div id="cart-overlay"></div>
+<div id="cart-button-placeholder"></div>
    
-   &lt;div id="cart-sidebar"&gt;&lt;/div&gt;
-   &lt;div id="cart-overlay"&gt;&lt;/div&gt;
-   &lt;div id="cart-button-placeholder"&gt;&lt;/div&gt;
+   **ABSOLUTELY FORBIDDEN:**
+   - ❌ DO NOT add ANY cart icons to the header/navigation
+   - ❌ DO NOT add ANY floating buttons
+   - ❌ DO NOT add ANY badges or counters
+   - ❌ DO NOT add ANY inline styles to these divs
+   - ❌ DO NOT add ANY content inside these divs
+   - ❌ DO NOT create <button> for cart
+   - ❌ DO NOT add cart-related elements anywhere else in the page
    
-   ALL OF THESE ARE WRONG AND WILL BREAK THE STORE:
-   - DO NOT use: class="open"
-   - DO NOT use: class="translate-x-0"
-   - DO NOT use: class="show"
-   - DO NOT use: style="right: 0;"
-   - DO NOT use: style="transform: translateX(0);"
-   - DO NOT use: style="display: block;"
-   - DO NOT add ANY content inside these divs
-   - DO NOT add ANY inline styles
-   - DO NOT add ANY classes
-   - DO NOT add ANY attributes except id
-   - DO NOT add cart icons to header or navigation
-   - DO NOT add floating cart buttons
-   - DO NOT add badge counters
-   - DO NOT create ANY other cart-related HTML
-   
-   FINAL WARNING - THE CART MUST START CLOSED
-   ONLY THE JAVASCRIPT CAN OPEN IT
-   IF YOU CREATE IT OPEN IT WILL BE STUCK OPEN
-   
-   REMEMBER: 3 EMPTY DIVS - NOTHING ELSE - JAVASCRIPT HANDLES EVERYTHING
+   **ONLY THESE 3 EMPTY DIVS - THE REST IS HANDLED BY JAVASCRIPT**
 
 5. **Trust Indicators**:
    - Delivery info, secure payment badges, return policy
 
 6. **Contact/Footer**: Store hours, contact info, social media
-
-**🚨 ABSOLUTELY CRITICAL - Footer Requirements 🚨**
-**✅ MUST INCLUDE:** Links to "מדיניות פרטיות", "תנאי שימוש", "הצהרת נגישות" → /privacy-policy.html, /terms-of-service.html, /accessibility-statement.html
-**❌ STRICTLY FORBIDDEN:** "© 2024", "© 2025", "כל הזכויות שמורות", "All Rights Reserved", any text with "זכויות" or "שמורות"
-- ✅ Footer should include: store name, contact info (if provided), social media icons, AND the 3 legal links
-
-**🚨🚨🚨 MANDATORY FLOATING BUBBLES - MUST INCLUDE BOTH 🚨🚨🚨**
-
-**1. WhatsApp Floating Bubble (REQUIRED):**
-   - Position: fixed, bottom: 20px, left: 20px
-   - Green background (#25D366)
-   - White WhatsApp icon
-   - z-index: 9999
-   - Opens WhatsApp chat with store phone: ${data.whatsappCountryCode}${data.phone}
-         - Smooth hover animation
-         
-         **2. AI Bot "סתיו" Bubble (REQUIRED):**
-            - Position: fixed, bottom: 20px, right: 20px
-            - Purple background (#8B5CF6)
-            - Robot head icon (use SVG)
-            - z-index: 9999
-            - Opens chat interface to help customers
-            - Webhook: https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbkfhkfggyt
-            
-            🚨 CRITICAL - BOT MUST INCLUDE THIS PRODUCT EXTRACTION FUNCTION:
-            \`\`\`javascript
-            function extractProductsFromPage() {
-              const products = [];
-              const productCards = document.querySelectorAll('.product-card, [class*="product"], .card, .item, section > div');
-              productCards.forEach(card => {
-                const nameEl = card.querySelector('h1, h2, h3, h4, .title, [class*="title"], [class*="name"]');
-                const priceEl = card.querySelector('[class*="price"], .cost') || 
-                               Array.from(card.querySelectorAll('*')).find(el => el.textContent.includes('₪') && !el.querySelector('*'));
-                if (nameEl && priceEl) {
-                  const priceMatch = priceEl.textContent.match(/(\d+(?:[.,]\d+)?)/);
-                  if (priceMatch) {
-                    products.push({
-                      name: nameEl.textContent.trim().replace(/\s+/g, ' '),
-                      price: parseFloat(priceMatch[1].replace(',', '.')),
-                      description: (card.querySelector('p, .desc') || {textContent: ''}).textContent.trim().substring(0, 200)
-                    });
-                  }
-                }
-              });
-              return products;
-            }
-            \`\`\`
-            
-            🚨 AND IN THE BOT'S FETCH, CALL IT LIKE THIS:
-            \`\`\`javascript
-            const messageData = {
-              user_message: userMessage,
-              page_type: "store",
-              products: extractProductsFromPage()  // ← MUST CALL THIS!
-            };
-            \`\`\`
-
-**⚠️ CRITICAL - NO OTHER FLOATING BUBBLES:**
-- ❌ DO NOT create accessibility bubble (add button to top nav instead)
-- ❌ DO NOT create multiple WhatsApp bubbles
-- ❌ Only these 2 bubbles: WhatsApp (left) + AI Bot (right)
 
 **VISUAL EXCELLENCE:**
 - Product cards must be gorgeous with hover effects
