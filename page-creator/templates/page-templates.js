@@ -27,7 +27,90 @@ const pageTemplates = {
 
 4. **Social Proof** (id="testimonials"): Add 3 realistic testimonials with names and optional avatar placeholders
 
-5. **Contact Form** (id="contact"): Beautiful form with name, email, phone, message. Style should match the chosen design style perfectly.
+5. **Lead Form** (id="lead-form-section"): **MANDATORY - YOU MUST INCLUDE THIS EXACT FORM:**
+
+\`\`\`html
+<section id="lead-form-section" style="padding: 60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+        <h2 style="text-align: center; color: #1F2937; font-size: 32px; margin-bottom: 10px;">📋 מעוניין? השאר פרטים</h2>
+        <p style="text-align: center; color: #6B7280; margin-bottom: 30px;">נחזור אליך בהקדם</p>
+        
+        <form id="landing-lead-form" style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">👤 שם מלא *</label>
+                <input type="text" name="name" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📱 טלפון *</label>
+                <input type="tel" name="phone" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📧 אימייל</label>
+                <input type="email" name="email" 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">💬 הודעה</label>
+                <textarea name="message" rows="4" 
+                          style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box; resize: vertical;"></textarea>
+            </div>
+            
+            <button type="submit" 
+                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                ✅ שלח פנייה
+            </button>
+        </form>
+        
+        <div id="form-success-message" style="display: none; margin-top: 20px; padding: 16px; background: #D1FAE5; border: 2px solid #10B981; border-radius: 8px; text-align: center; color: #065F46; font-weight: 600;">
+            ✅ הפנייה נשלחה בהצלחה! נחזור אליך בהקדם
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('landing-lead-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const leadData = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        message: formData.get('message'),
+        timestamp: new Date().toISOString(),
+        source: 'Landing Page'
+    };
+    try {
+        const pathParts = window.location.pathname.split('/');
+        const pageId = pathParts[pathParts.length - 1].replace('.html', '').replace('_html', '');
+        const userId = pathParts[2];
+        const response = await fetch('/api/save-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                pageId: pageId,
+                leadData: leadData
+            })
+        });
+        if (response.ok) {
+            document.getElementById('form-success-message').style.display = 'block';
+            e.target.reset();
+            setTimeout(() => {
+                document.getElementById('form-success-message').style.display = 'none';
+            }, 5000);
+        }
+    } catch (error) {
+        console.error('Error saving lead:', error);
+        alert('שגיאה בשליחת הפנייה. אנא נסה שנית.');
+    }
+});
+</script>
+\`\`\`
 
 6. **Footer**: Minimal footer with business info and links
 
@@ -83,7 +166,90 @@ const pageTemplates = {
 
 5. **Social Proof**: Testimonials, client logos, or case studies
 
-6. **Contact Section** (id="contact"): Form + info, beautifully styled
+6. **Lead Form** (id="lead-form-section"): **MANDATORY - YOU MUST INCLUDE THIS EXACT FORM:**
+
+\`\`\`html
+<section id="lead-form-section" style="padding: 60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+        <h2 style="text-align: center; color: #1F2937; font-size: 32px; margin-bottom: 10px;">📋 צור קשר</h2>
+        <p style="text-align: center; color: #6B7280; margin-bottom: 30px;">נשמח לשמוע ממך</p>
+        
+        <form id="brand-lead-form" style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">👤 שם מלא *</label>
+                <input type="text" name="name" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📱 טלפון *</label>
+                <input type="tel" name="phone" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📧 אימייל</label>
+                <input type="email" name="email" 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">💬 הודעה</label>
+                <textarea name="message" rows="4" 
+                          style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box; resize: vertical;"></textarea>
+            </div>
+            
+            <button type="submit" 
+                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                ✅ שלח פנייה
+            </button>
+        </form>
+        
+        <div id="form-success-message" style="display: none; margin-top: 20px; padding: 16px; background: #D1FAE5; border: 2px solid #10B981; border-radius: 8px; text-align: center; color: #065F46; font-weight: 600;">
+            ✅ הפנייה נשלחה בהצלחה! נחזור אליך בהקדם
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('brand-lead-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const leadData = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        message: formData.get('message'),
+        timestamp: new Date().toISOString(),
+        source: 'Brand Page'
+    };
+    try {
+        const pathParts = window.location.pathname.split('/');
+        const pageId = pathParts[pathParts.length - 1].replace('.html', '').replace('_html', '');
+        const userId = pathParts[2];
+        const response = await fetch('/api/save-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                pageId: pageId,
+                leadData: leadData
+            })
+        });
+        if (response.ok) {
+            document.getElementById('form-success-message').style.display = 'block';
+            e.target.reset();
+            setTimeout(() => {
+                document.getElementById('form-success-message').style.display = 'none';
+            }, 5000);
+        }
+    } catch (error) {
+        console.error('Error saving lead:', error);
+        alert('שגיאה בשליחת הפנייה. אנא נסה שנית.');
+    }
+});
+</script>
+\`\`\`
 
 7. **Footer**: Comprehensive with links, social media, legal
 
@@ -153,13 +319,13 @@ const pageTemplates = {
 
         fields: ['menuItems'],
 
-        structurePrompt: `Build a menu page with the following sections only: 1. Header (id="header") with the business name. 2. Category sections (e.g., 'Appetizers', 'Main Courses') and under each category, a grid of items based on the provided data. 3. Contact details and address as plain text (not links).`,
+        structurePrompt: `Build a marketing flyer/post with the following sections only: 1. Header (id="header") with the business name. 2. Main promotional content with visual elements. 3. Contact details and address as plain text (not links). This is for VISUAL DISPLAY ONLY - no ordering functionality.`,
 
         t: {
 
-            en: { title: "Menu / Flyer", label: "Business / Restaurant Name", description: "Display products or dishes visually.", guidance: "A <b>Menu or Flyer</b> is designed to present information clearly and legibly, divided into categories and items." },
+            en: { title: "Marketing Flyer", label: "Business Name", description: "Create a marketing flyer or promotional post.", guidance: "A <b>Marketing Flyer</b> is designed for visual display and promotion, not for online ordering." },
 
-            he: { title: "תפריט / פלאייר", label: "שם העסק / מסעדה", description: "הצג מוצרים או מנות בצורה ויזואלית.", guidance: "<b>תפריט או פלאייר</b> נועד להציג מידע בצורה ברורה וקלה לקריאה, מחולק לקטגוריות ופריטים." },
+            he: { title: "פלאייר שיווקי", label: "שם העסק", description: "צור פלאייר שיווקי או פוסט פרסומי.", guidance: "<b>פלאייר שיווקי</b> נועד לתצוגה ויזואלית ופרסום, לא להזמנות מקוונות." },
 
             ar: { title: "قائمة / نشرة", label: "اسم العمل / المطعم", description: "اعرض المنتجات أو الأطباق بصرياً.", guidance: "<b>القائمة أو النشرة</b> مصممة لعرض المعلومات بوضوح ومقروئية، مقسمة إلى فئات وعناصر." },
             ja: { title: "メニュー / チラシ", label: "ビジネス名 / レストラン名", description: "製品や料理を視覚的に表示します。", guidance: "<b>メニューやチラシ</b>は、情報を明確で読みやすく提示するよう設計されており、カテゴリーとアイテムに分かれています。" },
@@ -412,6 +578,9 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 - Beautiful checkout button in cart
 - Mobile-responsive grid (1 col on mobile, 2-3 on desktop)
 
+**FLOATING CTA BUTTON (if enabled in form):**
+If user enabled Floating CTA in the form, it will be injected automatically by JavaScript - DO NOT add it manually in HTML
+
 **AFTER PURCHASE - VIDEO ACCESS:**
 After a user purchases a course, they should be able to access the course videos. The page should check if the user has purchased the course (from localStorage: \`purchasedCourses\`) and if so, display the video player with all course videos.
 
@@ -537,7 +706,186 @@ Return complete valid HTML starting with <!DOCTYPE html>.`,
 
         fields: ['propertyDetails'],
 
-        structurePrompt: "Build a real estate property landing page with the following sections: 1. Hero Section with a primary image of the property, address, and price. 2. Image gallery (id='gallery'). 3. 'Property Description' section (id='description') with marketing text. 4. 'Technical Specs' section (id='specs') showing the number of bedrooms, bathrooms, and square meters/feet. 5. Agent contact section (id='contact').",
+        structurePrompt: `Build a professional real estate property landing page with the following sections:
+
+1. **Hero Section** with:
+   - Large primary property image (use placeholder: https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200)
+   - Property address prominently displayed
+   - Price in large, bold text (₪ format)
+   - **"🖼️ צפה בגלריה" button** that calls: onclick="openPropertyGallery()"
+   
+2. **Property Description** section (id='description') with compelling marketing text
+
+3. **Technical Specs** section (id='specs') showing:
+   - 🛏️ X חדרים
+   - 🚿 X אמבטיות  
+   - 📐 X מ"ר
+   
+4. **Agent Contact** section (id='contact') with:
+   - Agent name and photo
+   - Phone number (clickable)
+   - **WhatsApp button**: <a href="https://wa.me/\${data.phone || '972504443333'}?text=שלום, אני מעוניין לקבוע ביקור בנכס" class="btn-whatsapp">📱 צור קשר לביקור בנכס</a>
+
+5. **MANDATORY: Contact Form for Leads** (id='lead-form-section') - You MUST include this EXACT form:
+
+\`\`\`html
+<section id="lead-form-section" style="padding: 60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+        <h2 style="text-align: center; color: #1F2937; font-size: 32px; margin-bottom: 10px;">📋 מעוניין בנכס?</h2>
+        <p style="text-align: center; color: #6B7280; margin-bottom: 30px;">השאר פרטים ונחזור אליך בהקדם</p>
+        
+        <form id="property-lead-form" style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">👤 שם מלא *</label>
+                <input type="text" name="name" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📱 טלפון *</label>
+                <input type="tel" name="phone" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📧 אימייל</label>
+                <input type="email" name="email" 
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">💬 הודעה</label>
+                <textarea name="message" rows="4" 
+                          style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box; resize: vertical;"></textarea>
+            </div>
+            
+            <button type="submit" 
+                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                ✅ שלח פנייה
+            </button>
+        </form>
+        
+        <div id="form-success-message" style="display: none; margin-top: 20px; padding: 16px; background: #D1FAE5; border: 2px solid #10B981; border-radius: 8px; text-align: center; color: #065F46; font-weight: 600;">
+            ✅ הפנייה נשלחה בהצלחה! נחזור אליך בהקדם
+        </div>
+    </div>
+</section>
+
+<script>
+// Handle property lead form submission
+document.getElementById('property-lead-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const leadData = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        message: formData.get('message'),
+        timestamp: new Date().toISOString(),
+        source: 'Property Inquiry'
+    };
+    
+    try {
+        // Get page info from URL
+        const pathParts = window.location.pathname.split('/');
+        const pageId = pathParts[pathParts.length - 1].replace('.html', '').replace('_html', '');
+        const userId = pathParts[2];
+        
+        // Send to server
+        const response = await fetch('/api/save-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                pageId: pageId,
+                leadData: leadData
+            })
+        });
+        
+        if (response.ok) {
+            // Show success message
+            document.getElementById('form-success-message').style.display = 'block';
+            e.target.reset();
+            
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                document.getElementById('form-success-message').style.display = 'none';
+            }, 5000);
+        }
+    } catch (error) {
+        console.error('Error saving lead:', error);
+        alert('שגיאה בשליחת הפנייה. אנא נסה שנית.');
+    }
+});
+</script>
+\`\`\`
+
+6. **MANDATORY: Property Gallery Modal** - You MUST include this exact code:
+
+\`\`\`html
+<!-- Property Gallery Modal (HIDDEN by default) -->
+<div id="property-gallery-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; overflow: auto;">
+    <div style="max-width: 1400px; margin: 50px auto; padding: 20px;">
+        <button onclick="closePropertyGallery()" style="position: fixed; top: 20px; right: 20px; background: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; z-index: 100000;">✕</button>
+        
+        <h2 style="color: white; text-align: center; margin-bottom: 30px; font-size: 32px;">🏠 גלריית תמונות הנכס</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <!-- Main Image -->
+            <div style="grid-column: span 2; background: white; border-radius: 12px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200" alt="תמונה ראשית" style="width: 100%; height: 500px; object-fit: cover;">
+                <p style="padding: 15px; text-align: center; font-weight: bold; font-size: 18px;">תמונה ראשית</p>
+            </div>
+            
+            <!-- Gallery Images (4 more) -->
+            <div style="background: white; border-radius: 12px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800" alt="תמונה 1" style="width: 100%; height: 250px; object-fit: cover;">
+                <p style="padding: 10px; text-align: center; font-weight: 600;">סלון</p>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800" alt="תמונה 2" style="width: 100%; height: 250px; object-fit: cover;">
+                <p style="padding: 10px; text-align: center; font-weight: 600;">מטבח</p>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800" alt="תמונה 3" style="width: 100%; height: 250px; object-fit: cover;">
+                <p style="padding: 10px; text-align: center; font-weight: 600;">חדר שינה</p>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800" alt="תמונה 4" style="width: 100%; height: 250px; object-fit: cover;">
+                <p style="padding: 10px; text-align: center; font-weight: 600;">מרפסת</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openPropertyGallery() {
+    document.getElementById('property-gallery-modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePropertyGallery() {
+    document.getElementById('property-gallery-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePropertyGallery();
+});
+</script>
+\`\`\`
+
+**CRITICAL REQUIREMENTS:**
+- Include 5 placeholder images (1 main + 4 gallery)
+- All images are editable (user can click to replace them)
+- Gallery button must be prominent in hero section
+- Modal must overlay entire screen
+- Include close button (X) in top-right`,
 
         t: {
 
@@ -632,6 +980,101 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
             he: { title: "חנות מקוונת", label: "שם החנות", description: "צור חנות מקוונת מלאה.", guidance: "<b>חנות מקוונת</b> היא אתר מסחר אלקטרוני מלא עם קטלוג מוצרים, עגלת קניות ופונקציית תשלום." },
 
             ar: { title: "متجر إلكتروني", label: "اسم المتجر", description: "أنشئ متجرًا إلكترونيًا كاملاً.", guidance: "<b>المتجر الإلكتروني</b> هو موقع تجارة إلكترونية كامل مع كتالوج منتجات وعربة تسوق ووظيفة دفع." }
+        }
+    },
+
+    restaurantMenu: {
+        img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop",
+        fields: ['menuCategories'],
+        structurePrompt: `Build a beautiful, modern restaurant/cafe menu page with online ordering capabilities.
+
+**ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
+<meta name="page-type" content="restaurantMenu">
+
+**REQUIRED SECTIONS:**
+1. **Header** (sticky navigation):
+   - Restaurant logo/name: \${data.mainName || 'Restaurant Name'}
+   - Clean navigation with category links
+   - ⚠️ DO NOT ADD CART ICON TO HEADER - the cart button is separate (see section 4)
+
+2. **Hero Section**: Eye-catching banner with:
+   - Restaurant name and tagline
+   - "Order Now" CTA button
+   - Beautiful food background image
+
+3. **Menu by Categories** (id="menu"): Display menu items organized by categories. Each category should have:
+   - Category title (e.g., "🍕 מנות עיקריות", "🍰 קינוחים", "☕ משקאות")
+   - Grid of menu items under each category
+   - Each menu item MUST include:
+     * Appetizing food image (use Unsplash food images)
+     * Item name (creative based on category)
+     * Brief description (1 line)
+     * Price display (₪XX format)
+     * "הוסף לעגלה" button with: onclick="addToCart('ItemName', price, 'imageURL', event)"
+   
+   **EXAMPLE CATEGORIES TO USE** (if not provided):
+   - 🍔 מנות ראשונות (Appetizers) - 3-4 items
+   - 🍕 מנות עיקריות (Main Courses) - 4-6 items  
+   - 🍰 קינוחים (Desserts) - 3-4 items
+   - ☕ משקאות (Beverages) - 3-4 items
+
+4. **Cart Placeholders** (⚠️ CRITICAL - ONLY ADD THESE SIMPLE PLACEHOLDERS ⚠️):
+   
+   ⚠️⚠️⚠️ DO NOT CREATE CART HTML - ONLY PLACEHOLDERS ⚠️⚠️⚠️
+   ⚠️⚠️⚠️ THE JAVASCRIPT WILL BUILD THE CART AUTOMATICALLY ⚠️⚠️⚠️
+   
+   **ADD THESE EXACT 3 LINES ONLY - NOTHING MORE:**
+   
+<div id="cart-sidebar"></div>
+<div id="cart-overlay"></div>
+<div id="cart-button-placeholder"></div>
+   
+   **ABSOLUTELY FORBIDDEN:**
+   - ❌ DO NOT add ANY cart icons to the header/navigation
+   - ❌ DO NOT add ANY floating buttons
+   - ❌ DO NOT add ANY badges or counters
+   - ❌ DO NOT create cart-items divs, cart-total divs, or checkout buttons
+   - ❌ THE CART IS 100% BUILT BY JAVASCRIPT - YOU ONLY ADD EMPTY PLACEHOLDERS
+
+   **ONLY THESE 3 EMPTY DIVS - THE REST IS HANDLED BY JAVASCRIPT**
+
+5. **Delivery Info Section**: 
+   - Delivery areas
+   - Estimated delivery time
+   - Minimum order (if any)
+
+6. **Contact/Footer**: Restaurant address, phone, hours, social media
+
+**VISUAL EXCELLENCE:**
+- Menu items must be appetizing with beautiful food photography
+- Organize by clear category sections with icons
+- Add "Chef's Special" or "Popular" badges where appropriate
+- Beautiful, mobile-responsive grid
+- Smooth scroll between categories
+
+**CRITICAL REMINDER:** The checkout process will include a delivery address form - you don't need to add it, it's automatic!
+
+CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete valid HTML starting with <!DOCTYPE html>.`,
+
+        t: {
+            en: { 
+                title: "Restaurant Menu", 
+                label: "Restaurant Name", 
+                description: "Create an online menu with ordering.", 
+                guidance: "A <b>Restaurant Menu</b> is a complete online ordering system with categorized menu items, shopping cart, and checkout with delivery options." 
+            },
+            he: { 
+                title: "תפריט מסעדה", 
+                label: "שם המסעדה", 
+                description: "צור תפריט מקוון עם הזמנות.", 
+                guidance: "<b>תפריט מסעדה</b> הוא מערכת הזמנות מקוונת מלאה עם מנות מסודרות לפי קטגוריות, עגלת קניות וקופה עם אפשרויות משלוח." 
+            },
+            ar: { 
+                title: "قائمة مطعم", 
+                label: "اسم المطعم", 
+                description: "أنشئ قائمة إلكترونية مع الطلب.", 
+                guidance: "<b>قائمة المطعم</b> هي نظام طلب إلكتروني كامل مع عناصر قائمة مصنفة وعربة تسوق ودفع مع خيارات التوصيل." 
+            }
         }
     },
 

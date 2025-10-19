@@ -1308,6 +1308,33 @@
                         window.location.href = `/appointments-manager.html?page=${info.page}&userId=${info.userId}`;
                         return;
                     }
+                    
+                    if (pageType === 'course' || pageType === 'onlineCourse') {
+                        // Redirect to course management
+                        window.location.href = `/course-management.html?pageId=${info.page}&userId=${info.userId}`;
+                        return;
+                    }
+                    
+                    if (pageType === 'realEstate') {
+                        // Redirect to leads management (same as events)
+                        console.log('🏠 Real estate page - redirecting to leads management');
+                        window.location.href = `/leads-manager.html?page=${info.page}&userId=${info.userId}`;
+                        return;
+                    }
+                    
+                    if (pageType === 'landing' || pageType === 'general') {
+                        // Landing pages and brand pages → leads management
+                        console.log('📄 Landing/Brand page - redirecting to leads management');
+                        window.location.href = `/leads-manager.html?page=${info.page}&userId=${info.userId}`;
+                        return;
+                    }
+                    
+                    if (pageType === 'event') {
+                        // Event pages → leads management
+                        console.log('🎉 Event page - redirecting to leads management');
+                        window.location.href = `/leads-manager.html?page=${info.page}&userId=${info.userId}`;
+                        return;
+                    }
                 } catch (error) {
                     console.warn('⚠️ Could not detect page type:', error);
                 }

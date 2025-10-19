@@ -171,23 +171,27 @@ app.get('/page-creator/templates/page-templates.js', (req, res) => {
 // Configure multer for image uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // קבל את ה-userId מהטופס או מהפרמטרים
-    const userId = req.body.userId || req.params.userId;
-    const pageName = req.body.pageName || 'general';
-    console.log('Multer destination - userId:', userId, 'pageName:', pageName);
+    // Try to get userId from multiple sources
+    const userId = req.body?.userId || req.params?.userId || req.query?.userId;
+    const pageName = req.body?.pageName || 'general';
     
-    if (!userId) {
-      return cb(new Error('userId is required'), null);
-    }
+    console.log('📂 Multer destination - userId:', userId, 'pageName:', pageName);
     
-    // צור תיקייה ספציפית לדף
-    const pageDir = path.join('output', userId, 'images', pageName);
+    // If no userId, use a fallback
+    const finalUserId = userId || 'temp_' + Date.now();
+    
+    // Create directory for images
+    const pageDir = path.join('output', finalUserId, 'images', pageName);
     fs.ensureDirSync(pageDir);
+    
+    console.log('✅ Destination created:', pageDir);
     cb(null, pageDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const filename = uniqueSuffix + path.extname(file.originalname);
+    console.log('📝 Generated filename:', filename);
+    cb(null, filename);
   }
 });
 
@@ -197,11 +201,8 @@ const upload = multer({
     fileSize: 50 * 1024 * 1024 // 50MB
   },
   fileFilter: (req, file, cb) => {
-    // בדוק אם יש userId
-    const userId = req.body.userId;
-    if (!userId) {
-      return cb(new Error('userId is required'), false);
-    }
+    // Don't check userId here - multer fileFilter runs before body is parsed
+    // We'll check userId in the route handler instead
     cb(null, true);
   }
 });
@@ -276,6 +277,9 @@ app.post('/api/create-page', async (req, res) => {
     } else if (selectedTemplate === 'onlineStore') {
       pageType = 'store';
       console.log(`🎯 DETECTED from TEMPLATE: store (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
+    } else if (selectedTemplate === 'restaurantMenu') {
+      pageType = 'restaurantMenu'; // Restaurant menus use store functionality (cart, checkout)
+      console.log(`🎯 DETECTED from TEMPLATE: restaurantMenu (RESTAURANT/CAFE MENU - store with categories) (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
     } else if (selectedTemplate === 'onlineCourse') {
       pageType = 'course'; // Digital courses use BOTH store management (purchases) AND leads management (registrations)
       console.log(`🎯 DETECTED from TEMPLATE: course (DIGITAL COURSES - store + leads management) (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
@@ -303,7 +307,7 @@ app.post('/api/create-page', async (req, res) => {
     }
     
     // If it's a store OR course (digital courses), inject checkout scripts
-    if (pageType === 'store' || pageType === 'course') {
+    if (pageType === 'store' || pageType === 'course' || pageType === 'restaurantMenu') {
       const storeScriptInjection = `
 <script src="/store-checkout.js"></script>
 <!-- CHECKOUT_SCRIPTS_INJECTED -->`;
@@ -341,7 +345,7 @@ app.post('/api/create-page', async (req, res) => {
     pageHtml = fixEventPageWhatsApp(pageHtml, pageType);
     
     // ✅ FIX Store/Course page issues (cart, bubbles) BEFORE saving
-    if (pageType === 'store' || pageType === 'course') {
+    if (pageType === 'store' || pageType === 'course' || pageType === 'restaurantMenu') {
       pageHtml = fixStorePageIssues(pageHtml);
     }
     
@@ -410,46 +414,8 @@ app.post('/api/create-page', async (req, res) => {
 });
 
 // Upload image
-app.post('/api/upload-image', upload.single('image'), (req, res) => {
-  try {
-    console.log('Upload request received:', {
-      userId: req.body.userId,
-      hasFile: !!req.file,
-      fileSize: req.file?.size,
-      body: req.body
-    });
-
-    if (!req.file) {
-      console.error('No file provided');
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    const userId = req.body.userId;
-    if (!userId) {
-      console.error('No userId provided');
-      return res.status(400).json({ error: 'No userId provided' });
-    }
-    console.log('Using userId:', userId);
-
-    const imageUrl = `/pages/${userId}/images/${req.file.filename}`;
-    
-    console.log('Image uploaded successfully:', {
-      filename: req.file.filename,
-      imageUrl: imageUrl,
-      path: req.file.path
-    });
-
-    res.json({ 
-      success: true, 
-      imageUrl,
-      filename: req.file.filename 
-    });
-
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    res.status(500).json({ error: 'Failed to upload image: ' + error.message });
-  }
-});
+// Image upload endpoint moved to line ~3121 (merged version)
+// This old version is replaced by the newer one below
 
 // Save page content
 // ✅ UNIVERSAL FUNCTION - Inject page data extractor for ALL page types
@@ -535,7 +501,68 @@ function fixStorePageIssues(html) {
   // This will match cart-sidebar with any attributes (class, style, etc.) and any content
   // It will replace everything with a clean, empty div
   
-  // Step 1: Remove any existing cart elements (handles all attribute orders)
+  // Step 1: CRITICAL - Remove broken cart HTML that n8n creates
+  // n8n sometimes creates: <div id="cart-sidebar"></div><div id="cart-items">...</div>...
+  // We need to clean up the orphaned cart-items and cart-total divs
+  
+  // First, remove ALL orphaned cart elements that appear right after cart-sidebar
+  // Pattern: <div id="cart-sidebar"></div> followed by ANY divs until we hit a real element
+  // This aggressive approach removes everything between cart-sidebar and the next major section
+  
+  // Remove cart-items divs
+  html = html.replace(
+    /(<div\s+id=["']cart-sidebar["']><\/div>)\s*<div[^>]*id=["']cart-items["'][^>]*>[\s\S]*?<\/div>/gi,
+    '$1'
+  );
+  console.log('🧹 Removed orphaned cart-items after cart-sidebar');
+  
+  // Remove any div that contains cart-total and appears right after cart-sidebar
+  html = html.replace(
+    /(<div\s+id=["']cart-sidebar["']><\/div>)\s*<div[^>]*>[\s\S]*?cart-total[\s\S]*?<\/div>/gi,
+    '$1'
+  );
+  console.log('🧹 Removed orphaned cart-total sections');
+  
+  // Remove standalone divs with checkoutViaWhatsApp between cart-sidebar and header
+  html = html.replace(
+    /(<div\s+id=["']cart-sidebar["']><\/div>)\s*<div[^>]*>[\s\S]*?checkoutViaWhatsApp[\s\S]*?<\/div>/gi,
+    '$1'
+  );
+  console.log('🧹 Removed orphaned checkout sections');
+  
+  // Remove any standalone cart-total divs or checkout buttons outside cart-sidebar
+  html = html.replace(
+    /<div[^>]*>([\s\S]*?)<span[^>]*id=["']cart-total["'][^>]*>[\s\S]*?<\/span>[\s\S]*?<\/div>/gi,
+    (match) => {
+      // Only remove if it's NOT inside cart-sidebar already
+      if (!match.includes('cart-sidebar')) {
+        console.log('🧹 Removed orphaned cart-total section');
+        return '';
+      }
+      return match;
+    }
+  );
+  
+  // Remove orphaned WhatsApp checkout buttons (simple approach - remove all outside <header>)
+  // We'll look for checkout buttons that appear before the </header> tag
+  const headerEndIndex = html.indexOf('</header>');
+  if (headerEndIndex > 0) {
+    const headerSection = html.substring(0, headerEndIndex);
+    const restOfPage = html.substring(headerEndIndex);
+    
+    // Remove checkout buttons from header area only
+    const cleanedHeader = headerSection.replace(
+      /<button[^>]*onclick=["']checkoutViaWhatsApp\(\)["'][^>]*>[\s\S]*?<\/button>/gi,
+      () => {
+        console.log('🧹 Removed orphaned WhatsApp checkout button from header area');
+        return '';
+      }
+    );
+    
+    html = cleanedHeader + restOfPage;
+  }
+  
+  // Now handle the cart placeholders themselves
   const cartPatterns = [
     // cart-sidebar - all variations
     /<div[^>]*\s+id=["']cart-sidebar["'][^>]*>[\s\S]*?<\/div>/gi,
@@ -1113,7 +1140,7 @@ app.post('/api/save-page', async (req, res) => {
     content = fixEventPageWhatsApp(content, pageType);
     
     // Fix store/course page issues (cart, bubbles) BEFORE saving
-    if (pageType === 'store' || pageType === 'course') {
+    if (pageType === 'store' || pageType === 'course' || pageType === 'restaurantMenu') {
       console.log(`🔧 Applying fixStorePageIssues for ${pageType} page during save`);
       content = fixStorePageIssues(content);
     }
@@ -1311,7 +1338,7 @@ app.put('/api/update-page', async (req, res) => {
     }
     
     // Apply fixStorePageIssues for store pages BEFORE saving
-    if (pageType === 'store') {
+    if (pageType === 'store' || pageType === 'restaurantMenu') {
       console.log('🔧 Applying fixStorePageIssues BEFORE saving...');
       htmlContent = fixStorePageIssues(htmlContent);
       console.log('✅ fixStorePageIssues applied successfully');
@@ -3062,15 +3089,26 @@ app.get('/api/user/:userId/purchases', (req, res) => {
 // Upload image (replaces old image)
 app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     try {
+        console.log('📤 Image upload request:', {
+            hasFile: !!req.file,
+            userId: req.body.userId,
+            pageName: req.body.pageName,
+            fileSize: req.file?.size
+        });
+        
         if (!req.file) {
             return res.status(400).json({ error: 'No image uploaded' });
         }
         
         const { userId, pageName, oldImageUrl } = req.body;
         
-        if (!userId || !pageName) {
-            return res.status(400).json({ error: 'Missing userId or pageName' });
+        if (!userId) {
+            console.error('❌ Missing userId');
+            return res.status(400).json({ error: 'Missing userId' });
         }
+        
+        // pageName is optional - default to 'general'
+        const actualPageName = pageName || 'general';
         
         // Delete old image if exists
         if (oldImageUrl) {
@@ -3085,15 +3123,79 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
             }
         }
         
-        // Return new image URL
-        const imageUrl = `/pages/${userId}/images/${pageName}/${req.file.filename}`;
+        // Build image URL with pageName
+        const imageUrl = `/pages/${userId}/images/${actualPageName}/${req.file.filename}`;
         
         console.log('✅ Image uploaded:', imageUrl);
-        res.json({ url: imageUrl, fileName: req.file.originalname });
+        
+        // Return in BOTH formats for compatibility
+        res.json({ 
+            success: true,              // Old format
+            imageUrl: imageUrl,         // Old format  
+            filename: req.file.filename, // Old format
+            url: imageUrl,              // New format
+            fileName: req.file.originalname // New format
+        });
         
     } catch (error) {
-        console.error('Error uploading image:', error);
-        res.status(500).json({ error: 'Failed to upload image' });
+        console.error('❌ Error uploading image:', error);
+        res.status(500).json({ error: 'Failed to upload image: ' + error.message });
+    }
+});
+
+// Upload menu item image
+app.post('/api/upload-menu-image', upload.single('image'), async (req, res) => {
+    try {
+        console.log('🍽️ Menu image upload request:', {
+            hasFile: !!req.file,
+            userId: req.body.userId,
+            pageId: req.body.pageId,
+            menuItemIndex: req.body.menuItemIndex
+        });
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No image uploaded' });
+        }
+
+        const { userId, pageId, menuItemIndex } = req.body;
+
+        if (!userId || !pageId) {
+            return res.status(400).json({ error: 'Missing userId or pageId' });
+        }
+
+        // Create directory for menu images
+        const menuImagesDir = path.join(__dirname, 'output', userId, `${pageId}_html_data`, 'menu-images');
+        await fs.ensureDir(menuImagesDir);
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const originalName = req.file.originalname;
+        const extension = path.extname(originalName);
+        const filename = `menu-item-${menuItemIndex || 'unknown'}-${timestamp}${extension}`;
+        const filepath = path.join(menuImagesDir, filename);
+
+        // Move uploaded file
+        await fs.move(req.file.path, filepath);
+
+        // Generate URL
+        const imageUrl = `/output/${userId}/${pageId}_html_data/menu-images/${filename}`;
+
+        console.log('✅ Menu image uploaded successfully:', {
+            filename,
+            imageUrl,
+            menuItemIndex
+        });
+
+        res.json({
+            success: true,
+            imageUrl: imageUrl,
+            filename: filename,
+            menuItemIndex: menuItemIndex
+        });
+
+    } catch (error) {
+        console.error('❌ Error uploading menu image:', error);
+        res.status(500).json({ error: 'Failed to upload menu image: ' + error.message });
     }
 });
 
@@ -3917,6 +4019,102 @@ app.get('/api/fix-old-store-pages', async (req, res) => {
   } catch (error) {
     console.error('Error fixing old store pages:', error);
     res.status(500).json({ error: 'Failed to fix old store pages: ' + error.message });
+    }
+});
+
+// Check if user purchased course (by phone number)
+app.get('/api/check-purchase', async (req, res) => {
+    try {
+        const { userId, storeId, phone } = req.query;
+        
+        console.log('🔍 Checking purchase:', { userId, storeId, phone });
+        
+        if (!userId || !storeId || !phone) {
+            return res.status(400).json({ error: 'Missing required parameters' });
+        }
+        
+        // Check purchases.json in the page data folder
+        const pageDataDir = path.join('output', userId, storeId + '_data');
+        const purchasesFile = path.join(pageDataDir, 'purchases.json');
+        
+        console.log('📁 Looking in:', purchasesFile);
+        
+        if (await fs.pathExists(purchasesFile)) {
+            const purchases = await fs.readJson(purchasesFile);
+            console.log(`📦 Found ${purchases.length} purchases`);
+            
+            // Check if any purchase matches the phone number
+            const userPurchase = purchases.find(p => 
+                p.customerPhone === phone || 
+                p.phone === phone ||
+                (p.customerPhone && p.customerPhone.replace(/\D/g, '') === phone.replace(/\D/g, ''))
+            );
+            
+            if (userPurchase) {
+                console.log('✅ Purchase found for phone:', phone);
+                return res.json({ purchased: true, purchase: userPurchase });
+            }
+        }
+        
+        console.log('🔒 No purchase found for phone:', phone);
+        res.json({ purchased: false });
+        
+    } catch (error) {
+        console.error('❌ Error checking purchase:', error);
+        res.status(500).json({ error: 'Failed to check purchase' });
+    }
+});
+
+// Save lead from forms (property, restaurant, landing pages, etc.)
+app.post('/api/save-lead', async (req, res) => {
+    try {
+        const { userId, pageId, leadData } = req.body;
+        
+        console.log('📝 Saving lead:', { userId, pageId, leadData });
+        
+        if (!userId || !pageId || !leadData) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const cleanPageId = pageId.replace('_html', '');
+        const pageDataDir = path.join('output', userId, cleanPageId + '_html_data');
+        const leadsFile = path.join(pageDataDir, 'leads.json');
+        
+        // Ensure directory exists
+        await fs.ensureDir(pageDataDir);
+        
+        // Load existing leads
+        let leads = [];
+        if (await fs.pathExists(leadsFile)) {
+            try {
+                const fileContent = await fs.readFile(leadsFile, 'utf8');
+                const data = JSON.parse(fileContent);
+                leads = Array.isArray(data) ? data : [];
+            } catch (error) {
+                console.warn('⚠️ Could not parse leads file, starting fresh:', error);
+                leads = [];
+            }
+        }
+        
+        // Add new lead with ID and timestamp
+        const newLead = {
+            id: 'lead_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            ...leadData,
+            timestamp: leadData.timestamp || new Date().toISOString(),
+            status: 'new'
+        };
+        
+        leads.push(newLead);
+        
+        // Save leads
+        await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2));
+        
+        console.log(`✅ Lead saved successfully. Total leads: ${leads.length}`);
+        res.json({ success: true, leadId: newLead.id, total: leads.length });
+        
+    } catch (error) {
+        console.error('❌ Error saving lead:', error);
+        res.status(500).json({ error: 'Failed to save lead: ' + error.message });
     }
 });
 

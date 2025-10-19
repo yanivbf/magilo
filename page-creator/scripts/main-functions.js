@@ -76,6 +76,96 @@ async function handleFormSubmit(event) {
         console.log('✅ Total courses collected:', data.courses.length);
         console.log('📦 Courses array:', data.courses);
     }
+    
+    // Collect property details if this is a real estate page
+    if (data.pageType === 'realEstate') {
+        console.log('🏠 Collecting property details for realEstate page...');
+        
+        // Collect property specs
+        data.propertyDetails = {
+            beds: document.getElementById('propertyBeds')?.value || '3',
+            baths: document.getElementById('propertyBaths')?.value || '2',
+            sqm: document.getElementById('propertySqm')?.value || '120',
+            price: document.getElementById('propertyPrice')?.value || '2,500,000',
+            agentName: document.getElementById('agentName')?.value || 'משה כהן'
+        };
+        
+        // Note: Actual image files will be uploaded separately via /api/upload-image
+        // These fields are just for form reference
+        const mainImageFile = document.getElementById('propertyMainImage')?.files[0];
+        const image1File = document.querySelector('input[name="propertyImage1"]')?.files[0];
+        const image2File = document.querySelector('input[name="propertyImage2"]')?.files[0];
+        const image3File = document.querySelector('input[name="propertyImage3"]')?.files[0];
+        const image4File = document.querySelector('input[name="propertyImage4"]')?.files[0];
+        const agentPhotoFile = document.getElementById('agentPhoto')?.files[0];
+        
+        data.propertyDetails.hasMainImage = !!mainImageFile;
+        data.propertyDetails.hasGalleryImages = [image1File, image2File, image3File, image4File].filter(Boolean).length;
+        data.propertyDetails.hasAgentPhoto = !!agentPhotoFile;
+        
+        console.log('📊 Property details:', data.propertyDetails);
+        console.log(`📸 Images: Main=${!!mainImageFile}, Gallery=${data.propertyDetails.hasGalleryImages}, Agent=${!!agentPhotoFile}`);
+    }
+
+    // Collect menu categories if this is a restaurant menu page
+    if (data.pageType === 'restaurantMenu') {
+        console.log('🍽️ Collecting menu categories for restaurantMenu page...');
+        
+        const categoryContainers = document.querySelectorAll('.menu-category-item');
+        data.menuCategories = [];
+        
+        categoryContainers.forEach((container, categoryIndex) => {
+            const categoryName = container.querySelector('input[name="categoryName[]"]')?.value || `קטגוריה ${categoryIndex + 1}`;
+            
+            // Get all items in this category
+            const itemNames = container.querySelectorAll(`input[name="itemName_${categoryIndex}[]"]`);
+            const itemPrices = container.querySelectorAll(`input[name="itemPrice_${categoryIndex}[]"]`);
+            const itemDescriptions = container.querySelectorAll(`input[name="itemDescription_${categoryIndex}[]"]`);
+            
+            const items = [];
+            for (let i = 0; i < itemNames.length; i++) {
+                if (itemNames[i].value.trim()) {
+                    // Collect options for this item
+                    const options = [];
+                    const optionNames = container.querySelectorAll(`input[name="itemOptionName_${categoryIndex}_${i}[]"]`);
+                    const optionPrices = container.querySelectorAll(`input[name="itemOptionPrice_${categoryIndex}_${i}[]"]`);
+                    const optionTypes = container.querySelectorAll(`select[name="itemOptionType_${categoryIndex}_${i}[]"]`);
+                    
+                    for (let j = 0; j < optionNames.length; j++) {
+                        const optionName = optionNames[j]?.value?.trim();
+                        const optionPrice = optionPrices[j]?.value?.trim();
+                        const optionType = optionTypes[j]?.value?.trim();
+                        
+                        if (optionName) {
+                            options.push({
+                                name: optionName,
+                                price: optionPrice || '0',
+                                type: optionType || 'single'
+                            });
+                        }
+                    }
+                    
+                    items.push({
+                        name: itemNames[i].value.trim(),
+                        price: itemPrices[i].value || '0',
+                        description: itemDescriptions[i].value.trim() || '',
+                        options: options
+                    });
+                }
+            }
+            
+            if (items.length > 0) {
+                data.menuCategories.push({
+                    name: categoryName,
+                    items: items
+                });
+                console.log(`📋 Category "${categoryName}": ${items.length} items`);
+            }
+        });
+        
+        console.log('✅ Total categories collected:', data.menuCategories.length);
+        console.log('📦 Menu data:', data.menuCategories);
+    }
 
     // הוסף נתוני שפה ומדינה
     data = addLanguageToPageData(data);
@@ -87,9 +177,9 @@ async function handleFormSubmit(event) {
     try {
         let htmlContent = await generateHtmlFromApi(masterPrompt);
         
-        // Add store JavaScript if this is an online store
-        if (data.pageType === 'onlineStore') {
-            console.log('Detected online store, injecting store scripts...');
+        // Add store JavaScript if this is an online store or restaurant menu
+        if (data.pageType === 'onlineStore' || data.pageType === 'restaurantMenu') {
+            console.log(`Detected ${data.pageType}, injecting store scripts...`);
             // Use the store injector function directly
             htmlContent = injectStoreScripts(htmlContent);
             console.log('Store scripts injected successfully');
@@ -862,7 +952,7 @@ function createMasterPrompt(data) {
             prompt += `\n🎥 Video Link: ${course.video}`;
             prompt += `\n💰 Price (EXACT): ₪${course.price}`;
             prompt += `\n📄 Description (EXACT): "${course.description}"`;
-            prompt += `\n🔘 Button Code (EXACT): onclick="addToCart('${course.name}', ${course.price}, 'THUMBNAIL_URL', event)"`;
+            prompt += `\n🔘 Purchase Button (EXACT): <button onclick="purchaseCourse('${course.name.replace(/'/g, "\\'")}', ${course.price})" class="btn-purchase">קנה עכשיו - ₪${course.price}</button>`;
             prompt += `\n🖼️ Thumbnail: Use Unsplash education/learning image`;
         });
         
@@ -879,6 +969,64 @@ function createMasterPrompt(data) {
         console.log('✅ Courses section added to prompt');
     } else {
         console.warn('⚠️ No courses data found! data.courses:', data.courses);
+    }
+    
+    // Add menu categories data for restaurant menus
+    if (data.menuCategories && data.menuCategories.length > 0) {
+        console.log('📝 Adding menu categories to prompt:', data.menuCategories);
+        
+        prompt += `\n\n========================================`;
+        prompt += `\n🍽️ **RESTAURANT MENU** (${data.menuCategories.length} categories)`;
+        prompt += `\n========================================`;
+        prompt += `\n\n⚠️⚠️⚠️ CRITICAL INSTRUCTIONS ⚠️⚠️⚠️`;
+        prompt += `\n- YOU MUST CREATE EXACTLY ${data.menuCategories.length} CATEGORIES`;
+        prompt += `\n- DO NOT CREATE YOUR OWN MENU ITEMS`;
+        prompt += `\n- DO NOT CHANGE THE NAMES, PRICES, OR DESCRIPTIONS`;
+        prompt += `\n- USE THE EXACT DATA PROVIDED BELOW`;
+        prompt += `\n- ORGANIZE ITEMS BY CATEGORY SECTIONS`;
+        prompt += `\n\n**CREATE MENU SECTIONS FOR EACH OF THE FOLLOWING CATEGORIES:**`;
+        
+        data.menuCategories.forEach((category, catIndex) => {
+            prompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+            prompt += `\n**Category ${catIndex + 1} of ${data.menuCategories.length}: ${category.name}**`;
+            prompt += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+            prompt += `\n\n🍴 **${category.name}** - ${category.items.length} items`;
+            prompt += `\n\nCreate a section with category title "${category.name}" and the following menu items:`;
+            
+            category.items.forEach((item, itemIndex) => {
+                prompt += `\n\n   ${itemIndex + 1}. **${item.name}**`;
+                prompt += `\n      • Price (EXACT): ₪${item.price}`;
+                if (item.description) {
+                    prompt += `\n      • Description: "${item.description}"`;
+                }
+                
+                // Add options if they exist
+                if (item.options && item.options.length > 0) {
+                    prompt += `\n      • Options:`;
+                    item.options.forEach((option, optionIndex) => {
+                        prompt += `\n        - ${option.name} (${option.type === 'single' ? 'single choice' : 'multiple choice'})`;
+                        if (option.price && option.price !== '0') {
+                            prompt += ` - +₪${option.price}`;
+                        }
+                    });
+                }
+                
+                prompt += `\n      • Button (EXACT): <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.price}, 'food-image-url', event)" class="btn-add-to-cart">הוסף לעגלה</button>`;
+                prompt += `\n      • Image: Use Unsplash food/dish image for "${item.name}"`;
+            });
+        });
+        
+        prompt += `\n\n========================================`;
+        prompt += `\n✅ VERIFICATION CHECKLIST:`;
+        prompt += `\n- [ ] Created ${data.menuCategories.length} category sections`;
+        prompt += `\n- [ ] Used exact category names from above`;
+        prompt += `\n- [ ] Created exact number of items per category`;
+        prompt += `\n- [ ] Used exact item names, prices, and descriptions`;
+        prompt += `\n- [ ] Used exact onclick code for each button (with 'event' parameter)`;
+        prompt += `\n- [ ] Each item has an appetizing food image`;
+        prompt += `\n========================================`;
+        
+        console.log('✅ Menu categories section added to prompt');
     }
     
     // Add workshop details for live courses

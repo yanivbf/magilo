@@ -595,9 +595,9 @@
                     <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);">
                         <span style="font-size: 60px; color: white;">✓</span>
                     </div>
-                    <h2 style="color: #28a745; margin-bottom: 15px; font-size: 28px; font-weight: bold;">תשלום בוצע בהצלחה!</h2>
-                    <p style="color: #666; font-size: 18px; margin-bottom: 10px;">תודה על הרכישה שלך</p>
-                    <p style="color: #999; font-size: 14px; margin-bottom: 40px;">נציג יצור איתך קשר בקרוב</p>
+                    <h2 style="color: #28a745; margin-bottom: 15px; font-size: 28px; font-weight: bold;">הזמנה נקלטה בהצלחה!</h2>
+                    <p style="color: #666; font-size: 18px; margin-bottom: 10px;">תודה על ההזמנה שלך</p>
+                    <p style="color: #999; font-size: 14px; margin-bottom: 40px;">נציג יצור איתך קשר בהקדם לאישור ההזמנה</p>
                     <button onclick="finishPayment()" style="width: 80%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: transform 0.2s;">
                         סגור ✓
                     </button>
@@ -834,6 +834,150 @@
         };
         document.body.appendChild(cartIcon);
         console.log('✅ Cart icon created');
+    }
+    
+    // Helper function to unlock course videos
+    window.unlockCourseVideos = function() {
+        console.log('🔓 Unlocking course videos...');
+        
+        // Find all video cards
+        const videoCards = document.querySelectorAll('.video-card, [data-video-id], .course-video, [class*="video"]');
+        
+        videoCards.forEach(card => {
+            card.classList.remove('locked');
+            card.classList.add('unlocked');
+            
+            // Remove lock overlay
+            const lockOverlay = card.querySelector('.lock-overlay, [class*="lock"]');
+            if (lockOverlay) {
+                lockOverlay.style.display = 'none';
+            }
+            
+            // Make clickable
+            card.style.cursor = 'pointer';
+            card.style.opacity = '1';
+            card.style.filter = 'none';
+        });
+        
+        console.log(`✅ Unlocked ${videoCards.length} video cards`);
+        
+        // Show success message only if called from checkout (not on page load)
+        if (!window.isPageLoad) {
+            alert('🎉 רכישה הושלמה בהצלחה! הקורסים נפתחו לצפייה מיידית.');
+        }
+    };
+    
+    // Override checkout function to handle course unlocking
+    const originalCheckout = window.checkoutViaWhatsApp;
+    window.checkoutViaWhatsApp = function() {
+        console.log('💳 Checkout initiated...');
+        
+        // Get cart items
+        const cartItems = JSON.parse(localStorage.getItem('cart_' + storeId) || '[]');
+        
+        // Check if this is a course page
+        const isCourse = document.querySelector('[data-video-id], .video-card, .course-card') !== null;
+        
+        if (isCourse && cartItems.length > 0) {
+            console.log('🎓 Course page detected, marking as purchased');
+            
+            // Mark course as purchased
+            localStorage.setItem(`course_purchased_${storeId}`, 'true');
+            
+            // Unlock videos
+            setTimeout(() => {
+                window.unlockCourseVideos();
+            }, 500);
+        }
+        
+        // Call original checkout if it exists
+        if (typeof originalCheckout === 'function') {
+            return originalCheckout();
+        }
+        
+        // Default checkout behavior - open WhatsApp
+        const phone = document.querySelector('[href*="wa.me"], [href*="whatsapp"]')?.href.match(/\d{10,}/)?.[0] || '972504443333';
+        const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const items = cartItems.map(item => `${item.name} (x${item.quantity})`).join(', ');
+        const message = `שלום! אני מעוניין לרכוש: ${items}\n\nסה"כ: ₪${total}`;
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        
+        window.open(whatsappUrl, '_blank');
+        
+        // Clear cart after checkout
+        localStorage.removeItem('cart_' + storeId);
+        window.updateCartDisplay();
+    };
+    
+    // Event delegation for dynamically created buttons
+    document.addEventListener('click', function(e) {
+        // Handle "Add to Cart" buttons
+        if (e.target.matches('[data-action="add-to-cart"]') || 
+            e.target.closest('[data-action="add-to-cart"]') ||
+            e.target.matches('.btn-add-to-cart') ||
+            e.target.closest('.btn-add-to-cart')) {
+            
+            const btn = e.target.matches('[data-action="add-to-cart"]') ? e.target : e.target.closest('[data-action="add-to-cart"]');
+            const productName = btn?.dataset?.productName || btn?.getAttribute('data-product-name');
+            const price = parseFloat(btn?.dataset?.price || btn?.getAttribute('data-price') || 0);
+            const image = btn?.dataset?.image || btn?.getAttribute('data-image') || '';
+            
+            if (productName && price) {
+                console.log('🛒 Add to cart via event delegation:', { productName, price, image });
+                window.addToCart(productName, price, image);
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+        
+        // Handle course purchase buttons (look for buttons with course data)
+        if (e.target.matches('button[onclick*="addToCart"]') || 
+            e.target.closest('button[onclick*="addToCart"]') ||
+            (e.target.tagName === 'BUTTON' && (e.target.textContent.includes('קנה') || e.target.textContent.includes('הוסף לעגלה')))) {
+            
+            // Extract data from surrounding course card
+            const courseCard = e.target.closest('.course-card') || 
+                               e.target.closest('[class*="course"]') ||
+                               e.target.closest('.product-card') ||
+                               e.target.closest('[class*="product"]');
+            
+            if (courseCard) {
+                const courseName = courseCard.querySelector('h1, h2, h3, h4, [class*="title"], [class*="name"]')?.textContent?.trim();
+                const priceText = courseCard.querySelector('[class*="price"]')?.textContent?.trim();
+                const price = priceText ? parseFloat(priceText.replace(/[^\d.]/g, '')) : 0;
+                const image = courseCard.querySelector('img')?.src || '';
+                
+                if (courseName && price) {
+                    console.log('🎓 Course purchase via event delegation:', { courseName, price, image });
+                    window.addToCart(courseName, price, image);
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        }
+    });
+    
+    console.log('✅ Event delegation installed for dynamic buttons');
+    
+    // Check if this is a course page and if it was already purchased
+    const isCourse = document.querySelector('[data-video-id], .video-card, .course-card') !== null;
+    if (isCourse) {
+        console.log('🎓 Course page detected on load');
+        const isPurchased = localStorage.getItem(`course_purchased_${storeId}`) === 'true';
+        
+        if (isPurchased) {
+            console.log('✅ Course already purchased, unlocking videos');
+            // Mark as page load to suppress alert
+            window.isPageLoad = true;
+            // Unlock videos after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                window.unlockCourseVideos();
+                // Reset flag after unlock
+                window.isPageLoad = false;
+            }, 1000);
+        } else {
+            console.log('🔒 Course not yet purchased');
+        }
     }
     
     updateCartDisplay();

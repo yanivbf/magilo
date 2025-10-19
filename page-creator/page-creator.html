@@ -1846,19 +1846,44 @@
 
             },
 
+            restaurantMenu: {
+
+                img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop",
+
+                fields: ['menuCategories', 'menuOptions'],
+
+                structurePrompt: `Build a restaurant menu page with the following sections only: 1. Header (id="header") with the business name. 2. Hero section with restaurant atmosphere. 3. Menu categories with items, prices, descriptions, and "Add to Cart" buttons - USE THE EXACT MENU DATA PROVIDED IN THE PROMPT. 4. Cart placeholder (id="cart-placeholder") - DO NOT create actual cart HTML. 5. Delivery information section. 6. Contact details and WhatsApp button.`,
+
+                t: {
+
+                    en: { title: "Restaurant Menu", label: "Restaurant Name", description: "Create a restaurant menu with online ordering.", guidance: "A <b>Restaurant Menu</b> includes categories, items with prices, and online ordering functionality." },
+
+                    he: { title: "תפריט מסעדה", label: "שם המסעדה", description: "צור תפריט מסעדה עם הזמנות מקוונות.", guidance: "<b>תפריט מסעדה</b> כולל קטגוריות, פריטים עם מחירים ופונקציונליות הזמנות מקוונות." },
+
+                    ar: { title: "قائمة المطعم", label: "اسم المطعم", description: "إنشاء قائمة مطعم مع طلب عبر الإنترنت.", guidance: "<b>قائمة المطعم</b> تشمل الفئات والعناصر مع الأسعار ووظائف الطلب عبر الإنترنت." },
+                    ja: { title: "レストランメニュー", label: "レストラン名", description: "オンライン注文付きのレストランメニューを作成します。", guidance: "<b>レストランメニュー</b>には、カテゴリー、価格付きアイテム、オンライン注文機能が含まれます。" },
+                    es: { title: "Menú de Restaurante", label: "Nombre del Restaurante", description: "Crear un menú de restaurante con pedidos en línea.", guidance: "Un <b>Menú de Restaurante</b> incluye categorías, elementos con precios y funcionalidad de pedidos en línea." },
+                    fr: { title: "Menu Restaurant", label: "Nom du Restaurant", description: "Créer un menu de restaurant avec commande en ligne.", guidance: "Un <b>Menu Restaurant</b> inclut des catégories, des éléments avec des prix et une fonctionnalité de commande en ligne." },
+                    de: { title: "Restaurant-Menü", label: "Restaurantname", description: "Erstellen Sie ein Restaurant-Menü mit Online-Bestellung.", guidance: "Ein <b>Restaurant-Menü</b> umfasst Kategorien, Artikel mit Preisen und Online-Bestellfunktionalität." },
+                    ru: { title: "Меню Ресторана", label: "Название Ресторана", description: "Создать меню ресторана с онлайн-заказом.", guidance: "<b>Меню Ресторана</b> включает категории, элементы с ценами и функциональность онлайн-заказа." },
+                    zh: { title: "餐厅菜单", label: "餐厅名称", description: "创建带在线订购功能的餐厅菜单。", guidance: "<b>餐厅菜单</b>包括类别、带价格的商品和在线订购功能。" }
+                }
+
+            },
+
             flyer: {
 
                 img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1887&auto=format&fit=crop",
 
-                fields: ['menuItems'],
+                fields: [],
 
-                structurePrompt: `Build a menu page with the following sections only: 1. Header (id="header") with the business name. 2. Category sections (e.g., 'Appetizers', 'Main Courses') and under each category, a grid of items based on the provided data. 3. Contact details and address as plain text (not links).`,
+                structurePrompt: `Build a marketing flyer/post with the following sections only: 1. Header (id="header") with the business name. 2. Main promotional content with visual elements. 3. Contact details and address as plain text (not links). This is for VISUAL DISPLAY ONLY - no ordering functionality.`,
 
                 t: {
 
-                    en: { title: "Menu / Flyer", label: "Business / Restaurant Name", description: "Display products or dishes visually.", guidance: "A <b>Menu or Flyer</b> is designed to present information clearly and legibly, divided into categories and items." },
+                    en: { title: "Marketing Flyer", label: "Business Name", description: "Create a marketing flyer or promotional post.", guidance: "A <b>Marketing Flyer</b> is designed for visual display and promotion, not for online ordering." },
 
-                    he: { title: "תפריט / פלאייר", label: "שם העסק / מסעדה", description: "הצג מוצרים או מנות בצורה ויזואלית.", guidance: "<b>תפריט או פלאייר</b> נועד להציג מידע בצורה ברורה וקלה לקריאה, מחולק לקטגוריות ופריטים." },
+                    he: { title: "פלאייר שיווקי", label: "שם העסק", description: "צור פלאייר שיווקי או פוסט פרסומי.", guidance: "<b>פלאייר שיווקי</b> נועד לתצוגה ויזואלית ופרסום, לא להזמנות מקוונות." },
 
                     ar: { title: "قائمة / نشرة", label: "اسم العمل / المطعم", description: "اعرض المنتجات أو الأطباق بصرياً.", guidance: "<b>القائمة أو النشرة</b> مصممة لعرض المعلومات بوضوح ومقروئية، مقسمة إلى فئات وعناصر." },
                     ja: { title: "メニュー / チラシ", label: "ビジネス名 / レストラン名", description: "製品や料理を視覚的に表示します。", guidance: "<b>メニューやチラシ</b>は、情報を明確で読みやすく提示するよう設計されており、カテゴリーとアイテムに分かれています。" },
@@ -6465,7 +6490,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                             </div>
                         </div>
                         
-                        <button type="button" id="add-course-btn" class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-md">
+                        <button type="button" id="add-course-btn" onclick="window.addNewCourse(); return false;" class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-md" style="cursor: pointer; z-index: 100;">
                             ➕ הוסף קורס נוסף
                         </button>
                         
@@ -6846,6 +6871,411 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
                     </div>
 
+                </fieldset>`,
+
+                propertyDetails: `
+
+                <fieldset class="form-fieldset" data-field="propertyDetails">
+
+                    <legend class="form-legend">🏠 פרטי הנכס</legend>
+
+                    <div class="space-y-4">
+
+                        <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-4">
+                            <h4 class="font-semibold text-blue-900 mb-2">🏘️ דף נכס למכירה</h4>
+                            <p class="text-sm text-blue-700">
+                                <strong>מה כולל:</strong> גלריית תמונות, פרטים טכניים, תיאור הנכס, ופרטי יצירת קשר עם הסוכן ב-WhatsApp.
+                            </p>
+                        </div>
+
+                        <!-- Image Gallery -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h5 class="font-semibold text-gray-900 mb-3">📸 גלריית תמונות הנכס</h5>
+                            
+                            <div class="space-y-4">
+                                <!-- Main Image -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">🖼️ תמונה ראשית</label>
+                                    <input type="file" name="propertyMainImage" id="propertyMainImage" accept="image/*" 
+                                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <p class="text-xs text-gray-500 mt-1">תמונה זו תופיע בראש הדף</p>
+                                </div>
+                                
+                                <!-- Gallery Images (4 images) -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">🏡 גלריית תמונות (4 תמונות נוספות)</label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">תמונה #1</label>
+                                            <input type="file" name="propertyImage1" accept="image/*" 
+                                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">תמונה #2</label>
+                                            <input type="file" name="propertyImage2" accept="image/*" 
+                                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">תמונה #3</label>
+                                            <input type="file" name="propertyImage3" accept="image/*" 
+                                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">תמונה #4</label>
+                                            <input type="file" name="propertyImage4" accept="image/*" 
+                                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">💡 העלה 4 תמונות איכותיות נוספות שיוצגו בגלריה</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Technical Specs -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="propertyBeds" class="block text-sm font-medium text-gray-700">🛏️ מספר חדרים</label>
+                                <input type="number" name="propertyBeds" id="propertyBeds" min="0" 
+                                       class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm" placeholder="3">
+                            </div>
+                            <div>
+                                <label for="propertyBaths" class="block text-sm font-medium text-gray-700">🚿 מספר אמבטיות</label>
+                                <input type="number" name="propertyBaths" id="propertyBaths" min="0" step="0.5" 
+                                       class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm" placeholder="2">
+                            </div>
+                            <div>
+                                <label for="propertySqm" class="block text-sm font-medium text-gray-700">📐 שטח (מ״ר)</label>
+                                <input type="number" name="propertySqm" id="propertySqm" min="0" 
+                                       class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm" placeholder="120">
+                            </div>
+                            <div>
+                                <label for="propertyPrice" class="block text-sm font-medium text-gray-700">💰 מחיר (₪)</label>
+                                <input type="text" name="propertyPrice" id="propertyPrice" 
+                                       class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm" placeholder="2,500,000">
+                            </div>
+                        </div>
+
+                        <!-- Agent Info -->
+                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <h5 class="font-semibold text-purple-900 mb-3">👤 פרטי הסוכן</h5>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="agentName" class="block text-sm font-medium text-gray-700">שם הסוכן</label>
+                                    <input type="text" name="agentName" id="agentName" 
+                                           class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm" placeholder="משה כהן">
+                                </div>
+                                <div>
+                                    <label for="agentPhoto" class="block text-sm font-medium text-gray-700">תמונת הסוכן</label>
+                                    <input type="file" name="agentPhoto" id="agentPhoto" accept="image/*" 
+                                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <p class="text-sm text-green-800 mb-2">
+                                <strong>✅ כלול אוטומטית בדף הנכס:</strong>
+                            </p>
+                            <ul class="text-xs text-green-700 space-y-1 mr-4">
+                                <li>• 📸 גלריית תמונות אינטראקטיבית</li>
+                                <li>• 📋 מפרט טכני מלא</li>
+                                <li>• 💬 כפתור WhatsApp "צור קשר לביקור"</li>
+                                <li>• 🤖 בוט AI לשאלות</li>
+                                <li>• ♿ כפתור נגישות</li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </fieldset>`,
+
+                menuCategories: `
+                <fieldset class="form-fieldset" data-field="menuCategories">
+                    <legend class="form-legend">🍽️ תפריט המסעדה</legend>
+                    <div class="space-y-6">
+                        
+                        <div class="bg-orange-50 p-4 rounded-lg border-2 border-orange-200 mb-4">
+                            <h4 class="font-semibold text-orange-900 mb-2">🍴 תפריט עם קטגוריות</h4>
+                            <p class="text-sm text-orange-700">
+                                <strong>מה כולל:</strong> ארגן את התפריט לפי קטגוריות (ראשונות, עיקריות, קינוחים, משקאות). כל מנה תכלול תמונה, תיאור, מחיר וכפתור "הוסף לעגלה".
+                            </p>
+                        </div>
+
+                        <!-- Menu Categories Container -->
+                        <div id="menu-categories-container" class="space-y-6">
+                            
+                            <!-- Category 1: Appetizers -->
+                            <div class="menu-category-item bg-white p-5 rounded-lg border-2 border-orange-200 shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h5 class="font-semibold text-orange-900 text-lg">🍔 קטגוריה: מנות ראשונות</h5>
+                                    <button type="button" onclick="this.closest('.menu-category-item').remove(); window.updateCategoryNumbers();" class="remove-category-btn text-red-600 hover:text-red-800 font-semibold text-sm">
+                                        ✖ הסר קטגוריה
+                                    </button>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">שם הקטגוריה</label>
+                                    <input type="text" name="categoryName[]" value="מנות ראשונות" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200" placeholder="למשל: ראשונות, עיקריות, קינוחים...">
+                                </div>
+                                
+                                <div class="category-items-container space-y-3" data-category-index="0">
+                                    <div class="menu-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">🍽️ מנה #1</span>
+                                            <button type="button" onclick="this.closest('.menu-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">שם המנה</label>
+                                                <input type="text" name="itemName_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="סלט ירקות">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">מחיר (₪)</label>
+                                                <input type="number" name="itemPrice_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="25" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label class="block text-xs text-gray-600 mb-1">תיאור קצר</label>
+                                            <input type="text" name="itemDescription_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="סלט ירקות טריים עם רוטב בית">
+                                        </div>
+                                        
+                                        <!-- Item Options -->
+                                        <div class="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-xs font-medium text-blue-800">🍕 אופציות ותוספות למנה</span>
+                                                <button type="button" onclick="addNewItemOption(this, 0, 0)" class="text-blue-600 hover:text-blue-800 text-xs font-medium">➕ הוסף אופציה</button>
+                                            </div>
+                                            <div class="item-options-container space-y-2">
+                                                <!-- Default option -->
+                                                <div class="item-option bg-white p-2 rounded border border-blue-100">
+                                                    <div class="flex justify-between items-center mb-1">
+                                                        <span class="text-xs text-blue-700">אופציה #1</span>
+                                                        <button type="button" onclick="this.closest('.item-option').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                                    </div>
+                                                    <div class="grid grid-cols-3 gap-2">
+                                                        <div>
+                                                            <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                            <input type="text" name="itemOptionName_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="גדל" value="גדל">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs text-gray-600 mb-1">מחיר נוסף</label>
+                                                            <input type="number" name="itemOptionPrice_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs text-gray-600 mb-1">סוג</label>
+                                                            <select name="itemOptionType_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
+                                                                <option value="single">יחידה</option>
+                                                                <option value="multiple">מרובה</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" onclick="window.addNewMenuItem(this, 0)" class="mt-3 w-full px-3 py-2 bg-orange-100 text-orange-700 font-semibold rounded-lg hover:bg-orange-200 transition text-sm">
+                                    ➕ הוסף מנה לקטגוריה זו
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <button type="button" id="add-category-btn" onclick="window.addNewCategory(); return false;" class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-md">
+                            ➕ הוסף קטגוריה נוספת
+                        </button>
+
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <p class="text-sm text-blue-800 mb-2">
+                                <strong>✅ כלול אוטומטית בתפריט:</strong>
+                            </p>
+                            <ul class="text-xs text-blue-700 space-y-1 mr-4">
+                                <li>• 🛒 עגלת קניות מלאה</li>
+                                <li>• 💳 קופה עם משלוח/איסוף</li>
+                                <li>• 📱 שליחה ל-WhatsApp</li>
+                                <li>• 🤖 בוט AI לעזרה</li>
+                                <li>• ♿ כפתור נגישות</li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </fieldset>`,
+
+                menuOptions: `
+                <fieldset class="form-fieldset" data-field="menuOptions">
+                    <legend class="form-legend">🍕 אופציות ותוספות לתפריט</legend>
+                    <div class="space-y-6">
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-4">
+                            <h4 class="font-semibold text-blue-900 mb-2">🍕 אופציות ותוספות למנות</h4>
+                            <p class="text-sm text-blue-700">
+                                <strong>מה כולל:</strong> הגדר אופציות ותוספות למנות (למשל: פיצה - גדול/קטן, תוספות: גבינה, פטריות, זיתים). כל תוספת יכולה לכלול מחיר נוסף.
+                            </p>
+                        </div>
+
+                        <!-- Menu Options Container -->
+                        <div id="menu-options-container" class="space-y-6">
+                            
+                            <!-- Option Group 1: Pizza Sizes -->
+                            <div class="menu-option-group bg-white p-5 rounded-lg border-2 border-blue-200 shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h5 class="font-semibold text-blue-900 text-lg">🍕 קבוצת אופציות: גדלי פיצה</h5>
+                                    <button type="button" onclick="this.closest('.menu-option-group').remove();" class="text-red-600 hover:text-red-800 font-semibold text-sm">
+                                        ✖ הסר קבוצה
+                                    </button>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">שם קבוצת האופציות</label>
+                                    <input type="text" name="optionGroupName[]" value="גדלי פיצה" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="למשל: גדלי פיצה, סוגי בשר, רמת חריפות...">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">סוג האופציות</label>
+                                    <select name="optionType[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                        <option value="single">בחירה יחידה (רדיו)</option>
+                                        <option value="multiple">בחירה מרובה (צ'קבוקס)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="option-items-container space-y-3" data-option-index="0">
+                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">🍕 אופציה #1</span>
+                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                <input type="text" name="optionName_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="פיצה קטנה" value="פיצה קטנה">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                                                <input type="number" name="optionPrice_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">🍕 אופציה #2</span>
+                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                <input type="text" name="optionName_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="פיצה גדולה" value="פיצה גדולה">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                                                <input type="number" name="optionPrice_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="10" min="0" value="10">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" onclick="addNewOptionItem(this, 0)" class="w-full mt-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                                    ➕ הוסף אופציה חדשה
+                                </button>
+                            </div>
+                            
+                            <!-- Option Group 2: Toppings -->
+                            <div class="menu-option-group bg-white p-5 rounded-lg border-2 border-blue-200 shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h5 class="font-semibold text-blue-900 text-lg">🧀 קבוצת אופציות: תוספות</h5>
+                                    <button type="button" onclick="this.closest('.menu-option-group').remove();" class="text-red-600 hover:text-red-800 font-semibold text-sm">
+                                        ✖ הסר קבוצה
+                                    </button>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">שם קבוצת האופציות</label>
+                                    <input type="text" name="optionGroupName[]" value="תוספות" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="למשל: גדלי פיצה, סוגי בשר, רמת חריפות...">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">סוג האופציות</label>
+                                    <select name="optionType[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                        <option value="multiple">בחירה מרובה (צ'קבוקס)</option>
+                                        <option value="single">בחירה יחידה (רדיו)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="option-items-container space-y-3" data-option-index="1">
+                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">🧀 אופציה #1</span>
+                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                <input type="text" name="optionName_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="גבינה נוספת" value="גבינה נוספת">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                                                <input type="number" name="optionPrice_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="5" min="0" value="5">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">🍄 אופציה #2</span>
+                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                <input type="text" name="optionName_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="פטריות" value="פטריות">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                                                <input type="number" name="optionPrice_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="3" min="0" value="3">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">🫒 אופציה #3</span>
+                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                <input type="text" name="optionName_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="זיתים" value="זיתים">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                                                <input type="number" name="optionPrice_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="4" min="0" value="4">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" onclick="addNewOptionItem(this, 1)" class="w-full mt-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                                    ➕ הוסף אופציה חדשה
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="button" onclick="addNewOptionGroup()" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            ➕ הוסף קבוצת אופציות חדשה
+                        </button>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                            <h4 class="font-semibold text-green-900 mb-2">✅ מה יקרה בדף:</h4>
+                            <ul class="text-sm text-green-700 space-y-1">
+                                <li>• 🍕 כל מנה תוכל לכלול אופציות ותוספות</li>
+                                <li>• 💰 מחירים נוספים יועברו לעגלת הקניות</li>
+                                <li>• 📝 הלקוח יוכל לבחור אופציות לפני הוספה לעגלה</li>
+                                <li>• 🛒 סיכום מחיר כולל יוצג בעגלה</li>
+                            </ul>
+                        </div>
+
+                    </div>
                 </fieldset>`
 
             };
@@ -6946,12 +7376,395 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             }
 
             // Course Management - Add/Remove Courses
+            // Global counter for courses
+            window.courseCount = 1;
+            
+            // Global function to add new course (called from inline onclick)
+            window.addNewCourse = function() {
+                console.log('🎯 addNewCourse called!');
+                
+                const coursesContainer = document.getElementById('courses-container');
+                if (!coursesContainer) {
+                    console.error('❌ courses-container not found!');
+                    return;
+                }
+                
+                window.courseCount++;
+                const courseItem = document.createElement('div');
+                courseItem.className = 'course-item bg-white p-4 rounded-lg border-2 border-purple-200 shadow-sm';
+                courseItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h5 class="font-semibold text-purple-900">📚 קורס #${window.courseCount}</h5>
+                        <button type="button" onclick="this.closest('.course-item').remove(); window.updateCourseNumbers();" class="remove-course-btn text-red-600 hover:text-red-800 font-semibold text-sm">
+                            ✖ הסר
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">שם הקורס</label>
+                            <input type="text" name="courseName[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200" placeholder="למשל: קורס פיתוח אתרים מתקדם">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">🎥 קישור YouTube או העלאת סרטון</label>
+                            <input type="text" name="courseVideo[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200" placeholder="https://youtube.com/watch?v=... או העלה קובץ">
+                            <p class="text-xs text-gray-500 mt-1">💡 ניתן להזין קישור YouTube או להעלות סרטון</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">💰 מחיר (₪)</label>
+                            <input type="number" name="coursePrice[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200" placeholder="199" min="0">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">📝 תיאור קצר</label>
+                            <textarea name="courseDescription[]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200" placeholder="תיאור קצר של הקורס..."></textarea>
+                        </div>
+                    </div>
+                `;
+                
+                coursesContainer.appendChild(courseItem);
+                console.log(`✅ Added course #${window.courseCount}`);
+            };
+            
+            // Global function to update course numbers
+            window.updateCourseNumbers = function() {
+                const courseItems = document.querySelectorAll('.course-item');
+                courseItems.forEach((item, index) => {
+                    const title = item.querySelector('h5');
+                    if (title) {
+                        title.textContent = `📚 קורס #${index + 1}`;
+                    }
+                });
+                window.courseCount = courseItems.length;
+            };
+
+            // Menu Categories Management - Add/Remove Categories and Items
+            window.categoryCount = 1;
+
+            // Global function to add new category
+            window.addNewCategory = function() {
+                console.log('🍽️ addNewCategory called!');
+                
+                const categoriesContainer = document.getElementById('menu-categories-container');
+                if (!categoriesContainer) {
+                    console.error('❌ menu-categories-container not found!');
+                    return;
+                }
+                
+                window.categoryCount++;
+                const categoryIndex = window.categoryCount - 1;
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'menu-category-item bg-white p-5 rounded-lg border-2 border-orange-200 shadow-sm';
+                categoryItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="font-semibold text-orange-900 text-lg">🍴 קטגוריה #${window.categoryCount}</h5>
+                        <button type="button" onclick="this.closest('.menu-category-item').remove(); window.updateCategoryNumbers();" class="remove-category-btn text-red-600 hover:text-red-800 font-semibold text-sm">
+                            ✖ הסר קטגוריה
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">שם הקטגוריה</label>
+                        <input type="text" name="categoryName[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200" placeholder="למשל: ראשונות, עיקריות, קינוחים...">
+                    </div>
+                    
+                    <div class="category-items-container space-y-3" data-category-index="${categoryIndex}">
+                        <div class="menu-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-700">🍽️ מנה #1</span>
+                                <button type="button" onclick="this.closest('.menu-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">שם המנה</label>
+                                    <input type="text" name="itemName_${categoryIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם המנה">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">מחיר (₪)</label>
+                                    <input type="number" name="itemPrice_${categoryIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="25" min="0">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label class="block text-xs text-gray-600 mb-1">תיאור קצר</label>
+                                <input type="text" name="itemDescription_${categoryIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="תיאור המנה">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="window.addNewMenuItem(this, ${categoryIndex})" class="mt-3 w-full px-3 py-2 bg-orange-100 text-orange-700 font-semibold rounded-lg hover:bg-orange-200 transition text-sm">
+                        ➕ הוסף מנה לקטגוריה זו
+                    </button>
+                `;
+                
+                categoriesContainer.appendChild(categoryItem);
+                console.log(`✅ Added category #${window.categoryCount}`);
+            };
+
+            // Global function to add new menu item to a specific category
+            window.addNewMenuItem = function(button, categoryIndex) {
+                console.log(`🍽️ addNewMenuItem called for category ${categoryIndex}`);
+                
+                const categoryItem = button.closest('.menu-category-item');
+                const itemsContainer = categoryItem.querySelector('.category-items-container');
+                
+                if (!itemsContainer) {
+                    console.error('❌ items container not found!');
+                    return;
+                }
+                
+                const currentItemCount = itemsContainer.querySelectorAll('.menu-item').length + 1;
+                
+                const menuItem = document.createElement('div');
+                menuItem.className = 'menu-item bg-gray-50 p-3 rounded-lg border border-gray-200';
+                menuItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">🍽️ מנה #${currentItemCount}</span>
+                        <button type="button" onclick="this.closest('.menu-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">שם המנה</label>
+                            <input type="text" name="itemName_${categoryIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם המנה">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">מחיר (₪)</label>
+                            <input type="number" name="itemPrice_${categoryIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="25" min="0">
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs text-gray-600 mb-1">תיאור קצר</label>
+                        <input type="text" name="itemDescription_${categoryIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="תיאור המנה">
+                    </div>
+                    
+                    <!-- Item Options -->
+                    <div class="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-blue-800">🍕 אופציות ותוספות למנה</span>
+                            <button type="button" onclick="addNewItemOption(this, ${categoryIndex}, 0)" class="text-blue-600 hover:text-blue-800 text-xs font-medium">➕ הוסף אופציה</button>
+                        </div>
+                        <div class="item-options-container space-y-2">
+                            <!-- Default option -->
+                            <div class="item-option bg-white p-2 rounded border border-blue-100">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs text-blue-700">אופציה #1</span>
+                                    <button type="button" onclick="this.closest('.item-option').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                        <input type="text" name="itemOptionName_${categoryIndex}_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="גדל">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">מחיר נוסף</label>
+                                        <input type="number" name="itemOptionPrice_${categoryIndex}_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">סוג</label>
+                                        <select name="itemOptionType_${categoryIndex}_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
+                                            <option value="single">יחידה</option>
+                                            <option value="multiple">מרובה</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                itemsContainer.appendChild(menuItem);
+                console.log(`✅ Added menu item #${currentItemCount} to category ${categoryIndex}`);
+            };
+
+            // Global function to update category numbers
+            window.updateCategoryNumbers = function() {
+                const categoryItems = document.querySelectorAll('.menu-category-item');
+                categoryItems.forEach((item, index) => {
+                    const title = item.querySelector('h5');
+                    if (title) {
+                        title.textContent = `🍴 קטגוריה #${index + 1}`;
+                    }
+                    // Update category index
+                    const itemsContainer = item.querySelector('.category-items-container');
+                    if (itemsContainer) {
+                        itemsContainer.dataset.categoryIndex = index;
+                    }
+                });
+                window.categoryCount = categoryItems.length;
+            };
+
+            // Global function to add new option to a specific menu item
+            window.addNewItemOption = function(button, categoryIndex, itemIndex) {
+                console.log(`🍕 addNewItemOption called for category ${categoryIndex}, item ${itemIndex}!`);
+                
+                const menuItem = button.closest('.menu-item');
+                const optionsContainer = menuItem.querySelector('.item-options-container');
+                
+                if (!optionsContainer) {
+                    console.error('❌ item-options-container not found!');
+                    return;
+                }
+                
+                const currentOptionCount = optionsContainer.querySelectorAll('.item-option').length + 1;
+                
+                const optionItem = document.createElement('div');
+                optionItem.className = 'item-option bg-white p-2 rounded border border-blue-100';
+                optionItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-blue-700">אופציה #${currentOptionCount}</span>
+                        <button type="button" onclick="this.closest('.item-option').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                            <input type="text" name="itemOptionName_${categoryIndex}_${itemIndex}[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="שם האופציה">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">מחיר נוסף</label>
+                            <input type="number" name="itemOptionPrice_${categoryIndex}_${itemIndex}[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">סוג</label>
+                            <select name="itemOptionType_${categoryIndex}_${itemIndex}[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
+                                <option value="single">יחידה</option>
+                                <option value="multiple">מרובה</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                
+                optionsContainer.appendChild(optionItem);
+                console.log(`✅ Added option #${currentOptionCount} to item ${itemIndex} in category ${categoryIndex}`);
+            };
+            
+            // Menu Options Management - Add/Remove Option Groups and Items
+            window.optionGroupCount = 1;
+
+            // Global function to add new option group
+            window.addNewOptionGroup = function() {
+                console.log('🍕 addNewOptionGroup called!');
+                
+                const optionsContainer = document.getElementById('menu-options-container');
+                if (!optionsContainer) {
+                    console.error('❌ menu-options-container not found!');
+                    return;
+                }
+                
+                window.optionGroupCount++;
+                const optionIndex = window.optionGroupCount - 1;
+                
+                const optionGroup = document.createElement('div');
+                optionGroup.className = 'menu-option-group bg-white p-5 rounded-lg border-2 border-blue-200 shadow-sm';
+                optionGroup.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="font-semibold text-blue-900 text-lg">🍕 קבוצת אופציות #${optionIndex + 1}</h5>
+                        <button type="button" onclick="this.closest('.menu-option-group').remove();" class="text-red-600 hover:text-red-800 font-semibold text-sm">
+                            ✖ הסר קבוצה
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">שם קבוצת האופציות</label>
+                        <input type="text" name="optionGroupName[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="למשל: גדלי פיצה, סוגי בשר, רמת חריפות...">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">סוג האופציות</label>
+                        <select name="optionType[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            <option value="single">בחירה יחידה (רדיו)</option>
+                            <option value="multiple">בחירה מרובה (צ'קבוקס)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-items-container space-y-3" data-option-index="${optionIndex}">
+                        <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-700">🍕 אופציה #1</span>
+                                <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                    <input type="text" name="optionName_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם האופציה">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                                    <input type="number" name="optionPrice_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="addNewOptionItem(this, ${optionIndex})" class="w-full mt-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                        ➕ הוסף אופציה חדשה
+                    </button>
+                `;
+                
+                optionsContainer.appendChild(optionGroup);
+                console.log(`✅ Added option group #${optionIndex + 1}`);
+            };
+
+            // Global function to add new option item to a specific group
+            window.addNewOptionItem = function(button, optionIndex) {
+                console.log(`🍕 addNewOptionItem called for option group ${optionIndex}!`);
+                
+                const optionGroup = button.closest('.menu-option-group');
+                const itemsContainer = optionGroup.querySelector('.option-items-container');
+                
+                if (!itemsContainer) {
+                    console.error('❌ option-items-container not found!');
+                    return;
+                }
+                
+                const currentItemCount = itemsContainer.querySelectorAll('.option-item').length + 1;
+                
+                const optionItem = document.createElement('div');
+                optionItem.className = 'option-item bg-gray-50 p-3 rounded-lg border border-gray-200';
+                optionItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">🍕 אופציה #${currentItemCount}</span>
+                        <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                            <input type="text" name="optionName_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם האופציה">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
+                            <input type="number" name="optionPrice_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                        </div>
+                    </div>
+                `;
+                
+                itemsContainer.appendChild(optionItem);
+                console.log(`✅ Added option item #${currentItemCount} to option group ${optionIndex}`);
+            };
+            
+            // OLD FUNCTION - kept for backwards compatibility but not used
+            function initCourseManagement() {
+                console.log('🎓 Initializing course management...');
+                
             let courseCount = 1;
             const addCourseBtn = document.getElementById('add-course-btn');
             const coursesContainer = document.getElementById('courses-container');
 
-            if (addCourseBtn && coursesContainer) {
-                addCourseBtn.addEventListener('click', () => {
+                if (!addCourseBtn || !coursesContainer) {
+                    console.warn('⚠️ Course elements not found yet, retrying...');
+                    setTimeout(initCourseManagement, 100);
+                    return;
+                }
+
+                console.log('✅ Course elements found, setting up listeners');
+                console.log('🔍 Button element:', addCourseBtn);
+                console.log('🔍 Container element:', coursesContainer);
+
+                // Simple direct listener - no cloning
+                addCourseBtn.addEventListener('click', (e) => {
+                    console.log('🎯 Button clicked!');
+                    e.preventDefault();
+                    e.stopPropagation();
                     courseCount++;
                     const courseItem = document.createElement('div');
                     courseItem.className = 'course-item bg-white p-4 rounded-lg border-2 border-purple-200 shadow-sm';
@@ -6989,6 +7802,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     
                     coursesContainer.appendChild(courseItem);
                     updateRemoveCourseButtons();
+                    console.log(`✅ Added course #${courseCount}`);
                 });
 
                 // Event delegation for remove buttons
@@ -6998,6 +7812,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                         courseCount--;
                         updateCourseNumbers();
                         updateRemoveCourseButtons();
+                        console.log(`🗑️ Removed course, now ${courseCount} total`);
                     }
                 });
 
@@ -7020,6 +7835,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                         title.textContent = `📚 קורס #${index + 1}`;
                     });
                 }
+                
+                console.log('🎓 Course management initialized successfully!');
             }
 
             // Store Management Dashboard
@@ -7258,7 +8075,15 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
             createDynamicFields(pageTemplates[state.selectedPageType].fields);
 
-            
+            // Initialize course management after dynamic fields are created
+            if (state.selectedPageType === 'onlineCourse') {
+                console.log('🎯 Selected page type is onlineCourse, initializing course management...');
+                setTimeout(() => {
+                    initCourseManagement();
+                }, 200); // Increased delay to ensure DOM is ready
+            } else {
+                console.log('ℹ️ Selected page type:', state.selectedPageType);
+            }
 
             const showExtraSections = !['flyer', 'post', 'businessCard', 'event'].includes(state.selectedPageType);
 
@@ -7489,14 +8314,14 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     
                     // הוסף פונקציונליות חנות רק אם התבנית היא חנות
                     console.log('Checking if need to inject store scripts. selectedPageType:', state.selectedPageType);
-                    const isStoreTemplate = state.selectedPageType === 'onlineStore';
+                    const isStoreTemplate = state.selectedPageType === 'onlineStore' || state.selectedPageType === 'onlineCourse' || state.selectedPageType === 'restaurantMenu';
                     
                     if (isStoreTemplate) {
-                        console.log('✅ Injecting store scripts for preview... (isStore:', isStoreTemplate, ')');
+                        console.log('✅ Injecting store/course scripts for preview... (isStore:', isStoreTemplate, ')');
                         finalHtml = injectStoreScripts(finalHtml, data);
-                        console.log('✅ Store scripts injected to preview!');
+                        console.log('✅ Store/Course scripts injected to preview!');
                     } else {
-                        console.log('❌ NOT a store, skipping store scripts');
+                        console.log('❌ NOT a store/course, skipping store scripts');
                     }
                 
                 
@@ -8051,7 +8876,12 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                       state.elementToModifyForImage.style.backgroundImage = `url('${imageUrl}')`;
                  }
 
-                 
+                // עדכן את ה-generatedPageHTML עם התמונה החדשה
+                const iframeDoc = ui.previewIframe.contentDocument;
+                if (iframeDoc) {
+                    window.generatedPageHTML = iframeDoc.documentElement.outerHTML;
+                    console.log('✅ Updated generatedPageHTML with new image');
+                }
 
                  hideModal();
 
@@ -9752,8 +10582,106 @@ function handleBotAction(data) {
             break;
             
         case 'open_whatsapp':
-            const whatsappBtn = document.getElementById('whatsapp-bubble');
-            if (whatsappBtn) whatsappBtn.click();
+            const whatsappLink = document.querySelector('[href*="wa.me"], [href*="whatsapp"]');
+            if (whatsappLink) {
+                window.open(whatsappLink.href, '_blank');
+            } else {
+                const whatsappBtn = document.getElementById('whatsapp-bubble');
+                if (whatsappBtn) whatsappBtn.click();
+            }
+            break;
+            
+        case 'open_gallery':
+            // For real estate - open property gallery
+            if (typeof openPropertyGallery === 'function') {
+                openPropertyGallery();
+            } else {
+                const galleryBtn = document.querySelector('[onclick*="openPropertyGallery"], [onclick*="openGallery"]');
+                if (galleryBtn) galleryBtn.click();
+            }
+            break;
+            
+        case 'scroll_to_specs':
+            // For real estate - scroll to property specs
+            const specsSection = document.querySelector('#specs, [id*="spec"], .specs-section, [class*="spec"]');
+            if (specsSection) specsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_event_details':
+            // For events - scroll to event details
+            const eventSection = document.querySelector('#event-details, [id*="event"], .event-section');
+            if (eventSection) eventSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'purchase_course':
+            // For courses - trigger purchase
+            if (data.courseName && data.price && typeof window.purchaseCourse === 'function') {
+                window.purchaseCourse(data.courseName, data.price);
+            }
+            break;
+            
+        case 'book_appointment':
+            // For appointments - trigger booking
+            const appointmentForm = document.querySelector('#appointment-form, [id*="appointment"]');
+            if (appointmentForm && data.appointmentData) {
+                // Fill form fields if available
+                const timeInput = appointmentForm.querySelector('[name*="time"], #time');
+                const dateInput = appointmentForm.querySelector('[name*="date"], #date');
+                if (timeInput) timeInput.value = data.appointmentData.time || '';
+                if (dateInput) dateInput.value = data.appointmentData.date || '';
+                appointmentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+            
+        case 'scroll_to_appointments':
+            const appointmentsSection = document.querySelector('#appointments, [id*="appointment"], .appointments-section');
+            if (appointmentsSection) appointmentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'fill_rsvp_form':
+            // For events - fill RSVP form
+            const rsvpForm = document.querySelector('#rsvp-form, [id*="rsvp"], form');
+            if (rsvpForm && data.formData) {
+                const nameInput = rsvpForm.querySelector('[name*="name"], #name');
+                const phoneInput = rsvpForm.querySelector('[name*="phone"], #phone');
+                const guestsInput = rsvpForm.querySelector('[name*="guest"], #guests');
+                if (nameInput) nameInput.value = data.formData.name || '';
+                if (phoneInput) phoneInput.value = data.formData.phone || '';
+                if (guestsInput) guestsInput.value = data.formData.guests || 1;
+                rsvpForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+            
+        case 'fill_property_lead':
+            // For real estate - fill property lead form
+            const propertyForm = document.querySelector('#property-lead-form');
+            if (propertyForm && data.formData) {
+                const nameInput = propertyForm.querySelector('[name="name"]');
+                const phoneInput = propertyForm.querySelector('[name="phone"]');
+                const emailInput = propertyForm.querySelector('[name="email"]');
+                const messageInput = propertyForm.querySelector('[name="message"]');
+                if (nameInput) nameInput.value = data.formData.name || '';
+                if (phoneInput) phoneInput.value = data.formData.phone || '';
+                if (emailInput) emailInput.value = data.formData.email || '';
+                if (messageInput) messageInput.value = data.formData.message || '';
+                propertyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+            
+        case 'fill_landing_lead':
+            // For landing/brand pages - fill lead form
+            const leadForm = document.querySelector('#landing-lead-form, #brand-lead-form');
+            if (leadForm && data.formData) {
+                const nameInput = leadForm.querySelector('[name="name"]');
+                const phoneInput = leadForm.querySelector('[name="phone"]');
+                const emailInput = leadForm.querySelector('[name="email"]');
+                const messageInput = leadForm.querySelector('[name="message"]');
+                if (nameInput) nameInput.value = data.formData.name || '';
+                if (phoneInput) phoneInput.value = data.formData.phone || '';
+                if (emailInput) emailInput.value = data.formData.email || '';
+                if (messageInput) messageInput.value = data.formData.message || '';
+                leadForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             break;
     }
 }
@@ -9761,7 +10689,7 @@ function handleBotAction(data) {
 // Make handleBotAction globally available
 window.handleBotAction = handleBotAction;
 
-console.log('✅ AI Bot actions handler installed');
+console.log('✅ AI Bot actions handler installed (with ALL page types support)');
 </` + `script>
 `;
                     if (htmlContent.includes('</body>')) {
@@ -10535,9 +11463,9 @@ if (typeof window.sendAiMessage !== 'undefined') {
     };
 }
 
-// Handle bot actions
+// Handle bot actions - FULL VERSION supporting ALL page types
 function handleBotAction(data) {
-    console.log('🛒 Handling bot action:', data.action);
+    console.log('🤖 Handling bot action:', data.action);
     
     switch(data.action) {
         case 'add_to_cart':
@@ -10555,11 +11483,154 @@ function handleBotAction(data) {
                 });
             }
             break;
+            
+        case 'scroll_to_home':
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            break;
+            
+        case 'scroll_to_about':
+            const aboutSection = document.querySelector('#about, [id*="about"], .about-section');
+            if (aboutSection) aboutSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_products':
+            const productsSection = document.querySelector('#products, [id*="products"], .products-section');
+            if (productsSection) productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_contact':
+            const contactSection = document.querySelector('#contact, [id*="contact"], .contact-section');
+            if (contactSection) contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_testimonials':
+            const testimonialsSection = document.querySelector('#testimonials, [id*="testimonial"]');
+            if (testimonialsSection) testimonialsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_faq':
+            const faqSection = document.querySelector('#faq, [id*="faq"]');
+            if (faqSection) faqSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_product':
+            if (data.product_name) {
+                const allProducts = document.querySelectorAll('.product-card, [class*="product"]');
+                for (const product of allProducts) {
+                    const nameEl = product.querySelector('h1, h2, h3, h4, .product-name, [class*="name"]');
+                    if (nameEl && nameEl.textContent.toLowerCase().includes(data.product_name.toLowerCase())) {
+                        product.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        product.style.transition = 'all 0.3s ease';
+                        product.style.boxShadow = '0 0 30px rgba(139, 92, 246, 0.8)';
+                        setTimeout(() => { product.style.boxShadow = ''; }, 2000);
+                        break;
+                    }
+                }
+            }
+            break;
+            
+        case 'open_whatsapp':
+            const whatsappLink = document.querySelector('[href*="wa.me"], [href*="whatsapp"]');
+            if (whatsappLink) {
+                window.open(whatsappLink.href, '_blank');
+            } else {
+                const whatsappBtn = document.getElementById('whatsapp-bubble');
+                if (whatsappBtn) whatsappBtn.click();
+            }
+            break;
+            
+        case 'open_gallery':
+            if (typeof openPropertyGallery === 'function') {
+                openPropertyGallery();
+            } else {
+                const galleryBtn = document.querySelector('[onclick*="openPropertyGallery"], [onclick*="openGallery"]');
+                if (galleryBtn) galleryBtn.click();
+            }
+            break;
+            
+        case 'scroll_to_specs':
+            const specsSection = document.querySelector('#specs, [id*="spec"], .specs-section, [class*="spec"]');
+            if (specsSection) specsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'scroll_to_event_details':
+            const eventSection = document.querySelector('#event-details, [id*="event"], .event-section');
+            if (eventSection) eventSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'purchase_course':
+            if (data.courseName && data.price && typeof window.purchaseCourse === 'function') {
+                window.purchaseCourse(data.courseName, data.price);
+            }
+            break;
+            
+        case 'book_appointment':
+            const appointmentForm = document.querySelector('#appointment-form, [id*="appointment"]');
+            if (appointmentForm && data.appointmentData) {
+                const timeInput = appointmentForm.querySelector('[name*="time"], #time');
+                const dateInput = appointmentForm.querySelector('[name*="date"], #date');
+                if (timeInput) timeInput.value = data.appointmentData.time || '';
+                if (dateInput) dateInput.value = data.appointmentData.date || '';
+                appointmentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+            
+        case 'scroll_to_appointments':
+            const appointmentsSection = document.querySelector('#appointments, [id*="appointment"], .appointments-section');
+            if (appointmentsSection) appointmentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+            
+        case 'fill_rsvp_form':
+            const rsvpForm = document.querySelector('#rsvp-form, [id*="rsvp"], form');
+            if (rsvpForm && data.formData) {
+                const nameInput = rsvpForm.querySelector('[name*="name"], #name');
+                const phoneInput = rsvpForm.querySelector('[name*="phone"], #phone');
+                const guestsInput = rsvpForm.querySelector('[name*="guest"], #guests');
+                if (nameInput) nameInput.value = data.formData.name || '';
+                if (phoneInput) phoneInput.value = data.formData.phone || '';
+                if (guestsInput) guestsInput.value = data.formData.guests || 1;
+                rsvpForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+            
+        case 'fill_property_lead':
+            // For real estate - fill property lead form
+            const propertyForm = document.querySelector('#property-lead-form');
+            if (propertyForm && data.formData) {
+                const nameInput = propertyForm.querySelector('[name="name"]');
+                const phoneInput = propertyForm.querySelector('[name="phone"]');
+                const emailInput = propertyForm.querySelector('[name="email"]');
+                const messageInput = propertyForm.querySelector('[name="message"]');
+                if (nameInput) nameInput.value = data.formData.name || '';
+                if (phoneInput) phoneInput.value = data.formData.phone || '';
+                if (emailInput) emailInput.value = data.formData.email || '';
+                if (messageInput) messageInput.value = data.formData.message || '';
+                propertyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+            
+        case 'fill_landing_lead':
+            // For landing/brand pages - fill lead form
+            const leadForm = document.querySelector('#landing-lead-form, #brand-lead-form');
+            if (leadForm && data.formData) {
+                const nameInput = leadForm.querySelector('[name="name"]');
+                const phoneInput = leadForm.querySelector('[name="phone"]');
+                const emailInput = leadForm.querySelector('[name="email"]');
+                const messageInput = leadForm.querySelector('[name="message"]');
+                if (nameInput) nameInput.value = data.formData.name || '';
+                if (phoneInput) phoneInput.value = data.formData.phone || '';
+                if (emailInput) emailInput.value = data.formData.email || '';
+                if (messageInput) messageInput.value = data.formData.message || '';
+                leadForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
     }
 }
 
-console.log('✅ AI Bot actions handler installed');
+console.log('✅ AI Bot actions handler installed (UNIVERSAL - supports ALL page types)');
 </` + `script>
+
+${data.pageType === 'restaurantMenu' ? `<script src="/restaurant-menu.js"></script>` : ''}
 `;
             
             if (htmlContent.includes('</body>')) {

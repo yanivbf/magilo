@@ -21,63 +21,166 @@ function isCoursePurchased() {
     return purchased === 'true';
 }
 
-// Purchase course function
-window.purchaseCourse = async function() {
-    console.log('💳 Starting course purchase...');
+// Purchase course function - SIMPLIFIED DIRECT PURCHASE
+window.purchaseCourse = async function(courseName, price) {
+    console.log('💳 Starting direct course purchase...');
     
-    // Get course details
-    const courseTitle = document.querySelector('h1')?.textContent || 'קורס';
-    const priceElement = document.querySelector('[data-price], .price, .course-price');
-    const price = priceElement?.textContent.match(/\d+/)?.[0] || '999';
+    // Create purchase form modal
+    const modal = document.createElement('div');
+    modal.id = 'purchase-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
     
-    // Show purchase modal/confirmation
-    const confirmed = confirm(`האם אתה בטוח שברצונך לרכוש את "${courseTitle}" ב-₪${price}?`);
+    const formContainer = document.createElement('div');
+    formContainer.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    `;
     
-    if (!confirmed) {
-        console.log('❌ Purchase cancelled by user');
-        return;
-    }
+    formContainer.innerHTML = `
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="font-size: 28px; font-weight: bold; color: #1F2937; margin: 0 0 8px 0;">🎓 רכישת קורס</h2>
+            <p style="color: #6B7280; font-size: 16px;">${courseName}</p>
+            <p style="font-size: 32px; font-weight: bold; color: #10B981; margin: 16px 0;">₪${price}</p>
+        </div>
+        
+        <form id="purchase-form" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📱 מספר טלפון (לזיהוי)</label>
+                <input type="tel" id="phone-input" required 
+                       placeholder="050-1234567"
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                <p style="font-size: 12px; color: #6B7280; margin-top: 4px;">⚠️ חשוב! מספר זה ישמש לזיהוי שלך בכניסות הבאות</p>
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">👤 שם מלא</label>
+                <input type="text" id="name-input" required 
+                       placeholder="ישראל ישראלי"
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 8px;">📧 אימייל</label>
+                <input type="email" id="email-input" required 
+                       placeholder="example@gmail.com"
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            
+            <div style="background: #FEF3C7; padding: 16px; border-radius: 8px; border: 2px solid #FCD34D;">
+                <p style="font-size: 14px; color: #92400E; margin: 0; line-height: 1.6;">
+                    💡 <strong>הערה:</strong> התשלום יתבצע דרך WhatsApp. לאחר לחיצה על "המשך לתשלום", נפתח WhatsApp עם פרטי הרכישה.
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <button type="button" onclick="document.getElementById('purchase-modal').remove()" 
+                        style="flex: 1; padding: 14px; background: #E5E7EB; color: #374151; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer;">
+                    ביטול
+                </button>
+                <button type="submit" 
+                        style="flex: 2; padding: 14px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                    💳 המשך לתשלום
+                </button>
+            </div>
+        </form>
+    `;
     
-    // In production, this would process payment via payment gateway
-    // For now, we'll simulate successful purchase
+    modal.appendChild(formContainer);
+    document.body.appendChild(modal);
     
-    try {
-        // Save purchase to backend
-        const userId = localStorage.getItem('userId') || 'guest';
+    // Handle form submission
+    document.getElementById('purchase-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const phone = document.getElementById('phone-input').value.trim();
+        const name = document.getElementById('name-input').value.trim();
+        const email = document.getElementById('email-input').value.trim();
+        
+        console.log('💳 Processing purchase:', { phone, name, email, courseName, price });
+        
+        try {
+            // Save purchase to server
+            const pathParts = window.location.pathname.split('/');
+            const storeId = pathParts[pathParts.length - 1].replace('.html', '').replace('_html', '');
+            const userId = pathParts[2];
         
         const purchaseData = {
             userId,
-            courseId,
-            courseName: courseTitle,
-            price: parseInt(price),
-            paymentMethod: 'credit_card',
-            purchaseDate: new Date().toISOString()
-        };
-        
-        const response = await fetch('/api/purchase-course', {
+                storeId,
+                customerPhone: phone,
+                customerName: name,
+                customerEmail: email,
+                items: [{
+                    name: courseName,
+                    price: parseFloat(price),
+                    quantity: 1
+                }],
+                totalAmount: parseFloat(price),
+                purchaseDate: new Date().toISOString(),
+                status: 'completed'
+            };
+            
+            const response = await fetch('/api/save-purchase', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(purchaseData)
         });
         
         if (response.ok) {
-            // Mark course as purchased locally
-            localStorage.setItem(`course_purchased_${courseId}`, 'true');
-            
-            // Unlock all videos
+                console.log('✅ Purchase saved to server');
+                
+                // Save user phone in localStorage for future identification
+                localStorage.setItem('userPhone', phone);
+                localStorage.setItem('userName', name);
+                
+                // Mark course as purchased (by phone number)
+                localStorage.setItem(`course_purchased_${storeId}_${phone}`, 'true');
+                
+                // Close modal
+                modal.remove();
+                
+                // Unlock videos
+                if (typeof window.unlockCourseVideos === 'function') {
+                    window.unlockCourseVideos();
+                } else if (typeof unlockAllVideos === 'function') {
             unlockAllVideos();
-            
-            // Show success message
-            alert('🎉 רכישה בוצעה בהצלחה! כעת תוכל לצפות בכל שיעורי הקורס.');
-            
-            console.log('✅ Course purchased successfully');
+                }
+                
+                // Show success and open WhatsApp
+                alert('🎉 רכישה נשמרה! עכשיו נפתח WhatsApp לסיום התשלום.');
+                
+                // Open WhatsApp with purchase details
+                const whatsappPhone = document.querySelector('[href*="wa.me"]')?.href.match(/\d{10,}/)?.[0] || '972504443333';
+                const message = `שלום! אני ${name}\n\nאני מעוניין לרכוש: ${courseName}\n\nמחיר: ₪${price}\n\nפרטי ליצירת קשר:\n📱 ${phone}\n📧 ${email}`;
+                const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
+                
+                window.open(whatsappUrl, '_blank');
+                
+                console.log('✅ Course purchase completed');
         } else {
-            throw new Error('Purchase failed');
+                throw new Error('Failed to save purchase');
         }
     } catch (error) {
-        console.error('❌ Error purchasing course:', error);
-        alert('אירעה שגיאה בעת הרכישה. אנא נסה שוב מאוחר יותר.');
+            console.error('❌ Error saving purchase:', error);
+            alert('שגיאה בשמירת הרכישה. אנא נסה שנית.');
     }
+    });
 };
 
 // Unlock all videos
@@ -201,14 +304,86 @@ function openVideo(youtubeUrl, videoId) {
     document.body.appendChild(modal);
 }
 
+// Check if user has purchased (by phone number)
+async function checkUserPurchase() {
+    console.log('🔍 Checking if user purchased this course...');
+    
+    // Get user's phone from localStorage
+    const userPhone = localStorage.getItem('userPhone');
+    
+    if (!userPhone) {
+        console.log('📱 No phone number found in localStorage');
+        return false;
+    }
+    
+    // Check localStorage first (fast)
+    const pathParts = window.location.pathname.split('/');
+    const storeId = pathParts[pathParts.length - 1].replace('.html', '').replace('_html', '');
+    const localCheck = localStorage.getItem(`course_purchased_${storeId}_${userPhone}`);
+    
+    if (localCheck === 'true') {
+        console.log('✅ Purchase found in localStorage');
+        return true;
+    }
+    
+    // Check server (slower but more reliable)
+    try {
+        const userId = pathParts[2];
+        const response = await fetch(`/api/check-purchase?userId=${userId}&storeId=${storeId}&phone=${userPhone}`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.purchased) {
+                console.log('✅ Purchase confirmed by server');
+                // Save to localStorage for faster future checks
+                localStorage.setItem(`course_purchased_${storeId}_${userPhone}`, 'true');
+                return true;
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error checking server:', error);
+    }
+    
+    console.log('🔒 No purchase found');
+    return false;
+}
+
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('🎓 Initializing course system...');
     
-    // Check if course is already purchased
-    if (isCoursePurchased()) {
+    // Check if user purchased
+    const purchased = await checkUserPurchase();
+    
+    if (purchased) {
         console.log('✅ Course already purchased, unlocking videos');
         unlockAllVideos();
+        
+        // Show welcome message
+        const userName = localStorage.getItem('userName') || 'חבר';
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+            z-index: 9999;
+            font-weight: 600;
+            animation: slideDown 0.5s ease;
+        `;
+        welcomeDiv.textContent = `🎉 ברוך הבא ${userName}! הקורס שלך פתוח לצפייה`;
+        document.body.appendChild(welcomeDiv);
+        
+        setTimeout(() => {
+            welcomeDiv.style.transition = 'opacity 0.5s';
+            welcomeDiv.style.opacity = '0';
+            setTimeout(() => welcomeDiv.remove(), 500);
+        }, 3000);
     } else {
         console.log('🔒 Course not purchased, videos are locked');
         
@@ -220,9 +395,76 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('🔒 תוכן זה נעול. יש לרכוש את הקורס על מנת לצפות בשיעורים.');
             };
         });
+        
+        // Check if user needs to identify themselves
+        const userPhone = localStorage.getItem('userPhone');
+        if (!userPhone) {
+            // Show identification prompt
+            setTimeout(() => {
+                const identify = confirm('👋 שלום! כדי לבדוק אם רכשת את הקורס, נצטרך את מספר הטלפון שלך.\n\nהאם תרצה להזדהות עכשיו?');
+                if (identify) {
+                    showIdentificationForm();
+                }
+            }, 2000);
+        }
     }
     
     console.log('✅ Course system ready!');
 });
+
+// Show identification form for returning users
+function showIdentificationForm() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 100%;">
+            <h2 style="font-size: 24px; font-weight: bold; margin: 0 0 16px 0; text-align: center;">🔐 זיהוי משתמש</h2>
+            <p style="color: #6B7280; text-align: center; margin-bottom: 24px;">הזן את מספר הטלפון שבו רכשת את הקורס</p>
+            
+            <form id="identify-form" style="display: flex; flex-direction: column; gap: 16px;">
+                <input type="tel" id="identify-phone" required 
+                       placeholder="050-1234567"
+                       style="width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" onclick="this.closest('div').parentElement.parentElement.parentElement.remove()" 
+                            style="flex: 1; padding: 12px; background: #E5E7EB; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        ביטול
+                    </button>
+                    <button type="submit" 
+                            style="flex: 1; padding: 12px; background: #10B981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        אמת
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    document.getElementById('identify-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const phone = document.getElementById('identify-phone').value.trim();
+        
+        localStorage.setItem('userPhone', phone);
+        modal.remove();
+        
+        // Reload to check purchase
+        location.reload();
+    });
+}
 
 
