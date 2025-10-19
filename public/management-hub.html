@@ -72,6 +72,14 @@
         .card.event {
             border-top: 5px solid #ec4899;
         }
+        
+        .card.appointments {
+            border-top: 5px solid #8b5cf6;
+        }
+        
+        .card.course {
+            border-top: 5px solid #f59e0b;
+        }
     </style>
 </head>
 <body>
@@ -79,7 +87,7 @@
         <h1 class="text-5xl font-bold text-white text-center mb-4">🎯 מרכז הניהול</h1>
         <p class="text-white/90 text-center mb-12 text-xl">בחר את סוג הניהול שאתה רוצה</p>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Store Management -->
             <div class="card store" onclick="window.location.href='/admin.html'">
                 <div class="card-icon">🛒</div>
@@ -95,6 +103,24 @@
                     ✓ מעקב מכירות<br>
                     ✓ ניהול מוצרים<br>
                     ✓ דוחות ואנליטיקס
+                </div>
+            </div>
+
+            <!-- Course Management -->
+            <div class="card course" onclick="navigateToCourseManagement()">
+                <div class="card-icon">📚</div>
+                <h2 class="card-title">ניהול קורסים</h2>
+                <p class="card-description">
+                    רכישות, נרשמים, סטודנטים,<br>
+                    הכנסות ושיעור המרה
+                </p>
+                <div class="card-button">
+                    כניסה לניהול קורסים →
+                </div>
+                <div class="mt-4 text-sm text-gray-500">
+                    ✓ רכישות קורסים<br>
+                    ✓ נרשמים ולידים<br>
+                    ✓ ניתוח נתונים
                 </div>
             </div>
 
@@ -116,6 +142,22 @@
                 </div>
             </div>
         </div>
+        
+        <script>
+            function navigateToCourseManagement() {
+                // Get URL parameters if they exist
+                const urlParams = new URLSearchParams(window.location.search);
+                const pageId = urlParams.get('pageId');
+                const userId = urlParams.get('userId');
+                
+                if (pageId && userId) {
+                    window.location.href = `/course-management.html?pageId=${pageId}&userId=${userId}`;
+                } else {
+                    alert('נא לבחור דף קורס ספציפי מדף הבית');
+                    window.location.href = '/';
+                }
+            }
+        </script>
 
         <!-- Quick Links -->
         <div class="mt-12 text-center">

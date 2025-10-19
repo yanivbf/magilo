@@ -1287,11 +1287,31 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const userAgent = navigator.userAgent;
             const isEdge = userAgent.indexOf('Edg') !== -1;
             const isChrome = userAgent.indexOf('Chrome') !== -1 && !isEdge;
             console.log('Browser detected:', { isEdge, isChrome, userAgent });
+            
+            // Check page type and redirect if needed
+            const info = getPageInfo();
+            if (info.page && info.userId) {
+                try {
+                    const response = await fetch(`/api/analytics/page/${info.page}?userId=${info.userId}`);
+                    const data = await response.json();
+                    const pageType = data.metadata?.pageType || 'store';
+                    
+                    console.log('📋 Page type detected:', pageType);
+                    
+                    if (pageType === 'serviceProvider' || pageType === 'appointment') {
+                        // Redirect to appointments manager
+                        window.location.href = `/appointments-manager.html?page=${info.page}&userId=${info.userId}`;
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Could not detect page type:', error);
+                }
+            }
             
             loadStoreData();
             

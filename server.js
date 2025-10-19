@@ -157,6 +157,17 @@ app.get('/page-creator/page-creator.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'page-creator', 'page-creator.html'));
 });
 
+// Serve page-templates.js
+app.get('/templates/page-templates.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'page-creator', 'templates', 'page-templates.js'));
+});
+
+app.get('/page-creator/templates/page-templates.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'page-creator', 'templates', 'page-templates.js'));
+});
+
 // Configure multer for image uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -242,6 +253,10 @@ app.post('/api/create-page', async (req, res) => {
     const eventKeywords = ['rsvp', 'אישור הגעה', 'מוזמנים', 'countdown-timer', 'חתונה', 'wedding', 'בר מצווה', 'אירוע', 'הזמנה לאירוע'];
     const hasEventKeywords = eventKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
     
+    // Check for APPOINTMENT/SERVICE PROVIDER keywords (HIGH PRIORITY)
+    const appointmentKeywords = ['תור', 'appointment', 'booking', 'קביעת תור', 'schedule', 'calendar', 'זמן פנוי', 'available time'];
+    const hasAppointmentKeywords = appointmentKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
+    
     // Check for STORE-specific keywords
     const storeKeywords = ['חנות', 'store', 'shop', 'מכירה', 'sale', 'מבצע'];
     const hasStoreKeywords = storeKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
@@ -250,16 +265,29 @@ app.post('/api/create-page', async (req, res) => {
     const selectedTemplate = req.body.selectedPageType;
     console.log('📋 Selected template:', selectedTemplate);
     
-    // Priority: Template selection > Event keywords > Store keywords > Generic
+    // Priority: Template selection (HIGHEST) > Event keywords > Appointment keywords > Store keywords > Generic
+    // CRITICAL: Template selection ALWAYS wins, no matter what keywords are found
     if (selectedTemplate === 'event') {
       pageType = 'event';
-      console.log(`🎯 DETECTED from TEMPLATE: event (100% RELIABLE ✅)`);
+      console.log(`🎯 DETECTED from TEMPLATE: event (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
+    } else if (selectedTemplate === 'serviceProvider' || selectedTemplate === 'appointment') {
+      pageType = 'serviceProvider';
+      console.log(`🎯 DETECTED from TEMPLATE: serviceProvider (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
     } else if (selectedTemplate === 'onlineStore') {
       pageType = 'store';
-      console.log(`🎯 DETECTED from TEMPLATE: store (100% RELIABLE ✅)`);
+      console.log(`🎯 DETECTED from TEMPLATE: store (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
+    } else if (selectedTemplate === 'onlineCourse') {
+      pageType = 'course'; // Digital courses use BOTH store management (purchases) AND leads management (registrations)
+      console.log(`🎯 DETECTED from TEMPLATE: course (DIGITAL COURSES - store + leads management) (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
+    } else if (selectedTemplate === 'liveWorkshop') {
+      pageType = 'workshop'; // Live workshops/webinars use leads management for registrations
+      console.log(`🎯 DETECTED from TEMPLATE: workshop (LIVE WORKSHOP/WEBINAR - leads management) (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
     } else if (hasEventKeywords) {
       pageType = 'event';
       console.log(`✅ Detected EVENT page from keywords${hasPurchaseKeywords ? ' (with gifts/purchases)' : ''}`);
+    } else if (hasAppointmentKeywords) {
+      pageType = 'serviceProvider';
+      console.log(`✅ Detected SERVICE PROVIDER page from appointment keywords`);
     } else if (hasPurchaseKeywords || hasStoreKeywords) {
       pageType = 'store';
       console.log(`✅ Detected STORE page from keywords`);
@@ -274,8 +302,8 @@ app.post('/api/create-page', async (req, res) => {
       }
     }
     
-    // If it has purchase capability OR it's a store, inject checkout scripts
-    if (hasPurchaseKeywords || pageType === 'store') {
+    // If it's a store OR course (digital courses), inject checkout scripts
+    if (pageType === 'store' || pageType === 'course') {
       const storeScriptInjection = `
 <script src="/store-checkout.js"></script>
 <!-- CHECKOUT_SCRIPTS_INJECTED -->`;
@@ -292,7 +320,11 @@ app.post('/api/create-page', async (req, res) => {
         console.log('✅ Checkout script appended to end of HTML');
       }
       
-      console.log('🛒 Page has purchase capability - cart & checkout available');
+      if (pageType === 'course') {
+        console.log('📚 Digital course page - cart & checkout available for course purchases');
+      } else {
+        console.log('🛒 Page has purchase capability - cart & checkout available');
+      }
     }
     
     // 📊 DEBUG: Log HTML length before fixEventPageWhatsApp
@@ -308,8 +340,8 @@ app.post('/api/create-page', async (req, res) => {
     // ✅ FIX WhatsApp code in event pages BEFORE saving
     pageHtml = fixEventPageWhatsApp(pageHtml, pageType);
     
-    // ✅ FIX Store page issues (cart, bubbles) BEFORE saving
-    if (pageType === 'store') {
+    // ✅ FIX Store/Course page issues (cart, bubbles) BEFORE saving
+    if (pageType === 'store' || pageType === 'course') {
       pageHtml = fixStorePageIssues(pageHtml);
     }
     
@@ -550,8 +582,15 @@ function fixStorePageIssues(html) {
   }
   
   // Step 2: Extra aggressive cleanup - remove any remaining cart icons/buttons in header
-  html = html.replace(/<button[^>]*cart[^>]*>[\s\S]*?<\/button>/gi, '');
-  console.log('✅ Removed any cart buttons from header');
+  // ⚠️ IMPORTANT: Only remove cart buttons in header/nav, NOT the "רכוש את הקורס" buttons!
+  // These buttons have onclick="addToCart(...)" and should stay
+  html = html.replace(/<header[^>]*>([\s\S]*?)<\/header>/gi, function(headerMatch) {
+    return headerMatch.replace(/<button[^>]*\b(?:id|class)=["'][^"']*cart[^"']*["'][^>]*>[\s\S]*?<\/button>/gi, '');
+  });
+  html = html.replace(/<nav[^>]*>([\s\S]*?)<\/nav>/gi, function(navMatch) {
+    return navMatch.replace(/<button[^>]*\b(?:id|class)=["'][^"']*cart[^"']*["'][^>]*>[\s\S]*?<\/button>/gi, '');
+  });
+  console.log('✅ Removed cart buttons from header/nav only (preserving course purchase buttons)');
   
   // 2. FIX: Ensure bubbles have correct z-index and are clickable
   // Find WhatsApp bubble and ensure it has proper styling
@@ -611,15 +650,98 @@ function fixStorePageIssues(html) {
     content: '' !important;
   }
   
-  /* Ensure floating bubbles are ALWAYS clickable and visible */
+  /* Ensure floating bubbles are ALWAYS clickable and visible AND FIXED */
   a[href*="wa.me"], 
   [id*="whatsapp"], 
   [id*="bot"], 
   [style*="#8B5CF6"],
   [style*="25D366"] {
+    position: fixed !important; /* צף עם הגלילה */
     z-index: 10000 !important;
     pointer-events: all !important;
     cursor: pointer !important;
+  }
+  
+  /* ✨ FIX: Ensure bot button stays fixed while scrolling */
+  #ai-bot-btn {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 10000 !important;
+  }
+  
+  /* ✨ FIX: Ensure WhatsApp bubble stays fixed */
+  a[href*="wa.me"] {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 10000 !important;
+  }
+  
+  /* ✨ FIX: Ensure body has NORMAL font size (override any 1% bugs) */
+  body {
+    font-size: 16px !important; /* Normal readable size */
+  }
+  
+  /* ✨ FIX: Ensure all text elements are readable */
+  body p {
+    font-size: 16px !important;
+  }
+  
+  body h1 {
+    font-size: 2.5rem !important;
+  }
+  
+  body h2 {
+    font-size: 2rem !important;
+  }
+  
+  body h3 {
+    font-size: 1.75rem !important;
+  }
+  
+  body h4 {
+    font-size: 1.5rem !important;
+  }
+  
+  body button, body a {
+    font-size: 16px !important;
+  }
+  
+  body input, body textarea, body select {
+    font-size: 16px !important;
+  }
+  
+  /* ✨ FIX: Ensure AI bot chat has READABLE FONT SIZES */
+  #ai-chat-window {
+    font-size: 16px !important; /* Override body's 1% */
+  }
+  
+  #ai-chat-window h3 {
+    font-size: 20px !important; /* Larger title */
+  }
+  
+  #ai-chat-window p,
+  #ai-chat-messages p,
+  #ai-chat-messages div {
+    font-size: 16px !important; /* Readable message text */
+  }
+  
+  #ai-user-input {
+    font-size: 16px !important; /* Larger input text */
+  }
+  
+  #ai-send-btn {
+    font-size: 16px !important; /* Larger button text */
+  }
+  
+  /* Also fix any dynamically created message elements */
+  #ai-chat-messages > div {
+    font-size: 16px !important;
+  }
+  
+  #ai-chat-messages > div > p {
+    font-size: 16px !important;
   }
   
   /* Ensure bubbles don't hide behind cart */
@@ -989,6 +1111,12 @@ app.post('/api/save-page', async (req, res) => {
 
     // Fix WhatsApp code for event pages
     content = fixEventPageWhatsApp(content, pageType);
+    
+    // Fix store/course page issues (cart, bubbles) BEFORE saving
+    if (pageType === 'store' || pageType === 'course') {
+      console.log(`🔧 Applying fixStorePageIssues for ${pageType} page during save`);
+      content = fixStorePageIssues(content);
+    }
 
     const filePath = path.join('output', userId, fileName);
     await fs.writeFile(filePath, content);
@@ -2473,6 +2601,25 @@ app.get('/api/analytics/page/:pageName', async (req, res) => {
         
         analytics.topProducts = Object.values(productSales).sort((a, b) => b.revenue - a.revenue);
         
+        // Load metadata to get pageType
+        let pageType = 'store'; // default
+        if (userId && pageName) {
+            const cleanPageName = pageName.replace(/_html$/, '');
+            const metadataPath = path.join('output', userId, cleanPageName + '_html_data', 'metadata.json');
+            
+            try {
+                if (await fs.pathExists(metadataPath)) {
+                    const metadata = await fs.readJSON(metadataPath);
+                    pageType = metadata.pageType || 'store';
+                    console.log(`📋 Loaded pageType from metadata: ${pageType}`);
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not read metadata:', error.message);
+            }
+        }
+        
+        analytics.metadata = { pageType };
+        
         res.json(analytics);
     } catch (error) {
         console.error('Error getting page analytics:', error);
@@ -2529,6 +2676,116 @@ app.post('/api/order/:orderId/status', async (req, res) => {
     } catch (error) {
         console.error('Error updating order status:', error);
         res.status(500).json({ error: 'Failed to update order status' });
+    }
+});
+
+// Get appointments for a page
+app.get('/api/appointments/:userId/:pageId', async (req, res) => {
+    try {
+        const { userId, pageId } = req.params;
+        const cleanPageId = pageId.replace(/_html$/, '');
+        const appointmentsFile = path.join('output', userId, cleanPageId + '_data', 'appointments.json');
+        
+        console.log('📅 Getting appointments from:', appointmentsFile);
+        
+        let appointments = [];
+        if (await fs.pathExists(appointmentsFile)) {
+            const fileContent = await fs.readFile(appointmentsFile, 'utf8');
+            appointments = JSON.parse(fileContent);
+        }
+        
+        res.json({ appointments });
+    } catch (error) {
+        console.error('Error getting appointments:', error);
+        res.status(500).json({ error: 'Failed to get appointments', appointments: [] });
+    }
+});
+
+// Create new appointment
+app.post('/api/appointments', async (req, res) => {
+    try {
+        const appointmentData = req.body;
+        const { userId, pageId } = appointmentData;
+        
+        if (!userId || !pageId) {
+            return res.status(400).json({ error: 'Missing userId or pageId' });
+        }
+        
+        const cleanPageId = pageId.replace(/_html$/, '');
+        const pageDataDir = path.join('output', userId, cleanPageId + '_data');
+        const appointmentsFile = path.join(pageDataDir, 'appointments.json');
+        
+        // Ensure directory exists
+        await fs.ensureDir(pageDataDir);
+        
+        // Load existing appointments
+        let appointments = [];
+        if (await fs.pathExists(appointmentsFile)) {
+            const fileContent = await fs.readFile(appointmentsFile, 'utf8');
+            appointments = JSON.parse(fileContent);
+        }
+        
+        // Create new appointment
+        const newAppointment = {
+            id: Date.now().toString(),
+            ...appointmentData,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
+        
+        appointments.push(newAppointment);
+        
+        // Save appointments
+        await fs.writeFile(appointmentsFile, JSON.stringify(appointments, null, 2));
+        
+        console.log('✅ Appointment created:', newAppointment.id);
+        res.json({ success: true, appointment: newAppointment });
+    } catch (error) {
+        console.error('Error creating appointment:', error);
+        res.status(500).json({ error: 'Failed to create appointment' });
+    }
+});
+
+// Update appointment status
+app.put('/api/appointments/:appointmentId/status', async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+        const { status } = req.body;
+        
+        // Find appointment in all user folders
+        const outputDir = 'output';
+        const userDirs = await fs.readdir(outputDir);
+        
+        for (const userId of userDirs) {
+            const userPath = path.join(outputDir, userId);
+            const stat = await fs.stat(userPath);
+            if (!stat.isDirectory()) continue;
+            
+            const pageDirs = await fs.readdir(userPath);
+            for (const pageDir of pageDirs) {
+                if (!pageDir.endsWith('_data')) continue;
+                
+                const appointmentsFile = path.join(userPath, pageDir, 'appointments.json');
+                if (await fs.pathExists(appointmentsFile)) {
+                    const fileContent = await fs.readFile(appointmentsFile, 'utf8');
+                    const appointments = JSON.parse(fileContent);
+                    const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+                    
+                    if (appointmentIndex !== -1) {
+                        appointments[appointmentIndex].status = status;
+                        appointments[appointmentIndex].updatedAt = new Date().toISOString();
+                        await fs.writeFile(appointmentsFile, JSON.stringify(appointments, null, 2));
+                        console.log('✅ Appointment status updated:', appointmentId);
+                        return res.json({ success: true, appointment: appointments[appointmentIndex] });
+                    }
+                }
+            }
+        }
+        
+        res.status(404).json({ error: 'Appointment not found' });
+    } catch (error) {
+        console.error('Error updating appointment status:', error);
+        res.status(500).json({ error: 'Failed to update appointment status' });
     }
 });
 

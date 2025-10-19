@@ -21,26 +21,6 @@ const availableSections = {
 
     },
 
-    gallery: {
-
-        icon: "image",
-
-         t: {
-
-            en: { title: "Image Gallery", prompt: "Create an image gallery section (id='gallery') with 6 placeholder images from placehold.co." },
-
-            he: { title: "גלריית תמונות", prompt: "צור מקטע גלריית תמונות (id='gallery') עם 6 תמונות placeholder מ-placehold.co." },
-
-            ar: { title: "معرض الصور", prompt: "أنشئ قسم معرض الصور (id='gallery') مع 6 صور مؤقتة من placehold.co." },
-
-            es: { title: "Galería de Imágenes", prompt: "Crea una sección de galería de imágenes (id='gallery') con 6 imágenes de marcador de posición de placehold.co." },
-
-            fr: { title: "Galerie d'Images", prompt: "Créez une section de galerie d'images (id='gallery') avec 6 images de substitution de placehold.co." }
-
-        }
-
-    },
-
     faq: {
 
         icon: "help-circle",
@@ -81,6 +61,26 @@ const availableSections = {
 
     },
 
+    gallery: {
+
+        icon: "image",
+
+         t: {
+
+            en: { title: "Image Gallery", prompt: "Create an image gallery section (id='gallery') with 6 placeholder images from placehold.co." },
+
+            he: { title: "גלריית תמונות", prompt: "צור מקטע גלריית תמונות (id='gallery') עם 6 תמונות placeholder מ-placehold.co." },
+
+            ar: { title: "معرض الصور", prompt: "أنشئ قسم معرض الصور (id='gallery') مع 6 صور مؤقتة من placehold.co." },
+
+            es: { title: "Galería de Imágenes", prompt: "Crea una sección de galería de imágenes (id='gallery') con 6 imágenes de marcador de posición de placehold.co." },
+
+            fr: { title: "Galerie d'Images", prompt: "Créez une section de galerie d'images (id='gallery') avec 6 images de substitution de placehold.co." }
+
+        }
+
+    },
+
     pricingTable: {
 
         icon: "dollar-sign",
@@ -95,7 +95,7 @@ const availableSections = {
 
             es: { title: "Tabla de Precios", prompt: "Crea una sección de 'Tabla de Precios' (id='pricing') con 3 paquetes diferentes (por ejemplo, Básico, Popular, Premium), incluyendo una lista de características y un precio para cada uno." },
 
-            fr: { title: "Tableau de Prix", prompt: "Créez une section 'Tableau de Prix' (id='pricing') avec 3 forfaits différents (par exemple, Basique, Populaire, Premium), incluant une liste de fonctionnalités et un prix pour chacun." }
+            fr: { title: "Tableau des Prix", prompt: "Créez une section 'Tableau des Prix' (id='pricing') avec 3 forfaits différents (par exemple, Basique, Populaire, Premium), incluant une liste de fonctionnalités et un prix pour chacun." }
 
         }
 

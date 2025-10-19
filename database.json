@@ -45,7 +45,7 @@
         "purchase_1760423720897_l7ela4las"
       ],
       "createdAt": "2025-10-10T04:34:55.026Z",
-      "lastActive": "2025-10-14T06:35:20.913Z"
+      "lastActive": "2025-10-18T21:45:18.904Z"
     },
     "3ed25bfd-680d-4c09-a027-1a846170c13e": {
       "id": "3ed25bfd-680d-4c09-a027-1a846170c13e",
@@ -70,14 +70,10 @@
         "purchase_1760132258437_64dcnbt65",
         "purchase_1760141162385_lxfayw2yw",
         "purchase_1760141271760_vizlcjry7",
-        "purchase_1760144098467_9f03e8j7z",
-        "purchase_1760157603096_w523t64zs",
-        "purchase_1760159844538_tcbuabepm",
-        "purchase_1760159946881_bi6y5ve58",
-        "purchase_1760162754750_qsek9abzv"
+        "purchase_1760144098467_9f03e8j7z"
       ],
       "createdAt": "2025-10-10T08:16:38.563Z",
-      "lastActive": "2025-10-11T06:05:54.760Z"
+      "lastActive": "2025-10-18T16:42:36.581Z"
     }
   },
   "purchases": {
@@ -1132,115 +1128,6 @@
       "status": "new",
       "createdAt": "2025-10-11T00:54:58.467Z"
     },
-    "purchase_1760157603096_w523t64zs": {
-      "id": "purchase_1760157603096_w523t64zs",
-      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-      "storeId": "שוקולד_יניב_1760122549721",
-      "products": [
-        {
-          "id": 1760157368552,
-          "name": "שוקולד טרופי",
-          "price": 45,
-          "quantity": 2,
-          "image": ""
-        },
-        {
-          "id": 1760157552708,
-          "name": "שוקולד חורף",
-          "price": 42,
-          "quantity": 1,
-          "image": ""
-        },
-        {
-          "id": 1760157564814,
-          "name": "שוקולד עננים",
-          "price": 37,
-          "quantity": 1,
-          "image": ""
-        }
-      ],
-      "total": 204,
-      "customerName": "יניב",
-      "customerPhone": "0505378108",
-      "customerEmail": "",
-      "customerAddress": "לא צוין",
-      "shipping": false,
-      "status": "new",
-      "createdAt": "2025-10-11T04:40:03.097Z"
-    },
-    "purchase_1760159844538_tcbuabepm": {
-      "id": "purchase_1760159844538_tcbuabepm",
-      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-      "storeId": "שוקולד_יניב_1760122549721",
-      "products": [
-        {
-          "id": 1760157762219,
-          "name": "שוקולד אביב",
-          "price": 35,
-          "quantity": 2,
-          "image": ""
-        }
-      ],
-      "total": 105,
-      "customerName": "מיה",
-      "customerPhone": "0538377366",
-      "customerEmail": "ehaleiameleh@gmail.com",
-      "customerAddress": "בר אילן 70 תל אביב",
-      "shipping": true,
-      "status": "new",
-      "createdAt": "2025-10-11T05:17:24.538Z"
-    },
-    "purchase_1760159946881_bi6y5ve58": {
-      "id": "purchase_1760159946881_bi6y5ve58",
-      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-      "storeId": "שוקולד_יניב_1760122549721",
-      "products": [
-        {
-          "id": 1760159896001,
-          "name": "שוקולד אביב",
-          "price": 35,
-          "quantity": 1,
-          "image": ""
-        },
-        {
-          "id": 1760159899837,
-          "name": "שוקולד קיץ",
-          "price": 40,
-          "quantity": 1,
-          "image": ""
-        }
-      ],
-      "total": 110,
-      "customerName": "מיה",
-      "customerPhone": "0538377366",
-      "customerEmail": "ehaleiameleh@gmail.com",
-      "customerAddress": "בר אילן 50 נתניה",
-      "shipping": true,
-      "status": "new",
-      "createdAt": "2025-10-11T05:19:06.881Z"
-    },
-    "purchase_1760162754750_qsek9abzv": {
-      "id": "purchase_1760162754750_qsek9abzv",
-      "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-      "storeId": "שוקולד_יניב_1760122549721",
-      "products": [
-        {
-          "id": 1760162736144,
-          "name": "שוקולד אביב",
-          "price": 35,
-          "quantity": 1,
-          "image": ""
-        }
-      ],
-      "total": 70,
-      "customerName": "רמי",
-      "customerPhone": "0505378108",
-      "customerEmail": "britolam1@gmail.com",
-      "customerAddress": "בר אילן 50 נתניה",
-      "shipping": true,
-      "status": "new",
-      "createdAt": "2025-10-11T06:05:54.750Z"
-    },
     "purchase_1760421638059_drf69or7x": {
       "id": "purchase_1760421638059_drf69or7x",
       "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
@@ -1325,7 +1212,7 @@
   "products": {},
   "stores": {},
   "analytics": {
-    "totalSales": 34408.9,
+    "totalSales": 33919.9,
     "totalUsers": 0,
     "totalProducts": 0,
     "dailySales": {
@@ -1334,10 +1221,11 @@
       "2025-10-10": 3354.9,
       "2025-10-11": 1637,
       "2025-10-13": 394.4,
-      "2025-10-14": 198
+      "2025-10-14": 198,
+      "2025-10-18": 832
     },
     "monthlySales": {
-      "2025-10": 35889.3
+      "2025-10": 36721.3
     },
     "topProducts": [
       {
@@ -1365,6 +1253,12 @@
         "revenue": 420
       },
       {
+        "id": 1760823905051,
+        "name": "לגו ארמון קסום",
+        "sales": 1,
+        "revenue": 350
+      },
+      {
         "id": 1760196529410,
         "name": "פרלינים שוקולד בוטיק",
         "sales": 1,
@@ -1379,6 +1273,12 @@
       {
         "id": "p_1759942382474_xxl4hibnq",
         "name": "זוהר הקדוש - כרך א",
+        "sales": 1,
+        "revenue": 180
+      },
+      {
+        "id": 1760770777837,
+        "name": "רחפן מיני למתחילים",
         "sales": 1,
         "revenue": 180
       },
@@ -1409,6 +1309,12 @@
       {
         "id": 1760357830853,
         "name": "פרלינים מובחרים",
+        "sales": 1,
+        "revenue": 120
+      },
+      {
+        "id": 1760770709057,
+        "name": "דולפין מעופף",
         "sales": 1,
         "revenue": 120
       },
@@ -1600,6 +1506,12 @@
       },
       {
         "id": 1760157552708,
+        "name": "שוקולד חורף",
+        "sales": 1,
+        "revenue": 42
+      },
+      {
+        "id": 1760805738179,
         "name": "שוקולד חורף",
         "sales": 1,
         "revenue": 42
@@ -1925,115 +1837,6 @@
         "shipping": true,
         "status": "new",
         "createdAt": "2025-10-14T06:00:38.059Z"
-      },
-      {
-        "id": "purchase_1760162754750_qsek9abzv",
-        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-        "storeId": "שוקולד_יניב_1760122549721",
-        "products": [
-          {
-            "id": 1760162736144,
-            "name": "שוקולד אביב",
-            "price": 35,
-            "quantity": 1,
-            "image": ""
-          }
-        ],
-        "total": 70,
-        "customerName": "רמי",
-        "customerPhone": "0505378108",
-        "customerEmail": "britolam1@gmail.com",
-        "customerAddress": "בר אילן 50 נתניה",
-        "shipping": true,
-        "status": "new",
-        "createdAt": "2025-10-11T06:05:54.750Z"
-      },
-      {
-        "id": "purchase_1760159946881_bi6y5ve58",
-        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-        "storeId": "שוקולד_יניב_1760122549721",
-        "products": [
-          {
-            "id": 1760159896001,
-            "name": "שוקולד אביב",
-            "price": 35,
-            "quantity": 1,
-            "image": ""
-          },
-          {
-            "id": 1760159899837,
-            "name": "שוקולד קיץ",
-            "price": 40,
-            "quantity": 1,
-            "image": ""
-          }
-        ],
-        "total": 110,
-        "customerName": "מיה",
-        "customerPhone": "0538377366",
-        "customerEmail": "ehaleiameleh@gmail.com",
-        "customerAddress": "בר אילן 50 נתניה",
-        "shipping": true,
-        "status": "new",
-        "createdAt": "2025-10-11T05:19:06.881Z"
-      },
-      {
-        "id": "purchase_1760159844538_tcbuabepm",
-        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-        "storeId": "שוקולד_יניב_1760122549721",
-        "products": [
-          {
-            "id": 1760157762219,
-            "name": "שוקולד אביב",
-            "price": 35,
-            "quantity": 2,
-            "image": ""
-          }
-        ],
-        "total": 105,
-        "customerName": "מיה",
-        "customerPhone": "0538377366",
-        "customerEmail": "ehaleiameleh@gmail.com",
-        "customerAddress": "בר אילן 70 תל אביב",
-        "shipping": true,
-        "status": "new",
-        "createdAt": "2025-10-11T05:17:24.538Z"
-      },
-      {
-        "id": "purchase_1760157603096_w523t64zs",
-        "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
-        "storeId": "שוקולד_יניב_1760122549721",
-        "products": [
-          {
-            "id": 1760157368552,
-            "name": "שוקולד טרופי",
-            "price": 45,
-            "quantity": 2,
-            "image": ""
-          },
-          {
-            "id": 1760157552708,
-            "name": "שוקולד חורף",
-            "price": 42,
-            "quantity": 1,
-            "image": ""
-          },
-          {
-            "id": 1760157564814,
-            "name": "שוקולד עננים",
-            "price": 37,
-            "quantity": 1,
-            "image": ""
-          }
-        ],
-        "total": 204,
-        "customerName": "יניב",
-        "customerPhone": "0505378108",
-        "customerEmail": "",
-        "customerAddress": "לא צוין",
-        "shipping": false,
-        "status": "new",
-        "createdAt": "2025-10-11T04:40:03.097Z"
       },
       {
         "id": "purchase_1760144098467_9f03e8j7z",

@@ -26,6 +26,57 @@ async function handleFormSubmit(event) {
 
     state.originalDescription = data.description;
 
+    // Collect Floating CTA data
+    const enableFloatingCta = document.getElementById('enableFloatingCta')?.checked;
+    if (enableFloatingCta) {
+        data.floatingCta = {
+            enabled: true,
+            text: document.getElementById('ctaText')?.value || 'קנה עכשיו!',
+            link: document.getElementById('ctaLink')?.value || '',
+            style: document.querySelector('input[name="ctaStyle"]:checked')?.value || 'solid',
+            position: document.querySelector('input[name="ctaPosition"]:checked')?.value || 'bottom-right',
+            countdown: {
+                enabled: document.getElementById('enableCountdown')?.checked || false,
+                text: document.getElementById('countdownText')?.value || 'המבצע נגמר בעוד',
+                date: document.getElementById('countdownDate')?.value || '',
+                time: document.getElementById('countdownTime')?.value || '23:59'
+            }
+        };
+    }
+
+    // Collect courses data if this is a digital course page
+    if (data.pageType === 'onlineCourse') {
+        console.log('🎓 Collecting courses data for onlineCourse page...');
+        const courseNames = document.getElementsByName('courseName[]');
+        const courseVideos = document.getElementsByName('courseVideo[]');
+        const coursePrices = document.getElementsByName('coursePrice[]');
+        const courseDescriptions = document.getElementsByName('courseDescription[]');
+        
+        console.log('📊 Found fields:', {
+            courseNames: courseNames.length,
+            courseVideos: courseVideos.length,
+            coursePrices: coursePrices.length,
+            courseDescriptions: courseDescriptions.length
+        });
+        
+        data.courses = [];
+        for (let i = 0; i < courseNames.length; i++) {
+            if (courseNames[i].value.trim()) {
+                const course = {
+                    name: courseNames[i].value.trim(),
+                    video: courseVideos[i].value.trim(),
+                    price: coursePrices[i].value || '0',
+                    description: courseDescriptions[i].value.trim() || 'קורס מקצועי ומקיף'
+                };
+                console.log(`📚 Course ${i + 1}:`, course);
+                data.courses.push(course);
+            }
+        }
+        
+        console.log('✅ Total courses collected:', data.courses.length);
+        console.log('📦 Courses array:', data.courses);
+    }
+
     // הוסף נתוני שפה ומדינה
     data = addLanguageToPageData(data);
 
@@ -659,6 +710,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Add footer links to the page
 function addFooterLinks(htmlContent, data) {
+    // Check if footer already exists (AI might have added it)
+    if (htmlContent.includes('נוצר עם') || htmlContent.includes('AutoPage') || htmlContent.includes('<footer')) {
+        console.log('Footer already exists, skipping...');
+        return htmlContent;
+    }
+    
     // Add footer with links
     const footer = `
 <footer style="background: #f8f9fa; padding: 20px; text-align: center; margin-top: 40px; border-top: 1px solid #dee2e6;">
@@ -699,6 +756,61 @@ function createMasterPrompt(data) {
 
     let prompt = template.structurePrompt;
     
+    // Add CRITICAL CONTACT INFORMATION FIRST (most important!)
+    prompt += `\n\n========================================`;
+    prompt += `\n🔥 CRITICAL - USE THIS EXACT INFORMATION 🔥`;
+    prompt += `\n========================================`;
+    
+    if (data.mainName) {
+        prompt += `\n\n**Business/Person Name (USE EXACTLY)**: ${data.mainName}`;
+        prompt += `\n⚠️ IMPORTANT: This is the ACTUAL business/person name - USE IT EVERYWHERE in the page!`;
+    }
+    
+    if (data.contactName) {
+        prompt += `\n\n**Contact Person Name (USE EXACTLY)**: ${data.contactName}`;
+    }
+    
+    if (data.phone) {
+        const cleanPhone = data.phone.replace(/[^0-9]/g, '');
+        prompt += `\n\n**Phone Number (USE EXACTLY)**: ${data.phone}`;
+        prompt += `\n⚠️ CRITICAL: Make phone CLICKABLE everywhere it appears!`;
+        prompt += `\n📞 Phone link format: <a href="tel:${data.phone}">${data.phone}</a>`;
+        prompt += `\n💬 WhatsApp link format: <a href="https://wa.me/${cleanPhone}">WhatsApp</a>`;
+        prompt += `\n✅ Example usage in contact section:`;
+        prompt += `\n   <a href="tel:${data.phone}" style="color: #007bff; text-decoration: none;">${data.phone}</a>`;
+        prompt += `\n   <a href="https://wa.me/${cleanPhone}" style="color: #25D366;">צור קשר בWhatsApp</a>`;
+    }
+    
+    if (data.email) {
+        prompt += `\n\n**Email Address (USE EXACTLY)**: ${data.email}`;
+        prompt += `\n⚠️ CRITICAL: Make email CLICKABLE everywhere it appears!`;
+        prompt += `\n📧 Email link format: <a href="mailto:${data.email}">${data.email}</a>`;
+        prompt += `\n✅ Example usage: <a href="mailto:${data.email}" style="color: #007bff; text-decoration: none;">${data.email}</a>`;
+    }
+    
+    if (data.address) {
+        const encodedAddress = encodeURIComponent(data.address);
+        prompt += `\n\n**Address (USE EXACTLY)**: ${data.address}`;
+        prompt += `\n⚠️ CRITICAL: Make address CLICKABLE for navigation!`;
+        prompt += `\n🗺️ Navigation link format: <a href="https://www.google.com/maps/search/?api=1&query=${encodedAddress}">${data.address}</a>`;
+        prompt += `\n🚗 Waze link format: <a href="https://waze.com/ul?q=${encodedAddress}">נווט בWaze</a>`;
+        prompt += `\n✅ Example usage:`;
+        prompt += `\n   <a href="https://www.google.com/maps/search/?api=1&query=${encodedAddress}" target="_blank" style="color: #007bff;">`;
+        prompt += `\n     📍 ${data.address} - לחץ לניווט`;
+        prompt += `\n   </a>`;
+    }
+    
+    prompt += `\n\n========================================`;
+    prompt += `\n✅ VERIFICATION CHECKLIST - ALL MUST BE CLICKABLE:`;
+    prompt += `\n- [ ] Phone is CLICKABLE: <a href="tel:${data.phone}">`;
+    prompt += `\n- [ ] WhatsApp is CLICKABLE: <a href="https://wa.me/...">`;
+    prompt += `\n- [ ] Email is CLICKABLE: <a href="mailto:${data.email}">`;
+    if (data.address) {
+        prompt += `\n- [ ] Address is CLICKABLE: <a href="https://www.google.com/maps/search/...">`;
+    }
+    prompt += `\n- [ ] NO plain text for contact details - ALL must be links!`;
+    prompt += `\n========================================`;
+    
     // Add specific data to prompt
     if (data.title) {
         prompt += `\n\nTitle: ${data.title}`;
@@ -728,12 +840,153 @@ function createMasterPrompt(data) {
         prompt += `\n\nCourse Details: ${data.courseDetails}`;
     }
     
+    // Add courses data for digital course platforms
+    if (data.courses && data.courses.length > 0) {
+        console.log('📝 Adding courses to prompt:', data.courses);
+        
+        prompt += `\n\n========================================`;
+        prompt += `\n📚 **DIGITAL COURSES** (${data.courses.length} courses)`;
+        prompt += `\n========================================`;
+        prompt += `\n\n⚠️⚠️⚠️ CRITICAL INSTRUCTIONS ⚠️⚠️⚠️`;
+        prompt += `\n- YOU MUST CREATE EXACTLY ${data.courses.length} COURSE CARDS`;
+        prompt += `\n- DO NOT CREATE YOUR OWN COURSES`;
+        prompt += `\n- DO NOT CHANGE THE COURSE NAMES, PRICES, OR DESCRIPTIONS`;
+        prompt += `\n- USE THE EXACT DATA PROVIDED BELOW`;
+        prompt += `\n\n**CREATE ONE COURSE CARD FOR EACH OF THE FOLLOWING:**`;
+        
+        data.courses.forEach((course, index) => {
+            prompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+            prompt += `\n**Course ${index + 1} of ${data.courses.length}:**`;
+            prompt += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+            prompt += `\n📝 Course Name (EXACT): "${course.name}"`;
+            prompt += `\n🎥 Video Link: ${course.video}`;
+            prompt += `\n💰 Price (EXACT): ₪${course.price}`;
+            prompt += `\n📄 Description (EXACT): "${course.description}"`;
+            prompt += `\n🔘 Button Code (EXACT): onclick="addToCart('${course.name}', ${course.price}, 'THUMBNAIL_URL', event)"`;
+            prompt += `\n🖼️ Thumbnail: Use Unsplash education/learning image`;
+        });
+        
+        prompt += `\n\n========================================`;
+        prompt += `\n✅ VERIFICATION CHECKLIST:`;
+        prompt += `\n- [ ] Created ${data.courses.length} course cards (not more, not less)`;
+        prompt += `\n- [ ] Used exact course names from above`;
+        prompt += `\n- [ ] Used exact prices from above`;
+        prompt += `\n- [ ] Used exact descriptions from above`;
+        prompt += `\n- [ ] Used exact onclick code for each button`;
+        prompt += `\n========================================`;
+        prompt += `\n\n**AFTER PURCHASE**: The video should be accessible to the user.`;
+        
+        console.log('✅ Courses section added to prompt');
+    } else {
+        console.warn('⚠️ No courses data found! data.courses:', data.courses);
+    }
+    
+    // Add workshop details for live courses
+    if (data.workshopDate || data.workshopLocation || data.instructorName) {
+        prompt += `\n\n🎓 **Workshop/Webinar Details**:`;
+        if (data.workshopDate) prompt += `\n- Date: ${data.workshopDate}`;
+        if (data.workshopLocation) prompt += `\n- Location: ${data.workshopLocation}`;
+        if (data.instructorName) prompt += `\n- Instructor: ${data.instructorName}`;
+        if (data.instructorBio) prompt += `\n- Instructor Bio: ${data.instructorBio}`;
+    }
+    
     // Add style information
     prompt += `\n\nStyle: ${data.style}`;
     
     // Add language information
     prompt += `\n\nLanguage: Hebrew (RTL)`;
     prompt += `\n\nCurrency: Israeli Shekel (₪)`;
+    
+    // Add Floating CTA if enabled
+    if (data.floatingCta && data.floatingCta.enabled) {
+        prompt += `\n\n=== FLOATING CALL-TO-ACTION BUTTON ===`;
+        prompt += `\n\nCREATE A FLOATING CALL-TO-ACTION BUTTON with the following specifications:`;
+        prompt += `\n\n1. **Button Text**: "${data.floatingCta.text}"`;
+        prompt += `\n2. **Position**: ${data.floatingCta.position}`;
+        prompt += `\n3. **Style**: ${data.floatingCta.style}`;
+        
+        if (data.floatingCta.link) {
+            prompt += `\n4. **Action**: Link to ${data.floatingCta.link}`;
+        } else {
+            prompt += `\n4. **Action**: Scroll to #cta section (if exists) or to contact form`;
+        }
+        
+        prompt += `\n\n**STYLE SPECIFICATIONS:**`;
+        
+        if (data.floatingCta.style === 'solid') {
+            prompt += `\n- Background: Solid bright color (e.g., #FF6B6B, #4ECDC4, #FFD93D)`;
+            prompt += `\n- Shadow: Large shadow for depth (box-shadow: 0 4px 20px rgba(0,0,0,0.3))`;
+        } else if (data.floatingCta.style === 'gradient') {
+            prompt += `\n- Background: Linear gradient (e.g., linear-gradient(135deg, #667eea 0%, #764ba2 100%))`;
+            prompt += `\n- Shadow: Large shadow with gradient color tint`;
+        } else if (data.floatingCta.style === 'pulse') {
+            prompt += `\n- Background: Solid bright color`;
+            prompt += `\n- Animation: Continuous pulse effect using CSS @keyframes`;
+            prompt += `\n- CSS: @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }`;
+            prompt += `\n- Apply: animation: pulse 2s ease-in-out infinite;`;
+        } else if (data.floatingCta.style === 'flash') {
+            prompt += `\n- Background: Bright color that flashes`;
+            prompt += `\n- Animation: Flashing effect using CSS @keyframes`;
+            prompt += `\n- CSS: @keyframes flash { 0%, 50%, 100% { opacity: 1; } 25%, 75% { opacity: 0.7; } }`;
+            prompt += `\n- Apply: animation: flash 1.5s ease-in-out infinite;`;
+        }
+        
+        prompt += `\n\n**POSITION SPECIFICATIONS:**`;
+        if (data.floatingCta.position === 'bottom-right') {
+            prompt += `\n- position: fixed; bottom: 20px; right: 20px; (for LTR)`;
+            prompt += `\n- position: fixed; bottom: 20px; left: 20px; (for RTL)`;
+        } else if (data.floatingCta.position === 'bottom-left') {
+            prompt += `\n- position: fixed; bottom: 20px; left: 20px; (for LTR)`;
+            prompt += `\n- position: fixed; bottom: 20px; right: 20px; (for RTL)`;
+        } else if (data.floatingCta.position === 'bottom-center') {
+            prompt += `\n- position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);`;
+        } else if (data.floatingCta.position === 'top-center') {
+            prompt += `\n- position: fixed; top: 20px; left: 50%; transform: translateX(-50%);`;
+        }
+        
+        prompt += `\n- z-index: 9999; (ensure it's above all content)`;
+        prompt += `\n- padding: 16px 32px;`;
+        prompt += `\n- border-radius: 50px;`;
+        prompt += `\n- font-size: 18px;`;
+        prompt += `\n- font-weight: bold;`;
+        prompt += `\n- color: white;`;
+        prompt += `\n- cursor: pointer;`;
+        prompt += `\n- transition: all 0.3s ease;`;
+        prompt += `\n- On hover: transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,0,0,0.4);`;
+        
+        // Add countdown timer if enabled
+        if (data.floatingCta.countdown && data.floatingCta.countdown.enabled && data.floatingCta.countdown.date) {
+            const countdownDateTime = `${data.floatingCta.countdown.date}T${data.floatingCta.countdown.time}`;
+            prompt += `\n\n**COUNTDOWN TIMER:**`;
+            prompt += `\n- Display above the button: "${data.floatingCta.countdown.text}"`;
+            prompt += `\n- Target date/time: ${countdownDateTime}`;
+            prompt += `\n- Format: "XX ימים XX שעות XX דקות XX שניות"`;
+            prompt += `\n- Style: Small text above button, same color scheme`;
+            prompt += `\n- Update every second using JavaScript`;
+            prompt += `\n\n**COUNTDOWN JAVASCRIPT:**`;
+            prompt += `\n<script>`;
+            prompt += `\nconst countdownDate = new Date('${countdownDateTime}').getTime();`;
+            prompt += `\nconst countdownElement = document.getElementById('countdown-timer');`;
+            prompt += `\nconst updateCountdown = () => {`;
+            prompt += `\n  const now = new Date().getTime();`;
+            prompt += `\n  const distance = countdownDate - now;`;
+            prompt += `\n  if (distance < 0) {`;
+            prompt += `\n    countdownElement.innerHTML = 'המבצע הסתיים';`;
+            prompt += `\n    return;`;
+            prompt += `\n  }`;
+            prompt += `\n  const days = Math.floor(distance / (1000 * 60 * 60 * 24));`;
+            prompt += `\n  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));`;
+            prompt += `\n  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));`;
+            prompt += `\n  const seconds = Math.floor((distance % (1000 * 60)) / 1000);`;
+            prompt += `\n  countdownElement.innerHTML = days + ' ימים ' + hours + ' שעות ' + minutes + ' דקות ' + seconds + ' שניות';`;
+            prompt += `\n};`;
+            prompt += `\nupdateCountdown();`;
+            prompt += `\nsetInterval(updateCountdown, 1000);`;
+            prompt += `\n</script>`;
+        }
+        
+        prompt += `\n\n**IMPORTANT**: The floating CTA button must be ALWAYS VISIBLE on scroll, positioned FIXED, and have HIGH z-index to stay above all content.`;
+    }
     
     return prompt;
 }

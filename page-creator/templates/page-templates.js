@@ -317,23 +317,193 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 
     },
 
-    course: {
+    onlineCourse: {
 
-        img: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2072&auto=format&fit=crop",
+        img: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=2074&auto=format&fit=crop",
 
-        fields: ['courseDetails', 'websiteLink'],
+        fields: ['courseManagement', 'websiteLink'],
 
-        structurePrompt: `Build a course page with the following sections: 1. Header with navigation containing the provided external links ('Main Link', 'Additional External Link'). 2. Hero Section (id="home") with the course name and a central promise. 3. Countdown timer (id="countdown-timer") with elements having IDs: days, hours, minutes, seconds. **Very important**: The display order for Hebrew should be right-to-left: days, hours, minutes, seconds. 4. "About the Course" section (id="about") with a detailed description. 5. "About the Instructor" section (id="instructor") with a **circular** image (class="rounded-full"), the instructor's name (from data), and a short description. 6. "Who is this course for" section (id="for-whom"). 7. Course details (id="details") - location. 8. A prominent registration button that leads to the provided registration link.`,
+        structurePrompt: `Build a professional online course platform with modern design aesthetic. Create a platform that looks like Udemy or Coursera.
+
+**ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
+<meta name="page-type" content="course">
+
+**REQUIRED SECTIONS:**
+1. **Header** (sticky navigation): 
+   - Platform logo/name: \${data.mainName || 'Course Platform'}
+   - Clean, modern navigation links
+   - ⚠️ DO NOT ADD CART ICON TO HEADER - the cart button is separate
+   
+2. **Hero Section**: Choose ONE compelling hero layout:
+   - Option A: Full-width banner with featured course + "התחל ללמוד" CTA
+   - Option B: Split-screen with promotional text and course preview
+   - Option C: Slider with 2-3 featured courses
+   - Option D: Grid showcase of popular courses
+
+3. **Course Catalog** (id="courses"): Create a beautiful course card for EACH course provided in the data. 
+   
+   **CRITICAL**: The courses will be provided in \${data.courses} array. Each course object has:
+   - name: Course name
+   - video: YouTube link or video file URL
+   - price: Course price in ₪
+   - description: Course description
+   
+   For EACH course in the array, create a card with:
+   - Course thumbnail/preview image (use Unsplash education/learning images)
+   - Course title: USE THE EXACT NAME from data.courses[i].name
+   - Course description: USE THE EXACT DESCRIPTION from data.courses[i].description
+   - Instructor name (generate a professional name)
+   - Price display: USE THE EXACT PRICE from data.courses[i].price (format: ₪XX)
+   - "רכוש את הקורס" button with: onclick="addToCart('EXACT_COURSE_NAME', EXACT_PRICE, 'imageURL', event)" (CRITICAL: include 'event' parameter!)
+   - Hover effects (scale, shadow, etc.)
+   
+   Choose ONE grid layout:
+     * Option A: Classic grid (3 columns)
+     * Option B: Masonry layout
+     * Option C: Featured + grid (1 large + smaller ones)
+     * Option D: Carousel/slider format
+
+4. **Cart Placeholders** (⚠️ CRITICAL - ONLY ADD THESE SIMPLE PLACEHOLDERS ⚠️):
+   
+   ⚠️⚠️⚠️ DO NOT CREATE CART HTML - ONLY PLACEHOLDERS ⚠️⚠️⚠️
+   ⚠️⚠️⚠️ THE JAVASCRIPT WILL BUILD THE CART AUTOMATICALLY ⚠️⚠️⚠️
+   
+   **ADD THESE EXACT 3 LINES ONLY - NOTHING MORE:**
+   
+<div id="cart-sidebar"></div>
+<div id="cart-overlay"></div>
+<div id="cart-button-placeholder"></div>
+   
+   **ABSOLUTELY FORBIDDEN:**
+   - ❌ DO NOT add ANY cart icons to the header/navigation
+   - ❌ DO NOT add ANY floating buttons
+   - ❌ DO NOT add ANY badges or counters
+   - ❌ DO NOT add ANY inline styles to these divs
+   - ❌ DO NOT add ANY content inside these divs
+   - ❌ DO NOT create <button> for cart
+   - ❌ DO NOT add cart-related elements anywhere else in the page
+   
+   **ONLY THESE 3 EMPTY DIVS - THE REST IS HANDLED BY JAVASCRIPT**
+
+5. **Floating Support Bubbles** (⚠️ CRITICAL - MUST INCLUDE ⚠️):
+   
+   **WhatsApp Bubble** - Add this EXACT code before </body>:
+   
+<!-- WhatsApp Floating Bubble -->
+<a href="https://wa.me/\${data.phone || '972504443333'}?text=היי,%20יש%20לי%20שאלה%20לגבי%20הקורסים" 
+   target="_blank" 
+   style="position: fixed; bottom: 20px; left: 20px; width: 64px; height: 64px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); z-index: 10000; transition: transform 0.3s ease;"
+   onmouseover="this.style.transform='scale(1.1)'"
+   onmouseout="this.style.transform='scale(1)'">
+    <svg width="36" height="36" fill="white" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.652a11.96 11.96 0 005.713 1.457h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+</a>
+
+6. **Trust Indicators**:
+   - "למידה מכל מקום", "תעודת השלמה", "גישה לכל החיים"
+
+7. **Contact/Footer**: Platform info, contact, social media
+
+**VISUAL EXCELLENCE:**
+- Course cards must be gorgeous with hover effects
+- Use consistent spacing and alignment
+- Add "חדש" or "פופולרי" badges where appropriate
+- Beautiful checkout button in cart
+- Mobile-responsive grid (1 col on mobile, 2-3 on desktop)
+
+**AFTER PURCHASE - VIDEO ACCESS:**
+After a user purchases a course, they should be able to access the course videos. The page should check if the user has purchased the course (from localStorage: \`purchasedCourses\`) and if so, display the video player with all course videos.
+
+CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete valid HTML starting with <!DOCTYPE html>.`,
 
         t: {
 
-            en: { title: "Course Page", label: "Course Name", description: "Market and register for a course or workshop.", guidance: "A <b>Course Page</b> is designed to market a course or workshop, introduce the instructor, and provide all necessary information for registration." },
+            en: { title: "Digital Courses", label: "Platform Name", description: "Sell online courses with video content.", guidance: "A <b>Digital Course Platform</b> is for selling pre-recorded video courses with instant access after purchase." },
 
-            he: { title: "דף קורס", label: "שם הקורס", description: "שיווק והרשמה לקורס או סדנה.", guidance: "<b>דף קורס</b> נועד לשווק קורס או סדנה, להציג את המרצה, ולספק את כל המידע הדרוש להרשמה." },
+            he: { title: "קורסים דיגיטליים", label: "שם הפלטפורמה", description: "מכור קורסים מקוונים עם תוכן וידאו.", guidance: "<b>פלטפורמת קורסים דיגיטליים</b> מיועדת למכירת קורסי וידאו מוקלטים עם גישה מיידית לאחר רכישה." },
 
-            es: { title: "Página de Curso", label: "Nombre del Curso", description: "Promociona e inscribe a un curso o taller.", guidance: "Una <b>Página de Curso</b> está diseñada para promocionar un curso o taller, presentar al instructor y proporcionar toda la información necesaria para la inscripción." },
+            es: { title: "Cursos Digitales", label: "Nombre de la Plataforma", description: "Vende cursos en línea con contenido de video.", guidance: "Una <b>Plataforma de Cursos Digitales</b> es para vender cursos de video pregrabados con acceso instantáneo después de la compra." },
 
-            fr: { title: "Page de Cours", label: "Nom du Cours", description: "Faites la promotion et l'inscription à un cours ou un atelier.", guidance: "Une <b>Page de Cours</b> est conçue pour promouvoir un cours ou un atelier, présenter l'instructeur et fournir toutes les informations nécessaires à l'inscription." }
+            fr: { title: "Cours Numériques", label: "Nom de la Plateforme", description: "Vendez des cours en ligne avec du contenu vidéo.", guidance: "Une <b>Plateforme de Cours Numériques</b> est destinée à la vente de cours vidéo préenregistrés avec accès instantané après l'achat." }
+
+        }
+
+    },
+
+    liveWorkshop: {
+
+        img: "https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?q=80&w=2074&auto=format&fit=crop",
+
+        fields: ['workshopDetails', 'websiteLink'],
+
+        structurePrompt: `Build a beautiful, professional workshop/webinar landing page with modern design aesthetic.
+
+**REQUIRED SECTIONS:**
+1. **Header** with navigation containing the provided external links ('Main Link', 'Additional External Link').
+
+2. **Hero Section** (id="home"): Choose ONE compelling hero layout:
+   - Option A: Full-width banner with workshop image + "הירשם עכשיו" CTA
+   - Option B: Split-screen with promotional text and instructor photo
+   - Option C: Centered with animated gradient background
+   - Option D: Video background with overlay
+
+Include: Workshop/Webinar name, tagline, date & time prominently displayed, instructor name.
+
+3. **Countdown Timer** (id="countdown-timer"): Beautiful, animated countdown with elements having IDs: days, hours, minutes, seconds. 
+   **CRITICAL**: For Hebrew, display order MUST be RIGHT-TO-LEFT: days, hours, minutes, seconds.
+   Style variations: 
+   - Circular timers with animations
+   - Card-based counters with shadows
+   - Minimalist numbers with labels
+
+4. **About the Workshop** (id="about"): Detailed description of what participants will learn.
+
+5. **About the Instructor** (id="instructor"): 
+   - **Circular** image (class="rounded-full")
+   - Instructor's name (from data)
+   - Bio and credentials
+
+6. **Who Should Attend** (id="for-whom"): Target audience description.
+
+7. **Workshop Details** (id="details"): 
+   - Date and time
+   - Location (physical address or "אונליין" for webinar)
+   - Duration
+   - Language
+
+8. **Registration Form** (id="registration"): Beautiful form that matches the design. 
+   Fields: name, email, phone, company (optional), message (optional)
+   Submit button: "הירשם לוובינר" or "הירשם לקורס"
+   
+   **FORM MUST:**
+   - Send data to /api/leads endpoint using fetch() POST
+   - Include pageId and userId from URL
+   - Show success message after submission
+   - NOT use WhatsApp for registration
+
+9. **Trust Indicators**: Testimonials from previous participants, number of attendees, certifications offered.
+
+10. **Footer**: Contact info, social media, legal links.
+
+**VISUAL EXCELLENCE:**
+- Modern, professional design
+- Clear hierarchy emphasizing CTA
+- Mobile-responsive
+- Smooth animations
+- Trust-building elements throughout
+
+Return complete valid HTML starting with <!DOCTYPE html>.`,
+
+        t: {
+
+            en: { title: "Workshop/Webinar", label: "Workshop Name", description: "Promote and register for live workshops or webinars.", guidance: "A <b>Workshop/Webinar Page</b> is designed to promote a live learning event and collect registrations." },
+
+            he: { title: "וובינר/קורס פרונטלי", label: "שם הקורס", description: "קדם והרשם לסדנאות או וובינרים חיים.", guidance: "<b>דף וובינר/קורס פרונטלי</b> נועד לקדם אירוע למידה חי ולאסוף הרשמות." },
+
+            es: { title: "Taller/Webinar", label: "Nombre del Taller", description: "Promociona e inscribe a talleres o webinars en vivo.", guidance: "Una <b>Página de Taller/Webinar</b> está diseñada para promocionar un evento de aprendizaje en vivo y recopilar inscripciones." },
+
+            fr: { title: "Atelier/Webinaire", label: "Nom de l'Atelier", description: "Faites la promotion et inscrivez-vous à des ateliers ou webinaires en direct.", guidance: "Une <b>Page d'Atelier/Webinaire</b> est conçue pour promouvoir un événement d'apprentissage en direct et collecter des inscriptions." }
 
         }
 
@@ -389,7 +559,7 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 
         fields: ['productManagement'],
 
-        structurePrompt: `Build a stunning, professional online store with ${data.style} design aesthetic. Create a store that looks like it was designed by a top e-commerce agency.
+        structurePrompt: `Build a stunning, professional online store with modern design aesthetic. Create a store that looks like it was designed by a top e-commerce agency.
 
 **ABSOLUTELY CRITICAL - YOU MUST INCLUDE THIS EXACT META TAG IN THE <head> SECTION:**
 <meta name="page-type" content="store">
@@ -462,6 +632,27 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
             he: { title: "חנות מקוונת", label: "שם החנות", description: "צור חנות מקוונת מלאה.", guidance: "<b>חנות מקוונת</b> היא אתר מסחר אלקטרוני מלא עם קטלוג מוצרים, עגלת קניות ופונקציית תשלום." },
 
             ar: { title: "متجر إلكتروني", label: "اسم المتجر", description: "أنشئ متجرًا إلكترونيًا كاملاً.", guidance: "<b>المتجر الإلكتروني</b> هو موقع تجارة إلكترونية كامل مع كتالوج منتجات وعربة تسوق ووظيفة دفع." }
+        }
+    },
+
+    serviceProvider: {
+        img: "https://images.unsplash.com/photo-1581578731548-c6a0c3f2f7c8?q=80&w=2070&auto=format&fit=crop",
+        fields: ['serviceDetails', 'websiteLink'],
+        structurePrompt: `Build a professional service provider page with appointment booking functionality. Include header, hero section, services list, about section, and contact information. Add appointment booking form with calendar integration.`,
+
+        t: {
+            en: { 
+                title: "Service Provider", 
+                label: "Professional/Company Name", 
+                description: "For service professionals like plumbers, electricians, etc.", 
+                guidance: "A <b>Service Provider Page</b> is designed for tradespeople and professionals who provide on-demand services." 
+            },
+            he: { 
+                title: "נותן שירותים", 
+                label: "שם המקצוע/העסק", 
+                description: "למקצועני שירותים כמו שרברבים, חשמלאים וכו'.", 
+                guidance: "<b>דף נותן שירותים</b> נועד לאנשי מקצוע ובעלי מלאכה המספקים שירותים לפי דרישה." 
+            }
         }
     }
 };

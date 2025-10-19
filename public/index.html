@@ -3100,6 +3100,8 @@
                 case 'event': return 'ניהול מוזמנים';
                 case 'store': 
                 case 'onlineStore': return 'ניהול חנות';
+                case 'course': return 'ניהול קורסים';
+                case 'workshop': return 'ניהול נרשמים';
                 default: return 'ניהול';
             }
         }
@@ -3109,6 +3111,8 @@
                 case 'event': return `/event-admin.html?page=${fileName}&userId=${userId}`;
                 case 'store':
                 case 'onlineStore': return `/page-management.html?page=${fileName}&userId=${userId}`;
+                case 'course': return `/course-management.html?pageId=${fileName}&userId=${userId}`;
+                case 'workshop': return `/leads-admin.html?page=${fileName}&userId=${userId}`;
                 default: return `/leads-admin.html?page=${fileName}&userId=${userId}`;
             }
         }

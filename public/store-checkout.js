@@ -139,7 +139,22 @@
             }
         }
         
-        console.log('🎯 Final values:', { name: actualName, price: actualPrice, image: actualImage });
+        console.log('🎯 Final values BEFORE bot check:', { name: actualName, price: actualPrice, image: actualImage });
+        console.log('🔍 Button found?', !!button);
+        
+        // If no button was found (AI bot call), use provided values directly
+        if (!button) {
+            console.log('🤖 AI Bot call detected - using provided values directly');
+            console.log('📥 Provided values:', { productName, price, image });
+            actualName = productName;
+            actualPrice = parseFloat(price);
+            actualImage = image || '';
+            console.log('✅ Updated to provided values:', { actualName, actualPrice, actualImage });
+        } else {
+            console.log('👆 User clicked button - using DOM values');
+        }
+        
+        console.log('🎯 Final values AFTER bot check:', { name: actualName, price: actualPrice, image: actualImage });
         
         // Validate that we have good values
         if (!actualName || actualName === 'undefined' || actualName === 'null') {
@@ -172,15 +187,18 @@
                 actualImage = '';
             }
             
-            cart.push({
+            const newItem = {
                 id: Date.now(),
                 name: actualName,
                 price: actualPrice,
                 quantity: 1,
                 image: actualImage || ''
-            });
-            console.log(`🆕 Added new item: ${actualName}`);
+            };
+            cart.push(newItem);
+            console.log(`🆕 Added new item:`, newItem);
         }
+        
+        console.log('📋 Current cart:', JSON.parse(JSON.stringify(cart)));
         
         // Save and update display
         try {
@@ -264,9 +282,13 @@
     };
     
     window.updateCartDisplay = function() {
+        console.log('🔄 updateCartDisplay() called');
         cart = JSON.parse(localStorage.getItem('cart_' + storeId) || '[]');
+        console.log('📦 Cart from localStorage:', cart);
+        console.log('🏪 Store ID:', storeId);
         const cartItems = document.getElementById('cart-items') || document.querySelector('.cart-items');
         const cartTotal = document.getElementById('cart-total') || document.querySelector('.cart-total');
+        console.log('🔍 Cart elements found:', { cartItems: !!cartItems, cartTotal: !!cartTotal });
         
         // Update cart count in button
         const cartCount = document.getElementById('cart-count');
@@ -713,18 +735,18 @@
         sidebar.innerHTML = `
             <div style="padding: 25px; height: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
-                <h3 style="margin: 0; font-size: 24px; font-weight: bold;">🛒 עגלת קניות</h3>
-                <button id="cart-close-x" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999; line-height: 1;">×</button>
+                    <h3 style="margin: 0; font-size: 24px; font-weight: bold;">🛒 עגלת קניות</h3>
+                    <button id="cart-close-x" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999; line-height: 1;">×</button>
                 </div>
-            <div class="cart-items" style="min-height: 200px; max-height: calc(100vh - 400px); overflow-y: auto;"></div>
+                <div class="cart-items" style="min-height: 200px; max-height: calc(100vh - 400px); overflow-y: auto;"></div>
                 <div class="cart-total" style="margin: 25px 0; font-weight: bold; text-align: center; font-size: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;"></div>
-            <button id="cart-clear-btn" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; margin-bottom: 10px; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
-                🗑️ נקה עגלה
-            </button>
-            <button id="cart-checkout-btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <button id="cart-clear-btn" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; margin-bottom: 10px; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+                    🗑️ נקה עגלה
+                </button>
+                <button id="cart-checkout-btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                     💳 המשך לתשלום
                 </button>
-            <button id="cart-close-btn" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">סגור</button>
+                <button id="cart-close-btn" style="width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">סגור</button>
             </div>
         `;
         

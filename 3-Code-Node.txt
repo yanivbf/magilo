@@ -1,0 +1,56 @@
+// Get AI response - try multiple paths
+const aiResponse = $input.item.json.output || $input.item.json.message || $input.item.json.text || $input.item.json;
+
+console.log('🤖 Raw AI Response:', typeof aiResponse, aiResponse);
+
+let result;
+
+try {
+  if (typeof aiResponse === 'string') {
+    // It's a string - need to parse
+    let clean = aiResponse.trim();
+    
+    // Remove markdown code blocks
+    clean = clean.replace(/```json\s*/g, '');
+    clean = clean.replace(/```\s*/g, '');
+    
+    // Remove escaped newlines
+    clean = clean.replace(/\\n/g, '');
+    clean = clean.replace(/\n/g, '');
+    
+    // Try to extract JSON object
+    const jsonMatch = clean.match(/\{[^]*\}/);
+    if (jsonMatch) {
+      clean = jsonMatch[0];
+    }
+    
+    console.log('🧹 Cleaned:', clean);
+    result = JSON.parse(clean);
+    
+  } else if (typeof aiResponse === 'object' && aiResponse !== null) {
+    // Already an object
+    result = aiResponse;
+  } else {
+    throw new Error('Unknown format');
+  }
+  
+  console.log('✅ Parsed result:', result);
+  
+} catch (e) {
+  console.error('❌ Parse error:', e.message);
+  result = {
+    message: 'סליחה, לא הבנתי...',
+    action: 'none'
+  };
+}
+
+// Return clean JSON object
+return {
+  json: {
+    message: result.message || 'סליחה, לא הבנתי...',
+    action: result.action || 'none',
+    category: result.category || null,
+    page_id: result.page_id || null
+  }
+};
+
