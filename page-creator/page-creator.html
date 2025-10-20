@@ -794,111 +794,6 @@
     
     
     
-                            <!-- Floating CTA Button Section -->
-                            <fieldset id="floating-cta-fieldset" class="form-fieldset">
-    
-                                <legend class="form-legend">כפתור קריאה לפעולה צף (אופציונלי)</legend>
-    
-                                <div class="space-y-4">
-    
-                                    <!-- Enable Floating CTA -->
-                                    <div class="flex items-center">
-                                        <input type="checkbox" id="enableFloatingCta" name="enableFloatingCta" class="h-4 w-4 text-purple-600 focus:ring-purple-600 border-gray-300 rounded">
-                                        <label for="enableFloatingCta" class="ms-2 block text-sm font-medium text-gray-900">הפעל כפתור קריאה לפעולה צף</label>
-                                    </div>
-    
-                                    <div id="floatingCtaOptions" style="display: none;" class="space-y-4 mt-4 p-4 bg-slate-50 rounded-lg">
-    
-                                        <!-- CTA Text -->
-                                        <div>
-                                            <label for="ctaText" class="block text-sm font-medium text-slate-700">טקסט הכפתור</label>
-                                            <input type="text" id="ctaText" name="ctaText" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" placeholder="קנה עכשיו! / הצטרף למבצע / הזמן עכשיו">
-                                        </div>
-    
-                                        <!-- CTA Link -->
-                                        <div>
-                                            <label for="ctaLink" class="block text-sm font-medium text-slate-700">קישור (אופציונלי)</label>
-                                            <input type="url" id="ctaLink" name="ctaLink" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" placeholder="https://...">
-                                            <p class="mt-1 text-xs text-slate-500">אם ריק, הכפתור יגלול למקטע ה-CTA בדף</p>
-                                        </div>
-    
-                                        <!-- CTA Style -->
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-2">סגנון הכפתור</label>
-                                            <div class="grid grid-cols-2 gap-3">
-                                                <div class="flex items-center">
-                                                    <input id="cta-style-solid" name="ctaStyle" type="radio" value="solid" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600" checked>
-                                                    <label for="cta-style-solid" class="ms-2 block text-sm text-gray-900">מלא</label>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <input id="cta-style-gradient" name="ctaStyle" type="radio" value="gradient" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600">
-                                                    <label for="cta-style-gradient" class="ms-2 block text-sm text-gray-900">גרדיאנט</label>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <input id="cta-style-pulse" name="ctaStyle" type="radio" value="pulse" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600">
-                                                    <label for="cta-style-pulse" class="ms-2 block text-sm text-gray-900">פעימה</label>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <input id="cta-style-flash" name="ctaStyle" type="radio" value="flash" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600">
-                                                    <label for="cta-style-flash" class="ms-2 block text-sm text-gray-900">מהבהב</label>
-                                                </div>
-                                            </div>
-                                        </div>
-    
-                                        <!-- CTA Position -->
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-2">מיקום הכפתור</label>
-                                            <div class="grid grid-cols-2 gap-3">
-                                                <div class="flex items-center">
-                                                    <input id="cta-pos-bottom-right" name="ctaPosition" type="radio" value="bottom-right" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600" checked>
-                                                    <label for="cta-pos-bottom-right" class="ms-2 block text-sm text-gray-900">למטה ימין</label>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <input id="cta-pos-bottom-left" name="ctaPosition" type="radio" value="bottom-left" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600">
-                                                    <label for="cta-pos-bottom-left" class="ms-2 block text-sm text-gray-900">למטה שמאל</label>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <input id="cta-pos-bottom-center" name="ctaPosition" type="radio" value="bottom-center" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600">
-                                                    <label for="cta-pos-bottom-center" class="ms-2 block text-sm text-gray-900">למטה מרכז</label>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <input id="cta-pos-top-center" name="ctaPosition" type="radio" value="top-center" class="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-600">
-                                                    <label for="cta-pos-top-center" class="ms-2 block text-sm text-gray-900">למעלה מרכז</label>
-                                                </div>
-                                            </div>
-                                        </div>
-    
-                                        <!-- Countdown Timer -->
-                                        <div>
-                                            <div class="flex items-center mb-2">
-                                                <input type="checkbox" id="enableCountdown" name="enableCountdown" class="h-4 w-4 text-purple-600 focus:ring-purple-600 border-gray-300 rounded">
-                                                <label for="enableCountdown" class="ms-2 block text-sm font-medium text-gray-900">הוסף שעון ספירה לאחור</label>
-                                            </div>
-    
-                                            <div id="countdownOptions" style="display: none;" class="space-y-3 mt-2 p-3 bg-white rounded border border-slate-200">
-                                                <div>
-                                                    <label for="countdownText" class="block text-sm font-medium text-slate-700">טקסט לפני השעון</label>
-                                                    <input type="text" id="countdownText" name="countdownText" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" placeholder="המבצע נגמר בעוד">
-                                                </div>
-    
-                                                <div class="grid grid-cols-2 gap-3">
-                                                    <div>
-                                                        <label for="countdownDate" class="block text-sm font-medium text-slate-700">תאריך סיום</label>
-                                                        <input type="date" id="countdownDate" name="countdownDate" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm">
-                                                    </div>
-                                                    <div>
-                                                        <label for="countdownTime" class="block text-sm font-medium text-slate-700">שעת סיום</label>
-                                                        <input type="time" id="countdownTime" name="countdownTime" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" value="23:59">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-    
-                                    </div>
-    
-                                </div>
-    
-                            </fieldset>
     
     
     
@@ -1225,9 +1120,6 @@
 
                 label_youtube_link: "Link only",
 
-                fieldset_floating_cta: "Floating Call-to-Action Button (Optional)",
-
-                label_enable_floating_cta: "Enable Floating CTA Button",
 
                 label_cta_text: "Button Text",
 
@@ -1369,9 +1261,6 @@
 
                 label_youtube_link: "רק קישור",
 
-                fieldset_floating_cta: "כפתור קריאה לפעולה צף (אופציונלי)",
-
-                label_enable_floating_cta: "הפעל כפתור קריאה לפעולה צף",
 
                 label_cta_text: "טקסט הכפתור",
 
@@ -1754,11 +1643,12 @@
 
         const pageTemplates = {
 
+            // 1. דף נחיתה - ראשון
             landing: {
 
                 img: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop",
 
-                fields: ['websiteLink'],
+                fields: ['websiteLink', 'branches'],
 
                 structurePrompt: `Build a landing page with only the following sections, in this order: 1. A simple Header containing the provided external links ('Main Link', 'Additional External Link') as text links or small buttons on the side. 2. Hero Section (id="home") with a headline, description, and a central CTA button. 3. Benefits section (id="benefits") with 3 key benefits. 4. Contact form section (id="contact").`,
 
@@ -1780,11 +1670,22 @@
 
             },
 
+            // דף מוצר - מתמקד במוצר בלבד
+            product: {
+                img: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=2126&auto=format&fit=crop",
+                fields: ['productDetails', 'productGallery', 'branches'],
+                structurePrompt: `Build a product-focused page with only the following sections: 1. Header with product name. 2. Hero section with product image and key features. 3. Product details section with specifications. 4. Gallery section with multiple product images. 5. Purchase section with pricing and CTA. 6. Contact section.`,
+                t: {
+                    en: { title: "Product Page", label: "Product Name", description: "A focused page showcasing a single product.", guidance: "A <b>Product Page</b> is designed to showcase one specific product with maximum impact and conversion focus." },
+                    he: { title: "דף מוצר", label: "שם המוצר", description: "דף ממוקד המציג מוצר יחיד.", guidance: "<b>דף מוצר</b> נועד להציג מוצר ספציפי אחד עם השפעה מקסימלית ומיקוד המרות." }
+                }
+            },
+
             general: {
 
                 img: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1932&auto=format&fit=crop",
 
-                fields: ['websiteLink'],
+                fields: ['websiteLink', 'branches'],
 
                  structurePrompt: `Build a brand page with only the following sections, in this order: 1. Header with a logo and navigation. In the navigation, include internal links to relevant sections (About, Services, Contact) and also the provided external links ('Main Link', 'Additional External Link'). If button text is provided, use it. The external links should be prominent, perhaps as buttons. 2. Hero Section (id="home"). 3. About section (id="about"). 4. Services section (id="services"). 5. Contact section (id="contact"). 6. Footer.`,
 
@@ -1850,7 +1751,7 @@
 
                 img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop",
 
-                fields: ['menuCategories', 'menuOptions'],
+                fields: ['menuCategories', 'branches'],
 
                 structurePrompt: `Build a restaurant menu page with the following sections only: 1. Header (id="header") with the business name. 2. Hero section with restaurant atmosphere. 3. Menu categories with items, prices, descriptions, and "Add to Cart" buttons - USE THE EXACT MENU DATA PROVIDED IN THE PROMPT. 4. Cart placeholder (id="cart-placeholder") - DO NOT create actual cart HTML. 5. Delivery information section. 6. Contact details and WhatsApp button.`,
 
@@ -1967,7 +1868,7 @@
 
                 img: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?q=80&w=1887&auto=format&fit=crop",
 
-                fields: ['eventDetails'],
+                fields: ['eventDetails', 'branches'],
 
                 structurePrompt: `Build an event invitation with the following sections: 
 1. Hero Section (id="home") with the event name and date
@@ -1993,7 +1894,7 @@
 
                 img: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=2074&auto=format&fit=crop",
 
-                fields: ['courseManagement', 'websiteLink'],
+                fields: ['courseManagement', 'websiteLink', 'branches'],
 
                 structurePrompt: `Build a professional online course platform with modern design aesthetic. Create a platform that looks like Udemy or Coursera.
 
@@ -2106,7 +2007,7 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
                 img: "https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?q=80&w=2074&auto=format&fit=crop",
 
-                fields: ['workshopDetails', 'websiteLink'],
+                fields: ['workshopDetails', 'websiteLink', 'branches'],
 
                 structurePrompt: `Build a beautiful, professional workshop/webinar landing page with modern design aesthetic.
 
@@ -2206,7 +2107,7 @@ Return complete valid HTML starting with <!DOCTYPE html>.`,
 
                 img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1973&auto=format&fit=crop",
 
-                fields: ['propertyGallery'],
+                fields: ['propertyGallery', 'branches'],
 
                 structurePrompt: `Build a stunning real estate properties showcase page with the following sections:
 
@@ -2491,7 +2392,7 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
                 img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=2340&auto=format&fit=crop",
 
-                fields: ['productManagement'],
+                fields: ['productManagement', 'branches'],
 
                 structurePrompt: `Build a complete online store with modern design. Include:
 
@@ -2560,7 +2461,7 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
                 img: "https://images.unsplash.com/photo-1556745753-b2904692b3cd?q=80&w=2073&auto=format&fit=crop",
 
-                fields: ['serviceDetails', 'websiteLink', 'appointmentBooking'],
+                fields: ['serviceDetails', 'websiteLink', 'appointmentBooking', 'branches'],
 
                 structurePrompt: `Build a professional service provider page with appointment booking functionality.
 
@@ -2591,9 +2492,9 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
                 t: {
 
-                    en: { title: "Service Provider", label: "Professional/Company Name", description: "For service professionals like plumbers, electricians, etc.", guidance: "A <b>Service Provider Page</b> is designed for tradespeople and professionals who provide on-demand services." },
+                    en: { title: "Service Provider", label: "Professional/Company Name", description: "For service professionals like plumbers, electricians, etc. Includes appointment booking option.", guidance: "A <b>Service Provider Page</b> is designed for tradespeople and professionals who provide on-demand services. Includes advanced appointment booking system." },
 
-                    he: { title: "נותן שירותים", label: "שם המקצוע/העסק", description: "למקצועני שירותים כמו שרברבים, חשמלאים וכו'.", guidance: "<b>דף נותן שירותים</b> נועד לאנשי מקצוע ובעלי מלאכה המספקים שירותים לפי דרישה." },
+                    he: { title: "נותן שירותים", label: "שם המקצוע/העסק", description: "למקצועני שירותים כמו שרברבים, חשמלאים וכו'. כולל אופציה לזימון תורים.", guidance: "<b>דף נותן שירותים</b> נועד לאנשי מקצוע ובעלי מלאכה המספקים שירותים לפי דרישה. כולל מערכת זימון תורים מתקדמת." },
 
                     es: { title: "Proveedor de Servicios", label: "Nombre Profesional/Empresa", description: "Para profesionales como plomeros, electricistas, etc.", guidance: "Una <b>Página de Proveedor de Servicios</b> está diseñada para profesionales y artesanos que brindan servicios bajo demanda." },
 
@@ -2943,8 +2844,8 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
             const translations = {
                 'he': {
                     'modal_close_btn': 'סגור',
-                    'main_title': 'יוצר דפי נחיתה מתקדם',
-                    'main_subtitle': 'צור דף נחיתה מקצועי תוך דקות עם בוט AI חכם',
+                    'main_title': 'AutoPage - צור את הממשק שלך',
+                    'main_subtitle': 'צור דף מקצועי תוך דקות עם בוט AI חכם',
                     'create_page_title': 'צור דף',
                     'form_subtitle': 'מלא את הפרטים הבאים',
                     'fieldset_basic_details': 'פרטים בסיסיים',
@@ -2998,8 +2899,8 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
                 },
                 'en': {
                     'modal_close_btn': 'Close',
-                    'main_title': 'Advanced Landing Page Creator',
-                    'main_subtitle': 'Create professional landing pages in minutes with smart AI bot',
+                    'main_title': 'AutoPage - Create Your Interface',
+                    'main_subtitle': 'Create professional pages in minutes with smart AI bot',
                     'create_page_title': 'Create Page',
                     'form_subtitle': 'Fill in the following details',
                     'fieldset_basic_details': 'Basic Details',
@@ -6237,7 +6138,27 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
         function populateTemplateGrid() {
 
-            ui.templateGrid.innerHTML = Object.entries(pageTemplates).map(([key, templateData]) => {
+            // סדר מועדף לפי בקשת המשתמש
+            const preferredOrder = [
+                'landing',      // 1. דף נחיתה - ראשון
+                'onlineStore',  // 2. חנות מכוונת - שני
+                'serviceProvider', // 3. נותני שירות - שלישי
+                'onlineCourse', // 4. קורסים - רביעי
+                'realEstate',   // 5. נכסים - חמישי
+                'product',      // 6. דף מוצר - שישי
+                // השאר בסדר הקיים
+            ];
+            
+            // צור רשימה ממוינת של הסוגים
+            const sortedEntries = preferredOrder
+                .filter(key => pageTemplates[key]) // רק סוגים שקיימים
+                .map(key => [key, pageTemplates[key]])
+                .concat(
+                    Object.entries(pageTemplates)
+                        .filter(([key]) => !preferredOrder.includes(key))
+                );
+
+            ui.templateGrid.innerHTML = sortedEntries.map(([key, templateData]) => {
 
                 const t = templateData.t[state.currentLanguage]; // Get translated content
 
@@ -6298,6 +6219,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     </div>
 
                 </fieldset>`,
+
 
                 propertyGallery: `
                 <fieldset class="form-fieldset" data-field="propertyGallery">
@@ -7055,7 +6977,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                                                     <div class="grid grid-cols-3 gap-2">
                                                         <div>
                                                             <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                                            <input type="text" name="itemOptionName_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="גדל" value="גדל">
+                                                            <input type="text" name="itemOptionName_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="מנה שניה פיצה" value="מנה שניה פיצה">
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs text-gray-600 mb-1">מחיר נוסף</label>
@@ -7065,7 +6987,32 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                                                             <label class="block text-xs text-gray-600 mb-1">סוג</label>
                                                             <select name="itemOptionType_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
                                                                 <option value="single">יחידה</option>
-                                                                <option value="multiple">מרובה</option>
+                                                                <option value="multiple" selected>מרובה</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Second option example -->
+                                                <div class="item-option bg-white p-2 rounded border border-blue-100">
+                                                    <div class="flex justify-between items-center mb-1">
+                                                        <span class="text-xs text-blue-700">אופציה #2</span>
+                                                        <button type="button" onclick="this.closest('.item-option').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                                    </div>
+                                                    <div class="grid grid-cols-3 gap-2">
+                                                        <div>
+                                                            <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
+                                                            <input type="text" name="itemOptionName_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="זיתים" value="זיתים">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs text-gray-600 mb-1">מחיר נוסף</label>
+                                                            <input type="number" name="itemOptionPrice_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="5" min="0" value="5">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs text-gray-600 mb-1">סוג</label>
+                                                            <select name="itemOptionType_0_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
+                                                                <option value="single">יחידה</option>
+                                                                <option value="multiple" selected>מרובה</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -7102,179 +7049,85 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     </div>
                 </fieldset>`,
 
-                menuOptions: `
-                <fieldset class="form-fieldset" data-field="menuOptions">
-                    <legend class="form-legend">🍕 אופציות ותוספות לתפריט</legend>
-                    <div class="space-y-6">
-                        
-                        <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-4">
-                            <h4 class="font-semibold text-blue-900 mb-2">🍕 אופציות ותוספות למנות</h4>
-                            <p class="text-sm text-blue-700">
-                                <strong>מה כולל:</strong> הגדר אופציות ותוספות למנות (למשל: פיצה - גדול/קטן, תוספות: גבינה, פטריות, זיתים). כל תוספת יכולה לכלול מחיר נוסף.
-                            </p>
+                productDetails: `
+                <fieldset class="form-fieldset" data-field="productDetails">
+                    <legend class="form-legend">📦 פרטי מוצר</legend>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">שם המוצר</label>
+                            <input type="text" name="productName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="שם המוצר">
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">מחיר (₪)</label>
+                            <input type="number" name="productPrice" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">תיאור המוצר</label>
+                            <textarea name="productDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="תיאור מפורט של המוצר"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">מפרט טכני</label>
+                            <textarea name="productSpecs" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="מפרט טכני של המוצר"></textarea>
+                        </div>
+                    </div>
+                </fieldset>`,
 
-                        <!-- Menu Options Container -->
-                        <div id="menu-options-container" class="space-y-6">
-                            
-                            <!-- Option Group 1: Pizza Sizes -->
-                            <div class="menu-option-group bg-white p-5 rounded-lg border-2 border-blue-200 shadow-sm">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h5 class="font-semibold text-blue-900 text-lg">🍕 קבוצת אופציות: גדלי פיצה</h5>
-                                    <button type="button" onclick="this.closest('.menu-option-group').remove();" class="text-red-600 hover:text-red-800 font-semibold text-sm">
-                                        ✖ הסר קבוצה
-                                    </button>
+                productGallery: `
+                <fieldset class="form-fieldset" data-field="productGallery">
+                    <legend class="form-legend">🖼️ גלריית מוצר</legend>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                            <h4 class="font-semibold text-blue-900 mb-2">📸 תמונות מוצר</h4>
+                            <p class="text-sm text-blue-700">הוסף תמונות של המוצר מכמה זוויות שונות</p>
+                        </div>
+                        <div id="product-images-container" class="space-y-3">
+                            <div class="product-image-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">📸 תמונה #1</span>
+                                    <button type="button" onclick="this.closest('.product-image-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
                                 </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">שם קבוצת האופציות</label>
-                                    <input type="text" name="optionGroupName[]" value="גדלי פיצה" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="למשל: גדלי פיצה, סוגי בשר, רמת חריפות...">
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">סוג האופציות</label>
-                                    <select name="optionType[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                        <option value="single">בחירה יחידה (רדיו)</option>
-                                        <option value="multiple">בחירה מרובה (צ'קבוקס)</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="option-items-container space-y-3" data-option-index="0">
-                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-sm font-medium text-gray-700">🍕 אופציה #1</span>
-                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                                <input type="text" name="optionName_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="פיצה קטנה" value="פיצה קטנה">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                                                <input type="number" name="optionPrice_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="0" min="0" value="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-sm font-medium text-gray-700">🍕 אופציה #2</span>
-                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                                <input type="text" name="optionName_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="פיצה גדולה" value="פיצה גדולה">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                                                <input type="number" name="optionPrice_0[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="10" min="0" value="10">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <button type="button" onclick="addNewOptionItem(this, 0)" class="w-full mt-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
-                                    ➕ הוסף אופציה חדשה
-                                </button>
-                            </div>
-                            
-                            <!-- Option Group 2: Toppings -->
-                            <div class="menu-option-group bg-white p-5 rounded-lg border-2 border-blue-200 shadow-sm">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h5 class="font-semibold text-blue-900 text-lg">🧀 קבוצת אופציות: תוספות</h5>
-                                    <button type="button" onclick="this.closest('.menu-option-group').remove();" class="text-red-600 hover:text-red-800 font-semibold text-sm">
-                                        ✖ הסר קבוצה
-                                    </button>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">שם קבוצת האופציות</label>
-                                    <input type="text" name="optionGroupName[]" value="תוספות" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="למשל: גדלי פיצה, סוגי בשר, רמת חריפות...">
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">סוג האופציות</label>
-                                    <select name="optionType[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                        <option value="multiple">בחירה מרובה (צ'קבוקס)</option>
-                                        <option value="single">בחירה יחידה (רדיו)</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="option-items-container space-y-3" data-option-index="1">
-                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-sm font-medium text-gray-700">🧀 אופציה #1</span>
-                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                                <input type="text" name="optionName_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="גבינה נוספת" value="גבינה נוספת">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                                                <input type="number" name="optionPrice_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="5" min="0" value="5">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-sm font-medium text-gray-700">🍄 אופציה #2</span>
-                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                                <input type="text" name="optionName_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="פטריות" value="פטריות">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                                                <input type="number" name="optionPrice_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="3" min="0" value="3">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-sm font-medium text-gray-700">🫒 אופציה #3</span>
-                                            <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                                <input type="text" name="optionName_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="זיתים" value="זיתים">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                                                <input type="number" name="optionPrice_1[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="4" min="0" value="4">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <button type="button" onclick="addNewOptionItem(this, 1)" class="w-full mt-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
-                                    ➕ הוסף אופציה חדשה
-                                </button>
+                                <input type="url" name="productImage[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="קישור לתמונה">
                             </div>
                         </div>
-                        
-                        <button type="button" onclick="addNewOptionGroup()" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                            ➕ הוסף קבוצת אופציות חדשה
+                        <button type="button" onclick="addNewProductImage()" class="w-full px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                            ➕ הוסף תמונה נוספת
                         </button>
-                        
-                        <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200">
-                            <h4 class="font-semibold text-green-900 mb-2">✅ מה יקרה בדף:</h4>
-                            <ul class="text-sm text-green-700 space-y-1">
-                                <li>• 🍕 כל מנה תוכל לכלול אופציות ותוספות</li>
-                                <li>• 💰 מחירים נוספים יועברו לעגלת הקניות</li>
-                                <li>• 📝 הלקוח יוכל לבחור אופציות לפני הוספה לעגלה</li>
-                                <li>• 🛒 סיכום מחיר כולל יוצג בעגלה</li>
-                            </ul>
-                        </div>
+                    </div>
+                </fieldset>`,
 
+                branches: `
+                <fieldset class="form-fieldset" data-field="branches">
+                    <legend class="form-legend">🏢 סניפים</legend>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="enableBranches" name="enableBranches" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                <label for="enableBranches" class="text-sm font-medium text-blue-900">הוסף כפתור "סניפים" מתחת לכתובת</label>
+                            </div>
+                            <p class="text-xs text-blue-700 mt-1">כפתור קטן שיפתח רשימת סניפים</p>
+                        </div>
+                        <div id="branches-container" class="space-y-3" style="display: none;">
+                            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                                <h4 class="font-semibold text-green-900 mb-2">📍 ניהול סניפים</h4>
+                                <p class="text-sm text-green-700">הוסף כתובות סניפים נוספים לעסק שלך</p>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="branch-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm font-medium text-gray-700">🏢 סניף #1</span>
+                                        <button type="button" onclick="this.closest('.branch-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <input type="text" name="branchName[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם הסניף">
+                                        <input type="text" name="branchAddress[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="כתובת הסניף">
+                                        <input type="tel" name="branchPhone[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="טלפון הסניף">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="addNewBranch()" class="w-full px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
+                                ➕ הוסף סניף נוסף
+                            </button>
+                        </div>
                     </div>
                 </fieldset>`
 
@@ -7317,6 +7170,11 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             });
 
             ui.detailsForm.addEventListener('submit', handleFormSubmit);
+            
+            // Make injectStoreScripts globally available BEFORE handleFormSubmit is called
+            if (typeof window.injectStoreScripts !== 'function') {
+                console.log('⚠️ injectStoreScripts not yet defined - will be available soon');
+            }
 
             if (ui.designSelectionContainer) {
 
@@ -7357,23 +7215,6 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
             document.getElementById('back-to-type-btn').addEventListener('click', () => switchView(ui.formView, ui.typeSelectionView));
 
-            // Floating CTA Toggle
-            const enableFloatingCtaCheckbox = document.getElementById('enableFloatingCta');
-            const floatingCtaOptions = document.getElementById('floatingCtaOptions');
-            const enableCountdownCheckbox = document.getElementById('enableCountdown');
-            const countdownOptions = document.getElementById('countdownOptions');
-
-            if (enableFloatingCtaCheckbox) {
-                enableFloatingCtaCheckbox.addEventListener('change', (e) => {
-                    floatingCtaOptions.style.display = e.target.checked ? 'block' : 'none';
-                });
-            }
-
-            if (enableCountdownCheckbox) {
-                enableCountdownCheckbox.addEventListener('change', (e) => {
-                    countdownOptions.style.display = e.target.checked ? 'block' : 'none';
-                });
-            }
 
             // Course Management - Add/Remove Courses
             // Global counter for courses
@@ -7514,13 +7355,13 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     return;
                 }
                 
-                const currentItemCount = itemsContainer.querySelectorAll('.menu-item').length + 1;
+                const currentItemCount = itemsContainer.querySelectorAll('.menu-item').length;
                 
                 const menuItem = document.createElement('div');
                 menuItem.className = 'menu-item bg-gray-50 p-3 rounded-lg border border-gray-200';
                 menuItem.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium text-gray-700">🍽️ מנה #${currentItemCount}</span>
+                        <span class="text-sm font-medium text-gray-700">🍽️ מנה #${currentItemCount + 1}</span>
                         <button type="button" onclick="this.closest('.menu-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
@@ -7542,7 +7383,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     <div class="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-xs font-medium text-blue-800">🍕 אופציות ותוספות למנה</span>
-                            <button type="button" onclick="addNewItemOption(this, ${categoryIndex}, 0)" class="text-blue-600 hover:text-blue-800 text-xs font-medium">➕ הוסף אופציה</button>
+                            <button type="button" onclick="addNewItemOption(this, ${categoryIndex}, ${currentItemCount})" class="text-blue-600 hover:text-blue-800 text-xs font-medium">➕ הוסף אופציה</button>
                         </div>
                         <div class="item-options-container space-y-2">
                             <!-- Default option -->
@@ -7554,15 +7395,15 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div>
                                         <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                        <input type="text" name="itemOptionName_${categoryIndex}_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="גדל">
+                                        <input type="text" name="itemOptionName_${categoryIndex}_${currentItemCount}[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="גדל">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-600 mb-1">מחיר נוסף</label>
-                                        <input type="number" name="itemOptionPrice_${categoryIndex}_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="0" min="0" value="0">
+                                        <input type="number" name="itemOptionPrice_${categoryIndex}_${currentItemCount}[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded" placeholder="0" min="0" value="0">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-600 mb-1">סוג</label>
-                                        <select name="itemOptionType_${categoryIndex}_0[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
+                                        <select name="itemOptionType_${categoryIndex}_${currentItemCount}[]" class="w-full px-1.5 py-1 text-xs border border-gray-300 rounded">
                                             <option value="single">יחידה</option>
                                             <option value="multiple">מרובה</option>
                                         </select>
@@ -7574,7 +7415,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 `;
                 
                 itemsContainer.appendChild(menuItem);
-                console.log(`✅ Added menu item #${currentItemCount} to category ${categoryIndex}`);
+                console.log(`✅ Added menu item #${currentItemCount + 1} to category ${categoryIndex}`);
             };
 
             // Global function to update category numbers
@@ -7637,110 +7478,73 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 optionsContainer.appendChild(optionItem);
                 console.log(`✅ Added option #${currentOptionCount} to item ${itemIndex} in category ${categoryIndex}`);
             };
-            
-            // Menu Options Management - Add/Remove Option Groups and Items
-            window.optionGroupCount = 1;
 
-            // Global function to add new option group
-            window.addNewOptionGroup = function() {
-                console.log('🍕 addNewOptionGroup called!');
+            // Global function to add new product image
+            window.addNewProductImage = function() {
+                console.log('📸 addNewProductImage called!');
                 
-                const optionsContainer = document.getElementById('menu-options-container');
-                if (!optionsContainer) {
-                    console.error('❌ menu-options-container not found!');
+                const container = document.getElementById('product-images-container');
+                if (!container) {
+                    console.error('❌ product-images-container not found!');
                     return;
                 }
                 
-                window.optionGroupCount++;
-                const optionIndex = window.optionGroupCount - 1;
+                const currentImageCount = container.querySelectorAll('.product-image-item').length + 1;
                 
-                const optionGroup = document.createElement('div');
-                optionGroup.className = 'menu-option-group bg-white p-5 rounded-lg border-2 border-blue-200 shadow-sm';
-                optionGroup.innerHTML = `
-                    <div class="flex justify-between items-center mb-4">
-                        <h5 class="font-semibold text-blue-900 text-lg">🍕 קבוצת אופציות #${optionIndex + 1}</h5>
-                        <button type="button" onclick="this.closest('.menu-option-group').remove();" class="text-red-600 hover:text-red-800 font-semibold text-sm">
-                            ✖ הסר קבוצה
-                        </button>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">שם קבוצת האופציות</label>
-                        <input type="text" name="optionGroupName[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="למשל: גדלי פיצה, סוגי בשר, רמת חריפות...">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">סוג האופציות</label>
-                        <select name="optionType[]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            <option value="single">בחירה יחידה (רדיו)</option>
-                            <option value="multiple">בחירה מרובה (צ'קבוקס)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="option-items-container space-y-3" data-option-index="${optionIndex}">
-                        <div class="option-item bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-sm font-medium text-gray-700">🍕 אופציה #1</span>
-                                <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                                    <input type="text" name="optionName_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם האופציה">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                                    <input type="number" name="optionPrice_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="0" min="0" value="0">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="button" onclick="addNewOptionItem(this, ${optionIndex})" class="w-full mt-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
-                        ➕ הוסף אופציה חדשה
-                    </button>
-                `;
-                
-                optionsContainer.appendChild(optionGroup);
-                console.log(`✅ Added option group #${optionIndex + 1}`);
-            };
-
-            // Global function to add new option item to a specific group
-            window.addNewOptionItem = function(button, optionIndex) {
-                console.log(`🍕 addNewOptionItem called for option group ${optionIndex}!`);
-                
-                const optionGroup = button.closest('.menu-option-group');
-                const itemsContainer = optionGroup.querySelector('.option-items-container');
-                
-                if (!itemsContainer) {
-                    console.error('❌ option-items-container not found!');
-                    return;
-                }
-                
-                const currentItemCount = itemsContainer.querySelectorAll('.option-item').length + 1;
-                
-                const optionItem = document.createElement('div');
-                optionItem.className = 'option-item bg-gray-50 p-3 rounded-lg border border-gray-200';
-                optionItem.innerHTML = `
+                const imageItem = document.createElement('div');
+                imageItem.className = 'product-image-item bg-gray-50 p-3 rounded-lg border border-gray-200';
+                imageItem.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium text-gray-700">🍕 אופציה #${currentItemCount}</span>
-                        <button type="button" onclick="this.closest('.option-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                        <span class="text-sm font-medium text-gray-700">📸 תמונה #${currentImageCount}</span>
+                        <button type="button" onclick="this.closest('.product-image-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">שם האופציה</label>
-                            <input type="text" name="optionName_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם האופציה">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">מחיר נוסף (₪)</label>
-                            <input type="number" name="optionPrice_${optionIndex}[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="0" min="0" value="0">
-                        </div>
+                    <input type="url" name="productImage[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="קישור לתמונה">
+                `;
+                
+                container.appendChild(imageItem);
+                console.log(`✅ Added product image #${currentImageCount}`);
+            };
+
+            // Global function to add new branch
+            window.addNewBranch = function() {
+                console.log('🏢 addNewBranch called!');
+                
+                const container = document.getElementById('branches-container');
+                if (!container) {
+                    console.error('❌ branches-container not found!');
+                    return;
+                }
+                
+                const currentBranchCount = container.querySelectorAll('.branch-item').length + 1;
+                
+                const branchItem = document.createElement('div');
+                branchItem.className = 'branch-item bg-gray-50 p-3 rounded-lg border border-gray-200';
+                branchItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">🏢 סניף #${currentBranchCount}</span>
+                        <button type="button" onclick="this.closest('.branch-item').remove();" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+                    </div>
+                    <div class="space-y-2">
+                        <input type="text" name="branchName[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="שם הסניף">
+                        <input type="text" name="branchAddress[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="כתובת הסניף">
+                        <input type="tel" name="branchPhone[]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded" placeholder="טלפון הסניף">
                     </div>
                 `;
                 
-                itemsContainer.appendChild(optionItem);
-                console.log(`✅ Added option item #${currentItemCount} to option group ${optionIndex}`);
+                container.appendChild(branchItem);
+                console.log(`✅ Added branch #${currentBranchCount}`);
             };
+
+            // Toggle branches container when checkbox is clicked
+            document.addEventListener('change', function(e) {
+                if (e.target.id === 'enableBranches') {
+                    const branchesContainer = document.getElementById('branches-container');
+                    if (branchesContainer) {
+                        branchesContainer.style.display = e.target.checked ? 'block' : 'none';
+                    }
+                }
+            });
+            
             
             // OLD FUNCTION - kept for backwards compatibility but not used
             function initCourseManagement() {
@@ -8318,8 +8122,12 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     
                     if (isStoreTemplate) {
                         console.log('✅ Injecting store/course scripts for preview... (isStore:', isStoreTemplate, ')');
-                        finalHtml = injectStoreScripts(finalHtml, data);
-                        console.log('✅ Store/Course scripts injected to preview!');
+                        if (typeof window.injectStoreScripts === 'function') {
+                            finalHtml = window.injectStoreScripts(finalHtml, data);
+                            console.log('✅ Store/Course scripts injected to preview!');
+                    } else {
+                            console.error('❌ window.injectStoreScripts is not defined!');
+                        }
                     } else {
                         console.log('❌ NOT a store/course, skipping store scripts');
                     }
@@ -9794,8 +9602,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
         function translatePageCreatorInterface(lang) {
             const translations = {
                 'he': {
-                    'main_title': 'יוצר דפי נחיתה מתקדם',
-                    'main_subtitle': 'צור דף נחיתה מקצועי תוך דקות עם בוט AI חכם',
+                    'main_title': 'AutoPage - צור את הממשק שלך',
+                    'main_subtitle': 'צור דף מקצועי תוך דקות עם בוט AI חכם',
                     'create_page_title': 'צור דף',
                     'form_subtitle': 'מלא את הפרטים הבאים',
                     'fieldset_basic_details': 'פרטים בסיסיים',
@@ -9841,8 +9649,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     'modal_close_btn': 'סגור'
                 },
                 'en': {
-                    'main_title': 'Advanced Landing Page Creator',
-                    'main_subtitle': 'Create professional landing pages in minutes with smart AI bot',
+                    'main_title': 'AutoPage - Create Your Interface',
+                    'main_subtitle': 'Create professional pages in minutes with smart AI bot',
                     'create_page_title': 'Create Page',
                     'form_subtitle': 'Fill in the following details',
                     'fieldset_basic_details': 'Basic Details',
@@ -11630,7 +11438,7 @@ function handleBotAction(data) {
 console.log('✅ AI Bot actions handler installed (UNIVERSAL - supports ALL page types)');
 </` + `script>
 
-${data.pageType === 'restaurantMenu' ? `<script src="/restaurant-menu.js"></script>` : ''}
+${data.pageType === 'restaurantMenu' ? '<script src="/restaurant-menu.js"><' + '/script>' : ''}
 `;
             
             if (htmlContent.includes('</body>')) {
@@ -11648,6 +11456,3 @@ ${data.pageType === 'restaurantMenu' ? `<script src="/restaurant-menu.js"></scri
         </script>
 
 </html>
-
-     הקובץ מוכן לקבלת הקוד שלך -->
-<!-- אנא הדבק את הקוד המלא כאן -->

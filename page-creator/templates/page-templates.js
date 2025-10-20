@@ -17,7 +17,12 @@ const pageTemplates = {
    - Option B: Centered with full-width background
    - Option C: Diagonal split with overlapping elements
    - Option D: Text overlay on full-screen image
-   Include: Headline (value proposition), subheadline, primary CTA button, trust indicator (e.g., "Join 1000+ happy customers")
+   Include: Headline (value proposition), subheadline, **LARGE PROMINENT CTA BUTTON** (e.g., "התחל עכשיו!", "קבל הצעה!", "צור קשר!"), trust indicator (e.g., "Join 1000+ happy customers")
+   **CTA BUTTON MUST:**
+   - Be large and eye-catching (min 200px wide, 50px high)
+   - Use bright, contrasting colors
+   - Have compelling text
+   - Scroll to the lead form when clicked
 
 3. **Benefits/Features Section** (id="benefits"): Show 3-4 key benefits. Choose ONE layout:
    - Option A: Card grid with icons
@@ -27,7 +32,14 @@ const pageTemplates = {
 
 4. **Social Proof** (id="testimonials"): Add 3 realistic testimonials with names and optional avatar placeholders
 
-5. **Lead Form** (id="lead-form-section"): **MANDATORY - YOU MUST INCLUDE THIS EXACT FORM:**
+5. **Call to Action Section** (id="cta"): **MANDATORY - YOU MUST INCLUDE THIS PROMINENT CTA:**
+   - Large, eye-catching section with contrasting background
+   - Compelling headline (e.g., "מוכן להתחיל?", "הצטרף אלינו היום!", "קבל הצעה מיוחדת!")
+   - Clear value proposition
+   - Large, prominent button that scrolls to the lead form
+   - Use bright colors and strong contrast
+
+6. **Lead Form** (id="lead-form-section"): **MANDATORY - YOU MUST INCLUDE THIS EXACT FORM:**
 
 \`\`\`html
 <section id="lead-form-section" style="padding: 60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -114,7 +126,19 @@ document.getElementById('landing-lead-form').addEventListener('submit', async fu
 
 6. **Footer**: Minimal footer with business info and links
 
-**CREATIVE FREEDOM**: Vary the visual treatment, animations, colors, and exact positioning while maintaining these core sections.`,
+7. **Final CTA Section** (id="final-cta"): **MANDATORY - ADD ONE MORE CTA BEFORE FOOTER:**
+   - Urgency-based CTA (e.g., "הזדמנות מוגבלת!", "הצטרף עכשיו!", "אל תחמיץ!")
+   - Different style from previous CTAs
+   - Clear call to action
+   - Button that scrolls to lead form
+
+**CREATIVE FREEDOM**: Vary the visual treatment, animations, colors, and exact positioning while maintaining these core sections.
+
+**CTA REQUIREMENTS SUMMARY:**
+- Hero section: Large prominent CTA button
+- Middle section: Dedicated CTA section (id="cta")
+- Before footer: Final urgency CTA (id="final-cta")
+- All CTAs must scroll to the lead form when clicked`,
 
         t: {
 
@@ -578,8 +602,6 @@ document.getElementById('rsvp-form').addEventListener('submit', async (e) => {
 - Beautiful checkout button in cart
 - Mobile-responsive grid (1 col on mobile, 2-3 on desktop)
 
-**FLOATING CTA BUTTON (if enabled in form):**
-If user enabled Floating CTA in the form, it will be injected automatically by JavaScript - DO NOT add it manually in HTML
 
 **AFTER PURCHASE - VIDEO ACCESS:**
 After a user purchases a course, they should be able to access the course videos. The page should check if the user has purchased the course (from localStorage: \`purchasedCourses\`) and if so, display the video player with all course videos.

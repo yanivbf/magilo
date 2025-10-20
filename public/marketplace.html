@@ -292,20 +292,121 @@
 
         async function loadPages() {
             try {
-                const response = await fetch('/api/public-pages');
-                const data = await response.json();
-                
-                allPages = data.pages || [];
+                let pagesResp = await fetch('/api/public-pages');
+                if (!pagesResp.ok) {
+                    // Fallback for older servers
+                    pagesResp = await fetch('/api/all-pages');
+                }
+
+                const contentType = pagesResp.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    throw new Error('Non-JSON response');
+                }
+
+                const payload = await pagesResp.json();
+                // Normalize to { pages: [...] }
+                const pagesArr = Array.isArray(payload) ? payload : (payload.pages || []);
+
+                allPages = pagesArr.map(p => ({
+                    pageId: p.pageId || (p.fileName ? String(p.fileName).replace(/_html$/, '') : ''),
+                    userId: p.userId,
+                    pageType: p.pageType || 'other',
+                    title: p.title || p.fileName || 'דף',
+                    description: p.description || '',
+                    url: p.url || (p.userId && (p.pageId || p.fileName) ? `/output/${p.userId}/${(p.pageId || String(p.fileName).replace(/_html$/, ''))}_html` : ''),
+                    thumbnail: p.thumbnail || ''
+                }));
                 filteredPages = allPages;
+
+                // Try to resolve thumbnails client-side for pages missing one
+                await Promise.all(filteredPages.map(async (page) => {
+                    if (!page.thumbnail) {
+                        page.thumbnail = await resolveThumbnailFromHtml(page).catch(() => '');
+                    }
+                }));
                 
                 displayPages();
                 updateResultsCount();
             } catch (error) {
                 console.error('Error loading pages:', error);
                 document.getElementById('loading-state').innerHTML = `
-                    <div class="text-red-500 text-lg">Failed to load pages. Please try again later.</div>
+                    <div class="text-red-500 text-lg">לא הצלחתי לטעון דפים. בדקי שהשרת רץ ועדכני את הדפדפן.</div>
                 `;
             }
+        }
+
+        async function resolveThumbnailFromHtml(page) {
+            if (!page || !page.url) return '';
+            try {
+                const resp = await fetch(page.url, { cache: 'no-store' });
+                const html = await resp.text();
+                // og:image
+                let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i) ||
+                        html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["'][^>]*>/i);
+                if (m && m[1]) return absolutizeImage(m[1], page);
+                // first <img>
+                m = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+                if (m && m[1]) return absolutizeImage(m[1], page);
+                // background-image
+                m = html.match(/background-image\s*:\s*url\(([^)]+)\)/i);
+                if (m && m[1]) return absolutizeImage(m[1].replace(/["']/g, ''), page);
+            } catch {}
+            // Fallback to first image in _html_data
+            return `/output/${page.userId}/${page.pageId}_html_data/cover.jpg`;
+        }
+
+        function absolutizeImage(src, page) {
+            if (!src) return '';
+            if (/^https?:\/\//i.test(src) || src.startsWith('/')) return src;
+            const rel = src.replace(/^\.\//, '');
+            const candidate1 = `/output/${page.userId}/${page.pageId}_html_data/${rel}`;
+            return candidate1;
+        }
+
+        function normalizeType(type) {
+            if (!type) return 'other';
+            const t = String(type).toLowerCase();
+            const map = {
+                'store': 'store',
+                'onlinestore': 'store',
+                'online_store': 'store',
+                'shop': 'store',
+                'serviceprovider': 'serviceProvider',
+                'service_provider': 'serviceProvider',
+                'service': 'serviceProvider',
+                'landing': 'landing',
+                'landingpage': 'landing',
+                'landing_page': 'landing',
+                'course': 'course',
+                'onlinecourse': 'course',
+                'online_course': 'course',
+                'event': 'event',
+                'restaurantmenu': 'restaurantMenu',
+                'restaurant_menu': 'restaurantMenu',
+                'menu': 'restaurantMenu',
+                'product': 'product',
+                'realestate': 'realEstate',
+                'real_estate': 'realEstate',
+                'businesscard': 'businessCard',
+                'business_card': 'businessCard',
+                'portfolio': 'portfolio'
+            };
+            return map[t] || type;
+        }
+
+        function inferTypeFromTitle(title) {
+            const s = (title || '').toLowerCase();
+            if (/(חנות|store|shop)/.test(s)) return 'store';
+            if (/(בעל|שירות|service)/.test(s)) return 'serviceProvider';
+            if (/(נחית|landing)/.test(s)) return 'landing';
+            if (/(קורס|course)/.test(s)) return 'course';
+            if (/(אירוע|event|חתונ)/.test(s)) return 'event';
+            if (/(תפריט|מסעד|menu|restaurant)/.test(s)) return 'restaurantMenu';
+            if (/(מוצר|product)/.test(s)) return 'product';
+            if (/(נדל|real\s?estate)/.test(s)) return 'realEstate';
+            if (/(כרטיס ביקור|business\s?card)/.test(s)) return 'businessCard';
+            if (/(תיק עבודות|portfolio)/.test(s)) return 'portfolio';
+            return 'other';
         }
 
         function filterByCategory(category) {
@@ -324,7 +425,10 @@
             if (category === 'all') {
                 filteredPages = allPages;
             } else {
-                filteredPages = allPages.filter(page => page.pageType === category || page.pageType === category + 'Page');
+                filteredPages = allPages.filter(page => {
+                    const normalized = normalizeType(page.pageType || inferTypeFromTitle(page.title));
+                    return normalized === category;
+                });
             }
             
             // Apply search if active
@@ -405,8 +509,9 @@
             // Determine image source
             const imageHtml = page.thumbnail 
                 ? `<img src="${page.thumbnail}" alt="${escapeHtml(page.title)}" class="w-full h-48 object-cover">`
-                : `<div class="h-48 bg-gradient-to-br from-purple-400 to-indigo-600 flex items-center justify-center text-white text-6xl">
-                        ${icon}
+                : `<div class="h-48 bg-gradient-to-br from-purple-400 to-indigo-600 flex flex-col items-center justify-center text-white px-4 text-center">
+                        <div class="text-5xl mb-2">${icon}</div>
+                        <div class="text-base md:text-lg font-semibold leading-tight line-clamp-2">${escapeHtml(page.title)}</div>
                    </div>`;
             
             return `
@@ -424,7 +529,7 @@
                         <p class="text-gray-600 text-sm mb-4 line-clamp-2">
                             ${escapeHtml(page.description || 'לחץ כדי לחקור דף מדהים זה')}
                         </p>
-                        <a href="/pages/${page.userId}/${page.pageId}" 
+                        <a href="/view/${page.userId}/${page.pageId}_html" 
                            target="_blank"
                            class="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center py-3 rounded-lg font-semibold transition">
                             בקר בדף ←
@@ -449,8 +554,9 @@
             // Determine image source for list view
             const listImageHtml = page.thumbnail 
                 ? `<img src="${page.thumbnail}" alt="${escapeHtml(page.title)}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0">`
-                : `<div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-xl flex items-center justify-center text-white text-3xl flex-shrink-0">
-                        ${icon}
+                : `<div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-xl flex flex-col items-center justify-center text-white text-center px-1 flex-shrink-0">
+                        <div class="text-2xl">${icon}</div>
+                        <div class="text-[10px] font-semibold leading-tight line-clamp-2">${escapeHtml(page.title)}</div>
                    </div>`;
             
             return `
@@ -466,30 +572,33 @@
                             </span>
                         </div>
                         <p class="text-gray-600 text-sm line-clamp-1">
-                            ${escapeHtml(page.description || 'Click to explore this amazing page')}
+                            ${escapeHtml(page.description || 'לחץ כדי לחקור דף מדהים זה')}
                         </p>
                     </div>
-                    <a href="/pages/${page.userId}/${page.pageId}" 
+                    <a href="/view/${page.userId}/${page.pageId}_html" 
                        target="_blank"
                        class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition flex-shrink-0">
-                        Visit →
+                        בקר בדף ←
                     </a>
                 </div>
             `;
         }
 
         function getCategoryName(type) {
+            const t = normalizeType(type);
             const names = {
-                store: 'Store',
-                onlineStore: 'Store',
-                serviceProvider: 'Service',
-                event: 'Event',
-                course: 'Course',
-                landing: 'Landing Page',
-                portfolio: 'Portfolio',
-                businessCard: 'Business Card'
+                store: 'חנות',
+                serviceProvider: 'בעלי מקצוע',
+                event: 'אירוע',
+                course: 'קורס',
+                landing: 'דף נחיתה',
+                portfolio: 'תיק עבודות',
+                businessCard: 'כרטיס ביקור',
+                restaurantMenu: 'תפריט מסעדה',
+                product: 'מוצר',
+                realEstate: 'נדל"ן'
             };
-            return names[type] || 'Page';
+            return names[t] || 'דף';
         }
 
         function changeView(view) {
@@ -546,7 +655,7 @@
         </div>
         <div class="ai-chat-input-area">
             <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="מה אתה מחפש?" onkeypress="if(event.key==='Enter') sendAIMessage()">
-            <button class="ai-send-btn" onclick="sendAIMessage()">שלח</button>
+            <button class="ai-send-btn" onclick="sendAIMessage()">Send</button>
         </div>
     </div>
 
@@ -763,8 +872,19 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        user_message: userMessage,
-                        page_type: 'marketplace',
+                        // Align with n8n prompt variables
+                        userMessage: userMessage,
+                        pageType: 'marketplace',
+                        businessText: 'AutoPage Marketplace',
+                        contextText: `קטגוריה נוכחית: ${currentCategory === 'all' ? 'הכל' : currentCategory}. סה"כ דפים: ${allPages.length}.`,
+                        // Provide structured content the bot can act upon if needed
+                        pageContent: {
+                            products: [],
+                            appointments: { available: [], booked: [] },
+                            // Expose pages list so the bot can reference and return actions (e.g., scroll_to_page)
+                            pages: allPagesContext
+                        },
+                        // Keep old fields for backward compatibility
                         current_category: currentCategory,
                         filtered_pages: filteredPagesContext,
                         available_pages: allPagesContext,

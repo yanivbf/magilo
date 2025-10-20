@@ -98,6 +98,9 @@ app.use('/pages', (req, res, next) => {
     next();
 }, express.static('output'));
 
+// Serve generated pages and assets directly under /output (for marketplace thumbnails/links)
+app.use('/output', express.static(path.join(__dirname, 'output')));
+
 // Serve clean pages for viewing (without editor tools)
 app.get('/view/:userId/:fileName', async (req, res) => {
     try {
@@ -1891,6 +1894,177 @@ app.get('/api/all-pages', async (req, res) => {
   }
 });
 
+// Public pages API for marketplace (returns normalized structure)
+app.get('/api/public-pages', async (req, res) => {
+  try {
+    const pages = [];
+    const outputDir = path.join(__dirname, 'output');
+    if (fs.existsSync(outputDir)) {
+      const userIds = fs.readdirSync(outputDir, { withFileTypes: true })
+        .filter(entry => entry.isDirectory() && entry.name !== 'default')
+        .map(entry => entry.name);
+
+      for (const userId of userIds) {
+        const userDir = path.join(outputDir, userId);
+        if (!fs.existsSync(userDir)) continue;
+
+        const files = fs.readdirSync(userDir);
+        const htmlFiles = files.filter(f => f.endsWith('_html'));
+        const dataFolders = files.filter(f => f.endsWith('_html_data'));
+
+        // Pages with actual HTML files
+        htmlFiles.forEach(file => {
+          const filePath = path.join(userDir, file);
+          const stats = fs.statSync(filePath);
+
+          // Try detect page type and thumbnail/description from metadata
+          let pageType = 'other';
+          let thumbnail = '';
+          let description = '';
+          try {
+            const metaDir = file.replace(/_html$/, '') + '_html_data';
+            const metaPath = path.join(userDir, metaDir, 'metadata.json');
+            if (fs.existsSync(metaPath)) {
+              const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+              if (meta && meta.pageType) pageType = meta.pageType;
+              thumbnail = meta.thumbnail || meta.coverImage || thumbnail;
+              description = meta.description || description;
+            }
+            // If no pageType from metadata, try reading meta tag from HTML
+            if (pageType === 'other') {
+              try {
+                const html = fs.readFileSync(filePath, 'utf8');
+                const m = html.match(/<meta\s+name=["']page-type["']\s+content=["']([^"']+)["'][^>]*>/i);
+                if (m && m[1]) pageType = m[1];
+              } catch {}
+            }
+            // Fallback: first image inside _html_data
+            if (!thumbnail) {
+              const dataDir = path.join(userDir, metaDir);
+              if (fs.existsSync(dataDir)) {
+                const images = fs.readdirSync(dataDir).filter(n => /\.(png|jpe?g|webp|gif)$/i.test(n));
+                if (images.length > 0) {
+                  thumbnail = `/output/${userId}/${metaDir}/${images[0]}`;
+                }
+              }
+            }
+            // Final fallback: extract image from HTML (og:image or first <img> / background-image)
+            if (!thumbnail) {
+              try {
+                const html = fs.readFileSync(filePath, 'utf8');
+                let img = null;
+                let m;
+                m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i) ||
+                    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["'][^>]*>/i);
+                if (m && m[1]) img = m[1];
+                if (!img) {
+                  m = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+                  if (m && m[1]) img = m[1];
+                }
+                if (!img) {
+                  m = html.match(/background-image\s*:\s*url\(([^)]+)\)/i);
+                  if (m && m[1]) img = m[1].replace(/["']/g, '');
+                }
+                if (img) {
+                  if (/^https?:\/\//i.test(img) || img.startsWith('/')) {
+                    thumbnail = img;
+                  } else {
+                    // relative path -> assume under _html_data or same folder
+                    const rel = img.replace(/^\.\//, '');
+                    const candidate1 = `/output/${userId}/${metaDir}/${rel}`;
+                    const candidate2 = `/output/${userId}/${rel}`;
+                    const abs1 = path.join(userDir, metaDir, rel);
+                    const abs2 = path.join(userDir, rel);
+                    if (fs.existsSync(abs1)) thumbnail = candidate1; else if (fs.existsSync(abs2)) thumbnail = candidate2; else thumbnail = img;
+                  }
+                }
+              } catch {}
+            }
+          } catch {}
+
+          // Normalize thumbnail to absolute /output path when possible
+          if (thumbnail && !/^https?:\/\//i.test(thumbnail) && !thumbnail.startsWith('/')) {
+            const pageId = file.replace(/_html$/, '');
+            const metaDir = pageId + '_html_data';
+            const rel = thumbnail.replace(/^\.\//, '');
+            const abs1 = path.join(userDir, metaDir, rel);
+            const abs2 = path.join(userDir, rel);
+            if (fs.existsSync(abs1)) thumbnail = `/output/${userId}/${metaDir}/${rel}`;
+            else if (fs.existsSync(abs2)) thumbnail = `/output/${userId}/${rel}`;
+          }
+
+          pages.push({
+            pageId: file.replace(/_html$/, ''),
+            userId,
+            pageType,
+            title: file.replace('_html', '').replace(/_/g, ' ').trim(),
+            description,
+            created_at: stats.birthtime.toISOString(),
+            url: `/output/${userId}/${file}`,
+            thumbnail
+          });
+        });
+
+        // Pages that have only data folders (_html_data) but no explicit HTML file
+        dataFolders.forEach(folder => {
+          const pageId = folder.replace(/_html_data$/, '');
+          const htmlFile = `${pageId}_html`;
+          const filePath = path.join(userDir, htmlFile);
+          // If already added via htmlFiles, skip
+          if (pages.find(p => p.userId === userId && p.pageId === pageId)) return;
+
+          // Metadata
+          let pageType = 'other';
+          let thumbnail = '';
+          let description = '';
+          try {
+            const metaPath = path.join(userDir, folder, 'metadata.json');
+            if (fs.existsSync(metaPath)) {
+              const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+              pageType = meta.pageType || pageType;
+              thumbnail = meta.thumbnail || meta.coverImage || thumbnail;
+              description = meta.description || description;
+            }
+            if (!thumbnail) {
+              const dataDirAbs = path.join(userDir, folder);
+              const images = fs.readdirSync(dataDirAbs).filter(n => /\.(png|jpe?g|webp|gif)$/i.test(n));
+              if (images.length > 0) {
+                thumbnail = `/output/${userId}/${folder}/${images[0]}`;
+              }
+            }
+          } catch {}
+
+          // Stats based on folder time
+          const stats = fs.statSync(path.join(userDir, folder));
+          // Normalize thumbnail for data-folder page
+          if (thumbnail && !/^https?:\/\//i.test(thumbnail) && !thumbnail.startsWith('/')) {
+            const rel = thumbnail.replace(/^\.\//, '');
+            const abs1 = path.join(userDir, folder, rel);
+            const abs2 = path.join(userDir, rel);
+            if (fs.existsSync(abs1)) thumbnail = `/output/${userId}/${folder}/${rel}`;
+            else if (fs.existsSync(abs2)) thumbnail = `/output/${userId}/${rel}`;
+          }
+
+          pages.push({
+            pageId,
+            userId,
+            pageType,
+            title: pageId.replace(/_/g, ' ').trim(),
+            description,
+            created_at: stats.birthtime.toISOString(),
+            url: `/output/${userId}/${htmlFile}`,
+            thumbnail
+          });
+        });
+      }
+    }
+    res.json({ pages });
+  } catch (e) {
+    console.error('Error building public pages list:', e);
+    res.status(500).json({ pages: [] });
+  }
+});
+
 // API endpoint ליצירת HTML מהיר
 app.post('/api/generate-html', async (req, res) => {
   try {
@@ -3196,6 +3370,105 @@ app.post('/api/upload-menu-image', upload.single('image'), async (req, res) => {
     } catch (error) {
         console.error('❌ Error uploading menu image:', error);
         res.status(500).json({ error: 'Failed to upload menu image: ' + error.message });
+    }
+});
+
+// Manage branches for pages
+app.post('/api/manage-branches', async (req, res) => {
+    try {
+        const { userId, pageId, action, branchData } = req.body;
+        
+        console.log('🏢 Managing branches:', { userId, pageId, action, branchData });
+        
+        if (!userId || !pageId || !action) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const cleanPageId = pageId.replace('_html', '');
+        const dataDir = path.join(__dirname, 'output', userId, `${cleanPageId}_html_data`);
+        await fs.ensureDir(dataDir);
+        
+        const branchesFile = path.join(dataDir, 'branches.json');
+        let branches = [];
+        
+        // Load existing branches
+        try {
+            const existingData = await fs.readFile(branchesFile, 'utf8');
+            branches = JSON.parse(existingData);
+        } catch (e) {
+            // File doesn't exist yet, start with empty array
+        }
+        
+        if (action === 'add') {
+            // Add new branch
+            const newBranch = {
+                id: Date.now().toString(),
+                name: branchData.name || '',
+                address: branchData.address || '',
+                phone: branchData.phone || '',
+                createdAt: new Date().toISOString()
+            };
+            branches.push(newBranch);
+            
+        } else if (action === 'update') {
+            // Update existing branch
+            const branchIndex = branches.findIndex(b => b.id === branchData.id);
+            if (branchIndex !== -1) {
+                branches[branchIndex] = {
+                    ...branches[branchIndex],
+                    name: branchData.name || branches[branchIndex].name,
+                    address: branchData.address || branches[branchIndex].address,
+                    phone: branchData.phone || branches[branchIndex].phone,
+                    updatedAt: new Date().toISOString()
+                };
+            }
+            
+        } else if (action === 'delete') {
+            // Delete branch
+            branches = branches.filter(b => b.id !== branchData.id);
+        }
+        
+        // Save updated branches
+        await fs.writeFile(branchesFile, JSON.stringify(branches, null, 2));
+        
+        console.log('✅ Branches updated successfully:', branches.length);
+        
+        res.json({
+            success: true,
+            branches: branches,
+            message: `Branch ${action}ed successfully`
+        });
+        
+    } catch (error) {
+        console.error('❌ Error managing branches:', error);
+        res.status(500).json({ error: 'Failed to manage branches: ' + error.message });
+    }
+});
+
+// Get branches for a page
+app.get('/api/branches/:userId/:pageId', async (req, res) => {
+    try {
+        const { userId, pageId } = req.params;
+        const cleanPageId = pageId.replace('_html', '');
+        const dataDir = path.join(__dirname, 'output', userId, `${cleanPageId}_html_data`);
+        const branchesFile = path.join(dataDir, 'branches.json');
+        
+        let branches = [];
+        try {
+            const existingData = await fs.readFile(branchesFile, 'utf8');
+            branches = JSON.parse(existingData);
+        } catch (e) {
+            // File doesn't exist, return empty array
+        }
+        
+        res.json({
+            success: true,
+            branches: branches
+        });
+        
+    } catch (error) {
+        console.error('❌ Error getting branches:', error);
+        res.status(500).json({ error: 'Failed to get branches: ' + error.message });
     }
 });
 

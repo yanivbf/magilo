@@ -42,10 +42,11 @@
         "purchase_1760082908809_137owz9ov",
         "purchase_1760421638059_drf69or7x",
         "purchase_1760423617669_vzhj9yibz",
-        "purchase_1760423720897_l7ela4las"
+        "purchase_1760423720897_l7ela4las",
+        "purchase_1760952283111_0077x9dt7"
       ],
       "createdAt": "2025-10-10T04:34:55.026Z",
-      "lastActive": "2025-10-19T18:34:08.017Z"
+      "lastActive": "2025-10-20T09:24:43.124Z"
     },
     "3ed25bfd-680d-4c09-a027-1a846170c13e": {
       "id": "3ed25bfd-680d-4c09-a027-1a846170c13e",
@@ -1207,12 +1208,34 @@
       "shipping": true,
       "status": "new",
       "createdAt": "2025-10-14T06:35:20.897Z"
+    },
+    "purchase_1760952283111_0077x9dt7": {
+      "id": "purchase_1760952283111_0077x9dt7",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "יניב_תכשיטם___1760952174509",
+      "products": [
+        {
+          "id": 1760952266369,
+          "name": "טבעת יהלום נוצצת",
+          "price": 750,
+          "quantity": 2,
+          "image": "https://images.unsplash.com/photo-1587309199201-44755a153293?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 1535,
+      "customerName": "רמי",
+      "customerPhone": "0505378108",
+      "customerEmail": "britolam1@gmail.com",
+      "customerAddress": "בר  יואי 2 נתניה",
+      "shipping": true,
+      "status": "shipped",
+      "createdAt": "2025-10-20T09:24:43.111Z"
     }
   },
   "products": {},
   "stores": {},
   "analytics": {
-    "totalSales": 33919.9,
+    "totalSales": 35454.9,
     "totalUsers": 0,
     "totalProducts": 0,
     "dailySales": {
@@ -1223,10 +1246,11 @@
       "2025-10-13": 394.4,
       "2025-10-14": 198,
       "2025-10-18": 832,
-      "2025-10-19": 398
+      "2025-10-19": 398,
+      "2025-10-20": 1535
     },
     "monthlySales": {
-      "2025-10": 37119.3
+      "2025-10": 38654.3
     },
     "topProducts": [
       {
@@ -1240,6 +1264,12 @@
         "name": "טבעת אירוסים הבטחת עולם",
         "sales": 1,
         "revenue": 13950
+      },
+      {
+        "id": 1760952266369,
+        "name": "טבעת יהלום נוצצת",
+        "sales": 2,
+        "revenue": 1500
       },
       {
         "id": 1760196526164,
@@ -1771,6 +1801,28 @@
       }
     ],
     "recentPurchases": [
+      {
+        "id": "purchase_1760952283111_0077x9dt7",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "יניב_תכשיטם___1760952174509",
+        "products": [
+          {
+            "id": 1760952266369,
+            "name": "טבעת יהלום נוצצת",
+            "price": 750,
+            "quantity": 2,
+            "image": "https://images.unsplash.com/photo-1587309199201-44755a153293?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 1535,
+        "customerName": "רמי",
+        "customerPhone": "0505378108",
+        "customerEmail": "britolam1@gmail.com",
+        "customerAddress": "בר  יואי 2 נתניה",
+        "shipping": true,
+        "status": "new",
+        "createdAt": "2025-10-20T09:24:43.111Z"
+      },
       {
         "id": "purchase_1760423720897_l7ela4las",
         "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",

@@ -26,23 +26,6 @@ async function handleFormSubmit(event) {
 
     state.originalDescription = data.description;
 
-    // Collect Floating CTA data
-    const enableFloatingCta = document.getElementById('enableFloatingCta')?.checked;
-    if (enableFloatingCta) {
-        data.floatingCta = {
-            enabled: true,
-            text: document.getElementById('ctaText')?.value || 'קנה עכשיו!',
-            link: document.getElementById('ctaLink')?.value || '',
-            style: document.querySelector('input[name="ctaStyle"]:checked')?.value || 'solid',
-            position: document.querySelector('input[name="ctaPosition"]:checked')?.value || 'bottom-right',
-            countdown: {
-                enabled: document.getElementById('enableCountdown')?.checked || false,
-                text: document.getElementById('countdownText')?.value || 'המבצע נגמר בעוד',
-                date: document.getElementById('countdownDate')?.value || '',
-                time: document.getElementById('countdownTime')?.value || '23:59'
-            }
-        };
-    }
 
     // Collect courses data if this is a digital course page
     if (data.pageType === 'onlineCourse') {
@@ -166,6 +149,36 @@ async function handleFormSubmit(event) {
         console.log('✅ Total categories collected:', data.menuCategories.length);
         console.log('📦 Menu data:', data.menuCategories);
     }
+    
+    // Collect branches data for pages with physical addresses (NOT for landing pages)
+    if (data.pageType === 'onlineStore' || data.pageType === 'serviceProvider' || 
+        data.pageType === 'realEstate' || data.pageType === 'product' || 
+        data.pageType === 'restaurantMenu' || data.pageType === 'event' || data.pageType === 'general') {
+        console.log('🏢 Collecting branches data for page type:', data.pageType);
+        
+        const branchNames = document.getElementsByName('branchName[]');
+        const branchAddresses = document.getElementsByName('branchAddress[]');
+        const branchPhones = document.getElementsByName('branchPhone[]');
+        
+        data.branches = [];
+        
+        for (let i = 0; i < branchNames.length; i++) {
+            const name = branchNames[i]?.value?.trim();
+            const address = branchAddresses[i]?.value?.trim();
+            const phone = branchPhones[i]?.value?.trim();
+            
+            if (name || address || phone) {
+                data.branches.push({
+                    name: name || `סניף ${i + 1}`,
+                    address: address || '',
+                    phone: phone || ''
+                });
+            }
+        }
+        
+        console.log('✅ Total branches collected:', data.branches.length);
+        console.log('🏢 Branches data:', data.branches);
+    }
 
     // הוסף נתוני שפה ומדינה
     data = addLanguageToPageData(data);
@@ -185,8 +198,11 @@ async function handleFormSubmit(event) {
             console.log('Store scripts injected successfully');
         }
         
+        // Enforcement: ensure mandatory bubbles/buttons are present (per page type)
+        let processedHtml = ensureMandatoryFloatingElements(htmlContent, data);
+
         // הוסף קישורים לתחתית הדף
-        const finalHtml = addFooterLinks(htmlContent, data);
+        const finalHtml = addFooterLinks(processedHtml, data);
         
         // שמור את ה-HTML המלא למשתנה גלובלי כדי שהשמירה תשמור אותו עם הסקריפטים
         window.generatedPageHTML = finalHtml;
@@ -225,6 +241,43 @@ async function generateHtmlFromApi(prompt) {
     } catch (error) {
         console.error('Error calling API:', error);
         throw error;
+    }
+}
+
+// Ensure AI/WhatsApp/Accessibility bubbles exist where required (except flyer/post/checkout)
+function ensureMandatoryFloatingElements(htmlContent, data) {
+    try {
+        const pageType = (data?.pageType || '').toLowerCase();
+        const excludedTypes = new Set(['flyer', 'post', 'checkout']);
+        if (excludedTypes.has(pageType)) return htmlContent;
+
+        // Normalize content for checks
+        const lc = (htmlContent || '').toLowerCase();
+
+        // Helper: inject before </body>
+        const injectBeforeBodyEnd = (snippet) => {
+            if (!snippet) return htmlContent;
+            if (lc.includes('</body>')) {
+                return htmlContent.replace(/</body>/i, snippet + '\n</body>');
+            }
+            return (htmlContent || '') + '\n' + snippet;
+        };
+
+        // WhatsApp bubble enforcement
+        const hasWhatsApp = lc.includes('wa.me') || lc.includes('whatsapp-bubble');
+        if (!hasWhatsApp) {
+            const rawPhone = (data?.phone || data?.businessPhone || '').toString();
+            const cleaned = rawPhone.replace(/[^\d]/g, '');
+            const intl = cleaned.startsWith('972') ? cleaned : (cleaned.startsWith('0') ? ('972' + cleaned.slice(1)) : cleaned);
+            const waPhone = intl && intl.length >= 9 ? intl : '972504443333';
+            const waSnippet = `\n<!-- WhatsApp Floating Bubble (auto-injected) -->\n<a class="whatsapp-bubble" href="https://wa.me/${waPhone}?text=${encodeURIComponent('שלום! יש לי שאלה') }"\n   style="position: fixed; bottom: 20px; left: 20px; width: 64px; height: 64px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); z-index: 10000; transition: transform 0.3s ease;"\n   aria-label="פתח וואטסאפ" target="_blank" rel="noopener">\n   <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M.057 24l1.687-6.163a10.9 10.9 0 01-1.62-5.729C.122 5.281 5.403 0 12.057 0c3.19 0 6.167 1.244 8.412 3.488A11.82 11.82 0 0124 11.936c-.003 6.653-5.284 11.936-11.938 11.936a11.95 11.95 0 01-6.119-1.675L.057 24zm6.597-3.807c1.766.995 3.003 1.591 5.347 1.591 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.893-5.452 0-9.887 4.434-9.889 9.881 0 2.225.651 3.891 1.746 5.564l-.999 3.648 3.787-.914zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.03-.967-.272-.099-.47-.149-.669.149-.198.297-.767.967-.94 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.173.198-.297.297-.495.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.117.571-.085 1.758-.718 2.006-1.41.248-.694.248-1.289.173-1.41z"/></svg>\n</a>`;
+            htmlContent = injectBeforeBodyEnd(waSnippet);
+        }
+
+        return htmlContent;
+    } catch (e) {
+        console.error('ensureMandatoryFloatingElements failed:', e);
+        return htmlContent;
     }
 }
 
@@ -1029,6 +1082,65 @@ function createMasterPrompt(data) {
         console.log('✅ Menu categories section added to prompt');
     }
     
+    // Add branches data for pages with physical addresses
+    if (data.branches && data.branches.length > 0) {
+        console.log('🏢 Adding branches to prompt:', data.branches);
+        
+        prompt += `\n\n========================================`;
+        prompt += `\n🏢 **BRANCHES** (${data.branches.length} branches)`;
+        prompt += `\n========================================`;
+        prompt += `\n\n⚠️⚠️⚠️ CRITICAL INSTRUCTIONS ⚠️⚠️⚠️`;
+        prompt += `\n- YOU MUST CREATE A BRANCHES SECTION`;
+        prompt += `\n- PLACE IT RIGHT AFTER THE ADDRESS/CONTACT SECTION`;
+        prompt += `\n- DISPLAY ALL ${data.branches.length} BRANCHES`;
+        prompt += `\n- USE THE EXACT DATA PROVIDED BELOW`;
+        prompt += `\n- CREATE A "הוסף סניפים שלנו" BUTTON`;
+        prompt += `\n\n**CREATE BRANCHES SECTION WITH THE FOLLOWING BRANCHES:**`;
+        
+        data.branches.forEach((branch, branchIndex) => {
+            prompt += `\n\n   ${branchIndex + 1}. **${branch.name || 'סניף ' + (branchIndex + 1)}**`;
+            if (branch.address) {
+                prompt += `\n      • Address: ${branch.address}`;
+            }
+            if (branch.phone) {
+                prompt += `\n      • Phone: ${branch.phone}`;
+            }
+        });
+        
+        prompt += `\n\n**BRANCHES SECTION LAYOUT:`;
+        prompt += `\n- Title: "סניפים שלנו" or "מיקומים"`;
+        prompt += `\n- Place immediately after contact/address section`;
+        prompt += `\n- Show each branch with name, address, and phone`;
+        prompt += `\n- Use clean, organized layout (cards or list)`;
+        prompt += `\n- Add "הוסף סניפים שלנו" button INSIDE the branches section`;
+        
+        prompt += `\n\n**CREATE A "הוסף סניפים שלנו" BUTTON THAT:`;
+        prompt += `\n- PLACE IT AT THE BOTTOM OF THE BRANCHES SECTION (after all branches)`;
+        prompt += `\n- STYLE IT AS A SMALL, SECONDARY BUTTON (not prominent)`;
+        prompt += `\n- POSITION IT BELOW THE ADDRESS/CONTACT INFO`;
+        prompt += `\n- OPENS A MODAL OR SIDEBAR`;
+        prompt += `\n- ALLOWS ADDING NEW BRANCHES`;
+        prompt += `\n- DISPLAYS ALL EXISTING BRANCHES`;
+        prompt += `\n- ALLOWS EDITING/DELETING BRANCHES**`;
+        
+        prompt += `\n\n**BUTTON STYLING:`;
+        prompt += `\n- Small size (not large/prominent)`;
+        prompt += `\n- Secondary color (gray or light)`;
+        prompt += `\n- Positioned at bottom of branches list`;
+        prompt += `\n- Text: "הוסף סניפים שלנו" or "ניהול סניפים"`;
+        
+        prompt += `\n\n========================================`;
+        prompt += `\n✅ VERIFICATION CHECKLIST:`;
+        prompt += `\n- [ ] Created branches section with all ${data.branches.length} branches`;
+        prompt += `\n- [ ] Used exact branch names, addresses, and phone numbers`;
+        prompt += `\n- [ ] Created "הוסף סניפים שלנו" button`;
+        prompt += `\n- [ ] Button opens modal/sidebar for branch management`;
+        prompt += `\n========================================`;
+        
+        console.log('✅ Branches section added to prompt');
+    }
+    
+    
     // Add workshop details for live courses
     if (data.workshopDate || data.workshopLocation || data.instructorName) {
         prompt += `\n\n🎓 **Workshop/Webinar Details**:`;
@@ -1045,96 +1157,6 @@ function createMasterPrompt(data) {
     prompt += `\n\nLanguage: Hebrew (RTL)`;
     prompt += `\n\nCurrency: Israeli Shekel (₪)`;
     
-    // Add Floating CTA if enabled
-    if (data.floatingCta && data.floatingCta.enabled) {
-        prompt += `\n\n=== FLOATING CALL-TO-ACTION BUTTON ===`;
-        prompt += `\n\nCREATE A FLOATING CALL-TO-ACTION BUTTON with the following specifications:`;
-        prompt += `\n\n1. **Button Text**: "${data.floatingCta.text}"`;
-        prompt += `\n2. **Position**: ${data.floatingCta.position}`;
-        prompt += `\n3. **Style**: ${data.floatingCta.style}`;
-        
-        if (data.floatingCta.link) {
-            prompt += `\n4. **Action**: Link to ${data.floatingCta.link}`;
-        } else {
-            prompt += `\n4. **Action**: Scroll to #cta section (if exists) or to contact form`;
-        }
-        
-        prompt += `\n\n**STYLE SPECIFICATIONS:**`;
-        
-        if (data.floatingCta.style === 'solid') {
-            prompt += `\n- Background: Solid bright color (e.g., #FF6B6B, #4ECDC4, #FFD93D)`;
-            prompt += `\n- Shadow: Large shadow for depth (box-shadow: 0 4px 20px rgba(0,0,0,0.3))`;
-        } else if (data.floatingCta.style === 'gradient') {
-            prompt += `\n- Background: Linear gradient (e.g., linear-gradient(135deg, #667eea 0%, #764ba2 100%))`;
-            prompt += `\n- Shadow: Large shadow with gradient color tint`;
-        } else if (data.floatingCta.style === 'pulse') {
-            prompt += `\n- Background: Solid bright color`;
-            prompt += `\n- Animation: Continuous pulse effect using CSS @keyframes`;
-            prompt += `\n- CSS: @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }`;
-            prompt += `\n- Apply: animation: pulse 2s ease-in-out infinite;`;
-        } else if (data.floatingCta.style === 'flash') {
-            prompt += `\n- Background: Bright color that flashes`;
-            prompt += `\n- Animation: Flashing effect using CSS @keyframes`;
-            prompt += `\n- CSS: @keyframes flash { 0%, 50%, 100% { opacity: 1; } 25%, 75% { opacity: 0.7; } }`;
-            prompt += `\n- Apply: animation: flash 1.5s ease-in-out infinite;`;
-        }
-        
-        prompt += `\n\n**POSITION SPECIFICATIONS:**`;
-        if (data.floatingCta.position === 'bottom-right') {
-            prompt += `\n- position: fixed; bottom: 20px; right: 20px; (for LTR)`;
-            prompt += `\n- position: fixed; bottom: 20px; left: 20px; (for RTL)`;
-        } else if (data.floatingCta.position === 'bottom-left') {
-            prompt += `\n- position: fixed; bottom: 20px; left: 20px; (for LTR)`;
-            prompt += `\n- position: fixed; bottom: 20px; right: 20px; (for RTL)`;
-        } else if (data.floatingCta.position === 'bottom-center') {
-            prompt += `\n- position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);`;
-        } else if (data.floatingCta.position === 'top-center') {
-            prompt += `\n- position: fixed; top: 20px; left: 50%; transform: translateX(-50%);`;
-        }
-        
-        prompt += `\n- z-index: 9999; (ensure it's above all content)`;
-        prompt += `\n- padding: 16px 32px;`;
-        prompt += `\n- border-radius: 50px;`;
-        prompt += `\n- font-size: 18px;`;
-        prompt += `\n- font-weight: bold;`;
-        prompt += `\n- color: white;`;
-        prompt += `\n- cursor: pointer;`;
-        prompt += `\n- transition: all 0.3s ease;`;
-        prompt += `\n- On hover: transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,0,0,0.4);`;
-        
-        // Add countdown timer if enabled
-        if (data.floatingCta.countdown && data.floatingCta.countdown.enabled && data.floatingCta.countdown.date) {
-            const countdownDateTime = `${data.floatingCta.countdown.date}T${data.floatingCta.countdown.time}`;
-            prompt += `\n\n**COUNTDOWN TIMER:**`;
-            prompt += `\n- Display above the button: "${data.floatingCta.countdown.text}"`;
-            prompt += `\n- Target date/time: ${countdownDateTime}`;
-            prompt += `\n- Format: "XX ימים XX שעות XX דקות XX שניות"`;
-            prompt += `\n- Style: Small text above button, same color scheme`;
-            prompt += `\n- Update every second using JavaScript`;
-            prompt += `\n\n**COUNTDOWN JAVASCRIPT:**`;
-            prompt += `\n<script>`;
-            prompt += `\nconst countdownDate = new Date('${countdownDateTime}').getTime();`;
-            prompt += `\nconst countdownElement = document.getElementById('countdown-timer');`;
-            prompt += `\nconst updateCountdown = () => {`;
-            prompt += `\n  const now = new Date().getTime();`;
-            prompt += `\n  const distance = countdownDate - now;`;
-            prompt += `\n  if (distance < 0) {`;
-            prompt += `\n    countdownElement.innerHTML = 'המבצע הסתיים';`;
-            prompt += `\n    return;`;
-            prompt += `\n  }`;
-            prompt += `\n  const days = Math.floor(distance / (1000 * 60 * 60 * 24));`;
-            prompt += `\n  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));`;
-            prompt += `\n  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));`;
-            prompt += `\n  const seconds = Math.floor((distance % (1000 * 60)) / 1000);`;
-            prompt += `\n  countdownElement.innerHTML = days + ' ימים ' + hours + ' שעות ' + minutes + ' דקות ' + seconds + ' שניות';`;
-            prompt += `\n};`;
-            prompt += `\nupdateCountdown();`;
-            prompt += `\nsetInterval(updateCountdown, 1000);`;
-            prompt += `\n</script>`;
-        }
-        
-        prompt += `\n\n**IMPORTANT**: The floating CTA button must be ALWAYS VISIBLE on scroll, positioned FIXED, and have HIGH z-index to stay above all content.`;
-    }
     
     return prompt;
 }
