@@ -98,7 +98,20 @@ app.use('/pages', (req, res, next) => {
     next();
 }, express.static('output'));
 
-// Serve generated pages and assets directly under /output (for marketplace thumbnails/links)
+// Serve HTML files with correct Content-Type under /users route
+app.get('/users/:userId/:fileName', (req, res) => {
+    const { userId, fileName } = req.params;
+    const filePath = path.join(__dirname, 'output', userId, fileName);
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            res.status(404).send('File not found');
+        }
+    });
+});
+
+// Serve all assets
 app.use('/output', express.static(path.join(__dirname, 'output')));
 
 // Serve clean pages for viewing (without editor tools)
@@ -1915,7 +1928,35 @@ app.get('/api/public-pages', async (req, res) => {
         // Pages with actual HTML files
         htmlFiles.forEach(file => {
           const filePath = path.join(userDir, file);
+          
+          // Check if HTML file still exists and is readable
+          if (!fs.existsSync(filePath)) {
+            console.log(`⚠️ HTML file missing: ${filePath}`);
+            return;
+          }
+          
           const stats = fs.statSync(filePath);
+          
+          // Check if file is not empty
+          if (stats.size === 0) {
+            console.log(`⚠️ HTML file is empty: ${filePath}`);
+            return;
+          }
+          
+          // Check if file contains valid HTML content
+          try {
+            const htmlContent = fs.readFileSync(filePath, 'utf8');
+            if (!htmlContent.includes('<html') && !htmlContent.includes('<!DOCTYPE')) {
+              console.log(`⚠️ HTML file doesn't contain valid HTML: ${filePath}`);
+              return;
+            }
+          } catch (error) {
+            console.log(`⚠️ Cannot read HTML file: ${filePath}`, error.message);
+            return;
+          }
+          
+          // Only add pages that have valid HTML files
+          console.log(`✅ Valid HTML file found: ${file}`);
 
           // Try detect page type and thumbnail/description from metadata
           let pageType = 'other';
@@ -1947,6 +1988,31 @@ app.get('/api/public-pages', async (req, res) => {
                   thumbnail = `/output/${userId}/${metaDir}/${images[0]}`;
                 }
               }
+            }
+            
+            // Fallback: extract first image from HTML content
+            if (!thumbnail) {
+              try {
+                const htmlContent = fs.readFileSync(filePath, 'utf8');
+                const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+                if (imgMatch && imgMatch[1]) {
+                  let imgSrc = imgMatch[1];
+                  // Convert relative paths to absolute
+                  if (imgSrc.startsWith('/pages/')) {
+                    imgSrc = imgSrc.replace('/pages/', '/output/');
+                  } else if (imgSrc.startsWith('./') || !imgSrc.startsWith('http')) {
+                    imgSrc = `/output/${userId}/${metaDir}/${imgSrc}`;
+                  }
+                  thumbnail = imgSrc;
+                }
+              } catch (error) {
+                console.log(`⚠️ Error extracting image from HTML: ${filePath}`, error.message);
+              }
+            }
+            
+            // Use the page URL as thumbnail - this will show the actual page
+            if (!thumbnail) {
+              thumbnail = `/view/${userId}/${file}`;
             }
             // Final fallback: extract image from HTML (og:image or first <img> / background-image)
             if (!thumbnail) {
@@ -1993,11 +2059,36 @@ app.get('/api/public-pages', async (req, res) => {
             else if (fs.existsSync(abs2)) thumbnail = `/output/${userId}/${rel}`;
           }
 
+          // Extract real title from HTML content
+          let realTitle = file.replace('_html', '').replace(/_/g, ' ').trim();
+          try {
+            const htmlContent = fs.readFileSync(filePath, 'utf8');
+            // Try to extract title from <title> tag
+            const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+            if (titleMatch && titleMatch[1]) {
+              realTitle = titleMatch[1].trim();
+            } else {
+              // Try to extract from <h1> tag
+              const h1Match = htmlContent.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+              if (h1Match && h1Match[1]) {
+                realTitle = h1Match[1].trim();
+              } else {
+                // Try to extract from meta title
+                const metaTitleMatch = htmlContent.match(/<meta[^>]+name=["']title["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+                if (metaTitleMatch && metaTitleMatch[1]) {
+                  realTitle = metaTitleMatch[1].trim();
+                }
+              }
+            }
+          } catch (error) {
+            console.log(`⚠️ Error extracting title from HTML: ${filePath}`, error.message);
+          }
+
           pages.push({
             pageId: file.replace(/_html$/, ''),
             userId,
             pageType,
-            title: file.replace('_html', '').replace(/_/g, ' ').trim(),
+            title: realTitle,
             description,
             created_at: stats.birthtime.toISOString(),
             url: `/output/${userId}/${file}`,
@@ -2010,8 +2101,33 @@ app.get('/api/public-pages', async (req, res) => {
           const pageId = folder.replace(/_html_data$/, '');
           const htmlFile = `${pageId}_html`;
           const filePath = path.join(userDir, htmlFile);
+          
           // If already added via htmlFiles, skip
           if (pages.find(p => p.userId === userId && p.pageId === pageId)) return;
+          
+          // SKIP if HTML file doesn't exist - we only want pages with actual HTML files
+          if (!fs.existsSync(filePath)) {
+            console.log(`⚠️ Skipping data folder without HTML file: ${folder}`);
+            return;
+          }
+          
+          // Check if HTML file is valid
+          try {
+            const stats = fs.statSync(filePath);
+            if (stats.size === 0) {
+              console.log(`⚠️ Skipping data folder with empty HTML file: ${folder}`);
+              return;
+            }
+            
+            const htmlContent = fs.readFileSync(filePath, 'utf8');
+            if (!htmlContent.includes('<html') && !htmlContent.includes('<!DOCTYPE')) {
+              console.log(`⚠️ Skipping data folder with invalid HTML file: ${folder}`);
+              return;
+            }
+          } catch (error) {
+            console.log(`⚠️ Skipping data folder with unreadable HTML file: ${folder}`, error.message);
+            return;
+          }
 
           // Metadata
           let pageType = 'other';
@@ -2045,11 +2161,36 @@ app.get('/api/public-pages', async (req, res) => {
             else if (fs.existsSync(abs2)) thumbnail = `/output/${userId}/${rel}`;
           }
 
+          // Extract real title from HTML content for data-folder pages too
+          let realTitle = pageId.replace(/_/g, ' ').trim();
+          try {
+            const htmlContent = fs.readFileSync(filePath, 'utf8');
+            // Try to extract title from <title> tag
+            const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+            if (titleMatch && titleMatch[1]) {
+              realTitle = titleMatch[1].trim();
+            } else {
+              // Try to extract from <h1> tag
+              const h1Match = htmlContent.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+              if (h1Match && h1Match[1]) {
+                realTitle = h1Match[1].trim();
+              } else {
+                // Try to extract from meta title
+                const metaTitleMatch = htmlContent.match(/<meta[^>]+name=["']title["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+                if (metaTitleMatch && metaTitleMatch[1]) {
+                  realTitle = metaTitleMatch[1].trim();
+                }
+              }
+            }
+          } catch (error) {
+            console.log(`⚠️ Error extracting title from HTML: ${filePath}`, error.message);
+          }
+
           pages.push({
             pageId,
             userId,
             pageType,
-            title: pageId.replace(/_/g, ' ').trim(),
+            title: realTitle,
             description,
             created_at: stats.birthtime.toISOString(),
             url: `/output/${userId}/${htmlFile}`,

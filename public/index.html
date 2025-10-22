@@ -2852,9 +2852,21 @@
                 
                 // נקה את שם הדף
                 let cleanPageName = page.title || page.fileName || 'דף נחיתה';
-                if (cleanPageName.includes('_')) {
-                    const parts = cleanPageName.split('_');
-                    cleanPageName = parts[0] || 'דף נחיתה';
+                
+                // Remove timestamp patterns (13-digit numbers)
+                cleanPageName = cleanPageName.replace(/\d{13}/g, '');
+                
+                // Remove other number patterns at the end
+                cleanPageName = cleanPageName.replace(/_\d+$/g, '');
+                cleanPageName = cleanPageName.replace(/\d+$/g, '');
+                
+                // Clean up underscores and extra spaces
+                cleanPageName = cleanPageName.replace(/_+/g, ' ').trim();
+                cleanPageName = cleanPageName.replace(/\s+/g, ' ');
+                
+                // If title is empty after cleaning, use a default
+                if (!cleanPageName || cleanPageName.length < 2) {
+                    cleanPageName = 'דף נחיתה';
                 }
                 
                 pageDiv.innerHTML = `

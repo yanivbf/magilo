@@ -3,57 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoPage - גלה דפים מדהימים</title>
+    <title>AutoPage Marketplace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Rubik', sans-serif;
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        /* AI Search Bot Bubble */
+        .page-card {
+            transition: all 0.3s ease;
+        }
+        .page-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
         .ai-bot-bubble {
             position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 70px;
-            height: 70px;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
             z-index: 1000;
             transition: all 0.3s ease;
-            font-size: 32px;
         }
         
         .ai-bot-bubble:hover {
             transform: scale(1.1);
-            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
         
-        .ai-bot-bubble:active {
-            transform: scale(0.95);
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
-        /* AI Chat Window */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        
         .ai-chat-window {
             position: fixed;
-            bottom: 120px;
-            left: 30px;
-            width: 400px;
-            max-width: calc(100vw - 60px);
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
             height: 500px;
-            max-height: calc(100vh - 180px);
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
             display: none;
             flex-direction: column;
-            z-index: 999;
             overflow: hidden;
         }
         
@@ -64,8 +92,7 @@
         .ai-chat-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
-            font-weight: 600;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -73,564 +100,158 @@
         
         .ai-chat-messages {
             flex: 1;
+            padding: 15px;
             overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            background: #f8f9fa;
         }
         
         .ai-message {
-            padding: 12px 16px;
-            border-radius: 12px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
             max-width: 80%;
-            word-wrap: break-word;
         }
         
         .ai-message.user {
             background: #667eea;
             color: white;
-            align-self: flex-end;
             margin-left: auto;
         }
         
         .ai-message.bot {
-            background: #f3f4f6;
-            color: #1f2937;
-            align-self: flex-start;
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
         }
         
-        .ai-chat-input-area {
+        .ai-chat-input {
             padding: 15px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #e0e0e0;
             display: flex;
             gap: 10px;
         }
         
-        .ai-chat-input {
+        .ai-chat-input input {
             flex: 1;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
             outline: none;
-            font-family: 'Rubik', sans-serif;
         }
         
-        .ai-chat-input:focus {
-            border-color: #667eea;
-        }
-        
-        .ai-send-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .ai-chat-input button {
+            background: #667eea;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
+            padding: 10px 20px;
+            border-radius: 20px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
         }
         
-        .ai-send-btn:hover {
-            transform: scale(1.05);
+        .typing-dots {
+            animation: typing 1.5s infinite;
         }
         
-        .ai-send-btn:active {
-            transform: scale(0.95);
-        }
-        
-        @media (max-width: 640px) {
-            .ai-bot-bubble {
-                width: 60px;
-                height: 60px;
-                bottom: 20px;
-                left: 20px;
-                font-size: 28px;
-            }
-            
-            .ai-chat-window {
-                bottom: 100px;
-                left: 20px;
-                width: calc(100vw - 40px);
-            }
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .card {
-            transition: all 0.3s ease, outline 0s, transform 0.3s;
-        }
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-        .category-badge {
-            transition: all 0.2s ease;
-        }
-        .category-badge:hover {
-            transform: scale(1.05);
-        }
-        .search-bar {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0; }
+            30% { opacity: 1; }
         }
     </style>
 </head>
 <body class="bg-gray-50">
-
-    <!-- Hero Section -->
-    <div class="gradient-bg text-white py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-5xl md:text-6xl font-bold mb-6">AutoPage</h1>
-            <p class="text-xl md:text-2xl mb-8 text-purple-100">גלה דפים מדהימים, חנויות ושירותים</p>
-            
-            <!-- Create Page Button -->
-            <div class="mb-6">
-                <a href="/" class="inline-flex items-center gap-3 bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-2xl">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <span>צור דף משלך עכשיו</span>
-                </a>
-            </div>
-            
-            <!-- Search Bar -->
-            <div class="max-w-3xl mx-auto search-bar rounded-full shadow-2xl p-2 flex items-center">
-                <button onclick="searchPages()" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition">
-                    חפש
-                </button>
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    placeholder="חפש חנויות, שירותים, אירועים..." 
-                    class="flex-1 px-6 py-3 rounded-full text-gray-800 focus:outline-none text-lg"
-                />
-            </div>
-        </div>
-    </div>
-
-    <!-- Category Filters -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-12">
-        <div class="bg-white rounded-2xl shadow-xl p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">סינון לפי קטגוריה</h3>
-            <div class="flex flex-wrap gap-3" id="category-filters">
-                <button onclick="filterByCategory('all')" class="category-badge px-6 py-2 rounded-full bg-purple-600 text-white font-medium shadow-md" data-category="all">
-                    🌐 כל הדפים
-                </button>
-                <button onclick="filterByCategory('store')" class="category-badge px-6 py-2 rounded-full bg-white text-gray-700 border-2 border-gray-200 font-medium hover:border-purple-400" data-category="store">
-                    🛍️ חנויות
-                </button>
-                <button onclick="filterByCategory('serviceProvider')" class="category-badge px-6 py-2 rounded-full bg-white text-gray-700 border-2 border-gray-200 font-medium hover:border-purple-400" data-category="serviceProvider">
-                    🔧 בעלי מקצוע
-                </button>
-                <button onclick="filterByCategory('course')" class="category-badge px-6 py-2 rounded-full bg-white text-gray-700 border-2 border-gray-200 font-medium hover:border-purple-400" data-category="course">
-                    📚 קורסים
-                </button>
-                <button onclick="filterByCategory('landing')" class="category-badge px-6 py-2 rounded-full bg-white text-gray-700 border-2 border-gray-200 font-medium hover:border-purple-400" data-category="landing">
-                    🚀 דפי נחיתה
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Results Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-2xl font-bold text-gray-800">
-                <span id="results-count">Loading...</span>
-            </h2>
-            <div class="flex items-center gap-2">
-                <button onclick="changeView('grid')" id="grid-view-btn" class="p-2 rounded-lg bg-purple-600 text-white">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                    </svg>
-                </button>
-                <button onclick="changeView('list')" id="list-view-btn" class="p-2 rounded-lg bg-gray-200 text-gray-600">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Pages Grid -->
-        <div id="pages-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Pages will be loaded here -->
-        </div>
-
-        <!-- Empty State -->
-        <div id="empty-state" class="hidden text-center py-20">
-            <div class="text-gray-400 text-6xl mb-4">🔍</div>
-            <h3 class="text-2xl font-semibold text-gray-700 mb-2">לא נמצאו דפים</h3>
-            <p class="text-gray-500">נסה לשנות את הסינון או מילת החיפוש</p>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loading-state" class="text-center py-20">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
-            <p class="mt-4 text-gray-600">טוען דפים מדהימים...</p>
-        </div>
-    </div>
-
-    <script>
-        let allPages = [];
-        let filteredPages = [];
-        let currentCategory = 'all';
-        let currentView = 'grid';
-
-        // Load pages on page load
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadPages();
-        });
-
-        // Search on Enter key
-        document.getElementById('search-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchPages();
-            }
-        });
-
-        async function loadPages() {
-            try {
-                let pagesResp = await fetch('/api/public-pages');
-                if (!pagesResp.ok) {
-                    // Fallback for older servers
-                    pagesResp = await fetch('/api/all-pages');
-                }
-
-                const contentType = pagesResp.headers.get('content-type') || '';
-                if (!contentType.includes('application/json')) {
-                    throw new Error('Non-JSON response');
-                }
-
-                const payload = await pagesResp.json();
-                // Normalize to { pages: [...] }
-                const pagesArr = Array.isArray(payload) ? payload : (payload.pages || []);
-
-                allPages = pagesArr.map(p => ({
-                    pageId: p.pageId || (p.fileName ? String(p.fileName).replace(/_html$/, '') : ''),
-                    userId: p.userId,
-                    pageType: p.pageType || 'other',
-                    title: p.title || p.fileName || 'דף',
-                    description: p.description || '',
-                    url: p.url || (p.userId && (p.pageId || p.fileName) ? `/output/${p.userId}/${(p.pageId || String(p.fileName).replace(/_html$/, ''))}_html` : ''),
-                    thumbnail: p.thumbnail || ''
-                }));
-                filteredPages = allPages;
-
-                // Try to resolve thumbnails client-side for pages missing one
-                await Promise.all(filteredPages.map(async (page) => {
-                    if (!page.thumbnail) {
-                        page.thumbnail = await resolveThumbnailFromHtml(page).catch(() => '');
-                    }
-                }));
+    <!-- Hero Header with Purple Background -->
+    <div class="hero-gradient text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">AutoPage Marketplace</h1>
+                <p class="text-xl md:text-2xl mb-8 opacity-90">מצא את הדף המושלם שלך</p>
                 
-                displayPages();
-                updateResultsCount();
-            } catch (error) {
-                console.error('Error loading pages:', error);
-                document.getElementById('loading-state').innerHTML = `
-                    <div class="text-red-500 text-lg">לא הצלחתי לטעון דפים. בדקי שהשרת רץ ועדכני את הדפדפן.</div>
-                `;
-            }
-        }
-
-        async function resolveThumbnailFromHtml(page) {
-            if (!page || !page.url) return '';
-            try {
-                const resp = await fetch(page.url, { cache: 'no-store' });
-                const html = await resp.text();
-                // og:image
-                let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i) ||
-                        html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["'][^>]*>/i);
-                if (m && m[1]) return absolutizeImage(m[1], page);
-                // first <img>
-                m = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
-                if (m && m[1]) return absolutizeImage(m[1], page);
-                // background-image
-                m = html.match(/background-image\s*:\s*url\(([^)]+)\)/i);
-                if (m && m[1]) return absolutizeImage(m[1].replace(/["']/g, ''), page);
-            } catch {}
-            // Fallback to first image in _html_data
-            return `/output/${page.userId}/${page.pageId}_html_data/cover.jpg`;
-        }
-
-        function absolutizeImage(src, page) {
-            if (!src) return '';
-            if (/^https?:\/\//i.test(src) || src.startsWith('/')) return src;
-            const rel = src.replace(/^\.\//, '');
-            const candidate1 = `/output/${page.userId}/${page.pageId}_html_data/${rel}`;
-            return candidate1;
-        }
-
-        function normalizeType(type) {
-            if (!type) return 'other';
-            const t = String(type).toLowerCase();
-            const map = {
-                'store': 'store',
-                'onlinestore': 'store',
-                'online_store': 'store',
-                'shop': 'store',
-                'serviceprovider': 'serviceProvider',
-                'service_provider': 'serviceProvider',
-                'service': 'serviceProvider',
-                'landing': 'landing',
-                'landingpage': 'landing',
-                'landing_page': 'landing',
-                'course': 'course',
-                'onlinecourse': 'course',
-                'online_course': 'course',
-                'event': 'event',
-                'restaurantmenu': 'restaurantMenu',
-                'restaurant_menu': 'restaurantMenu',
-                'menu': 'restaurantMenu',
-                'product': 'product',
-                'realestate': 'realEstate',
-                'real_estate': 'realEstate',
-                'businesscard': 'businessCard',
-                'business_card': 'businessCard',
-                'portfolio': 'portfolio'
-            };
-            return map[t] || type;
-        }
-
-        function inferTypeFromTitle(title) {
-            const s = (title || '').toLowerCase();
-            if (/(חנות|store|shop)/.test(s)) return 'store';
-            if (/(בעל|שירות|service)/.test(s)) return 'serviceProvider';
-            if (/(נחית|landing)/.test(s)) return 'landing';
-            if (/(קורס|course)/.test(s)) return 'course';
-            if (/(אירוע|event|חתונ)/.test(s)) return 'event';
-            if (/(תפריט|מסעד|menu|restaurant)/.test(s)) return 'restaurantMenu';
-            if (/(מוצר|product)/.test(s)) return 'product';
-            if (/(נדל|real\s?estate)/.test(s)) return 'realEstate';
-            if (/(כרטיס ביקור|business\s?card)/.test(s)) return 'businessCard';
-            if (/(תיק עבודות|portfolio)/.test(s)) return 'portfolio';
-            return 'other';
-        }
-
-        function filterByCategory(category) {
-            currentCategory = category;
-            
-            // Update active button
-            document.querySelectorAll('.category-badge').forEach(btn => {
-                if (btn.dataset.category === category) {
-                    btn.className = 'category-badge px-6 py-2 rounded-full bg-purple-600 text-white font-medium shadow-md';
-                } else {
-                    btn.className = 'category-badge px-6 py-2 rounded-full bg-white text-gray-700 border-2 border-gray-200 font-medium hover:border-purple-400';
-                }
-            });
-            
-            // Filter pages
-            if (category === 'all') {
-                filteredPages = allPages;
-            } else {
-                filteredPages = allPages.filter(page => {
-                    const normalized = normalizeType(page.pageType || inferTypeFromTitle(page.title));
-                    return normalized === category;
-                });
-            }
-            
-            // Apply search if active
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            if (searchTerm) {
-                filteredPages = filteredPages.filter(page => 
-                    page.title.toLowerCase().includes(searchTerm) ||
-                    (page.description && page.description.toLowerCase().includes(searchTerm))
-                );
-            }
-            
-            displayPages();
-            updateResultsCount();
-        }
-
-        function searchPages() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            
-            // Start with category filter
-            if (currentCategory === 'all') {
-                filteredPages = allPages;
-            } else {
-                filteredPages = allPages.filter(page => page.pageType === currentCategory);
-            }
-            
-            // Apply search filter
-            if (searchTerm) {
-                filteredPages = filteredPages.filter(page => 
-                    page.title.toLowerCase().includes(searchTerm) ||
-                    (page.description && page.description.toLowerCase().includes(searchTerm)) ||
-                    (page.tags && page.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
-                );
-            }
-            
-            displayPages();
-            updateResultsCount();
-        }
-
-        function displayPages() {
-            const grid = document.getElementById('pages-grid');
-            const loading = document.getElementById('loading-state');
-            const empty = document.getElementById('empty-state');
-            
-            loading.classList.add('hidden');
-            
-            if (filteredPages.length === 0) {
-                grid.classList.add('hidden');
-                empty.classList.remove('hidden');
-                return;
-            }
-            
-            grid.classList.remove('hidden');
-            empty.classList.add('hidden');
-            
-            if (currentView === 'grid') {
-                grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8';
-                grid.innerHTML = filteredPages.map(page => createPageCard(page)).join('');
-            } else {
-                grid.className = 'space-y-4';
-                grid.innerHTML = filteredPages.map(page => createPageListItem(page)).join('');
-            }
-        }
-
-        function createPageCard(page) {
-            const categoryIcons = {
-                store: '🛍️',
-                serviceProvider: '🔧',
-                event: '🎉',
-                course: '📚',
-                landing: '🚀',
-                portfolio: '💼',
-                businessCard: '📇'
-            };
-            
-            const icon = categoryIcons[page.pageType] || '📄';
-            const categoryName = getCategoryName(page.pageType);
-            
-            // Determine image source
-            const imageHtml = page.thumbnail 
-                ? `<img src="${page.thumbnail}" alt="${escapeHtml(page.title)}" class="w-full h-48 object-cover">`
-                : `<div class="h-48 bg-gradient-to-br from-purple-400 to-indigo-600 flex flex-col items-center justify-center text-white px-4 text-center">
-                        <div class="text-5xl mb-2">${icon}</div>
-                        <div class="text-base md:text-lg font-semibold leading-tight line-clamp-2">${escapeHtml(page.title)}</div>
-                   </div>`;
-            
-            return `
-                <div class="card bg-white rounded-2xl shadow-lg overflow-hidden" data-page-id="${page.pageId}" data-user-id="${page.userId}">
-                    ${imageHtml}
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
-                                ${categoryName}
-                            </span>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2 line-clamp-1">
-                            ${escapeHtml(page.title)}
-                        </h3>
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
-                            ${escapeHtml(page.description || 'לחץ כדי לחקור דף מדהים זה')}
-                        </p>
-                        <a href="/view/${page.userId}/${page.pageId}_html" 
-                           target="_blank"
-                           class="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center py-3 rounded-lg font-semibold transition">
-                            בקר בדף ←
-                        </a>
+                <!-- Search Bar -->
+                <div class="max-w-2xl mx-auto mb-8">
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="חפש דפים, עסקים, שירותים..." 
+                               class="w-full px-6 py-4 text-gray-900 text-lg rounded-full focus:ring-4 focus:ring-white focus:ring-opacity-50 focus:outline-none">
+                        <button onclick="searchPages()" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
-            `;
-        }
-
-        function createPageListItem(page) {
-            const categoryIcons = {
-                store: '🛍️',
-                serviceProvider: '🔧',
-                event: '🎉',
-                course: '📚',
-                landing: '🚀'
-            };
-            
-            const icon = categoryIcons[page.pageType] || '📄';
-            const categoryName = getCategoryName(page.pageType);
-            
-            // Determine image source for list view
-            const listImageHtml = page.thumbnail 
-                ? `<img src="${page.thumbnail}" alt="${escapeHtml(page.title)}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0">`
-                : `<div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-xl flex flex-col items-center justify-center text-white text-center px-1 flex-shrink-0">
-                        <div class="text-2xl">${icon}</div>
-                        <div class="text-[10px] font-semibold leading-tight line-clamp-2">${escapeHtml(page.title)}</div>
-                   </div>`;
-            
-            return `
-                <div class="card bg-white rounded-xl shadow-md p-6 flex items-center gap-6" data-page-id="${page.pageId}" data-user-id="${page.userId}">
-                    ${listImageHtml}
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-3 mb-2">
-                            <h3 class="text-lg font-bold text-gray-800 truncate">
-                                ${escapeHtml(page.title)}
-                            </h3>
-                            <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full flex-shrink-0">
-                                ${categoryName}
-                            </span>
-                        </div>
-                        <p class="text-gray-600 text-sm line-clamp-1">
-                            ${escapeHtml(page.description || 'לחץ כדי לחקור דף מדהים זה')}
-                        </p>
-                    </div>
-                    <a href="/view/${page.userId}/${page.pageId}_html" 
-                       target="_blank"
-                       class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition flex-shrink-0">
-                        בקר בדף ←
-                    </a>
+                
+                <!-- Create Page Button -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="goToFullApp()" class="bg-white text-indigo-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        צור דף עכשיו
+                    </button>
                 </div>
-            `;
-        }
+                
+                <!-- View Toggle Buttons -->
+                <div class="flex justify-center gap-2 mt-4">
+                    <button id="grid-view-btn" onclick="setView('grid')" class="p-3 rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        </svg>
+                    </button>
+                    <button id="table-view-btn" onclick="setView('table')" class="p-3 rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function getCategoryName(type) {
-            const t = normalizeType(type);
-            const names = {
-                store: 'חנות',
-                serviceProvider: 'בעלי מקצוע',
-                event: 'אירוע',
-                course: 'קורס',
-                landing: 'דף נחיתה',
-                portfolio: 'תיק עבודות',
-                businessCard: 'כרטיס ביקור',
-                restaurantMenu: 'תפריט מסעדה',
-                product: 'מוצר',
-                realEstate: 'נדל"ן'
-            };
-            return names[t] || 'דף';
-        }
+    <!-- Filter Buttons -->
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="filterByType('all')" class="px-6 py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-all">הכל</button>
+                <button onclick="filterByType('store')" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-all">🏪 חנויות</button>
+                <button onclick="filterByType('event')" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-all">🎉 אירועים</button>
+                <button onclick="filterByType('course')" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-all">🎓 קורסים</button>
+                <button onclick="filterByType('serviceProvider')" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-all">🔧 בעלי מקצוע</button>
+            </div>
+            <div class="text-center mt-4">
+                <p id="pages-count" class="text-gray-600">טוען דפים...</p>
+            </div>
+        </div>
+    </div>
 
-        function changeView(view) {
-            currentView = view;
-            
-            // Update buttons
-            if (view === 'grid') {
-                document.getElementById('grid-view-btn').className = 'p-2 rounded-lg bg-purple-600 text-white';
-                document.getElementById('list-view-btn').className = 'p-2 rounded-lg bg-gray-200 text-gray-600';
-            } else {
-                document.getElementById('grid-view-btn').className = 'p-2 rounded-lg bg-gray-200 text-gray-600';
-                document.getElementById('list-view-btn').className = 'p-2 rounded-lg bg-purple-600 text-white';
-            }
-            
-            displayPages();
-        }
+    <!-- Loading State -->
+    <div id="loading-state" class="text-center py-12">
+        <div class="text-lg text-gray-600">טוען דפים...</div>
+    </div>
 
-        function updateResultsCount() {
-            const count = filteredPages.length;
-            const total = allPages.length;
-            document.getElementById('results-count').textContent = 
-                currentCategory === 'all' 
-                    ? `All Pages (${total})` 
-                    : `${count} ${count === 1 ? 'Page' : 'Pages'} Found`;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-    </script>
+    <!-- Pages Grid -->
+    <div id="pages-grid" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Pages will be loaded here -->
+    </div>
+    
+    <!-- Pages Table -->
+    <div id="pages-table" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תמונה</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">כותרת</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תיאור</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך יצירה</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Table rows will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <!-- AI Search Bot -->
     <div class="ai-bot-bubble" onclick="toggleAIChat()" title="עזרה חכמה">
@@ -639,23 +260,17 @@
 
     <div class="ai-chat-window" id="aiChatWindow">
         <div class="ai-chat-header">
-            <span>🤖 עוזר החיפוש החכם</span>
+            <span>🤖 העוזרת החכמה</span>
             <button onclick="toggleAIChat()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
         </div>
         <div class="ai-chat-messages" id="aiChatMessages">
             <div class="ai-message bot">
-                היי! 👋 אני כאן לעזור לך למצוא בדיוק מה שאתה מחפש במרקטפלייס!<br><br>
-                🔍 <strong>אני יכול לחפש לפי:</strong><br>
-                • <strong>מיקום:</strong> "נגר בנתניה", "ספר בתל אביב"<br>
-                • <strong>מקצוע:</strong> "חשמלאי", "אינסטלטור", "מאמן כושר"<br>
-                • <strong>קטגוריה:</strong> "חנויות", "בעלי מקצוע", "קורסים"<br>
-                • <strong>חיפוש כללי:</strong> "אני רוצה לקנות שוקולד"<br><br>
-                💡 <strong>דוגמה:</strong> "אני מחפש נגר בנתניה" או "ספר בנתניה"
+                שלום! 😊 איך אני יכולה לעזור לך?
             </div>
         </div>
-        <div class="ai-chat-input-area">
-            <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="מה אתה מחפש?" onkeypress="if(event.key==='Enter') sendAIMessage()">
-            <button class="ai-send-btn" onclick="sendAIMessage()">Send</button>
+        <div class="ai-chat-input">
+            <input type="text" id="aiChatInput" placeholder="כתוב הודעה...">
+            <button onclick="sendAIMessage()">שלח</button>
         </div>
     </div>
 
@@ -675,160 +290,493 @@
             const messagesDiv = document.getElementById('aiChatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `ai-message ${isUser ? 'user' : 'bot'}`;
-            messageDiv.innerHTML = message;
+            
+            if (isUser) {
+                messageDiv.textContent = message;
+            } else {
+                // Convert markdown-style links to clickable links
+                let processedMessage = message.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #667eea; text-decoration: underline;">$1</a>');
+                
+                // Fix image URLs to be absolute and add error handling
+                processedMessage = processedMessage.replace(/src="([^"]+)"/g, (match, src) => {
+                    let fullSrc = src;
+                    if (src.startsWith('/')) {
+                        fullSrc = `${window.location.origin}${src}`;
+                    }
+                    return `src="${fullSrc}" onerror="this.style.display='none'" onload="this.style.display='block'"`;
+                });
+                
+                messageDiv.innerHTML = processedMessage;
+            }
+            
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
         
-        function getProfessionSynonyms(profession) {
-            const synonymMap = {
-                'נגר': ['מסגר', 'עובד עץ', 'בנאי', 'פועל'],
-                'חשמלאי': ['חשמל', 'חשמלאות'],
-                'אינסטלטור': ['שרברב', 'אינסטלציה', 'מים'],
-                'ספר': ['תספורת', 'מספרה', 'ספרות'],
-                'קוסמטיקאית': ['יופי', 'קוסמטיקה', 'טיפוח'],
-                'מאמן': ['אימון', 'כושר', 'ספורט'],
-                'רופא': ['רפואה', 'בריאות', 'טיפול'],
-                'מעצב': ['עיצוב', 'דיזיין'],
-                'אדריכל': ['אדריכלות', 'בנייה', 'תכנון'],
-                'מהנדס': ['הנדסה', 'תכנון'],
-                'עורך דין': ['משפטים', 'עורך דין', 'עו"ד'],
-                'רואה חשבון': ['חשבונאות', 'כספים'],
-                'יועץ': ['ייעוץ', 'עצה'],
-                'מטפל': ['טיפול', 'בריאות'],
-                'פסיכולוג': ['פסיכולוגיה', 'נפש'],
-                'יועץ זוגי': ['זוגיות', 'נישואים'],
-                'מנקה': ['ניקיון', 'ניקוי'],
-                'גנן': ['גינון', 'גינה'],
-                'צלם': ['צילום', 'תמונות'],
-                'מוזיקאי': ['מוזיקה', 'נגינה'],
-                'שף': ['בישול', 'מטבח'],
-                'טבח': ['בישול', 'מטבח'],
-                'מלצר': ['מסעדה', 'שירות'],
-                'נהג': ['נסיעה', 'הובלה'],
-                'שליח': ['משלוח', 'הובלה'],
-                'מאבטח': ['אבטחה', 'שמירה'],
-                'פארמקיסט': ['רוקח', 'תרופות'],
-                'אחות': ['סיעוד', 'בריאות'],
-                'פיזיותרפיסט': ['פיזיותרפיה', 'שיקום']
-            };
-            
-            return synonymMap[profession] || [];
-        }
-        
-        function performSmartSearch(location, profession, originalMessage) {
-            console.log('🔍 Performing smart search:', { location, profession, originalMessage });
-            
-            // Filter pages based on location and profession
-            let matchingPages = allPages.filter(page => {
-                const titleLower = page.title.toLowerCase();
-                const descLower = (page.description || '').toLowerCase();
-                
-                let matches = false;
-                
-                // Check profession match (including synonyms)
-                if (profession) {
-                    const professionLower = profession.toLowerCase();
-                    const synonyms = getProfessionSynonyms(professionLower);
-                    
-                    if (titleLower.includes(professionLower) || descLower.includes(professionLower)) {
-                        matches = true;
-                    } else {
-                        // Check synonyms
-                        for (const synonym of synonyms) {
-                            if (titleLower.includes(synonym) || descLower.includes(synonym)) {
-                                matches = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                // Check location match
-                if (location) {
-                    const locationLower = location.toLowerCase();
-                    if (titleLower.includes(locationLower) || descLower.includes(locationLower)) {
-                        matches = true;
-                    }
-                }
-                
-                return matches;
-            });
-            
-            console.log('📋 Found matching pages:', matchingPages.length);
-            
-            if (matchingPages.length > 0) {
-                // Show results
-                let message = `🔍 מצאתי ${matchingPages.length} תוצאות עבור החיפוש שלך:<br><br>`;
-                
-                matchingPages.slice(0, 5).forEach((page, index) => {
-                    message += `${index + 1}. <strong>${page.title}</strong> (${getCategoryName(page.pageType)})<br>`;
-                    if (page.description) {
-                        message += `   ${page.description.substring(0, 100)}...<br>`;
-                    }
-                    message += `<br>`;
-                });
-                
-                if (matchingPages.length > 5) {
-                    message += `ועוד ${matchingPages.length - 5} תוצאות...<br><br>`;
-                }
-                
-                message += `💡 <strong>טיפ:</strong> לחץ על "הכל" למעלה כדי לראות את כל התוצאות, או צמצם את החיפוש למילים ספציפיות יותר.`;
-                
-                addAIMessage(message, false);
-                
-                // Also update the search box and filter
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) {
-                    searchInput.value = originalMessage;
-                    searchPages();
-                }
-                
-                // Filter to serviceProvider category if searching for professions
-                if (profession && !location) {
-                    filterByCategory('serviceProvider');
-                }
-                
-            } else {
-                // No results found
-                let message = `😔 לא מצאתי תוצאות עבור "${originalMessage}"<br><br>`;
-                
-                if (profession && location) {
-                    message += `💡 <strong>נסה:</strong><br>`;
-                    message += `• לחפש רק "${profession}" (ללא מיקום)<br>`;
-                    message += `• לחפש רק "${location}" (ללא מקצוע)<br>`;
-                    message += `• לחפש מילים נרדפות (למשל: "מסגר" במקום "נגר")<br>`;
-                } else if (profession) {
-                    message += `💡 <strong>נסה:</strong><br>`;
-                    message += `• מילים נרדפות: "מסגר", "עובד עץ", "בנאי"<br>`;
-                    message += `• חיפוש כללי: "בעלי מקצוע"<br>`;
-                } else if (location) {
-                    message += `💡 <strong>נסה:</strong><br>`;
-                    message += `• חיפוש כללי: "בעלי מקצוע"<br>`;
-                    message += `• חיפוש לפי קטגוריה: לחץ על "בעלי מקצוע" למעלה<br>`;
-                }
-                
-                message += `<br>📞 <strong>אלטרנטיבה:</strong> צור קשר ישירות עם בעלי מקצוע באזור שלך דרך הדפים הקיימים.`;
-                
-                addAIMessage(message, false);
+        function removeTypingIndicator() {
+            const messagesDiv = document.getElementById('aiChatMessages');
+            if (messagesDiv.lastChild && messagesDiv.lastChild.textContent.includes('מקלידה')) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
             }
         }
         
-        async function sendAIMessage() {
-            const input = document.getElementById('aiChatInput');
-            const userMessage = input.value.trim();
-            
-            if (!userMessage) return;
-            
-            // Display user message
-            addAIMessage(userMessage, true);
-            input.value = '';
-            
-            // Show typing indicator
-            addAIMessage('⏳ מחפש...', false);
-            
+        // Global variables
+        let allPages = [];
+        let filteredPages = [];
+        let currentType = 'all';
+        let currentView = 'grid';
+        
+        // Load pages on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadPages();
+        });
+        
+        // Search functionality
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchPages();
+            }
+        });
+        
+        async function loadPages() {
             try {
-                // Prepare ALL pages data for AI (not just filtered)
+                const response = await fetch('/api/public-pages');
+                const data = await response.json();
+                
+                // Handle both array and object with pages property
+                allPages = Array.isArray(data) ? data : (data.pages || []);
+                filteredPages = [...allPages];
+                
+                console.log('Loaded pages:', allPages);
+                console.log('Page types:', [...new Set(allPages.map(p => p.pageType))]);
+                
+                displayPages();
+                updatePagesCount();
+                
+                // Hide loading state
+                document.getElementById('loading-state').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading pages:', error);
+                document.getElementById('loading-state').innerHTML = `
+                    <div class="text-red-500 text-lg">לא הצלחתי לטעון דפים. בדקי שהשרת רץ ועדכני את הדפדפן.</div>
+                `;
+            }
+        }
+        
+        function filterByType(type) {
+            currentType = type;
+            
+            // Update button styles
+            document.querySelectorAll('button[onclick^="filterByType"]').forEach(btn => {
+                btn.className = 'px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-all';
+            });
+            event.target.className = 'px-6 py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-all';
+            
+            console.log('Filtering by type:', type);
+            console.log('All pages:', allPages);
+            console.log('Page types found:', [...new Set(allPages.map(p => p.pageType))]);
+            
+            if (type === 'all') {
+                filteredPages = [...allPages];
+            } else {
+                filteredPages = allPages.filter(page => {
+                    console.log(`Page: ${page.title}, pageType: ${page.pageType}, matches: ${page.pageType === type}`);
+                    return page.pageType === type;
+                });
+            }
+            
+            console.log('Filtered pages:', filteredPages);
+            displayPages();
+            updatePagesCount();
+        }
+        
+        function searchPages() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            if (searchTerm === '') {
+                filteredPages = [...allPages];
+            } else {
+                filteredPages = allPages.filter(page => 
+                    page.title.toLowerCase().includes(searchTerm) ||
+                    (page.description && page.description.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            displayPages();
+            updatePagesCount();
+        }
+        
+        function displayPages() {
+            if (currentView === 'grid') {
+                displayGrid();
+            } else {
+                displayTable();
+            }
+        }
+        
+        function displayGrid() {
+            const grid = document.getElementById('pages-grid');
+            const table = document.getElementById('pages-table');
+            
+            grid.classList.remove('hidden');
+            table.classList.add('hidden');
+            
+            grid.innerHTML = '';
+            
+            if (filteredPages.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">לא נמצאו דפים</div>';
+                return;
+            }
+            
+            filteredPages.forEach(page => {
+                const pageCard = createPageCard(page);
+                grid.appendChild(pageCard);
+            });
+        }
+        
+        function displayTable() {
+            const grid = document.getElementById('pages-grid');
+            const table = document.getElementById('pages-table');
+            const tbody = document.getElementById('table-body');
+            
+            grid.classList.add('hidden');
+            table.classList.remove('hidden');
+            
+            tbody.innerHTML = '';
+            
+            if (filteredPages.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">לא נמצאו דפים</td></tr>';
+                return;
+            }
+            
+            filteredPages.forEach(page => {
+                const row = createTableRow(page);
+                tbody.appendChild(row);
+            });
+        }
+        
+        function setView(view) {
+            currentView = view;
+            
+            // Update button styles
+            document.getElementById('grid-view-btn').className = view === 'grid' ? 
+                'p-3 rounded-full bg-white bg-opacity-30 text-white hover:bg-opacity-40 transition-all' :
+                'p-3 rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all';
+            document.getElementById('table-view-btn').className = view === 'table' ? 
+                'p-3 rounded-full bg-white bg-opacity-30 text-white hover:bg-opacity-40 transition-all' :
+                'p-3 rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all';
+            
+            displayPages();
+        }
+        
+        function createPageCard(page) {
+            const card = document.createElement('div');
+            card.className = 'page-card bg-white rounded-lg shadow-md overflow-hidden';
+            
+            const typeIcons = {
+                'store': '🏪',
+                'event': '🎉',
+                'course': '🎓',
+                'serviceProvider': '🔧',
+                'other': '📄'
+            };
+            
+            const icon = typeIcons[page.pageType] || '📄';
+            const typeName = getTypeName(page.pageType);
+            
+            // Fix image URL - convert relative paths to absolute
+            let imageUrl = page.thumbnail || '';
+            if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                imageUrl = `/output/${page.userId}/${imageUrl}`;
+            }
+            
+            
+            // Use /users/ route like in the main interface
+            const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+            
+            // Try to find a screenshot image - only for courses
+            const screenshotUrl = page.pageType === 'course' ? page.thumbnail : null;
+            
+            card.innerHTML = `
+                <!-- תצוגה מקדימה של האתר -->
+                <div class="relative rounded-t-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100" style="height: 200px; flex-shrink: 0;">
+                    ${screenshotUrl ? `
+                        <!-- תצוגה מקדימה עם תמונה -->
+                        <img 
+                            src="${screenshotUrl}" 
+                            alt="${page.title}"
+                            class="w-full h-full object-cover"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                        />
+                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 hidden items-center justify-center">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg border-2 border-indigo-200">
+                                    <span class="text-2xl font-bold text-indigo-600">${icon}</span>
+                                </div>
+                                <div class="text-sm font-medium text-gray-700 bg-white/90 px-3 py-1 rounded-full shadow-sm border border-gray-200">
+                                    ${typeName}
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <!-- תצוגה מקדימה עם iframe -->
+                        <div class="absolute inset-2 bg-white rounded-lg overflow-hidden shadow-lg border border-gray-300">
+                            <iframe 
+                                src="${window.location.origin}${pageUrl}" 
+                                class="w-full h-full border-0"
+                                style="pointer-events: none; transform: scale(0.6) translateX(65%); transform-origin: top left; width: 166.67%; height: 166.67%;"
+                                title="תצוגה מקדימה של ${page.title}"
+                                loading="lazy"
+                                importance="low"
+                                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-modals allow-top-navigation allow-presentation">
+                            </iframe>
+                        </div>
+                    `}
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">${page.title}</h3>
+                    <p class="text-gray-600 mb-4">${page.description || 'ללא תיאור'}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                            ${icon} ${typeName}
+                        </span>
+                        <a href="/view/${page.userId}/${page.pageId}_html" target="_blank" 
+                           class="text-indigo-600 hover:text-indigo-800 font-medium">
+                            צפה בדף →
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function createTableRow(page) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            const typeIcons = {
+                'store': '🏪',
+                'event': '🎉',
+                'course': '🎓',
+                'serviceProvider': '🔧',
+                'other': '📄'
+            };
+            
+            const icon = typeIcons[page.pageType] || '📄';
+            const typeName = getTypeName(page.pageType);
+            
+            // Fix image URL
+            let imageUrl = page.thumbnail || '';
+            if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                imageUrl = `/output/${page.userId}/${imageUrl}`;
+            }
+            
+            const createdDate = new Date(page.created_at).toLocaleDateString('he-IL');
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex-shrink-0 h-16 w-16">
+                        ${pageUrl ? `
+                            <div class="h-16 w-16 rounded-lg overflow-hidden border border-gray-300 bg-white">
+                                <iframe 
+                                    src="${window.location.origin}${pageUrl}" 
+                                    class="w-full h-full border-0"
+                                    style="pointer-events: none; transform: scale(0.3) translateX(100%); transform-origin: top left; width: 333.33%; height: 333.33%;"
+                                    title="תצוגה מקדימה של ${page.title}"
+                                    loading="lazy"
+                                    importance="low"
+                                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms">
+                                </iframe>
+                            </div>
+                        ` : `
+                            <div class="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center text-2xl">${icon}</div>
+                        `}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">${page.title}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        ${icon} ${typeName}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-500 max-w-xs truncate">${page.description || 'ללא תיאור'}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${createdDate}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="/view/${page.userId}/${page.pageId}_html" target="_blank" 
+                       class="text-indigo-600 hover:text-indigo-900">
+                        צפה בדף
+                    </a>
+                </td>
+            `;
+            
+            return row;
+        }
+        
+        function getTypeName(type) {
+            const names = {
+                'store': 'חנות',
+                'event': 'אירוע',
+                'course': 'קורס',
+                'serviceProvider': 'בעל מקצוע',
+                'other': 'אחר'
+            };
+            return names[type] || 'אחר';
+        }
+        
+        function updatePagesCount() {
+            const count = filteredPages.length;
+            const total = allPages.length;
+            document.getElementById('pages-count').textContent = 
+                `מציג ${count} מתוך ${total} דפים`;
+        }
+        
+        
+        // Smart search functionality - ENABLED for real page results
+        async function handleSmartSearch(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Quick responses for greetings
+            if (lowerMessage.includes('שלום') || lowerMessage.includes('היי') || lowerMessage.includes('הי') || lowerMessage.includes('הייי')) {
+                return {
+                    message: 'שלום! 😊 איך אני יכולה לעזור לך במרקט?',
+                    action: { type: 'none' }
+                };
+            }
+            
+            // Quick responses for thanks
+            if (lowerMessage.includes('תודה') || lowerMessage.includes('תודה רבה')) {
+                return {
+                    message: 'בכיף! 😊 יש עוד משהו שאני יכולה לעזור לך?',
+                    action: { type: 'none' }
+                };
+            }
+            
+            // Check for specific keywords and search
+            const keywords = {
+                'לק': 'serviceProvider',
+                'מניקור': 'serviceProvider', 
+                'פדיקור': 'serviceProvider',
+                'צעצוע': 'store',
+                'ילד': 'store',
+                'חנות': 'store',
+                'קורס': 'course',
+                'לימוד': 'course',
+                'אירוע': 'event',
+                'חתונה': 'event'
+            };
+            
+            for (const [keyword, type] of Object.entries(keywords)) {
+                if (lowerMessage.includes(keyword)) {
+                    const matchingPages = allPages.filter(page => page.pageType === type);
+                    
+                    if (matchingPages.length > 0) {
+                        let response = `מצאתי ${matchingPages.length} דפים רלוונטיים:\n\n`;
+                        
+                        matchingPages.slice(0, 3).forEach(page => {
+                            const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                            // Use real page preview with iframe
+                            const emoji = page.pageType === 'store' ? '🏪' : page.pageType === 'event' ? '🎉' : page.pageType === 'course' ? '🎓' : page.pageType === 'serviceProvider' ? '🔧' : '📄';
+                            response += `• **${page.title}** ${emoji}\n`;
+                            response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                            response += `  <div style="margin: 8px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: fadeInUp 0.6s ease-out, pulse 2s infinite; position: relative; width: 100%; height: 200px;">`;
+                            response += `    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c); animation: shimmer 2s infinite;"></div>`;
+                            response += `    <iframe src="${pageUrl}" style="width: 200%; height: 400px; border: none; transform: scale(0.5); transform-origin: top left; transition: all 0.3s ease; position: absolute; top: 0; left: 0;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>`;
+                            response += `  </div>\n\n`;
+                        });
+                        
+                        if (matchingPages.length > 3) {
+                            response += `ועוד ${matchingPages.length - 3} דפים...`;
+                        }
+                        
+                        return {
+                            message: response,
+                            action: { type: 'change_category_and_highlight', category: type, highlight_pages: matchingPages.slice(0, 3).map(p => p.pageId) }
+                        };
+                    }
+                }
+            }
+            
+            // Search by title
+            const matchingPages = allPages.filter(page => 
+                page.title.toLowerCase().includes(lowerMessage)
+            );
+            
+            if (matchingPages.length > 0) {
+                let response = `מצאתי ${matchingPages.length} דפים עם "${message}":\n\n`;
+                
+                matchingPages.slice(0, 3).forEach(page => {
+                    const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                    // Use real page preview with iframe
+                    const emoji = page.pageType === 'store' ? '🏪' : page.pageType === 'event' ? '🎉' : page.pageType === 'course' ? '🎓' : page.pageType === 'serviceProvider' ? '🔧' : '📄';
+                    response += `• **${page.title}** ${emoji}\n`;
+                    response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                    response += `  <div style="margin: 8px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: fadeInUp 0.6s ease-out, pulse 2s infinite; position: relative; width: 100%; height: 200px;">`;
+                    response += `    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c); animation: shimmer 2s infinite;"></div>`;
+                    response += `    <iframe src="${pageUrl}" style="width: 200%; height: 400px; border: none; transform: scale(0.5); transform-origin: top left; transition: all 0.3s ease; position: absolute; top: 0; left: 0;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>`;
+                    response += `  </div>\n\n`;
+                });
+                
+                if (matchingPages.length > 3) {
+                    response += `ועוד ${matchingPages.length - 3} דפים...`;
+                }
+                
+                return {
+                    message: response,
+                    action: { type: 'change_category_and_highlight', category: matchingPages[0].pageType, highlight_pages: matchingPages.slice(0, 3).map(p => p.pageId) }
+                };
+            }
+            
+            return null; // No quick response, send to N8N
+        }
+        
+        
+        // Enhanced sendAIMessage with smart search
+        async function sendAIMessageEnhanced() {
+            try {
+                const input = document.getElementById('aiChatInput');
+                const userMessage = input.value.trim();
+                
+                if (!userMessage) return;
+                
+                // Display user message
+                addAIMessage(userMessage, true);
+                input.value = '';
+                
+                // Show typing indicator
+                addAIMessage('🤖 סתיו מקלידה<span class="typing-dots">...</span>', false);
+                
+                // Make sure we have pages loaded
+                if (allPages.length === 0) {
+                    await loadPages();
+                }
+                
+                // Try smart search first for real page results
+                const smartResult = await handleSmartSearch(userMessage);
+                if (smartResult) {
+                    // Remove typing indicator
+                    removeTypingIndicator();
+                    
+                    // Display smart search result
+                    addAIMessage(smartResult.message, false);
+                    
+                    // Execute action if any
+                    if (smartResult.action && smartResult.action.type !== 'none') {
+                        await executeAction(smartResult.action);
+                    }
+                    
+                    return; // Don't send to N8N
+                }
+                
+                // If no smart search result, send to N8N
+                
+                // Continue with original AI logic...
                 const allPagesContext = allPages.map(page => ({
                     title: page.title,
                     description: page.description,
@@ -837,71 +785,24 @@
                     pageId: page.pageId
                 }));
                 
-                const filteredPagesContext = filteredPages.map(page => ({
-                    title: page.title,
-                    description: page.description,
-                    pageType: page.pageType,
-                    userId: page.userId,
-                    pageId: page.pageId
-                }));
-                
-                console.log('📊 Sending to AI:', {
-                    currentCategory: currentCategory,
-                    totalPages: allPages.length,
-                    filteredPages: filteredPages.length,
-                    allPagesContext: allPagesContext
-                });
-                
-                // Enhanced search - extract location and profession from user message
-                const locationKeywords = ['תל אביב', 'ירושלים', 'חיפה', 'באר שבע', 'נתניה', 'אשדוד', 'ראשון לציון', 'פתח תקווה', 'בת ים', 'חולון', 'רמלה', 'לוד', 'נהריה', 'אילת', 'הרצליה', 'רמת גן', 'גבעתיים', 'קרית ביאליק', 'קרית אתא', 'רחובות', 'כפר סבא', 'רעננה', 'הוד השרון', 'מגדל העמק', 'עפולה', 'טבריה', 'נצרת', 'אום אל פחם', 'רהט', 'לוד'];
-                const professionKeywords = ['נגר', 'חשמלאי', 'אינסטלטור', 'צבע', 'ספר', 'קוסמטיקאית', 'מאמן', 'רופא', 'רופאת שיניים', 'וטרינר', 'מעצב', 'אדריכל', 'מהנדס', 'עורך דין', 'רואה חשבון', 'יועץ', 'מאמן כושר', 'מטפל', 'פסיכולוג', 'יועץ זוגי', 'מסגר', 'בנאי', 'פועל', 'עובד עץ', 'מנקה', 'ניקיון', 'גנן', 'דוגמן', 'צלם', 'מוזיקאי', 'שף', 'טבח', 'מלצר', 'נהג', 'שליח', 'מאבטח', 'פארמקיסט', 'אחות', 'פיזיותרפיסט', 'רופא עיניים', 'רופא ילדים', 'גניקולוג', 'אורטופד', 'קרדיולוג'];
-                
-                const userMessageLower = userMessage.toLowerCase();
-                const foundLocation = locationKeywords.find(loc => userMessageLower.includes(loc.toLowerCase()));
-                const foundProfession = professionKeywords.find(prof => userMessageLower.includes(prof.toLowerCase()));
-                
-                console.log('🔍 Enhanced search analysis:', {
-                    foundLocation,
-                    foundProfession,
-                    userMessage: userMessage
-                });
-
+                // Send to N8N with enhanced context
                 const response = await fetch(AI_WEBHOOK, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        // Align with n8n prompt variables
-                        userMessage: userMessage,
-                        pageType: 'marketplace',
-                        businessText: 'AutoPage Marketplace',
-                        contextText: `קטגוריה נוכחית: ${currentCategory === 'all' ? 'הכל' : currentCategory}. סה"כ דפים: ${allPages.length}.`,
-                        // Provide structured content the bot can act upon if needed
+                        user_message: userMessage,
                         pageContent: {
-                            products: [],
-                            appointments: { available: [], booked: [] },
-                            // Expose pages list so the bot can reference and return actions (e.g., scroll_to_page)
                             pages: allPagesContext
                         },
-                        // Keep old fields for backward compatibility
-                        current_category: currentCategory,
-                        filtered_pages: filteredPagesContext,
-                        available_pages: allPagesContext,
-                        available_pages_text: allPagesContext.map(p => `כותרת: ${p.title} | סוג: ${p.pageType} | תיאור: ${p.description || 'ללא תיאור'} | ID: ${p.pageId}`).join('\n'),
-                        context: `מרקטפלייס - חיפוש דפים. קטגוריה נוכחית: ${currentCategory === 'all' ? 'הכל' : currentCategory}`,
-                        search_context: {
-                            location: foundLocation,
-                            profession: foundProfession,
-                            is_specific_search: !!(foundLocation || foundProfession)
-                        }
+                        contextText: `אתה סתיו, עוזרת חכמה במרקטפלייס. אתה יכולה לענות על כל שאלה - ברכות, שאלות כלליות, וגם לעזור למצוא דפים במרקט. אם מישהו אומר "היי" או "שלום" - ענה בברכה ידידותית. אם מישהו מחפש משהו במרקט - חפש בדפים הזמינים.`,
+                        businessText: `Business: AutoPage Marketplace\nPhone: N/A\nEmail: N/A\nAddress: N/A`,
+                        page_type: "marketplace"
                     })
                 });
                 
-                // Remove typing indicator
-                const messages = document.getElementById('aiChatMessages');
-                messages.removeChild(messages.lastChild);
-                
+                // Check response and get data
                 if (!response.ok) {
                     throw new Error('שגיאת תקשורת');
                 }
@@ -909,123 +810,247 @@
                 const data = await response.json();
                 console.log('🤖 Bot response:', data);
                 
-                // Simple - just like the store bot!
-                const botMessage = data.message || 'סליחה, לא הבנתי...';
-                addAIMessage(botMessage, false);
+                // Remove typing indicator immediately
+                removeTypingIndicator();
                 
-                const botResponse = data;
+                // Extract message from response
+                let botMessage = data.message || data.output || 'סליחה, לא הבנתי...';
                 
-                // Handle actions
-                console.log('🎬 Action to perform:', botResponse.action);
-                
-                // If no specific page found and we have location/profession, try smart search
-                if (!botResponse.action && (foundLocation || foundProfession)) {
-                    console.log('🔍 No specific page found, trying smart search...');
-                    performSmartSearch(foundLocation, foundProfession, userMessage);
-                    return;
+                // Handle nested JSON response
+                if (typeof botMessage === 'string' && botMessage.startsWith('{')) {
+                    try {
+                        const parsedMessage = JSON.parse(botMessage);
+                        botMessage = parsedMessage.message || botMessage;
+                    } catch (e) {
+                        // Keep original message if parsing fails
+                    }
                 }
                 
-                if (botResponse.action === 'scroll_to_page' && botResponse.page_id) {
-                    console.log('🔍 Looking for page card with ID:', botResponse.page_id);
-                    
-                    // Find the page card and scroll to it
-                    setTimeout(() => {
-                        const allCards = document.querySelectorAll('[data-page-id]');
-                        console.log('📦 Total cards found:', allCards.length);
-                        
-                        // Log all card IDs for debugging
-                        allCards.forEach((card, index) => {
-                            console.log(`Card ${index}: "${card.dataset.pageId}"`);
-                        });
-                        
-                        // Try exact match first
-                        let pageCard = document.querySelector(`[data-page-id="${botResponse.page_id}"]`);
-                        
-                        if (!pageCard) {
-                            console.log('⚠️ Exact match not found, trying smart search...');
-                            
-                            // Extract meaningful parts from the page_id
-                            const searchTerms = botResponse.page_id
-                                .toLowerCase()
-                                .replace(/_html$/, '')
-                                .replace(/\.html$/, '')
-                                .split('_')
-                                .filter(term => term && term.length > 2 && !/^\d+$/.test(term)); // Remove numbers and short terms
-                            
-                            console.log('🔍 Search terms:', searchTerms);
-                            
-                            // Try to find by matching any of the terms
-                            pageCard = Array.from(allCards).find(card => {
-                                const cardId = (card.dataset.pageId || '').toLowerCase();
-                                console.log(`Checking: "${cardId}" against terms:`, searchTerms);
-                                return searchTerms.some(term => cardId.includes(term));
-                            });
-                        }
-                        
-                        if (pageCard) {
-                            console.log('✅ Found page card! ID:', pageCard.dataset.pageId);
-                            pageCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            
-                            // Highlight the card
-                            pageCard.style.outline = '3px solid #667eea';
-                            pageCard.style.transform = 'scale(1.05)';
-                            pageCard.style.transition = 'all 0.3s ease';
-                            
-                            setTimeout(() => {
-                                pageCard.style.outline = '';
-                                pageCard.style.transform = '';
-                            }, 3000);
-                        } else {
-                            console.error('❌ Page card not found for:', botResponse.page_id);
-                            console.error('Available cards:', Array.from(allCards).map(c => c.dataset.pageId));
-                        }
-                    }, 500);
-                } else if ((botResponse.action === 'filter_category' || botResponse.action === 'change_category') && botResponse.category) {
-                    console.log('🏷️ Changing to category:', botResponse.category);
-                    
-                    // Map category names
-                    const categoryMap = {
-                        'store': 'store',
-                        'stores': 'store',
-                        'חנות': 'store',
-                        'חנויות': 'store',
-                        'landing': 'landing',
-                        'דף נחיתה': 'landing',
-                        'דפי נחיתה': 'landing',
-                        'course': 'course',
-                        'courses': 'course',
-                        'קורס': 'course',
-                        'קורסים': 'course',
-                        'portfolio': 'portfolio',
-                        'תיק עבודות': 'portfolio',
-                        'all': 'all',
-                        'הכל': 'all'
-                    };
-                    
-                    const mappedCategory = categoryMap[botResponse.category.toLowerCase()] || botResponse.category;
-                    console.log('📂 Mapped category:', mappedCategory);
-                    
-                    setTimeout(() => {
-                        filterByCategory(mappedCategory);
-                        // Scroll to top to see results
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }, 500);
+                if (typeof botMessage === 'object') {
+                    botMessage = botMessage.message || JSON.stringify(botMessage);
+                }
+                
+                // Display bot response
+                addAIMessage(botMessage, false);
+                
+                // Handle actions
+                if (data.action === 'change_category' && data.category) {
+                    await executeAction({ type: 'change_category', category: data.category });
+                } else if (data.action === 'scroll_to_page' && data.page_id) {
+                    await executeAction({ type: 'scroll_to_page', page_id: data.page_id });
+                } else if (data.action === 'show_page' && data.page_id) {
+                    // Open page in new tab
+                    const page = allPages.find(p => p.pageId === data.page_id);
+                    if (page) {
+                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                        window.open(pageUrl, '_blank');
+                    }
                 } else {
                     console.log('ℹ️ No action to perform or action is "none"');
                 }
-                
             } catch (error) {
-                console.error('AI Error:', error);
+                console.error('❌ Error in sendAIMessage:', error);
                 // Remove typing indicator
-                const messages = document.getElementById('aiChatMessages');
-                if (messages.lastChild && messages.lastChild.textContent.includes('⏳')) {
-                    messages.removeChild(messages.lastChild);
-                }
-                addAIMessage('⚠️ סליחה, נתקלתי בבעיה. נסה שוב בעוד רגע.', false);
+                removeTypingIndicator();
+                addAIMessage('סליחה, קרתה שגיאה. נסה שוב!', false);
             }
         }
+        
+        // Execute actions
+        async function executeAction(action) {
+            if (action.type === 'change_category') {
+                console.log('🏷️ Changing to category:', action.category);
+                
+                // Map category names
+                const categoryMap = {
+                    'store': 'store',
+                    'stores': 'store',
+                    'חנות': 'store',
+                    'חנויות': 'store',
+                    'event': 'event',
+                    'events': 'event',
+                    'אירוע': 'event',
+                    'אירועים': 'event',
+                    'course': 'course',
+                    'courses': 'course',
+                    'קורס': 'course',
+                    'קורסים': 'course',
+                    'serviceProvider': 'serviceProvider',
+                    'service': 'serviceProvider',
+                    'בעלי מקצוע': 'serviceProvider',
+                    'all': 'all',
+                    'הכל': 'all'
+                };
+                
+                const mappedCategory = categoryMap[action.category.toLowerCase()] || action.category;
+                console.log('📂 Mapped category:', mappedCategory);
+                
+                // Update UI buttons - use the existing filterByType function
+                filterByType(mappedCategory);
+                
+                // Scroll to top to see results
+                setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    console.log('✅ Category changed to:', mappedCategory);
+                    console.log('📊 New filteredPages length:', filteredPages.length);
+                    
+                    // Show success message
+                    addAIMessage(`✅ עברתי לקטגוריית ${getTypeName(mappedCategory)}! מצא ${filteredPages.length} דפים.`, false);
+                }, 100);
+            } else if (action.type === 'change_category_and_highlight') {
+                console.log('🏷️ Changing to category and highlighting pages:', action.category, action.highlight_pages);
+                
+                // Map category names
+                const categoryMap = {
+                    'store': 'store',
+                    'stores': 'store',
+                    'חנות': 'store',
+                    'חנויות': 'store',
+                    'event': 'event',
+                    'events': 'event',
+                    'אירוע': 'event',
+                    'אירועים': 'event',
+                    'course': 'course',
+                    'courses': 'course',
+                    'קורס': 'course',
+                    'קורסים': 'course',
+                    'serviceProvider': 'serviceProvider',
+                    'service': 'serviceProvider',
+                    'בעלי מקצוע': 'serviceProvider',
+                    'all': 'all',
+                    'הכל': 'all'
+                };
+                
+                const mappedCategory = categoryMap[action.category.toLowerCase()] || action.category;
+                console.log('📂 Mapped category:', mappedCategory);
+                
+                // Update UI buttons - use the existing filterByType function
+                filterByType(mappedCategory);
+                
+                // Scroll to top and highlight pages
+                setTimeout(() => {
+                    // Highlight matching pages first
+                    if (action.highlight_pages && action.highlight_pages.length > 0) {
+                        action.highlight_pages.forEach((pageId, index) => {
+                            const pageCard = document.querySelector(`[data-page-id="${pageId}"]`);
+                            if (pageCard) {
+                                pageCard.style.outline = '3px solid #667eea';
+                                pageCard.style.transform = 'scale(1.05)';
+                                pageCard.style.transition = 'all 0.3s ease';
+                                pageCard.style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.3)';
+                                
+                                // Scroll to first highlighted page with delay
+                                if (index === 0) {
+                                    setTimeout(() => {
+                                        pageCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }, 200);
+                                }
+                                
+                                setTimeout(() => {
+                                    pageCard.style.outline = '';
+                                    pageCard.style.transform = '';
+                                    pageCard.style.boxShadow = '';
+                                }, 5000);
+                            }
+                        });
+                    }
+                    
+                    console.log('✅ Category changed to:', mappedCategory);
+                    console.log('📊 New filteredPages length:', filteredPages.length);
+                    
+                    // Show success message
+                    addAIMessage(`✅ עברתי לקטגוריית ${getTypeName(mappedCategory)}! מצא ${filteredPages.length} דפים.`, false);
+                }, 100);
+            } else if (action.type === 'scroll_to_page' && action.page_id) {
+                console.log('🔍 Looking for page card with ID:', action.page_id);
+                
+                // Find the page card and scroll to it
+                setTimeout(() => {
+                    const pageCard = document.querySelector(`[data-page-id="${action.page_id}"]`);
+                    if (pageCard) {
+                        pageCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        pageCard.style.outline = '3px solid #667eea';
+                        pageCard.style.transform = 'scale(1.05)';
+                        pageCard.style.transition = 'all 0.3s ease';
+                        pageCard.style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.3)';
+                        
+                        setTimeout(() => {
+                            pageCard.style.outline = '';
+                            pageCard.style.transform = '';
+                            pageCard.style.boxShadow = '';
+                        }, 3000);
+                    } else {
+                        console.error('❌ Page card not found for:', action.page_id);
+                        addAIMessage('🔍 מצאתי את הדף אבל לא הצלחתי לגלול אליו. חפש אותו ברשימה למעלה!', false);
+                    }
+                }, 500);
+            } else if (action.type === 'show_page' && action.page_id) {
+                // Open page in new tab
+                const page = allPages.find(p => p.pageId === action.page_id);
+                if (page) {
+                    const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                    window.open(pageUrl, '_blank');
+                }
+            }
+        }
+        
+        // Function to extract prices from page content
+        async function extractPricesFromPage(page) {
+            try {
+                const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                const response = await fetch(pageUrl);
+                if (!response.ok) return null;
+                
+                const htmlContent = await response.text();
+                const priceRegex = /₪\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/g;
+                const prices = [];
+                let match;
+                
+                while ((match = priceRegex.exec(htmlContent)) !== null) {
+                    prices.push(match[0]);
+                }
+                
+                return prices.length > 0 ? prices : null;
+            } catch (error) {
+                console.error('Error extracting prices:', error);
+                return null;
+            }
+        }
+        
+        // Enhanced search with price information - DISABLED, everything goes to N8N
+        async function searchWithPrices(message) {
+            // Everything goes to N8N now
+            return null;
+        }
+        
+        // Fix the filterByCategory function
+        function filterByCategory(category) {
+            currentType = category;
+            
+            if (category === 'all') {
+                filteredPages = [...allPages];
+            } else {
+                filteredPages = allPages.filter(page => page.pageType === category);
+            }
+            
+            displayPages();
+            updatePagesCount();
+        }
+        
+        // Replace the original sendAIMessage with enhanced version
+        window.sendAIMessage = sendAIMessageEnhanced;
+        
+        // Allow Enter key in chat input
+        document.getElementById('aiChatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendAIMessage();
+            }
+        });
+        
+        // Go to full app function
+        function goToFullApp() {
+            window.location.href = '/';
+        }
     </script>
-
 </body>
 </html>
-

@@ -3786,7 +3786,7 @@ window.addEventListener('DOMContentLoaded', function() {
 ### 3️⃣ AI BOT "סתיו" BUBBLE (CRITICAL - ALWAYS INCLUDE):
 
 **📍 Location:** Fixed position, bottom-right corner
-**🤖 Webhook:** https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbkfhkfggyt
+**🤖 Webhook:** https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbmreketpg
 
 \`\`\`html
 <div id="ai-bot-bubble" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
@@ -4431,9 +4431,12 @@ const SPECIAL_HOURS = ${JSON.stringify(specialHoursData)}; // Format: [{day: 'fr
 let selectedDate = new Date(); // Currently selected date
 let appointments = []; // Will be fetched from API
 
-// Initialize calendar
+// Initialize calendar - IMPROVED VERSION
 async function initCalendar() {
     await fetchAppointments();
+    
+    // Always start with today
+    selectedDate = new Date();
     
     // If today is not a working day, jump to next working day
     if (!WORKING_DAYS.includes(selectedDate.getDay())) {
@@ -4451,23 +4454,59 @@ async function initCalendar() {
     renderDateSelector();
     renderTimeSlots();
     setupEventListeners();
+    
+    // Add today's appointments highlight
+    highlightTodaysAppointments();
 }
 
-// Fetch appointments from server
-async function fetchAppointments() {
-    try {
-        const response = await fetch('/api/appointments/USER_ID/PAGE_ID');
-        appointments = await response.json();
-    } catch (error) {
-        console.error('Failed to fetch appointments:', error);
-        appointments = [];
+// Highlight today's appointments
+function highlightTodaysAppointments() {
+    const today = new Date().toISOString().split('T')[0];
+    const todaysAppointments = appointments.filter(apt => apt.date === today);
+    
+    if (todaysAppointments.length > 0) {
+        // Add notification about today's appointments
+        const notification = document.createElement('div');
+        notification.style.cssText = 'position: fixed; top: 20px; left: 20px; background: #3b82f6; color: white; padding: 12px 16px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);';
+        notification.innerHTML = \`📅 היום יש \${todaysAppointments.length} תורים מתוכננים\`;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
     }
 }
 
-// Render date selector
+// Fetch appointments from server - IMPROVED VERSION
+async function fetchAppointments() {
+    try {
+        // Try to get user ID and page ID from URL or page data
+        const urlParts = window.location.pathname.split('/');
+        const userId = urlParts[urlParts.length - 2] || 'default';
+        const pageId = urlParts[urlParts.length - 1]?.replace('_html', '') || 'default';
+        
+        const response = await fetch(\`/api/appointments/\${userId}/\${pageId}\`);
+        if (response.ok) {
+        appointments = await response.json();
+        } else {
+            // Fallback: try to get from localStorage or create empty array
+            appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+        }
+    } catch (error) {
+        console.error('Failed to fetch appointments:', error);
+        // Fallback: try to get from localStorage or create empty array
+        appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+    }
+    
+    console.log('📅 Loaded appointments:', appointments.length);
+}
+
+// Render date selector - IMPROVED VERSION
 function renderDateSelector() {
     const dateDisplay = document.getElementById('selected-date-display');
     const dayName = document.getElementById('day-name');
+    
+    if (!dateDisplay || !dayName) return;
     
     const hebrewDays = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
     const hebrewMonths = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
@@ -4479,6 +4518,12 @@ function renderDateSelector() {
     
     dateDisplay.textContent = \`יום \${dayOfWeek}, \${day} ב\${month} \${year}\`;
     dayName.textContent = dayOfWeek;
+    
+    // Update page title to show selected date
+    const pageTitle = document.querySelector('h1, .page-title');
+    if (pageTitle && !pageTitle.textContent.includes('תורים')) {
+        pageTitle.textContent = \`תורים ל-\${dayOfWeek}, \${day} ב\${month}\`;
+    }
 }
 
 // Render time slots for selected date
@@ -4533,6 +4578,17 @@ function renderTimeSlots() {
         grid.appendChild(specialHoursNotice);
     }
     
+    // Show today's appointments count if viewing today
+    const isToday = selectedDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+    if (isToday && dayAppointments.length > 0) {
+        const todayNotice = document.createElement('div');
+        todayNotice.className = 'col-span-full mb-4 p-3 bg-green-50 border-2 border-green-300 rounded-lg text-center';
+        todayNotice.innerHTML = \`
+            <p class="text-green-900 font-semibold">📅 היום יש \${dayAppointments.length} תורים מתוכננים</p>
+        \`;
+        grid.appendChild(todayNotice);
+    }
+    
     for (let hour = startHour; hour < endHour; hour++) {
         for (let min = 0; min < 60; min += 30) { // 30-minute slots
             const timeStr = \`\${hour.toString().padStart(2, '0')}:\${min.toString().padStart(2, '0')}\`;
@@ -4558,8 +4614,20 @@ function renderTimeSlots() {
             } else {
                 slot.className += ' available';
                 slot.dataset.time = timeStr;
-                slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">🟢 פנוי</div>\`;
+                
+                // Highlight if this is a popular time slot (morning/afternoon)
+                const hour = parseInt(timeStr.split(':')[0]);
+                const isPopularTime = (hour >= 9 && hour <= 11) || (hour >= 14 && hour <= 16);
+                const popularIcon = isPopularTime ? '⭐ ' : '';
+                
+                slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">\${popularIcon}🟢 פנוי</div>\`;
                 slot.onclick = () => selectTimeSlot(timeStr);
+                
+                // Add hover effect for popular times
+                if (isPopularTime) {
+                    slot.style.borderColor = '#f59e0b';
+                    slot.style.boxShadow = '0 0 0 2px rgba(245, 158, 11, 0.2)';
+                }
             }
             
             grid.appendChild(slot);
@@ -4567,27 +4635,69 @@ function renderTimeSlots() {
     }
 }
 
-// Select time slot and fill form
+// Select time slot and fill form - UNIVERSAL FUNCTION
 function selectTimeSlot(time) {
-    document.getElementById('appointment-time').value = time;
-    document.getElementById('appointment-date').value = selectedDate.toISOString().split('T')[0];
-    document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth' });
-    alert(\`נבחר תור ל-\${time}. אנא מלא את הפרטים בטופס למטה.\`);
+    // Try to find appointment form fields (universal approach)
+    const timeInput = document.querySelector('input[name="appointment-time"], input[id*="time"], input[placeholder*="שעה"]');
+    const dateInput = document.querySelector('input[name="appointment-date"], input[id*="date"], input[type="date"]');
+    const bookingForm = document.querySelector('form, .booking-form, #booking-form');
+    
+    // Fill the form fields if found
+    if (timeInput) {
+        timeInput.value = time;
+        timeInput.style.backgroundColor = '#d4fc79';
+        setTimeout(() => timeInput.style.backgroundColor = '', 2000);
+    }
+    
+    if (dateInput) {
+        dateInput.value = selectedDate.toISOString().split('T')[0];
+        dateInput.style.backgroundColor = '#d4fc79';
+        setTimeout(() => dateInput.style.backgroundColor = '', 2000);
+    }
+    
+    // Scroll to form if found
+    if (bookingForm) {
+        bookingForm.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        // Scroll to any form on the page
+        const anyForm = document.querySelector('form');
+        if (anyForm) {
+            anyForm.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    
+    // Show success message
+    const successMsg = document.createElement('div');
+    successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 16px; border-radius: 8px; z-index: 10000; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);';
+    successMsg.innerHTML = \`✅ נבחר תור ל-\${time} ב-\${selectedDate.toLocaleDateString('he-IL')}\`;
+    document.body.appendChild(successMsg);
+    
+    setTimeout(() => {
+        successMsg.remove();
+    }, 3000);
 }
 
-// Event listeners
+// Event listeners - IMPROVED VERSION
 function setupEventListeners() {
-    document.getElementById('prev-day').onclick = () => {
+    // Previous day button
+    const prevBtn = document.getElementById('prev-day');
+    if (prevBtn) {
+        prevBtn.onclick = () => {
         selectedDate.setDate(selectedDate.getDate() - 1);
         renderDateSelector();
         renderTimeSlots();
     };
+    }
     
-    document.getElementById('next-day').onclick = () => {
+    // Next day button
+    const nextBtn = document.getElementById('next-day');
+    if (nextBtn) {
+        nextBtn.onclick = () => {
         selectedDate.setDate(selectedDate.getDate() + 1);
         renderDateSelector();
         renderTimeSlots();
     };
+    }
     
     // Quick date buttons
     document.querySelectorAll('.quick-date-btn').forEach((btn, idx) => {
@@ -4598,10 +4708,111 @@ function setupEventListeners() {
             renderTimeSlots();
         };
     });
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            selectedDate.setDate(selectedDate.getDate() - 1);
+            renderDateSelector();
+            renderTimeSlots();
+        } else if (e.key === 'ArrowRight') {
+            selectedDate.setDate(selectedDate.getDate() + 1);
+            renderDateSelector();
+            renderTimeSlots();
+        }
+    });
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initCalendar);
+// Initialize on page load - UNIVERSAL APPROACH
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if this is an appointment page
+    const hasAppointmentForm = document.querySelector('form') && (
+        document.querySelector('input[name*="appointment"], input[id*="appointment"]') ||
+        document.querySelector('input[placeholder*="תור"], input[placeholder*="שעה"]') ||
+        document.querySelector('button[onclick*="appointment"], button[onclick*="תור"]')
+    );
+    
+    if (hasAppointmentForm) {
+        // Initialize calendar for appointment pages
+        initCalendar();
+    }
+    
+    // Initialize AI bot for all pages
+    initAIBot();
+});
+
+// Universal AI Bot Initialization
+function initAIBot() {
+    const aiBotBtn = document.getElementById('ai-bot-btn');
+    const aiChatWindow = document.getElementById('ai-chat-window');
+    const aiCloseBtn = document.getElementById('ai-close-btn');
+    const aiSendBtn = document.getElementById('ai-send-btn');
+    const aiUserInput = document.getElementById('ai-user-input');
+    const aiChatMessages = document.getElementById('ai-chat-messages');
+    
+    if (!aiBotBtn || !aiChatWindow) return;
+    
+    // Toggle chat window - RELIABLE CLICK HANDLER
+    aiBotBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (aiChatWindow.style.display === 'none' || !aiChatWindow.style.display) {
+            aiChatWindow.style.display = 'flex';
+            aiUserInput.focus();
+        } else {
+            aiChatWindow.style.display = 'none';
+        }
+    });
+    
+    // Close button
+    if (aiCloseBtn) {
+        aiCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            aiChatWindow.style.display = 'none';
+        });
+    }
+    
+    // Send message
+    if (aiSendBtn && aiUserInput) {
+        aiSendBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            sendAIMessage();
+        });
+        
+        aiUserInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                sendAIMessage();
+            }
+        });
+    }
+    
+    function sendAIMessage() {
+        const message = aiUserInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addBotMessage(message, true);
+        aiUserInput.value = '';
+        
+        // Simulate bot response
+        setTimeout(() => {
+            addBotMessage('תודה על ההודעה! אני כאן לעזור לך עם קביעת התור. איך אני יכולה לעזור?', false);
+        }, 1000);
+    }
+    
+    function addBotMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = \`background: \${isUser ? '#8B5CF6' : '#E9D5FF'}; color: \${isUser ? 'white' : '#1F2937'}; padding: 12px; border-radius: 12px; margin-bottom: 12px; font-size: 15px; line-height: 1.5;\`;
+        messageDiv.textContent = message;
+        aiChatMessages.appendChild(messageDiv);
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+}
 \`\`\`
 
 ---
@@ -8227,9 +8438,9 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
              try {
 
-                // יצירת AbortController עם timeout של 10 דקות
+                // יצירת AbortController עם timeout של 30 דקות
                  const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 דקות
+                const timeoutId = setTimeout(() => controller.abort(), 30 * 60 * 1000); // 30 דקות
 
                  const response = await fetch(N8N_GENERATE_URL, {
 
