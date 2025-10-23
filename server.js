@@ -1176,6 +1176,28 @@ app.post('/api/save-page', async (req, res) => {
         lastUpdated: new Date().toISOString()
       };
       
+      // Extract products from store pages for bot access
+      if (pageType === 'store') {
+        const products = [];
+        const priceRegex = /<p class="product-price">₪(\d+(?:,\d+)?)<\/p>/g;
+        const nameRegex = /<h3 class="product-name">([^<]+)<\/h3>/g;
+        
+        const prices = [...content.matchAll(priceRegex)];
+        const names = [...content.matchAll(nameRegex)];
+        
+        for (let i = 0; i < Math.min(prices.length, names.length); i++) {
+          products.push({
+            name: names[i][1],
+            price: prices[i][1]
+          });
+        }
+        
+        if (products.length > 0) {
+          metadata.products = products;
+          console.log('✅ Extracted products:', products);
+        }
+      }
+      
       const metadataPath = path.join(metadataDir, 'metadata.json');
       await fs.writeJSON(metadataPath, metadata, { spaces: 2 });
       console.log('✅ Saved metadata:', metadata);
@@ -1962,6 +1984,7 @@ app.get('/api/public-pages', async (req, res) => {
           let pageType = 'other';
           let thumbnail = '';
           let description = '';
+          let products = [];
           try {
             const metaDir = file.replace(/_html$/, '') + '_html_data';
             const metaPath = path.join(userDir, metaDir, 'metadata.json');
@@ -1970,6 +1993,7 @@ app.get('/api/public-pages', async (req, res) => {
               if (meta && meta.pageType) pageType = meta.pageType;
               thumbnail = meta.thumbnail || meta.coverImage || thumbnail;
               description = meta.description || description;
+              products = meta.products || [];
             }
             // If no pageType from metadata, try reading meta tag from HTML
             if (pageType === 'other') {
@@ -2092,7 +2116,8 @@ app.get('/api/public-pages', async (req, res) => {
             description,
             created_at: stats.birthtime.toISOString(),
             url: `/output/${userId}/${file}`,
-            thumbnail
+            thumbnail,
+            products: products.length > 0 ? products : undefined
           });
         });
 

@@ -44,10 +44,12 @@
         "purchase_1760423617669_vzhj9yibz",
         "purchase_1760423720897_l7ela4las",
         "purchase_1760952283111_0077x9dt7",
-        "purchase_1761035719470_vawnadc9b"
+        "purchase_1761035719470_vawnadc9b",
+        "purchase_1761153772262_q4auqrv4h",
+        "purchase_1761153882014_hx3gsx88j"
       ],
       "createdAt": "2025-10-10T04:34:55.026Z",
-      "lastActive": "2025-10-21T08:35:19.548Z"
+      "lastActive": "2025-10-22T17:24:42.033Z"
     },
     "3ed25bfd-680d-4c09-a027-1a846170c13e": {
       "id": "3ed25bfd-680d-4c09-a027-1a846170c13e",
@@ -1253,12 +1255,57 @@
       "shipping": true,
       "status": "shipped",
       "createdAt": "2025-10-21T08:35:19.470Z"
+    },
+    "purchase_1761153772262_q4auqrv4h": {
+      "id": "purchase_1761153772262_q4auqrv4h",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "יניב_צעצוע__1760960917165",
+      "products": [
+        {
+          "id": 1761153747980,
+          "name": "רכבת עץ קלאסית",
+          "price": 85,
+          "quantity": 1,
+          "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1760960849147-283159394.png"
+        }
+      ],
+      "total": 120,
+      "customerName": "ציון",
+      "customerPhone": "0505378108",
+      "customerEmail": "britolam1@gmail.com",
+      "customerAddress": "בר  יואי 2 נתניה",
+      "shipping": true,
+      "status": "completed",
+      "createdAt": "2025-10-22T17:22:52.262Z",
+      "completedAt": "2025-10-22T17:23:48.153Z"
+    },
+    "purchase_1761153882014_hx3gsx88j": {
+      "id": "purchase_1761153882014_hx3gsx88j",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "יניב_צעצוע__1760960917165",
+      "products": [
+        {
+          "id": 1761153860746,
+          "name": "טבעות השחלה צבעוניות",
+          "price": 60,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1628109043322-a988d44c4c73?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        }
+      ],
+      "total": 95,
+      "customerName": "מיטב",
+      "customerPhone": "0505378108",
+      "customerEmail": "britolam1@gmail.com",
+      "customerAddress": "בר  יואי 2 נתניה",
+      "shipping": true,
+      "status": "new",
+      "createdAt": "2025-10-22T17:24:42.014Z"
     }
   },
   "products": {},
   "stores": {},
   "analytics": {
-    "totalSales": 36989.9,
+    "totalSales": 37204.9,
     "totalUsers": 0,
     "totalProducts": 0,
     "dailySales": {
@@ -1271,10 +1318,11 @@
       "2025-10-18": 832,
       "2025-10-19": 398,
       "2025-10-20": 1535,
-      "2025-10-21": 1535
+      "2025-10-21": 1535,
+      "2025-10-22": 215
     },
     "monthlySales": {
-      "2025-10": 40189.3
+      "2025-10": 40404.3
     },
     "topProducts": [
       {
@@ -1428,6 +1476,12 @@
         "revenue": 89
       },
       {
+        "id": 1761153747980,
+        "name": "רכבת עץ קלאסית",
+        "sales": 1,
+        "revenue": 85
+      },
+      {
         "id": 1760132213715,
         "name": "טראפל מנגו-פסיפלורה",
         "sales": 2,
@@ -1498,6 +1552,12 @@
         "name": "פרקי אבות עם פירוש מודרני",
         "sales": 1,
         "revenue": 65
+      },
+      {
+        "id": 1761153860746,
+        "name": "טבעות השחלה צבעוניות",
+        "sales": 1,
+        "revenue": 60
       },
       {
         "id": 1760088497800,
@@ -1831,6 +1891,50 @@
       }
     ],
     "recentPurchases": [
+      {
+        "id": "purchase_1761153882014_hx3gsx88j",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "יניב_צעצוע__1760960917165",
+        "products": [
+          {
+            "id": 1761153860746,
+            "name": "טבעות השחלה צבעוניות",
+            "price": 60,
+            "quantity": 1,
+            "image": "https://images.unsplash.com/photo-1628109043322-a988d44c4c73?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
+        ],
+        "total": 95,
+        "customerName": "מיטב",
+        "customerPhone": "0505378108",
+        "customerEmail": "britolam1@gmail.com",
+        "customerAddress": "בר  יואי 2 נתניה",
+        "shipping": true,
+        "status": "new",
+        "createdAt": "2025-10-22T17:24:42.014Z"
+      },
+      {
+        "id": "purchase_1761153772262_q4auqrv4h",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "יניב_צעצוע__1760960917165",
+        "products": [
+          {
+            "id": 1761153747980,
+            "name": "רכבת עץ קלאסית",
+            "price": 85,
+            "quantity": 1,
+            "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1760960849147-283159394.png"
+          }
+        ],
+        "total": 120,
+        "customerName": "ציון",
+        "customerPhone": "0505378108",
+        "customerEmail": "britolam1@gmail.com",
+        "customerAddress": "בר  יואי 2 נתניה",
+        "shipping": true,
+        "status": "new",
+        "createdAt": "2025-10-22T17:22:52.262Z"
+      },
       {
         "id": "purchase_1761035719470_vawnadc9b",
         "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",

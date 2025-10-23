@@ -105,6 +105,37 @@
             background: #f8f9fa;
         }
         
+        .page-preview {
+            margin-top: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+        
+        .preview-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .preview-content {
+            padding: 0;
+            background: white;
+        }
+        
+        .preview-content iframe {
+            border: none;
+            border-radius: 0 0 12px 12px;
+        }
+        
         .ai-message {
             margin-bottom: 10px;
             padding: 10px;
@@ -122,6 +153,16 @@
             background: white;
             color: #333;
             border: 1px solid #e0e0e0;
+        }
+        
+        .typing-text {
+            display: inline-block;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
         
         .ai-chat-input {
@@ -254,14 +295,14 @@
     </div>
 
     <!-- AI Search Bot -->
-    <div class="ai-bot-bubble" onclick="toggleAIChat()" title="עזרה חכמה">
+    <div class="ai-bot-bubble" id="aiBotBubble" title="עזרה חכמה">
         🤖
     </div>
 
     <div class="ai-chat-window" id="aiChatWindow">
         <div class="ai-chat-header">
             <span>🤖 העוזרת החכמה</span>
-            <button onclick="toggleAIChat()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
+            <button id="closeAiChat" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
         </div>
         <div class="ai-chat-messages" id="aiChatMessages">
             <div class="ai-message bot">
@@ -286,6 +327,19 @@
             }
         }
         
+        // Add event listener for AI bot bubble
+        document.addEventListener('DOMContentLoaded', function() {
+            const aiBotBubble = document.getElementById('aiBotBubble');
+            if (aiBotBubble) {
+                aiBotBubble.addEventListener('click', toggleAIChat);
+            }
+            
+            const closeAiChat = document.getElementById('closeAiChat');
+            if (closeAiChat) {
+                closeAiChat.addEventListener('click', toggleAIChat);
+            }
+        });
+        
         function addAIMessage(message, isUser = false) {
             const messagesDiv = document.getElementById('aiChatMessages');
             const messageDiv = document.createElement('div');
@@ -296,6 +350,22 @@
             } else {
                 // Convert markdown-style links to clickable links
                 let processedMessage = message.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #667eea; text-decoration: underline;">$1</a>');
+                
+                // Add animated typing effect for bot messages
+                messageDiv.innerHTML = '<span class="typing-text"></span>';
+                messagesDiv.appendChild(messageDiv);
+                
+                // Animate typing effect
+                const typingSpan = messageDiv.querySelector('.typing-text');
+                let i = 0;
+                const typeMessage = () => {
+                    if (i < processedMessage.length) {
+                        typingSpan.innerHTML += processedMessage.charAt(i);
+                        i++;
+                        setTimeout(typeMessage, 50); // 50ms delay between characters
+                    }
+                };
+                typeMessage();
                 
                 // Fix image URLs to be absolute and add error handling
                 processedMessage = processedMessage.replace(/src="([^"]+)"/g, (match, src) => {
@@ -638,28 +708,772 @@
         }
         
         
-        // Smart search functionality - ENABLED for real page results
-        async function handleSmartSearch(message) {
+        // Extract product info from description and HTML content
+        async function extractProductInfo(description, keyword, pageUrl = null) {
+            if (!description) return null;
+            
+            const desc = description.toLowerCase();
+            const keywordLower = keyword.toLowerCase();
+            
+            // Look for price patterns - more comprehensive
+            const pricePatterns = [
+                /(\d+)\s*₪/g,
+                /(\d+)\s*שקל/g,
+                /(\d+)\s*ש"ח/g,
+                /מחיר[:\s]*(\d+)/g,
+                /(\d+)\s*-\s*(\d+)\s*₪/g,
+                /מחיר[:\s]*(\d+)\s*-\s*(\d+)/g,
+                /(\d+)\s*למאה/g,
+                /(\d+)\s*למטה/g,
+                /(\d+)\s*למעלה/g
+            ];
+            
+            let price = null;
+            for (const pattern of pricePatterns) {
+                const match = pattern.exec(desc);
+                if (match) {
+                    if (match[2]) {
+                        price = `${match[1]}-${match[2]}₪`;
+                    } else {
+                        price = `${match[1]}₪`;
+                    }
+                    break;
+                }
+            }
+            
+            // Look for location patterns
+            const locationPatterns = [
+                /מיקום[:\s]*([^,.\n]{2,50})/g,
+                /כתובת[:\s]*([^,.\n]{2,50})/g,
+                /נמצא[:\s]*([^,.\n]{2,50})/g,
+                /ב[:\s]*([^,.\n]{2,50})/g
+            ];
+            
+            let location = null;
+            for (const pattern of locationPatterns) {
+                const match = pattern.exec(desc);
+                if (match && match[1] && match[1].length > 2) {
+                    location = match[1].trim();
+                    break;
+                }
+            }
+            
+            // Look for product name patterns - more specific
+            let productName = null;
+            if (keywordLower === 'שעון') {
+                const watchPatterns = [
+                    /שעון\s+([^,.\n]{2,30})/g,
+                    /([^,.\n]{2,30})\s*שעון/g,
+                    /שעון\s+([א-ת\s]{2,30})/g,
+                    /([א-ת\s]{2,30})\s*שעון\s+([א-ת\s]{2,30})/g
+                ];
+                for (const pattern of watchPatterns) {
+                    const match = pattern.exec(desc);
+                    if (match && match[1] && match[1].length > 2) {
+                        productName = match[1].trim();
+                        break;
+                    }
+                }
+            } else if (keywordLower === 'תכשיט') {
+                const jewelryPatterns = [
+                    /תכשיט\s+([^,.\n]{2,30})/g,
+                    /([^,.\n]{2,30})\s*תכשיט/g,
+                    /([^,.\n]{2,30})\s*זהב/g,
+                    /([^,.\n]{2,30})\s*כסף/g
+                ];
+                for (const pattern of jewelryPatterns) {
+                    const match = pattern.exec(desc);
+                    if (match && match[1] && match[1].length > 2) {
+                        productName = match[1].trim();
+                        break;
+                    }
+                }
+            } else if (keywordLower === 'צעצוע') {
+                const toyPatterns = [
+                    /צעצוע\s+([^,.\n]{2,30})/g,
+                    /([^,.\n]{2,30})\s*צעצוע/g,
+                    /([^,.\n]{2,30})\s*משחק/g
+                ];
+                for (const pattern of toyPatterns) {
+                    const match = pattern.exec(desc);
+                    if (match && match[1] && match[1].length > 2) {
+                        productName = match[1].trim();
+                        break;
+                    }
+                }
+            }
+            
+            // If we have a page URL, try to fetch the HTML content to find more prices
+            if (pageUrl && (!price || !productName)) {
+                try {
+                    console.log('🔍 Fetching HTML for:', pageUrl);
+                    const response = await fetch(pageUrl);
+                    const html = await response.text();
+                    const htmlLower = html.toLowerCase();
+                    
+                    console.log('📄 HTML length:', html.length);
+                    
+                    // Look for prices in HTML content
+                    if (!price) {
+                        console.log('💰 Looking for prices in HTML...');
+                        const htmlPricePatterns = [
+                            /<p class="product-price[^"]*"[^>]*>₪(\d+(?:,\d+)?)<\/p>/g,
+                            /class="product-price[^"]*"[^>]*>₪(\d+(?:,\d+)?)/g,
+                            /₪\s*(\d+(?:,\d+)?)/g,
+                            /(\d+(?:,\d+)?)\s*₪/g
+                        ];
+                        
+                        for (const pattern of htmlPricePatterns) {
+                            const matches = [...html.matchAll(pattern)];
+                            console.log('🔍 Pattern matches:', pattern, matches.length);
+                            if (matches.length > 0) {
+                                // Get the first price found
+                                const firstPrice = matches[0][1] || matches[0][0].match(/(\d+(?:,\d+)?)/)?.[1];
+                                console.log('💰 Found price:', firstPrice);
+                                if (firstPrice) {
+                                    price = `₪${firstPrice}`;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // If still no price, try a simpler approach
+                        if (!price) {
+                            console.log('🔍 Trying simple price search...');
+                            const simplePriceMatch = html.match(/₪\s*(\d+(?:,\d+)?)/);
+                            console.log('💰 Simple match result:', simplePriceMatch);
+                            if (simplePriceMatch) {
+                                price = `₪${simplePriceMatch[1]}`;
+                            }
+                        }
+                        
+                        console.log('💰 Final price found:', price);
+                    }
+                    
+                    // Look for product names in HTML content
+                    if (!productName && keywordLower === 'שעון') {
+                        const watchPatterns = [
+                            /שעון\s+([^<>{}\n]{2,30})/g,
+                            /([^<>{}\n]{2,30})\s*שעון/g,
+                            /<h[1-6][^>]*>.*?שעון\s+([^<]{2,30})/g,
+                            /class="[^"]*product-name[^"]*"[^>]*>([^<]+)/g,
+                            /<h3[^>]*>([^<]*שעון[^<]*)<\/h3>/g
+                        ];
+                        
+                        for (const pattern of watchPatterns) {
+                            const matches = [...html.matchAll(pattern)];
+                            if (matches.length > 0) {
+                                productName = matches[0][1].trim();
+                                break;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('Could not fetch HTML content:', error);
+                }
+            }
+            
+            if (productName || price || location) {
+                return {
+                    name: productName || `${keyword} מיוחד`,
+                    price: price || 'מחיר לפי בקשה',
+                    location: location || 'מיקום לא צוין'
+                };
+            }
+            
+            return null;
+        }
+
+        // Smart search functionality - copied from Stav the Great
+        let lastSearchContext = null; // Remember last search context
+        let lastSearchResults = []; // Remember last search results
+        
+        async function handleSmartSearch(message, allPages) {
             const lowerMessage = message.toLowerCase();
             
-            // Quick responses for greetings
-            if (lowerMessage.includes('שלום') || lowerMessage.includes('היי') || lowerMessage.includes('הי') || lowerMessage.includes('הייי')) {
-                return {
-                    message: 'שלום! 😊 איך אני יכולה לעזור לך במרקט?',
-                    action: { type: 'none' }
-                };
+            // Handle greetings and personal questions
+            if (lowerMessage.includes('שלום') || lowerMessage.includes('היי') || lowerMessage.includes('הי') || 
+                lowerMessage.includes('שמי') || lowerMessage.includes('קוראים לי') || lowerMessage.includes('אני') ||
+                lowerMessage.includes('מה שלומך') || lowerMessage.includes('איך אתה') || lowerMessage.includes('איך את')) {
+                return { message: `היי! 😊 נחמד להכיר! איך אני יכולה לעזור לך היום?`, action: { type: 'none' } };
             }
             
-            // Quick responses for thanks
-            if (lowerMessage.includes('תודה') || lowerMessage.includes('תודה רבה')) {
-                return {
-                    message: 'בכיף! 😊 יש עוד משהו שאני יכולה לעזור לך?',
-                    action: { type: 'none' }
-                };
+            // Handle context switching (e.g., "ולגבר" after "מתנה לילד")
+            if (lowerMessage.includes('ולגבר') || lowerMessage.includes('ולאישה') || lowerMessage.includes('ולילד') || 
+                lowerMessage.includes('ולגברים') || lowerMessage.includes('ולנשים') || lowerMessage.includes('ולילדים')) {
+                // Extract the gift type from context
+                let giftType = 'מתנה';
+                if (lowerMessage.includes('גבר') || lowerMessage.includes('גברים')) giftType = 'מתנה לגבר';
+                else if (lowerMessage.includes('אישה') || lowerMessage.includes('נשים')) giftType = 'מתנה לאישה';
+                else if (lowerMessage.includes('ילד') || lowerMessage.includes('ילדים')) giftType = 'מתנה לילד';
+                
+                // Process as gift search
+                const giftResult = await handleSmartSearch(giftType, allPages);
+                if (giftResult) return giftResult;
             }
+            
+            // Only search for pages if user is specifically looking for something
+            if (!lowerMessage.includes('מתנה') && !lowerMessage.includes('לק') && !lowerMessage.includes('שעון') && !lowerMessage.includes('צעצוע') && !lowerMessage.includes('קורס') && !lowerMessage.includes('חנות') && !lowerMessage.includes('שירות') && !lowerMessage.includes('אירוע') && !lowerMessage.includes('מחיר') && !lowerMessage.includes('כמה') && !lowerMessage.includes('עולה') && !lowerMessage.includes('₪') && !lowerMessage.includes('שקל') && !lowerMessage.includes('הכי זול') && !lowerMessage.includes('הכי יקר') && !lowerMessage.includes('השוואה') && !lowerMessage.includes('נגיד') && !lowerMessage.includes('ולק') && !lowerMessage.includes('ושעון') && !lowerMessage.includes('וצעצוע') && !lowerMessage.includes('צעצועים') && !lowerMessage.includes('שעונים')) {
+                // For general questions, show available pages instead of letting N8N invent
+                if (allPages.length > 0) {
+                    let response = `🎯 **הנה הדפים הזמינים במערכת שלנו:**\n\n`;
+                    allPages.slice(0, 8).forEach(page => {
+                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                        const emoji = page.pageType === 'store' ? '🛍️' : page.pageType === 'event' ? '🎉' : page.pageType === 'course' ? '🎓' : page.pageType === 'serviceProvider' ? '🔧' : '📄';
+                        response += `• **${page.title}** ${emoji}\n`;
+                        response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                    });
+                    response += `\n💡 **רוצה לחפש משהו ספציפי?** כתוב "מתנה", "לק", "שעון", "צעצוע" או "קורס"!`;
+                    return { message: response, action: { type: 'none' } };
+                }
+                return null; // Let N8N handle general questions only if no pages available
+            }
+            
+            // Reset search context if user is searching for something new
+            if (lowerMessage.includes('מחפש') || lowerMessage.includes('המלצ') || lowerMessage.includes('לא') || lowerMessage.includes('לא ') || lowerMessage.includes('נגיד') || lowerMessage.includes('ולק') || lowerMessage.includes('ושעון') || lowerMessage.includes('וצעצוע') || lowerMessage.includes('צעצועים') || lowerMessage.includes('צעצוע') || lowerMessage.includes('שעונים') || lowerMessage.includes('שעון')) {
+                lastSearchContext = null;
+                lastSearchResults = [];
+                console.log('🔄 Reset search context for new search or rejection');
+            }
+            
+            // Special handling for "cheapest" or "most expensive" across all pages
+            if (lowerMessage.includes('הכי זול') || lowerMessage.includes('הכי יקר') || lowerMessage.includes('השוואה')) {
+                console.log('🔍 Cheapest/expensive search triggered:', lowerMessage);
+                
+                // Determine what product they're looking for
+                let searchKeyword = '';
+                if (lowerMessage.includes('שעון') || lowerMessage.includes('שעונים')) searchKeyword = 'שעון';
+                else if (lowerMessage.includes('צעצוע') || lowerMessage.includes('צעצועים')) searchKeyword = 'צעצוע';
+                else if (lowerMessage.includes('לק')) searchKeyword = 'לק';
+                else if (lowerMessage.includes('תכשיט') || lowerMessage.includes('תכשיטים')) searchKeyword = 'תכשיט';
+                else if (lastSearchContext) searchKeyword = lastSearchContext;
+                else searchKeyword = 'מוצר';
+                
+                console.log('🔍 Search keyword for comparison:', searchKeyword);
+                
+                // Find all relevant pages
+                let relevantPages = allPages.filter(page => {
+                    if (searchKeyword === 'מוצר') {
+                        return page.pageType === 'store';
+                    }
+                    
+                    const titleLower = page.title.toLowerCase();
+                    const descLower = (page.description || '').toLowerCase();
+                    const pluralKeyword = searchKeyword + 'ים';
+                    
+                    const hasKeywordInTitle = titleLower.includes(searchKeyword) || titleLower.includes(pluralKeyword);
+                    const hasKeywordInDesc = descLower.includes(searchKeyword) || descLower.includes(pluralKeyword);
+                    
+                    let hasKeywordInProducts = false;
+                    if (page.products && page.products.length > 0) {
+                        hasKeywordInProducts = page.products.some(product => 
+                            product.name.toLowerCase().includes(searchKeyword) || 
+                            product.name.toLowerCase().includes(pluralKeyword)
+                        );
+                    }
+                    
+                    // Search in all page types, not just stores
+                    return (hasKeywordInTitle || hasKeywordInDesc || hasKeywordInProducts);
+                });
+                
+                if (relevantPages.length > 0) {
+                    // Collect all products from all relevant pages
+                    let allProducts = [];
+                    
+                    for (const page of relevantPages) {
+                        if (page.products && page.products.length > 0) {
+                            // Use existing products data
+                            page.products.forEach(product => {
+                                allProducts.push({
+                                    ...product,
+                                    pageTitle: page.title,
+                                    pageUrl: `/users/${page.userId}/${page.pageId}_html`
+                                });
+                            });
+                        } else {
+                            // Extract products from page content
+                            const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                            const productInfo = await extractProductInfo(page.description, searchKeyword, pageUrl);
+                            
+                            if (productInfo && productInfo.prices && productInfo.prices.length > 0) {
+                                productInfo.prices.forEach((price, index) => {
+                                    const name = productInfo.names && productInfo.names[index] 
+                                        ? productInfo.names[index] 
+                                        : `${searchKeyword} ${index + 1}`;
+                                    
+                                    allProducts.push({
+                                        name: name,
+                                        price: price,
+                                        pageTitle: page.title,
+                                        pageUrl: pageUrl
+                                    });
+                                });
+                            }
+                        }
+                    }
+                    
+                    if (allProducts.length > 0) {
+                        // Sort by price
+                        allProducts.sort((a, b) => {
+                            const priceA = parseInt(a.price.replace(',', ''));
+                            const priceB = parseInt(b.price.replace(',', ''));
+                            return priceA - priceB;
+                        });
+                        
+                        const cheapest = allProducts[0];
+                        const mostExpensive = allProducts[allProducts.length - 1];
+                        
+                        let response = `🏆 **${searchKeyword === 'מוצר' ? 'השוואת מחירים' : `השוואת מחירים עבור ${searchKeyword}`}:**\n\n`;
+                        
+                        if (lowerMessage.includes('הכי זול')) {
+                            response += `🥇 **הכי זול במרקט:**\n`;
+                            response += `• **${cheapest.name}** - ₪${cheapest.price}\n`;
+                            response += `📍 **מ:** ${cheapest.pageTitle}\n`;
+                            response += `🔗 [👁️ צפה בדף](${cheapest.pageUrl})\n\n`;
+                        } else if (lowerMessage.includes('הכי יקר')) {
+                            response += `💎 **הכי יקר במרקט:**\n`;
+                            response += `• **${mostExpensive.name}** - ₪${mostExpensive.price}\n`;
+                            response += `📍 **מ:** ${mostExpensive.pageTitle}\n`;
+                            response += `🔗 [👁️ צפה בדף](${mostExpensive.pageUrl})\n\n`;
+                        } else {
+                            response += `🥇 **הכי זול:** ${cheapest.name} - ₪${cheapest.price} (${cheapest.pageTitle})\n`;
+                            response += `💎 **הכי יקר:** ${mostExpensive.name} - ₪${mostExpensive.price} (${mostExpensive.pageTitle})\n\n`;
+                        }
+                        
+                        response += `📊 **סה"כ ${allProducts.length} מוצרים מ-${relevantPages.length} חנויות**\n`;
+                        response += `💰 **טווח מחירים:** ₪${cheapest.price} - ₪${mostExpensive.price}\n`;
+                        
+                        // Add page preview after comparison
+                        if (lowerMessage.includes('הכי זול')) {
+                            response += `\n\n📱 **תצוגה מקדימה של הדף הזול ביותר:**\n`;
+                            response += `![${cheapest.pageTitle}](${cheapest.pageUrl})\n`;
+                            
+                            // Add delay and then show preview
+                            setTimeout(() => {
+                                const chatContainer = document.querySelector('.ai-chat-messages');
+                                if (chatContainer) {
+                                    const previewDiv = document.createElement('div');
+                                    previewDiv.className = 'page-preview';
+                                    previewDiv.innerHTML = `
+                                        <div class="preview-header">
+                                            <h3>📱 תצוגה מקדימה: ${cheapest.pageTitle}</h3>
+                                        </div>
+                                        <div class="preview-content">
+                                            <iframe src="${cheapest.pageUrl}" width="100%" height="400" frameborder="0" sandbox="allow-scripts allow-same-origin"></iframe>
+                                        </div>
+                                    `;
+                                    chatContainer.appendChild(previewDiv);
+                                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                                    
+                                    // Add animation
+                                    previewDiv.style.opacity = '0';
+                                    previewDiv.style.transform = 'translateY(20px)';
+                                    setTimeout(() => {
+                                        previewDiv.style.transition = 'all 0.5s ease';
+                                        previewDiv.style.opacity = '1';
+                                        previewDiv.style.transform = 'translateY(0)';
+                                    }, 200);
+                                }
+                            }, 2000);
+                        } else if (lowerMessage.includes('הכי יקר')) {
+                            response += `\n\n📱 **תצוגה מקדימה של הדף היקר ביותר:**\n`;
+                            response += `![${mostExpensive.pageTitle}](${mostExpensive.pageUrl})\n`;
+                            
+                            // Add delay and then show preview
+                            setTimeout(() => {
+                                const chatContainer = document.querySelector('.ai-chat-messages');
+                                if (chatContainer) {
+                                    const previewDiv = document.createElement('div');
+                                    previewDiv.className = 'page-preview';
+                                    previewDiv.innerHTML = `
+                                        <div class="preview-header">
+                                            <h3>📱 תצוגה מקדימה: ${mostExpensive.pageTitle}</h3>
+                                        </div>
+                                        <div class="preview-content">
+                                            <iframe src="${mostExpensive.pageUrl}" width="100%" height="400" frameborder="0" sandbox="allow-scripts allow-same-origin"></iframe>
+                                        </div>
+                                    `;
+                                    chatContainer.appendChild(previewDiv);
+                                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                                    
+                                    // Add animation
+                                    previewDiv.style.opacity = '0';
+                                    previewDiv.style.transform = 'translateY(20px)';
+                                    setTimeout(() => {
+                                        previewDiv.style.transition = 'all 0.5s ease';
+                                        previewDiv.style.opacity = '1';
+                                        previewDiv.style.transform = 'translateY(0)';
+                                    }, 200);
+                                }
+                            }, 2000);
+                        } else {
+                            response += `\n\n📱 **תצוגה מקדימה של הדף הזול ביותר:**\n`;
+                            response += `![${cheapest.pageTitle}](${cheapest.pageUrl})\n`;
+                            
+                            // Add delay and then show preview
+                            setTimeout(() => {
+                                const chatContainer = document.querySelector('.ai-chat-messages');
+                                if (chatContainer) {
+                                    const previewDiv = document.createElement('div');
+                                    previewDiv.className = 'page-preview';
+                                    previewDiv.innerHTML = `
+                                        <div class="preview-header">
+                                            <h3>📱 תצוגה מקדימה: ${cheapest.pageTitle}</h3>
+                                        </div>
+                                        <div class="preview-content">
+                                            <iframe src="${cheapest.pageUrl}" width="100%" height="400" frameborder="0" sandbox="allow-scripts allow-same-origin"></iframe>
+                                        </div>
+                                    `;
+                                    chatContainer.appendChild(previewDiv);
+                                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                                    
+                                    // Add animation
+                                    previewDiv.style.opacity = '0';
+                                    previewDiv.style.transform = 'translateY(20px)';
+                                    setTimeout(() => {
+                                        previewDiv.style.transition = 'all 0.5s ease';
+                                        previewDiv.style.opacity = '1';
+                                        previewDiv.style.transform = 'translateY(0)';
+                                    }, 200);
+                                }
+                            }, 2000);
+                        }
+                        
+                        return response;
+                    }
+                }
+                
+                return `❌ **לא מצאתי מוצרים להשוואה במערכת שלנו.**\n\n💡 **מה שיש לנו:**\n${allPages.slice(0, 4).map(page => `• ${page.title} - ${page.pageType === 'store' ? 'חנות' : page.pageType === 'course' ? 'קורס' : page.pageType === 'event' ? 'אירוע' : 'שירות'}`).join('\n')}\n\n🔍 **נסה:** "מחירים" או "מה יש לכם"`;
+            }
+            
+            
+            
+            // Price search - look for specific products
+            if (lowerMessage.includes('מחיר') || lowerMessage.includes('כמה') || lowerMessage.includes('עולה') || lowerMessage.includes('₪') || lowerMessage.includes('שקל')) {
+                console.log('💰 Price search triggered:', lowerMessage);
+                
+                // Determine what product they're looking for
+                let searchKeyword = '';
+                if (lowerMessage.includes('שעון') || lowerMessage.includes('שעונים')) {
+                    searchKeyword = 'שעון';
+                    console.log('🔍 Detected watch search');
+                }
+                else if (lowerMessage.includes('לק')) searchKeyword = 'לק';
+                else if (lowerMessage.includes('צעצוע') || lowerMessage.includes('צעצועים')) searchKeyword = 'צעצוע';
+                else if (lowerMessage.includes('תכשיט') || lowerMessage.includes('תכשיטים')) searchKeyword = 'תכשיט';
+                else if (lastSearchContext) {
+                    searchKeyword = lastSearchContext;
+                    console.log('🔍 Using last search context:', lastSearchContext);
+                }
+                else if (lastSearchResults.length > 0) {
+                    // Use last search results if available
+                    relevantPages = lastSearchResults;
+                    searchKeyword = lastSearchContext || 'מוצר';
+                    console.log('🔍 Using last search results:', relevantPages.length, 'pages');
+                }
+                else searchKeyword = 'מוצר';
+                
+                console.log('🔍 Final search keyword:', searchKeyword);
+                
+                // Filter pages by specific keyword if mentioned - STRICT FILTERING
+                let relevantPages = [];
+                
+                // Only search if we don't have results from previous search
+                if (lastSearchResults.length === 0) {
+                    relevantPages = allPages.filter(page => {
+                    if (searchKeyword === 'מוצר') {
+                        return page.pageType === 'store';
+                    }
+                    
+                    const titleLower = page.title.toLowerCase();
+                    const descLower = (page.description || '').toLowerCase();
+                    
+                    // Check for both singular and plural forms
+                    const pluralKeyword = searchKeyword + 'ים'; // e.g., שעון -> שעונים
+                    
+                    // Only show pages that actually contain the keyword in title OR description OR products (singular or plural)
+                    const hasKeywordInTitle = titleLower.includes(searchKeyword) || titleLower.includes(pluralKeyword);
+                    const hasKeywordInDesc = descLower.includes(searchKeyword) || descLower.includes(pluralKeyword);
+                    
+                    // Check if keyword exists in any product name
+                    let hasKeywordInProducts = false;
+                    if (page.products && page.products.length > 0) {
+                        hasKeywordInProducts = page.products.some(product => 
+                            product.name.toLowerCase().includes(searchKeyword) || 
+                            product.name.toLowerCase().includes(pluralKeyword)
+                        );
+                    }
+                    
+                    // Search in all page types, not just stores
+                    const matches = (hasKeywordInTitle || hasKeywordInDesc || hasKeywordInProducts);
+                    
+                    if (matches) {
+                        console.log('✅ Found matching page:', page.title, '(searching for:', searchKeyword, 'or', pluralKeyword + ')');
+                    }
+                    
+                    return matches;
+                    });
+                } else {
+                    // Use previous search results
+                    relevantPages = lastSearchResults;
+                }
+                
+                // If no specific keyword found, show all stores
+                if (relevantPages.length === 0 && searchKeyword === 'מוצר') {
+                    relevantPages = allPages.filter(page => page.pageType === 'store');
+                }
+                
+                console.log(`🔍 Searching for "${searchKeyword}" - found ${relevantPages.length} pages`);
+                
+                    if (relevantPages.length > 0) {
+                        // Save search results for context
+                        lastSearchResults = relevantPages;
+                        
+                        let response = `💰 **מחירים עבור ${searchKeyword}:**\n\n`;
+                        
+                        // Add smart recommendations before showing prices
+                        if (searchKeyword === 'מתנה' || searchKeyword === 'מתנות') {
+                            response += `🎁 **המלצות מתנות מושלמות:**\n\n`;
+                            
+                            // Categorize pages by type for better recommendations
+                            const storePages = relevantPages.filter(p => p.pageType === 'store');
+                            const servicePages = relevantPages.filter(p => p.pageType === 'serviceProvider');
+                            const coursePages = relevantPages.filter(p => p.pageType === 'course');
+                            const eventPages = relevantPages.filter(p => p.pageType === 'event');
+                            
+                            if (storePages.length > 0) {
+                                response += `🛍️ **מתנות מחנויות:**\n`;
+                                storePages.slice(0, 2).forEach(page => {
+                                    const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                    response += `• **${page.title}** - מתנות איכותיות! 🏪\n`;
+                                    response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                });
+                                response += `\n`;
+                            }
+                            
+                            if (servicePages.length > 0) {
+                                response += `💅 **מתנות חוויה:**\n`;
+                                servicePages.slice(0, 2).forEach(page => {
+                                    const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                    response += `• **${page.title}** - חוויה מפנקת! 💅\n`;
+                                    response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                });
+                                response += `\n`;
+                            }
+                            
+                            if (coursePages.length > 0) {
+                                response += `🎓 **מתנות העשרה:**\n`;
+                                coursePages.slice(0, 2).forEach(page => {
+                                    const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                    response += `• **${page.title}** - מתנה שתשנה חיים! 🎓\n`;
+                                    response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                });
+                                response += `\n`;
+                            }
+                            
+                            if (eventPages.length > 0) {
+                                response += `🎉 **מתנות אירועים:**\n`;
+                                eventPages.slice(0, 2).forEach(page => {
+                                    const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                    response += `• **${page.title}** - חוויה בלתי נשכחת! 🎉\n`;
+                                    response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                });
+                                response += `\n`;
+                            }
+                            
+                            response += `💡 **טיפ:** לכל מתנה יש מחירים שונים - כתוב "מחירים" כדי לראות את כל המחירים!\n\n`;
+                        }
+                        
+                        for (const page of relevantPages.slice(0, 3)) {
+                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                        
+                        response += `• **${page.title}** 🏪\n`;
+                        response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                        
+                        // Use products from metadata if available - ENHANCED PRODUCT INFO
+                        if (page.products && page.products.length > 0) {
+                            response += `\n  **🛍️ מוצרים זמינים:**\n`;
+                            
+                            // Sort products by price for better recommendations
+                            const sortedProducts = [...page.products].sort((a, b) => 
+                                parseInt(a.price.replace(',', '')) - parseInt(b.price.replace(',', ''))
+                            );
+                            
+                            sortedProducts.slice(0, 5).forEach((product, index) => {
+                                const price = parseInt(product.price.replace(',', ''));
+                                let priceEmoji = '💰';
+                                if (price < 100) priceEmoji = '💚';
+                                else if (price < 500) priceEmoji = '💛';
+                                else if (price < 1000) priceEmoji = '🧡';
+                                else priceEmoji = '❤️';
+                                
+                                response += `  ${priceEmoji} **${product.name}** - ₪${product.price}`;
+                                
+                                // Add availability status
+                                if (index === 0) response += ` ⭐ **הכי זול!**`;
+                                if (index === sortedProducts.length - 1) response += ` 💎 **פרימיום**`;
+                                
+                                response += `\n`;
+                            });
+                            
+                            // Smart recommendations based on user intent
+                            if (lowerMessage.includes('זול') || lowerMessage.includes('הכי זול')) {
+                                const cheapest = sortedProducts[0];
+                                response += `\n  🎯 **המלצה חכמה:** ${cheapest.name} - הכי משתלם! ₪${cheapest.price}\n`;
+                            } else if (lowerMessage.includes('יקר') || lowerMessage.includes('יוקרה')) {
+                                const mostExpensive = sortedProducts[sortedProducts.length - 1];
+                                response += `\n  💎 **המלצה יוקרה:** ${mostExpensive.name} - הכי איכותי! ₪${mostExpensive.price}\n`;
+                            } else if (lowerMessage.includes('מתנה') || lowerMessage.includes('מתנת')) {
+                                const midRange = sortedProducts[Math.floor(sortedProducts.length / 2)];
+                                response += `\n  🎁 **מתנה מושלמת:** ${midRange.name} - איזון מושלם! ₪${midRange.price}\n`;
+                            }
+                            
+                            // Add total products count
+                            if (page.products.length > 5) {
+                                response += `\n  📊 **סה"כ ${page.products.length} מוצרים זמינים** - [👁️ צפה בכולם](${pageUrl})\n`;
+                            }
+                            
+                            response += `\n`;
+                        } else {
+                            // Try to extract real data from the page
+                            const productInfo = await extractProductInfo(page.description, searchKeyword, pageUrl);
+                            
+                            if (productInfo) {
+                                if (productInfo.prices && productInfo.prices.length > 0) {
+                                    response += `\n  **💰 מחירים זמינים:**\n`;
+                                    productInfo.prices.forEach((price, index) => {
+                                        const priceNum = parseFloat(price.replace(',', ''));
+                                        let priceEmoji = '💰';
+                                        if (priceNum < 100) priceEmoji = '💚';
+                                        else if (priceNum < 500) priceEmoji = '💛';
+                                        else if (priceNum < 1000) priceEmoji = '🧡';
+                                        else priceEmoji = '❤️';
+                                        
+                                        response += `  ${priceEmoji} **₪${price}**\n`;
+                                    });
+                                }
+                                
+                                if (productInfo.names && productInfo.names.length > 0) {
+                                    response += `\n  **🏷️ שירותים/מוצרים:**\n`;
+                                    productInfo.names.forEach(name => {
+                                        response += `  • ${name}\n`;
+                                    });
+                                }
+                                
+                                if (productInfo.location) {
+                                    response += `\n  📍 **מיקום:** ${productInfo.location}\n`;
+                                }
+                                
+                                if (productInfo.descriptions && productInfo.descriptions.length > 0) {
+                                    response += `\n  **📝 תיאורים:**\n`;
+                                    productInfo.descriptions.slice(0, 3).forEach(desc => {
+                                        response += `  • ${desc.substring(0, 100)}...\n`;
+                                    });
+                                }
+                            } else {
+                                response += `  💡 **טיפ:** לחץ על הקישור כדי לראות מחירים מדויקים!\n`;
+                            }
+                        }
+                        
+                        response += `\n`;
+                    }
+                    
+                    if (searchKeyword !== 'מוצר') {
+                        response += `🔍 **רוצה חיפוש ספציפי?** כתוב "שעון" או "תכשיט" ואני אחפש עבורך!`;
+                    }
+                    
+                    // Add page preview after recommendations
+                    if (relevantPages.length > 0) {
+                        const firstPage = relevantPages[0];
+                        const pageUrl = `/users/${firstPage.userId}/${firstPage.pageId}_html`;
+                        response += `\n\n📱 **תצוגה מקדימה:**\n`;
+                        response += `![${firstPage.title}](${pageUrl})\n`;
+                        
+                        // Add delay and then show preview
+                        setTimeout(() => {
+                            const chatContainer = document.querySelector('.ai-chat-messages');
+                            if (chatContainer) {
+                                const previewDiv = document.createElement('div');
+                                previewDiv.className = 'page-preview';
+                                previewDiv.innerHTML = `
+                                    <div class="preview-header">
+                                        <h3>📱 תצוגה מקדימה: ${firstPage.title}</h3>
+                                    </div>
+                                    <div class="preview-content">
+                                        <iframe src="${pageUrl}" width="100%" height="400" frameborder="0" sandbox="allow-scripts allow-same-origin"></iframe>
+                                    </div>
+                                `;
+                                chatContainer.appendChild(previewDiv);
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                                
+                                // Add animation
+                                previewDiv.style.opacity = '0';
+                                previewDiv.style.transform = 'translateY(20px)';
+                                setTimeout(() => {
+                                    previewDiv.style.transition = 'all 0.5s ease';
+                                    previewDiv.style.opacity = '1';
+                                    previewDiv.style.transform = 'translateY(0)';
+                                }, 100);
+                            }
+                        }, 2000); // Wait 2 seconds before showing preview
+                    }
+                    
+                    // Send to N8N for smart response with real data
+                    const contextText = `המשתמש שאל על ${searchKeyword}. הנה הנתונים האמיתיים מהמערכת:
+${relevantPages.map(page => {
+    let pageInfo = `דף: ${page.title}\n`;
+    if (page.products && page.products.length > 0) {
+        pageInfo += `מוצרים:\n`;
+        page.products.forEach(product => {
+            pageInfo += `- ${product.name}: ₪${product.price}\n`;
+        });
+    }
+    return pageInfo;
+}).join('\n')}
+
+תן המלצה חכמה מבוססת על הנתונים האמיתיים האלה.`;
+                    
+                    try {
+                        const n8nResponse = await fetch('https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbmreketpg', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                message: userMessage,
+                                context: contextText
+                            })
+                        });
+                        
+                        if (n8nResponse.ok) {
+                            const n8nData = await n8nResponse.json();
+                            if (n8nData.response) {
+                                return {
+                                    message: n8nData.response,
+                                    action: { type: 'none' }
+                                };
+                            }
+                        }
+                    } catch (error) {
+                        console.log('N8N error:', error);
+                    }
+                    
+                    return {
+                        message: response,
+                        action: { type: 'none' }
+                    };
+                } else {
+                    // No relevant pages found - be honest
+                    return {
+                        message: `❌ **לא מצאתי דפים עם "${searchKeyword}" במערכת שלנו.**\n\n💡 **מה שיש לנו:**\n• red - חנות שעונים\n• יניב צעצוע AI - עולם הצעצועים החכם\n• יניב צעצוע - צעצועים לילדים\n• יניב תכשיטים - תכשיטי יוקרה\n\n🔍 **נסה:** "מחירים" או "מה יש לכם"`,
+                        action: { type: 'none' }
+                    };
+                }
+            }
+            
             
             // Check for specific keywords and search
             const keywords = {
+                'מתנה': 'store',
+                'מתנות': 'store',
                 'לק': 'serviceProvider',
                 'מניקור': 'serviceProvider', 
                 'פדיקור': 'serviceProvider',
@@ -669,35 +1483,594 @@
                 'קורס': 'course',
                 'לימוד': 'course',
                 'אירוע': 'event',
-                'חתונה': 'event'
+                'חתונה': 'event',
+                'שעון': 'store',
+                'שעונים': 'store',
+                'תכשיט': 'store',
+                'תכשיטים': 'store',
+                'זהב': 'store',
+                'כסף': 'store',
+                'יהלום': 'store',
+                'יהלומים': 'store',
+                'עגיל': 'store',
+                'עגילים': 'store',
+                'צמיד': 'store',
+                'צמידים': 'store',
+                'שרשרת': 'store',
+                'שרשראות': 'store',
+                'טבעת': 'store',
+                'טבעות': 'store'
             };
             
-            for (const [keyword, type] of Object.entries(keywords)) {
-                if (lowerMessage.includes(keyword)) {
-                    const matchingPages = allPages.filter(page => page.pageType === type);
+            // Check for specific needs and provide focused recommendations
+            const specificNeeds = {
+                'זול': { type: 'price', focus: 'cheapest' },
+                'יקר': { type: 'price', focus: 'expensive' },
+                'מתנה לילד': { type: 'gift', focus: 'child' },
+                'מתנה לאישה': { type: 'gift', focus: 'woman' },
+                'מתנה לגבר': { type: 'gift', focus: 'man' },
+                'מתנה לזוג': { type: 'gift', focus: 'couple' },
+                'מתנה ליום הולדת': { type: 'gift', focus: 'birthday' },
+                'מתנה לחג': { type: 'gift', focus: 'holiday' },
+                'מתנה מיוחדת': { type: 'gift', focus: 'special' },
+                'מתלבט': { type: 'help', focus: 'undecided' },
+                'לא יודע': { type: 'help', focus: 'undecided' },
+                'מה לבחור': { type: 'help', focus: 'undecided' },
+                'איזה': { type: 'help', focus: 'choice' },
+                'איך לבחור': { type: 'help', focus: 'choice' }
+            };
+            
+            // Smart keyword matching - find related words
+            const smartKeywords = {
+                'מתנה': ['מתנה', 'מתנות', 'מתנת', 'מתנות', 'מתנה ל', 'מתנה לילד', 'מתנה לאישה', 'מתנה לגבר', 'מתנה ליום הולדת', 'מתנה לחג', 'מתנה מיוחדת'],
+                'שעון': ['שעון', 'שעונים', 'זמן', 'זמנים', 'יד', 'ידיים', 'מבוגר', 'מבוגרים', 'קלאסי', 'ספורט', 'יוקרה', 'סמארט'],
+                'תכשיט': ['תכשיט', 'תכשיטים', 'זהב', 'כסף', 'יהלום', 'יהלומים', 'עגיל', 'עגילים', 'צמיד', 'צמידים', 'שרשרת', 'שרשראות', 'טבעת', 'טבעות'],
+                'צעצוע': ['צעצוע', 'צעצועים', 'ילד', 'ילדים', 'משחק', 'משחקים', 'בובה', 'בובות', 'רכב', 'מכונית'],
+                'לק': ['לק', 'מניקור', 'פדיקור', 'ציפורניים', 'יופי', 'יופי', 'ספא', 'טיפוח'],
+                'קורס': ['קורס', 'קורסים', 'לימוד', 'לימודים', 'הדרכה', 'הדרכות', 'סמינר', 'סמינרים']
+            };
+            
+            // Check for specific needs first - DISABLED TO PREVENT INVENTING
+            let specificNeed = null;
+            // for (const [need, config] of Object.entries(specificNeeds)) {
+            //     if (lowerMessage.includes(need)) {
+            //         specificNeed = config;
+            //         break;
+            //     }
+            // }
+            
+            // Smart search - check for any related keywords
+            for (const [mainKeyword, relatedWords] of Object.entries(smartKeywords)) {
+                const hasRelatedWord = relatedWords.some(word => lowerMessage.includes(word));
+                if (hasRelatedWord) {
+                    const type = keywords[mainKeyword] || 'store';
+                    
+                    // Remember search context for future price queries
+                    lastSearchContext = mainKeyword;
+                    
+                    // More precise search - look in title and description with better matching
+                    let matchingPages = allPages.filter(page => {
+                        const titleLower = page.title.toLowerCase();
+                        const descLower = (page.description || '').toLowerCase();
+                        
+                        // Check if any related word appears in title or description
+                        const titleMatch = relatedWords.some(word => titleLower.includes(word));
+                        const descMatch = relatedWords.some(word => descLower.includes(word));
+                        
+                        // Also check for partial matches and synonyms
+                        const partialMatch = relatedWords.some(word => {
+                            const wordParts = word.split(' ');
+                            return wordParts.some(part => 
+                                titleLower.includes(part) || descLower.includes(part)
+                            );
+                        });
+                        
+                        return page.pageType === type && (titleMatch || descMatch || partialMatch);
+                    });
+                    
+                    // DISABLED - No more inventing recommendations
+                    // Apply specific filtering based on user needs
+                    // if (specificNeed) { ... }
+                    
+                    console.log(`🔍 Searching for "${mainKeyword}" in type "${type}"`, { matchingPages: matchingPages.length, allPages: allPages.length });
                     
                     if (matchingPages.length > 0) {
-                        let response = `מצאתי ${matchingPages.length} דפים רלוונטיים:\n\n`;
+                        let response = '';
                         
-                        matchingPages.slice(0, 3).forEach(page => {
+                        // Simple response - no more inventing
+                        response = `🎯 **מצאתי ${matchingPages.length} דפים רלוונטיים ל"${mainKeyword}":**\n\n`;
+                        
+                        // Add smart recommendations for gifts
+                        if (mainKeyword === 'מתנה' || mainKeyword === 'מתנות') {
+                            response += `🎁 **מתנות מושלמות! בואו נמצא את המתנה המושלמת:**\n\n`;
+                            
+                            // Show specific products with prices for children
+                            if (lowerMessage.includes('ילד') || lowerMessage.includes('ילדים') || lowerMessage.includes('ילדה') || lowerMessage.includes('ילדות')) {
+                                response += `👶 **מתנות מושלמות לילדים - הנה המלצה ספציפית:**\n\n`;
+                                
+                                // Find toy pages specifically - exclude services
+                                const toyPages = matchingPages.filter(p => 
+                                    p.pageType === 'store' && 
+                                    p.pageType !== 'serviceProvider' &&
+                                    (p.title.toLowerCase().includes('צעצוע') || 
+                                     p.title.toLowerCase().includes('toy') ||
+                                     p.description?.toLowerCase().includes('צעצוע') ||
+                                     p.title.toLowerCase().includes('משחק') ||
+                                     p.description?.toLowerCase().includes('משחק') ||
+                                     p.title.toLowerCase().includes('בובה') ||
+                                     p.description?.toLowerCase().includes('בובה') ||
+                                     p.title.toLowerCase().includes('רכב') ||
+                                     p.description?.toLowerCase().includes('רכב') ||
+                                     p.title.toLowerCase().includes('יניב') ||
+                                     p.description?.toLowerCase().includes('ילדים') ||
+                                     p.description?.toLowerCase().includes('ילד')) &&
+                                    !p.title.toLowerCase().includes('לק') &&
+                                    !p.title.toLowerCase().includes('גל') &&
+                                    !p.title.toLowerCase().includes('שעון') &&
+                                    !p.title.toLowerCase().includes('תכשיט')
+                                );
+                                
+                                if (toyPages.length > 0) {
+                                    // Show ONLY ONE specific product with price
+                                    const firstPage = toyPages[0];
+                                    const pageUrl = `/users/${firstPage.userId}/${firstPage.pageId}_html`;
+                                    
+                                    response += `🧸 **${firstPage.title}**\n`;
+                                    
+                                    // Try to get real product info - only show if we have real data
+                                    if (firstPage.products && firstPage.products.length > 0) {
+                                        const sortedProducts = [...firstPage.products].sort((a, b) => 
+                                            parseInt(a.price.replace(',', '')) - parseInt(b.price.replace(',', ''))
+                                        );
+                                        
+                                        // Show only the cheapest product as recommendation
+                                        const cheapestProduct = sortedProducts[0];
+                                        const price = parseInt(cheapestProduct.price.replace(',', ''));
+                                        let priceEmoji = '💰';
+                                        if (price < 100) priceEmoji = '💚';
+                                        else if (price < 500) priceEmoji = '💛';
+                                        else if (price < 1000) priceEmoji = '🧡';
+                                        else priceEmoji = '❤️';
+                                        
+                                        response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                        response += `  ${priceEmoji} **${cheapestProduct.name}** - ₪${cheapestProduct.price} ⭐ **הכי זול!**\n`;
+                                        response += `  📊 **סה"כ ${sortedProducts.length} מוצרים זמינים**\n`;
+                                    } else if (firstPage.description) {
+                                        // Try to extract product info from description
+                                        const productInfo = await extractProductInfo(firstPage.description, 'צעצוע', pageUrl);
+                                        if (productInfo && productInfo.price) {
+                                            response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                            response += `  💰 **${productInfo.name || 'צעצוע מיוחד'}** - ${productInfo.price}\n`;
+                                        } else {
+                                            response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                            response += `  🧸 **צעצועים חכמים ומהנים** - מחיר לפי בקשה\n`;
+                                        }
+                                    } else {
+                                        response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                        response += `  🧸 **צעצועים חכמים ומהנים** - מחיר לפי בקשה\n`;
+                                    }
+                                    
+                                    response += `🏪 **חנות:** ${firstPage.title}\n`;
+                                    response += `🔗 [👁️ צפה בדף](${pageUrl})\n\n`;
+                                    
+                                    response += `💡 **רוצה לראות עוד?** כתוב "מחירים" או "הכי זול"!\n\n`;
+                                    
+                                    // Add iframe preview after recommendations
+                                    response += `📱 **תצוגה מקדימה של ${firstPage.title}:**\n`;
+                                    response += `![${firstPage.title}](${pageUrl})\n\n`;
+                                } else {
+                                    // Fallback to general pages
+                                    response += `🎯 **המלצות כלליות לילדים:**\n`;
+                                    matchingPages.slice(0, 2).forEach(page => {
+                                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                        response += `• **${page.title}** - מתנה מושלמת! 🎁\n`;
+                                        response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                    });
+                                }
+                                
+                            } else if (lowerMessage.includes('אישה') || lowerMessage.includes('נשים') || lowerMessage.includes('אישה') || lowerMessage.includes('נשים')) {
+                                response += `👩 **מתנות מושלמות לנשים - הנה המלצות ספציפיות:**\n\n`;
+                                
+                                // Find beauty/service pages
+                                const beautyPages = matchingPages.filter(p => 
+                                    p.pageType === 'serviceProvider' || 
+                                    (p.title.toLowerCase().includes('לק') || 
+                                     p.title.toLowerCase().includes('גל') ||
+                                     p.title.toLowerCase().includes('יופי') ||
+                                     p.title.toLowerCase().includes('שיער') ||
+                                     p.title.toLowerCase().includes('עיצוב') ||
+                                     p.title.toLowerCase().includes('חגית') ||
+                                     p.title.toLowerCase().includes('ניילס') ||
+                                     p.description?.toLowerCase().includes('יופי') ||
+                                     p.description?.toLowerCase().includes('שיער') ||
+                                     p.description?.toLowerCase().includes('לק') ||
+                                     p.description?.toLowerCase().includes('גל'))
+                                );
+                                
+                                if (beautyPages.length > 0) {
+                                    // Show specific services with prices
+                                    for (const page of beautyPages.slice(0, 2)) {
+                                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                        response += `💅 **${page.title}**\n`;
+                                        
+                                        // Try to extract service info
+                                        if (page.description) {
+                                            const serviceInfo = await extractProductInfo(page.description, 'לק', pageUrl);
+                                            if (serviceInfo && serviceInfo.price) {
+                                                response += `🎯 **המלצה שלי:**\n`;
+                                                response += `  💰 **${serviceInfo.name || 'שירות יופי'}** - ${serviceInfo.price}\n`;
+                                            } else {
+                                                response += `🎯 **המלצה שלי:**\n`;
+                                                response += `  💅 **שירותי יופי מפנקים** - מחיר לפי בקשה\n`;
+                                            }
+                                        } else {
+                                            response += `🎯 **המלצה שלי:**\n`;
+                                            response += `  💅 **שירותי יופי מפנקים** - מחיר לפי בקשה\n`;
+                                        }
+                                        
+                                        response += `🏪 **חנות:** ${page.title}\n`;
+                                        response += `🔗 [👁️ צפה בדף](${pageUrl})\n\n`;
+                                    }
+                                } else {
+                                    // Fallback to general pages
+                                    response += `🎯 **המלצות כלליות לנשים:**\n`;
+                                    matchingPages.slice(0, 2).forEach(page => {
+                                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                        response += `• **${page.title}** - מתנה מושלמת! 🎁\n`;
+                                        response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                    });
+                                }
+                                
+                                response += `💡 **רוצה לראות עוד?** כתוב "מחירים" או "הכי זול"!\n\n`;
+                                
+                            } else if (lowerMessage.includes('גבר') || lowerMessage.includes('גברים') || lowerMessage.includes('אב') || lowerMessage.includes('אבא')) {
+                                response += `👨 **מתנות מושלמות לגברים - הנה המלצה ספציפית:**\n\n`;
+                                
+                                // Find tech/accessory pages
+                                const techPages = matchingPages.filter(p => 
+                                    p.pageType === 'store' && 
+                                    (p.title.toLowerCase().includes('טכנולוגיה') || 
+                                     p.title.toLowerCase().includes('שעון') ||
+                                     p.title.toLowerCase().includes('תכשיט') ||
+                                     p.title.toLowerCase().includes('גאדג\'ט') ||
+                                     p.title.toLowerCase().includes('רובוט') ||
+                                     p.title.toLowerCase().includes('red') ||
+                                     p.title.toLowerCase().includes('ציפי') ||
+                                     p.description?.toLowerCase().includes('שעון') ||
+                                     p.description?.toLowerCase().includes('תכשיט') ||
+                                     p.description?.toLowerCase().includes('רובוט') ||
+                                     p.description?.toLowerCase().includes('טכנולוגיה'))
+                                );
+                                
+                                if (techPages.length > 0) {
+                                    // Show ONLY ONE specific product with price
+                                    const firstPage = techPages[0];
+                                    const pageUrl = `/users/${firstPage.userId}/${firstPage.pageId}_html`;
+                                    response += `⌚ **${firstPage.title}**\n`;
+                                    
+                                    // Try to get real product info - only show if we have real data
+                                    if (firstPage.products && firstPage.products.length > 0) {
+                                        const sortedProducts = [...firstPage.products].sort((a, b) => 
+                                            parseInt(a.price.replace(',', '')) - parseInt(b.price.replace(',', ''))
+                                        );
+                                        
+                                        // Show only the cheapest product as recommendation
+                                        const cheapestProduct = sortedProducts[0];
+                                        const price = parseInt(cheapestProduct.price.replace(',', ''));
+                                        let priceEmoji = '💰';
+                                        if (price < 100) priceEmoji = '💚';
+                                        else if (price < 500) priceEmoji = '💛';
+                                        else if (price < 1000) priceEmoji = '🧡';
+                                        else priceEmoji = '❤️';
+                                        
+                                        response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                        response += `  ${priceEmoji} **${cheapestProduct.name}** - ₪${cheapestProduct.price} ⭐ **הכי זול!**\n`;
+                                        response += `  📊 **סה"כ ${sortedProducts.length} מוצרים זמינים**\n`;
+                                    } else if (firstPage.description) {
+                                        // Try to extract product info from description
+                                        const productInfo = await extractProductInfo(firstPage.description, 'שעון', pageUrl);
+                                        if (productInfo && productInfo.price) {
+                                            response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                            response += `  💰 **${productInfo.name || 'גאדג\'ט מיוחד'}** - ${productInfo.price}\n`;
+                                        } else {
+                                            response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                            response += `  ⌚ **גאדג\'טים וטכנולוגיה מתקדמת** - מחיר לפי בקשה\n`;
+                                        }
+                                    } else {
+                                        response += `🎯 **המלצה שלי - מוצר אחד מושלם:**\n`;
+                                        response += `  ⌚ **גאדג\'טים וטכנולוגיה מתקדמת** - מחיר לפי בקשה\n`;
+                                    }
+                                    
+                                    response += `🏪 **חנות:** ${firstPage.title}\n`;
+                                    response += `🔗 [👁️ צפה בדף](${pageUrl})\n\n`;
+                                    
+                                    response += `💡 **רוצה לראות עוד?** כתוב "מחירים" או "הכי זול"!\n\n`;
+                                } else {
+                                    // Fallback to general pages
+                                    response += `🎯 **המלצות כלליות לגברים:**\n`;
+                                    matchingPages.slice(0, 3).forEach(page => {
+                                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                        response += `• **${page.title}** - מתנה מושלמת! 🎁\n`;
+                                        response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                    });
+                                }
+                                
+                                response += `💡 **רוצה לראות עוד?** כתוב "מחירים" או "הכי זול"!\n\n`;
+                                
+                                // Add iframe preview after recommendations
+                                if (techPages.length > 0) {
+                                    const firstPage = techPages[0];
+                                    const pageUrl = `/users/${firstPage.userId}/${firstPage.pageId}_html`;
+                                    
+                                    response += `📱 **תצוגה מקדימה של ${firstPage.title}:**\n`;
+                                    response += `![${firstPage.title}](${pageUrl})\n\n`;
+                                    
+                                    // Add delayed iframe preview
+                                    setTimeout(() => {
+                                        const chatContainer = document.querySelector('.ai-chat-messages');
+                                        if (chatContainer) {
+                                            const previewDiv = document.createElement('div');
+                                            previewDiv.className = 'page-preview';
+                                            previewDiv.style.cssText = `
+                                                margin: 16px 0;
+                                                border: 2px solid #e5e7eb;
+                                                border-radius: 12px;
+                                                overflow: hidden;
+                                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                                position: relative;
+                                                width: 100%;
+                                                height: 300px;
+                                                opacity: 0;
+                                                transform: translateY(20px);
+                                                transition: all 0.5s ease;
+                                            `;
+                                            previewDiv.innerHTML = `
+                                                <div class="preview-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                                    <span>🎁</span>
+                                                    <span>${firstPage.title}</span>
+                                                </div>
+                                                <div class="preview-content" style="position: relative; height: 276px; overflow: hidden;">
+                                                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);"></div>
+                                                    <iframe src="${pageUrl}" style="width: 200%; height: 600px; border: none; transform: scale(0.5); transform-origin: top left; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.8s ease;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>
+                                                </div>
+                                            `;
+                                            chatContainer.appendChild(previewDiv);
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                            
+                                            // Animate in gradually
+                                            setTimeout(() => {
+                                                previewDiv.style.opacity = '1';
+                                                previewDiv.style.transform = 'translateY(0)';
+                                            }, 200);
+                                        }
+                                    }, 2000);
+                                }
+                                
+                            } else {
+                                // General gift recommendations - only show real pages
+                                response += `🎯 **איזה סוג מתנה אתם מחפשים?**\n\n`;
+                                
+                                // Show only real pages from matchingPages
+                                if (matchingPages.length > 0) {
+                                    response += `🎁 **הדפים הזמינים במערכת:**\n`;
+                                    matchingPages.slice(0, 5).forEach(page => {
+                                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                        const emoji = page.pageType === 'store' ? '🛍️' : page.pageType === 'event' ? '🎉' : page.pageType === 'course' ? '🎓' : page.pageType === 'serviceProvider' ? '🔧' : '📄';
+                                        response += `• **${page.title}** ${emoji} - ${page.description || 'מתנה מושלמת'}\n`;
+                                        response += `  [👁️ צפה בדף](${pageUrl})\n`;
+                                    });
+                                    response += `\n`;
+                                    
+                                    // Add iframe preview for first page
+                                    const firstPage = matchingPages[0];
+                                    const pageUrl = `/users/${firstPage.userId}/${firstPage.pageId}_html`;
+                                    
+                                    response += `📱 **תצוגה מקדימה של ${firstPage.title}:**\n`;
+                                    response += `![${firstPage.title}](${pageUrl})\n\n`;
+                                    
+                                    // Add delayed iframe preview
+                                    setTimeout(() => {
+                                        const chatContainer = document.querySelector('.ai-chat-messages');
+                                        if (chatContainer) {
+                                            const previewDiv = document.createElement('div');
+                                            previewDiv.className = 'page-preview';
+                                            previewDiv.style.cssText = `
+                                                margin: 16px 0;
+                                                border: 2px solid #e5e7eb;
+                                                border-radius: 12px;
+                                                overflow: hidden;
+                                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                                position: relative;
+                                                width: 100%;
+                                                height: 300px;
+                                                opacity: 0;
+                                                transform: translateY(20px);
+                                                transition: all 0.5s ease;
+                                            `;
+                                            previewDiv.innerHTML = `
+                                                <div class="preview-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                                    <span>🎁</span>
+                                                    <span>${firstPage.title}</span>
+                                                </div>
+                                                <div class="preview-content" style="position: relative; height: 276px; overflow: hidden;">
+                                                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);"></div>
+                                                    <iframe src="${pageUrl}" style="width: 200%; height: 600px; border: none; transform: scale(0.5); transform-origin: top left; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.8s ease;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>
+                                                </div>
+                                            `;
+                                            chatContainer.appendChild(previewDiv);
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                            
+                                            // Animate in gradually
+                                            setTimeout(() => {
+                                                previewDiv.style.opacity = '1';
+                                                previewDiv.style.transform = 'translateY(0)';
+                                            }, 200);
+                                        }
+                                    }, 2000);
+                                } else {
+                                    response += `❌ **לא מצאתי דפים במערכת שלנו.**\n\n`;
+                                }
+                                
+                                response += `❓ **עזור לי להמליץ לך:**\n`;
+                                response += `• **למי המתנה?** (ילד, אישה, גבר, זוג) 👥\n`;
+                                response += `• **איזה סוג?** (צעצועים, יופי, טכנולוגיה, קורסים) 🎯\n`;
+                                response += `• **תקציב?** (זול, בינוני, פרימיום) 💰\n\n`;
+                            }
+                            
+                            response += `💡 **רוצה לראות מחירים?** כתוב "מחירים" או "כמה זה עולה"!\n`;
+                            response += `🎁 **רוצה המלצה ספציפית?** תגיד לי יותר פרטים!\n\n`;
+                            
+                        } else {
+                            // Show actual available pages with specific recommendations
+                            response += `📋 **המלצות ספציפיות:**\n\n`;
+                        }
+                        
+                        // Only show pages if it's not a gift search (gift search shows questions instead)
+                        if (mainKeyword !== 'מתנה' && mainKeyword !== 'מתנות') {
+                            // Show more results if user asks for specific number
+                            let maxResults = 3;
+                            if (lowerMessage.includes('כמה') || lowerMessage.includes('הרבה') || lowerMessage.includes('כל')) {
+                                maxResults = Math.min(matchingPages.length, 5);
+                            }
+                            
+                            for (const page of matchingPages.slice(0, maxResults)) {
                             const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
                             // Use real page preview with iframe
                             const emoji = page.pageType === 'store' ? '🏪' : page.pageType === 'event' ? '🎉' : page.pageType === 'course' ? '🎓' : page.pageType === 'serviceProvider' ? '🔧' : '📄';
                             response += `• **${page.title}** ${emoji}\n`;
                             response += `  [👁️ צפה בדף](${pageUrl})\n`;
-                            response += `  <div style="margin: 8px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: fadeInUp 0.6s ease-out, pulse 2s infinite; position: relative; width: 100%; height: 200px;">`;
-                            response += `    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c); animation: shimmer 2s infinite;"></div>`;
-                            response += `    <iframe src="${pageUrl}" style="width: 200%; height: 400px; border: none; transform: scale(0.5); transform-origin: top left; transition: all 0.3s ease; position: absolute; top: 0; left: 0;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>`;
+                            
+                            // Add specific product info if available
+                            if (page.pageType === 'store' && page.products && page.products.length > 0) {
+                                response += `\n  **🛍️ מוצרים זמינים:**\n`;
+                                
+                                // Sort products by price for better recommendations
+                                const sortedProducts = [...page.products].sort((a, b) => 
+                                    parseInt(a.price.replace(',', '')) - parseInt(b.price.replace(',', ''))
+                                );
+                                
+                                sortedProducts.slice(0, 3).forEach((product, index) => {
+                                    const price = parseInt(product.price.replace(',', ''));
+                                    let priceEmoji = '💰';
+                                    if (price < 100) priceEmoji = '💚';
+                                    else if (price < 500) priceEmoji = '💛';
+                                    else if (price < 1000) priceEmoji = '🧡';
+                                    else priceEmoji = '❤️';
+                                    
+                                    response += `  ${priceEmoji} **${product.name}** - ₪${product.price}`;
+                                    
+                                    if (index === 0) response += ` ⭐ **הכי זול!**`;
+                                    if (index === sortedProducts.length - 1) response += ` 💎 **פרימיום**`;
+                                    
+                                    response += `\n`;
+                                });
+                                
+                                // Smart recommendations
+                                if (lowerMessage.includes('זול') || lowerMessage.includes('הכי זול')) {
+                                    const cheapest = sortedProducts[0];
+                                    response += `\n  🎯 **המלצה חכמה:** ${cheapest.name} - הכי משתלם! ₪${cheapest.price}\n`;
+                                }
+                                
+                                response += `\n`;
+                            } else if (page.pageType === 'serviceProvider') {
+                                // Enhanced service provider info
+                                response += `\n  **🔧 שירותים זמינים:**\n`;
+                                
+                                // Check for appointment availability
+                                if (page.description && page.description.includes('תור')) {
+                                    response += `  📅 **תורים פנויים** - זמין להזמנה!\n`;
+                                }
+                                
+                                // Check for pricing info
+                                if (page.description && page.description.includes('₪')) {
+                                    const priceMatch = page.description.match(/₪(\d+)/);
+                                    if (priceMatch) {
+                                        response += `  💰 **מחיר:** ₪${priceMatch[1]}\n`;
+                                    }
+                                }
+                                
+                                // Check for location
+                                if (page.description && (page.description.includes('רחוב') || page.description.includes('עיר') || page.description.includes('כתובת'))) {
+                                    response += `  📍 **מיקום:** זמין באזור\n`;
+                                }
+                                
+                                // Add service description
+                                if (page.description) {
+                                    const shortDesc = page.description.substring(0, 100) + '...';
+                                    response += `  📝 **תיאור:** ${shortDesc}\n`;
+                                }
+                                
+                                response += `\n  🎯 **רוצה להזמין?** [👁️ צפה בדף](${pageUrl}) או התקשר ישירות!\n\n`;
+                            } else if (page.pageType === 'event') {
+                                // Enhanced event info
+                                response += `\n  **🎉 פרטי האירוע:**\n`;
+                                
+                                if (page.expectedGuests && page.expectedGuests > 0) {
+                                    response += `  👥 **מקומות פנויים:** ${page.expectedGuests} מקומות\n`;
+                                }
+                                
+                                if (page.description) {
+                                    const shortDesc = page.description.substring(0, 100) + '...';
+                                    response += `  📝 **תיאור:** ${shortDesc}\n`;
+                                }
+                                
+                                response += `\n  🎯 **רוצה להצטרף?** [👁️ צפה בדף](${pageUrl}) והרשם!\n\n`;
+                            } else if (page.pageType === 'course') {
+                                // Enhanced course info
+                                response += `\n  **🎓 פרטי הקורס:**\n`;
+                                
+                                if (page.expectedGuests && page.expectedGuests > 0) {
+                                    response += `  👥 **מקומות פנויים:** ${page.expectedGuests} מקומות\n`;
+                                }
+                                
+                                if (page.description) {
+                                    const shortDesc = page.description.substring(0, 100) + '...';
+                                    response += `  📝 **תיאור:** ${shortDesc}\n`;
+                                }
+                                
+                                response += `\n  🎯 **רוצה להירשם?** [👁️ צפה בדף](${pageUrl}) והתחל ללמוד!\n\n`;
+                            } else if (page.pageType === 'store' && page.description) {
+                                const productInfo = await extractProductInfo(page.description, mainKeyword, pageUrl);
+                                if (productInfo) {
+                                    if (productInfo.price) {
+                                        response += `  💰 **מחיר:** ${productInfo.price}\n`;
+                                    }
+                                    if (productInfo.name) {
+                                        response += `  🏷️ **מוצר:** ${productInfo.name}\n`;
+                                    }
+                                    if (productInfo.location) {
+                                        response += `  📍 **מיקום:** ${productInfo.location}\n`;
+                                    }
+                                }
+                            }
+                            
+                            response += `  <div style="margin: 8px 0; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; width: 100%; height: 300px;">`;
+                            response += `    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);"></div>`;
+                            response += `    <iframe src="${pageUrl}" style="width: 200%; height: 600px; border: none; transform: scale(0.5); transform-origin: top left; position: absolute; top: 0; left: 0;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>`;
                             response += `  </div>\n\n`;
-                        });
+                        }
+                        } // Close the if statement for non-gift searches
                         
                         if (matchingPages.length > 3) {
                             response += `ועוד ${matchingPages.length - 3} דפים...`;
                         }
                         
+                        // DISABLED - No more inventing help messages
+                        
+                        // Add price information request
+                        if (type === 'store') {
+                            response += `\n💰 **רוצה לדעת על מחירים?** כתוב "מחירים" או "כמה זה עולה" ואני אחפש עבורך!`;
+                        }
+                        
                         return {
                             message: response,
                             action: { type: 'change_category_and_highlight', category: type, highlight_pages: matchingPages.slice(0, 3).map(p => p.pageId) }
+                        };
+                    } else {
+                        // NO PAGES FOUND - Don't invent pages!
+                        return {
+                            message: `😔 **לא מצאתי דפים רלוונטיים ל"${mainKeyword}".**\n\nאבל יש לנו דפים אחרים שיכולים לעניין אותך:\n\n🏪 **חנויות:** ${allPages.filter(p => p.pageType === 'store').length} דפים\n🎓 **קורסים:** ${allPages.filter(p => p.pageType === 'course').length} דפים\n🔧 **שירותים:** ${allPages.filter(p => p.pageType === 'serviceProvider').length} דפים\n🎉 **אירועים:** ${allPages.filter(p => p.pageType === 'event').length} דפים\n\n**רוצה לראות הכל?** לחץ על "הכל" למעלה!`,
+                            action: { type: 'none' }
                         };
                     }
                 }
@@ -733,9 +2106,145 @@
                 };
             }
             
-            return null; // No quick response, send to N8N
+            // If no local match, prepare real data for N8N
+            const realData = {
+                availablePages: allPages.map(p => ({
+                    title: p.title,
+                    type: p.pageType,
+                    products: p.products || []
+                }))
+            };
+            
+            return null; // No quick response, send to N8N with real data
         }
         
+        // Function to extract product info from page content
+        async function extractProductInfo(description, keyword, pageUrl) {
+            console.log('🔍 extractProductInfo called with:', { description: description?.substring(0, 100), keyword, pageUrl });
+            
+            if (!description && !pageUrl) return null;
+            
+            const lowerKeyword = keyword.toLowerCase();
+            
+            // If we have a page URL, fetch the actual content
+            if (pageUrl) {
+                console.log('🔍 Fetching HTML for:', pageUrl);
+                try {
+                    const response = await fetch(pageUrl);
+                    if (response.ok) {
+                        const html = await response.text();
+                        console.log('📄 HTML fetched, length:', html.length);
+                        
+                        // Extract all prices from HTML
+                        const pricePatterns = [
+                            /₪\s*(\d+(?:[.,]\d+)?)/g,
+                            /מ-?\s*(\d+(?:[.,]\d+)?)\s*₪/g,
+                            /(\d+(?:[.,]\d+)?)\s*₪/g,
+                            /מחיר[^<]*?(\d+(?:[.,]\d+)?)/gi
+                        ];
+                        
+                        let allPrices = [];
+                        pricePatterns.forEach(pattern => {
+                            const matches = [...html.matchAll(pattern)];
+                            allPrices.push(...matches.map(m => m[1] || m[0]));
+                        });
+                        
+                        // Remove duplicates and sort
+                        allPrices = [...new Set(allPrices)].sort((a, b) => parseFloat(a) - parseFloat(b));
+                        
+                        console.log('💰 All prices found:', allPrices);
+                        
+                        // Extract service/product names
+                        const namePatterns = [
+                            /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi,
+                            /<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/gi,
+                            /<span[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/span>/gi
+                        ];
+                        
+                        let allNames = [];
+                        namePatterns.forEach(pattern => {
+                            const matches = [...html.matchAll(pattern)];
+                            allNames.push(...matches.map(m => m[1].trim()));
+                        });
+                        
+                        // Filter names that contain the keyword
+                        const relevantNames = allNames.filter(name => 
+                            name.toLowerCase().includes(lowerKeyword)
+                        );
+                        
+                        console.log('🏷️ Relevant names found:', relevantNames);
+                        
+                        // Extract location
+                        const locationPatterns = [
+                            /(?:בכתובת|כתובת|מיקום|באזור|בנתניה|בתל אביב|בירושלים)[^<]*?([א-ת\s]+)/gi,
+                            /<meta[^>]*name="[^"]*location[^"]*"[^>]*content="([^"]+)"/gi
+                        ];
+                        
+                        let location = null;
+                        locationPatterns.forEach(pattern => {
+                            const match = html.match(pattern);
+                            if (match && !location) {
+                                location = match[1].trim();
+                            }
+                        });
+                        
+                        // Extract descriptions
+                        const descPatterns = [
+                            /<p[^>]*class="[^"]*desc[^"]*"[^>]*>([^<]+)<\/p>/gi,
+                            /<div[^>]*class="[^"]*description[^"]*"[^>]*>([^<]+)<\/div>/gi
+                        ];
+                        
+                        let descriptions = [];
+                        descPatterns.forEach(pattern => {
+                            const matches = [...html.matchAll(pattern)];
+                            descriptions.push(...matches.map(m => m[1].trim()));
+                        });
+                        
+                        return {
+                            prices: allPrices.length > 0 ? allPrices : null,
+                            names: relevantNames.length > 0 ? relevantNames : null,
+                            location: location,
+                            descriptions: descriptions.length > 0 ? descriptions : null,
+                            allNames: allNames.length > 0 ? allNames : null
+                        };
+                    }
+                } catch (error) {
+                    console.error('❌ Error fetching HTML:', error);
+                }
+            }
+            
+            // Fallback to description parsing
+            if (description) {
+                const lowerDesc = description.toLowerCase();
+                
+                // Look for price patterns in description
+                const priceRegex = /[\d,]+₪|[\d,]+ ש"ח|[\d,]+ שקל|[\d,]+ ₪/g;
+                const prices = [];
+                let match;
+                while ((match = priceRegex.exec(description)) !== null) {
+                    prices.push(match[0]);
+                }
+                
+                console.log('💰 Prices found in description:', prices);
+                
+                if (prices.length > 0) {
+                    // Try to find product name near the keyword
+                    const keywordIndex = lowerDesc.indexOf(lowerKeyword);
+                    if (keywordIndex !== -1) {
+                        const start = Math.max(0, keywordIndex - 50);
+                        const end = Math.min(description.length, keywordIndex + 50);
+                        const context = description.substring(start, end);
+                        
+                        return {
+                            name: context.trim(),
+                            price: prices[0]
+                        };
+                    }
+                }
+            }
+            
+            return null;
+        }
         
         // Enhanced sendAIMessage with smart search
         async function sendAIMessageEnhanced() {
@@ -758,13 +2267,66 @@
                 }
                 
                 // Try smart search first for real page results
-                const smartResult = await handleSmartSearch(userMessage);
+                const smartResult = await handleSmartSearch(userMessage, allPages);
                 if (smartResult) {
                     // Remove typing indicator
                     removeTypingIndicator();
                     
                     // Display smart search result
                     addAIMessage(smartResult.message, false);
+                    
+                    // Add iframe preview for gift recommendations
+                    if (smartResult.message.includes('מתנות מושלמות') && smartResult.message.includes('המלצה שלי')) {
+                        setTimeout(() => {
+                            const chatContainer = document.querySelector('.ai-chat-messages');
+                            if (chatContainer) {
+                                // Find the first page mentioned in the message
+                                const pageMatch = smartResult.message.match(/\*\*([^*]+)\*\*/);
+                                if (pageMatch) {
+                                    const pageTitle = pageMatch[1];
+                                    // Find the page in allPages
+                                    const page = allPages.find(p => p.title === pageTitle);
+                                    if (page) {
+                                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
+                                        
+                                        const previewDiv = document.createElement('div');
+                                        previewDiv.className = 'page-preview';
+                                        previewDiv.style.cssText = `
+                                            margin: 16px 0;
+                                            border: 2px solid #e5e7eb;
+                                            border-radius: 12px;
+                                            overflow: hidden;
+                                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                            position: relative;
+                                            width: 100%;
+                                            height: 300px;
+                                            opacity: 0;
+                                            transform: translateY(20px);
+                                            transition: all 0.5s ease;
+                                        `;
+                                        previewDiv.innerHTML = `
+                                            <div class="preview-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                                <span>🎁</span>
+                                                <span>${page.title}</span>
+                                            </div>
+                                            <div class="preview-content" style="position: relative; height: 276px; overflow: hidden;">
+                                                <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);"></div>
+                                                <iframe src="${pageUrl}" style="width: 200%; height: 600px; border: none; transform: scale(0.5); transform-origin: top left; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.8s ease;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" onload="this.style.opacity='1';" onerror="this.style.display='none'"></iframe>
+                                            </div>
+                                        `;
+                                        chatContainer.appendChild(previewDiv);
+                                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                                        
+                                        // Animate in gradually
+                                        setTimeout(() => {
+                                            previewDiv.style.opacity = '1';
+                                            previewDiv.style.transform = 'translateY(0)';
+                                        }, 200);
+                                    }
+                                }
+                            }
+                        }, 2000);
+                    }
                     
                     // Execute action if any
                     if (smartResult.action && smartResult.action.type !== 'none') {
@@ -774,8 +2336,54 @@
                     return; // Don't send to N8N
                 }
                 
-                // If no smart search result, send to N8N
+                // If no smart search result, send to N8N with REAL DATA
+                try {
+                    // Prepare real data context for N8N
+                    const realDataContext = `אתה עוזר במרקטפלייס. ענה על שאלות בצורה ידידותית בהתבסס על הנתונים האמיתיים הבאים:
+
+**דפים זמינים במערכת:**
+${allPages.map(page => {
+    let pageInfo = `- ${page.title} (${page.pageType === 'store' ? 'חנות' : page.pageType === 'course' ? 'קורס' : page.pageType === 'event' ? 'אירוע' : 'שירות'})`;
+    if (page.products && page.products.length > 0) {
+        pageInfo += '\n  מוצרים:';
+        page.products.forEach(product => {
+            pageInfo += `\n  * ${product.name} - ₪${product.price}`;
+        });
+    }
+    return pageInfo;
+}).join('\n')}
+
+**חשוב:** השתמש רק בנתונים אמיתיים מהרשימה למעלה. אל תמציא דפים, חנויות או מוצרים שלא מופיעים ברשימה. אם אין מידע זמין, אמור זאת בכנות.`;
+
+                    const response = await fetch('https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbmreketpg', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: userMessage,
+                            context: 'marketplace',
+                            contextText: realDataContext
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        removeTypingIndicator();
+                        addAIMessage(data.message || 'סליחה, קרתה שגיאה. נסה שוב!', false);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error calling N8N:', error);
+                }
                 
+                // Fallback if N8N fails
+                removeTypingIndicator();
+                addAIMessage("אני כאן לעזור לך! 😊 אם אתה מחפש משהו ספציפי, תוכל לשאול אותי על מתנות, לק, שעונים, צעצועים או קורסים.", false);
+                return;
+                
+                // OLD N8N CODE - DISABLED TO PREVENT INVENTING PAGES
+                /*
                 // Continue with original AI logic...
                 const allPagesContext = allPages.map(page => ({
                     title: page.title,
@@ -785,72 +2393,16 @@
                     pageId: page.pageId
                 }));
                 
-                // Send to N8N with enhanced context
-                const response = await fetch(AI_WEBHOOK, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_message: userMessage,
-                        pageContent: {
-                            pages: allPagesContext
-                        },
-                        contextText: `אתה סתיו, עוזרת חכמה במרקטפלייס. אתה יכולה לענות על כל שאלה - ברכות, שאלות כלליות, וגם לעזור למצוא דפים במרקט. אם מישהו אומר "היי" או "שלום" - ענה בברכה ידידותית. אם מישהו מחפש משהו במרקט - חפש בדפים הזמינים.`,
-                        businessText: `Business: AutoPage Marketplace\nPhone: N/A\nEmail: N/A\nAddress: N/A`,
-                        page_type: "marketplace"
-                    })
-                });
+                // N8N CODE REMOVED - NO MORE INVENTING PAGES!
+                */
                 
-                // Check response and get data
-                if (!response.ok) {
-                    throw new Error('שגיאת תקשורת');
-                }
+                // N8N CODE REMOVED - NO MORE INVENTING PAGES!
                 
-                const data = await response.json();
-                console.log('🤖 Bot response:', data);
+                // N8N CODE REMOVED - NO MORE INVENTING PAGES!
                 
-                // Remove typing indicator immediately
-                removeTypingIndicator();
-                
-                // Extract message from response
-                let botMessage = data.message || data.output || 'סליחה, לא הבנתי...';
-                
-                // Handle nested JSON response
-                if (typeof botMessage === 'string' && botMessage.startsWith('{')) {
-                    try {
-                        const parsedMessage = JSON.parse(botMessage);
-                        botMessage = parsedMessage.message || botMessage;
-                    } catch (e) {
-                        // Keep original message if parsing fails
-                    }
-                }
-                
-                if (typeof botMessage === 'object') {
-                    botMessage = botMessage.message || JSON.stringify(botMessage);
-                }
-                
-                // Display bot response
-                addAIMessage(botMessage, false);
-                
-                // Handle actions
-                if (data.action === 'change_category' && data.category) {
-                    await executeAction({ type: 'change_category', category: data.category });
-                } else if (data.action === 'scroll_to_page' && data.page_id) {
-                    await executeAction({ type: 'scroll_to_page', page_id: data.page_id });
-                } else if (data.action === 'show_page' && data.page_id) {
-                    // Open page in new tab
-                    const page = allPages.find(p => p.pageId === data.page_id);
-                    if (page) {
-                        const pageUrl = `/users/${page.userId}/${page.pageId}_html`;
-                        window.open(pageUrl, '_blank');
-                    }
-                } else {
-                    console.log('ℹ️ No action to perform or action is "none"');
-                }
+                // N8N CODE REMOVED - NO MORE INVENTING PAGES!
             } catch (error) {
-                console.error('❌ Error in sendAIMessage:', error);
-                // Remove typing indicator
+                console.error('❌ Error in sendAIMessageEnhanced:', error);
                 removeTypingIndicator();
                 addAIMessage('סליחה, קרתה שגיאה. נסה שוב!', false);
             }
@@ -1051,6 +2603,6 @@
         function goToFullApp() {
             window.location.href = '/';
         }
-    </script>
-</body>
+      </script>
+  </body>
 </html>
