@@ -89,6 +89,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Serve marketplace.html at /marketplace
+app.get('/marketplace', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'marketplace.html'));
+});
+
+// Also serve marketplace.html directly
+app.get('/marketplace.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'marketplace.html'));
+});
+
 // Serve generated pages from output directory with proper HTML content type
 app.use('/pages', (req, res, next) => {
     // Set content type to HTML for .html files
@@ -228,7 +238,14 @@ const upload = multer({
 // Create a new page
 app.post('/api/create-page', async (req, res) => {
   try {
-    const { userId, title, htmlContent, pageData } = req.body;
+    const { userId, title, htmlContent, pageData, selectedPageType } = req.body;
+    
+    console.log('🔍 CREATE PAGE REQUEST:', {
+      userId,
+      title,
+      selectedPageType,
+      hasHtmlContent: !!htmlContent
+    });
     
     if (!userId) {
       return res.status(400).json({ error: 'Missing userId' });
@@ -244,7 +261,27 @@ app.post('/api/create-page', async (req, res) => {
     if (htmlContent) {
       // יש תוכן HTML מוכן - שמור אותו ישירות
       pageHtml = htmlContent;
-      fileName = `${title || 'דף נחיתה'}_${Date.now()}.html`.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
+      // Special naming for messageInBottle pages
+      if (selectedPageType === 'messageInBottle') {
+        fileName = `מסר_בבקבוק_${Date.now()}_html`.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
+      } else {
+      fileName = `${title || 'דף נחיתה'}_${Date.now()}_html`.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
+      }
+      
+      // 🍾 For messageInBottle, inject metadata into the HTML
+      if (selectedPageType === 'messageInBottle' && req.body.messageInBottleData) {
+        const data = req.body.messageInBottleData;
+        
+        // Replace placeholders in the HTML with actual data
+        pageHtml = pageHtml.replace(/\$\{name\}/g, data.name || '');
+        pageHtml = pageHtml.replace(/\$\{request\}/g, data.request || '');
+        pageHtml = pageHtml.replace(/\$\{area\}/g, data.area || '');
+        pageHtml = pageHtml.replace(/\$\{phone\}/g, data.phone || 'לא צוין');
+        pageHtml = pageHtml.replace(/\$\{price\}/g, data.price || '0');
+        pageHtml = pageHtml.replace(/\$\{priceType\}/g, data.priceType || 'כללי');
+        
+        console.log('🍾 Injected messageInBottle data into HTML');
+      }
     } else if (pageData) {
       // יש נתוני דף - צור HTML
       pageHtml = generatePageHtml(pageData, userId);
@@ -253,9 +290,18 @@ app.post('/api/create-page', async (req, res) => {
       return res.status(400).json({ error: 'Missing htmlContent or pageData' });
     }
     
-    // Auto-detect page type BEFORE saving
-    let pageType = 'generic';
+    // Use selectedPageType from client or auto-detect page type BEFORE saving
+    let pageType = selectedPageType || 'generic';
     const lowerHtml = pageHtml.toLowerCase();
+    
+    console.log(`🎯 Page type from client: ${selectedPageType || 'not provided'}`);
+    console.log(`🎯 Using page type: ${pageType}`);
+    
+    // FORCE messageInBottle if selectedPageType is messageInBottle
+    if (selectedPageType === 'messageInBottle') {
+      pageType = 'messageInBottle';
+      console.log(`🍾 FORCED pageType to messageInBottle!`);
+    }
     
     // Check for purchase/shopping indicators (always check for script injection)
     const purchaseKeywords = ['addtocart', 'shopping-cart', 'cart-icon', 'product-card', 'btn-add-cart', 
@@ -271,7 +317,10 @@ app.post('/api/create-page', async (req, res) => {
     const hasEventKeywords = eventKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
     
     // Check for APPOINTMENT/SERVICE PROVIDER keywords (HIGH PRIORITY)
-    const appointmentKeywords = ['תור', 'appointment', 'booking', 'קביעת תור', 'schedule', 'calendar', 'זמן פנוי', 'available time'];
+    // Including professions like: barber, hairdresser, beauty salon, etc.
+    const appointmentKeywords = ['תור', 'appointment', 'booking', 'קביעת תור', 'schedule', 'calendar', 'זמן פנוי', 'available time',
+                                  'מספרה', 'barber', 'hairdresser', 'salon', 'יפהפה', 'תספורת', 'גילוח', 'טיפול שיער',
+                                  'קוסמטיקאית', 'מסאז', 'פדיקור', 'מניקור', 'ציפורניים', 'אסתטיקאית', 'טיפוח'];
     const hasAppointmentKeywords = appointmentKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
     
     // Check for STORE-specific keywords
@@ -302,6 +351,10 @@ app.post('/api/create-page', async (req, res) => {
     } else if (selectedTemplate === 'liveWorkshop') {
       pageType = 'workshop'; // Live workshops/webinars use leads management for registrations
       console.log(`🎯 DETECTED from TEMPLATE: workshop (LIVE WORKSHOP/WEBINAR - leads management) (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
+    } else if (selectedTemplate === 'messageInBottle') {
+      pageType = 'messageInBottle'; // Message in a Bottle pages use messages management
+      console.log(`🎯 DETECTED from TEMPLATE: messageInBottle (MESSAGE IN BOTTLE - messages management) (100% RELIABLE ✅) - IGNORING ALL KEYWORDS`);
+      console.log(`🍾 MESSAGE IN BOTTLE PAGE DETECTED! pageType set to: ${pageType}`);
     } else if (hasEventKeywords) {
       pageType = 'event';
       console.log(`✅ Detected EVENT page from keywords${hasPurchaseKeywords ? ' (with gifts/purchases)' : ''}`);
@@ -381,11 +434,86 @@ app.post('/api/create-page', async (req, res) => {
     
     // Save metadata
     const metadataFile = path.join(dataDir, 'metadata.json');
-    await fs.writeFile(metadataFile, JSON.stringify({
+    
+    // Extract description from HTML to save in metadata
+    let description = '';
+    try {
+      // Try meta description tag first
+      let descMatch = pageHtml.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i) ||
+                    pageHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["'][^>]*>/i);
+      if (descMatch && descMatch[1] && descMatch[1].trim()) {
+        description = descMatch[1].trim();
+        console.log(`✅ Extracted description from HTML: ${description.substring(0, 50)}...`);
+      } else {
+        // Try og:description
+        descMatch = pageHtml.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["'][^>]*>/i) ||
+                  pageHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["'][^>]*>/i);
+        if (descMatch && descMatch[1] && descMatch[1].trim()) {
+          description = descMatch[1].trim();
+          console.log(`✅ Extracted description from og:description: ${description.substring(0, 50)}...`);
+        }
+      }
+    } catch (error) {
+      console.log(`⚠️ Error extracting description:`, error.message);
+    }
+    
+    // Extract full metadata from HTML (contact info, products, etc.)
+    console.log('🔍 Extracting full metadata from page HTML...');
+    const contactInfo = extractContactInfoFromHTML(pageHtml);
+    const products = extractProductsFromHTML(pageHtml);
+    
+    console.log('✅ Extracted metadata:', {
+      phone: contactInfo.phone,
+      city: contactInfo.city,
+      email: contactInfo.email,
+      address: contactInfo.address,
+      productsCount: products.length
+    });
+    
+    const metadataContent = {
       pageType,
       createdAt: new Date().toISOString(),
-      fileName: fileNameWithoutExt
-    }, null, 2));
+      fileName: fileNameWithoutExt,
+      description: description || undefined,  // Only include if exists
+      isActive: false,  // Default: not active until subscription is purchased
+      // Contact info
+      phone: contactInfo.phone,
+      phones: contactInfo.phones || [],
+      email: contactInfo.email,
+      city: contactInfo.city,
+      address: contactInfo.address,
+      // Products and prices
+      products: products || []
+    };
+    
+    // Add messageInBottle specific data if available
+    console.log(`🔍 DEBUG pageType: ${pageType}`);
+    console.log(`🔍 DEBUG messageInBottleData exists:`, !!req.body.messageInBottleData);
+    console.log(`🔍 DEBUG req.body.messageInBottleData:`, req.body.messageInBottleData);
+    
+    if (pageType === 'messageInBottle' && req.body.messageInBottleData) {
+      const bottleData = req.body.messageInBottleData;
+      console.log(`🍾 Processing messageInBottle data:`, bottleData);
+      metadataContent.name = bottleData.name;
+      metadataContent.request = bottleData.request;
+      metadataContent.area = bottleData.area;
+      // Override phone if provided in bottle data
+      if (bottleData.phone) metadataContent.phone = bottleData.phone;
+      metadataContent.price = bottleData.price;
+      metadataContent.priceType = bottleData.priceType;
+      console.log(`🍾 Adding messageInBottle data to metadata:`, metadataContent);
+    } else {
+      console.log(`⚠️ NOT adding messageInBottle data. pageType=${pageType}, hasData=${!!req.body.messageInBottleData}`);
+    }
+    
+    await fs.writeFile(metadataFile, JSON.stringify(metadataContent, null, 2));
+    console.log(`💾 Saved metadata to: ${metadataFile}`);
+    console.log(`📋 Metadata content:`, metadataContent);
+    
+    // EXTRA LOG for messageInBottle
+    if (pageType === 'messageInBottle') {
+      console.log(`🍾 MESSAGE IN BOTTLE METADATA SAVED! File: ${fileName}, Type: ${pageType}`);
+    }
     
     // Initialize empty data files
     const purchasesFile = path.join(dataDir, 'purchases.json');
@@ -451,27 +579,56 @@ function injectPageDataExtractor(html, pageType) {
 function extractPageData() {
   const data = {};
   
-  // For STORES: Extract products
-  if (document.querySelector('.product-card, [class*="product"]')) {
+  // For STORES: Extract products - IMPROVED VERSION
+  if (document.querySelector('.product-card, [class*="product"], .card, .item, section')) {
     const products = [];
-    const productCards = document.querySelectorAll('.product-card, [class*="product"], .card, .item, section > div');
-    productCards.forEach(card => {
-      const nameEl = card.querySelector('h1, h2, h3, h4, .title, [class*="title"], [class*="name"]');
-      const priceEl = card.querySelector('[class*="price"], .cost') || 
-                     Array.from(card.querySelectorAll('*')).find(el => el.textContent.includes('₪') && !el.querySelector('*'));
-      if (nameEl && priceEl) {
-        const priceMatch = priceEl.textContent.match(/(\\d+(?:[.,]\\d+)?)/);
-        if (priceMatch) {
-          products.push({
-            name: nameEl.textContent.trim().replace(/\\s+/g, ' '),
-            price: parseFloat(priceMatch[1].replace(',', '.')),
-            description: (card.querySelector('p, .desc, [class*="desc"]') || {textContent: ''}).textContent.trim().substring(0, 200)
-          });
+    
+    // Try multiple selectors to find products
+    const productSelectors = [
+      '.product-card',
+      '[class*="product"]',
+      '.card',
+      '.item',
+      'section > div',
+      'div[class*="card"]',
+      'div[class*="item"]'
+    ];
+    
+    productSelectors.forEach(selector => {
+      const productCards = document.querySelectorAll(selector);
+      productCards.forEach(card => {
+        // Look for product name in various elements
+        const nameEl = card.querySelector('h1, h2, h3, h4, h5, h6, .title, [class*="title"], [class*="name"], [class*="product"]') ||
+                      card.querySelector('p, span, div');
+        
+        // Look for price in various elements
+        const priceEl = card.querySelector('[class*="price"], .cost, .amount') || 
+                       Array.from(card.querySelectorAll('*')).find(el => 
+                         el.textContent.includes('₪') && 
+                         !el.querySelector('*') && 
+                         el.textContent.match(/\\d+/)
+                       );
+        
+        if (nameEl && priceEl) {
+          const name = nameEl.textContent.trim().replace(/\\s+/g, ' ');
+          const priceMatch = priceEl.textContent.match(/(\\d+(?:[.,]\\d+)?)/);
+          
+          if (name && name.length > 2 && name.length < 100 && priceMatch) {
+            const price = parseFloat(priceMatch[1].replace(',', '.'));
+            if (price > 0) {
+              products.push({
+                name: name,
+                price: price,
+                description: (card.querySelector('p, .desc, [class*="desc"]') || {textContent: ''}).textContent.trim().substring(0, 200)
+              });
+            }
+          }
         }
-      }
+      });
     });
+    
     data.products = products;
-    console.log(\`🛒 Extracted \${products.length} products\`, products);
+    console.log(\`🛒 Extracted \${products.length} products from live page\`, products);
   }
   
   // For ALL pages: Extract general content
@@ -484,6 +641,93 @@ function extractPageData() {
   console.log('📊 Page data extracted:', data);
   return data;
 }
+
+// 🚀 LIVE DATA EXTRACTOR - For bot to get current page data
+function getLivePageData() {
+  const data = extractPageData();
+  
+  // Send data to bot endpoint
+  if (data.products && data.products.length > 0) {
+    fetch('/api/update-live-products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: window.location.pathname.split('/')[2],
+        pageId: window.location.pathname.split('/')[3],
+        products: data.products,
+        timestamp: new Date().toISOString()
+      })
+    }).then(response => response.json())
+      .then(result => {
+        console.log('✅ Live products updated for bot:', result);
+      })
+      .catch(error => {
+        console.error('❌ Error updating live products:', error);
+      });
+  }
+  
+  return data;
+}
+
+// 🔄 Auto-update products when page changes
+let lastProductsHash = '';
+function checkForProductChanges() {
+  const currentData = extractPageData();
+  const currentHash = JSON.stringify(currentData.products);
+  
+  if (currentHash !== lastProductsHash) {
+    lastProductsHash = currentHash;
+    getLivePageData();
+    console.log('🔄 Products changed, updating bot data');
+  }
+}
+
+// Check for changes every 2 seconds
+setInterval(checkForProductChanges, 2000);
+
+// 🚀 Force update products when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    getLivePageData();
+  }, 1000);
+});
+
+// 🔄 Force update products when user edits
+function forceUpdateProducts() {
+  getLivePageData();
+}
+
+// 🎯 Make forceUpdateProducts available globally
+window.forceUpdateProducts = forceUpdateProducts;
+
+// 🚀 Auto-update products when page content changes
+const observer = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+      // Check if content changed
+      setTimeout(() => {
+        checkForProductChanges();
+      }, 500);
+    }
+  });
+});
+
+// Start observing
+document.addEventListener('DOMContentLoaded', function() {
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+});
+
+// 🎯 Manual trigger for testing
+window.updateBotProducts = function() {
+  console.log('🔄 Manual update triggered');
+  getLivePageData();
+};
 
 // Alias for backward compatibility
 function extractProductsFromPage() {
@@ -1144,6 +1388,299 @@ function fixEventPageWhatsApp(html, pageType) {
   return html;
 }
 
+// Extract contact info from HTML (for metadata)
+function extractContactInfoFromHTML(html) {
+  const contactInfo = {};
+  
+  // Extract phone numbers
+  const phonePatterns = [
+    /\+972[\s\-\)]?\s*5[0-9][\s\-]?\d{3}[\s\-]?\d{4}/g,
+    /\+972[\s\-\)]?\s*7[0-9][\s\-]?\d{3}[\s\-]?\d{4}/g,
+    /0?5[0-9][\s\-]?\d{3}[\s\-]?\d{4}/g,
+    /0?7[0-9][\s\-]?\d{3}[\s\-]?\d{4}/g,
+    /0[57]\d(?:[\.\s\-]?\d){8}/g
+  ];
+  
+  let foundPhones = [];
+  const phoneScores = new Map();
+  
+  // Search in contact/footer areas (higher priority)
+  const contactAreaPattern = /<(?:section|div|footer)[^>]*(?:class|id)="[^"]*(?:contact|footer|info|details)[^"]*"[^>]*>([\s\S]{500,3000})<\/[^>]+>/gi;
+  const contactAreas = [...html.matchAll(contactAreaPattern)];
+  
+  contactAreas.forEach(areaMatch => {
+    const areaHtml = areaMatch[1];
+    phonePatterns.forEach(pattern => {
+      const matches = areaHtml.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          let phone = match.replace(/[\s\-\(\)\.]/g, '');
+          if (phone.startsWith('+972')) phone = phone.replace('+972', '0');
+          if (phone.length === 9 && (phone.startsWith('5') || phone.startsWith('7'))) phone = '0' + phone;
+          if (phone.length === 10 && phone.startsWith('0') && (phone[1] === '5' || phone[1] === '7')) {
+            const isValidPhone = phone.match(/^0[57][0-9]{8}$/);
+            if (isValidPhone && !phone.match(/^0+$/) && phone !== '0500000000' && phone !== '0700000000') {
+              const formatted = `${phone.substring(0, 3)}-${phone.substring(3, 6)}-${phone.substring(6)}`;
+              if (!foundPhones.includes(formatted)) foundPhones.push(formatted);
+              phoneScores.set(formatted, (phoneScores.get(formatted) || 0) + 5);
+            }
+          }
+        });
+      }
+    });
+  });
+  
+  // Search entire HTML
+  phonePatterns.forEach(pattern => {
+    const matches = html.match(pattern);
+    if (matches) {
+      matches.forEach(match => {
+        let phone = match.replace(/[\s\-\(\)\.]/g, '');
+        if (phone.startsWith('+972')) phone = phone.replace('+972', '0');
+        if (phone.length === 9 && (phone.startsWith('5') || phone.startsWith('7'))) phone = '0' + phone;
+        if (phone.length === 10 && phone.startsWith('0') && (phone[1] === '5' || phone[1] === '7')) {
+          const isValidPhone = phone.match(/^0[57][0-9]{8}$/);
+          if (isValidPhone && !phone.match(/^0+$/) && phone !== '0500000000' && phone !== '0700000000') {
+            const formatted = `${phone.substring(0, 3)}-${phone.substring(3, 6)}-${phone.substring(6)}`;
+            if (!foundPhones.includes(formatted)) foundPhones.push(formatted);
+            phoneScores.set(formatted, (phoneScores.get(formatted) || 0) + 1);
+          }
+        }
+      });
+    }
+  });
+  
+  // Boost phones near "טלפון"
+  const proximityMatches = [...html.matchAll(/טלפון[:\s\-]*([^<\n]{0,60})/gi)];
+  proximityMatches.forEach(pm => {
+    const seg = (pm[1] || '').toString();
+    const hits = seg.match(/0[57]\d[\d\s\-\.]{7,}/g) || [];
+    hits.forEach(h => {
+      let normalized = h.replace(/[^0-9]/g, '');
+      if (normalized.length === 9 && (normalized.startsWith('5') || normalized.startsWith('7'))) normalized = '0' + normalized;
+      if (/^0[57]\d{8}$/.test(normalized)) {
+        const formatted = `${normalized.substring(0, 3)}-${normalized.substring(3, 6)}-${normalized.substring(6)}`;
+        phoneScores.set(formatted, (phoneScores.get(formatted) || 0) + 3);
+      }
+    });
+  });
+  
+  if (foundPhones.length > 0) {
+    const validPhones = foundPhones.filter(phone => {
+      const digits = phone.replace(/-/g, '');
+      const firstDigit = digits[0];
+      const isAllSame = digits.split('').every(d => d === firstDigit);
+      const isPlaceholder = phone.includes('000-000') || phone.includes('111-111');
+      return !isAllSame && !isPlaceholder;
+    });
+    
+    if (validPhones.length > 0) {
+      const ranked = [...new Set(validPhones)]
+        .map(p => ({ phone: p, score: phoneScores.get(p) || 0 }))
+        .sort((a, b) => b.score - a.score);
+      contactInfo.phones = ranked.map(r => r.phone);
+      contactInfo.phone = contactInfo.phones[0];
+    }
+  }
+  
+  // Extract email
+  const emailMatch = html.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (emailMatch) contactInfo.email = emailMatch[1];
+  
+  // Extract city
+  const cities = [
+    'תל אביב', 'ירושלים', 'חיפה', 'באר שבע', 'נתניה', 'אשדוד', 'רמת גן', 'פתח תקווה', 
+    'בני ברק', 'חולון', 'רחובות', 'כפר סבא', 'אילת', 'רעננה', 'הרצליה', 'חדרה', 
+    'קריית ביאליק', 'קריית מוצקין', 'ראשון לציון', 'נהריה', 'הוד השרון', 'גבעתיים', 
+    'קריית אתא', 'קריית שמונה', 'בית שאן', 'עפולה'
+  ];
+  
+  // Prioritize cities in contact/footer areas
+  for (const city of cities) {
+    // Check contact areas first
+    const inContactArea = contactAreas.some(area => area[1].includes(city));
+    if (inContactArea) {
+      contactInfo.city = city;
+      break;
+    }
+  }
+  
+  // If not found in contact areas, check entire HTML
+  if (!contactInfo.city) {
+    for (const city of cities) {
+      if (html.includes(city)) {
+        contactInfo.city = city;
+        break;
+      }
+    }
+  }
+  
+  // Extract address - FIRST try navigation button links (Google Maps / Waze)
+  // Users add address to navigation buttons, this is the most accurate source
+  const navigationButtonPatterns = [
+    // Google Maps: href="https://www.google.com/maps?q=..." or href="https://maps.google.com/?q=..."
+    /href\s*=\s*["']https?:\/\/(?:www\.)?(?:maps\.)?google\.com\/maps[^"']*q=([^"'\&]+)/gi,
+    /href\s*=\s*["']https?:\/\/(?:www\.)?(?:maps\.)?google\.com\/maps[^"']*daddr=([^"'\&]+)/gi,
+    // Waze: href="https://waze.com/ul?q=..." or href="https://www.waze.com/ul?q=..."
+    /href\s*=\s*["']https?:\/\/(?:www\.)?waze\.com\/ul[^"']*q=([^"'\&]+)/gi,
+    /href\s*=\s*["']https?:\/\/(?:www\.)?waze\.com\/ul[^"']*ll=([^"'\&]+)/gi,
+    // General navigation link with address in text
+    /<a[^>]*href\s*=\s*["'](?:https?:\/\/(?:maps|waze))[^"']*["'][^>]*>([^<]{10,100})<\/a>/gi
+  ];
+  
+  for (const pattern of navigationButtonPatterns) {
+    const matches = [...html.matchAll(pattern)];
+    if (matches && matches.length > 0) {
+      for (const match of matches) {
+        if (match[1]) {
+          // Decode URL-encoded address
+          let address = decodeURIComponent(match[1].trim());
+          // Clean up address
+          address = address.replace(/\+/g, ' ').replace(/%20/g, ' ').replace(/\s+/g, ' ').trim();
+          // Check if it looks like a real address (contains Hebrew/English, not just coordinates)
+          if (address.length > 5 && (address.match(/[א-ת]/) || address.match(/[a-zA-Z]/))) {
+            // Prioritize addresses with street names
+            if (address.match(/רחוב|street|st\./i) || address.match(/\d+/)) {
+              contactInfo.address = address;
+              console.log('📍 Found address from navigation button:', contactInfo.address);
+              break;
+            } else if (!contactInfo.address) {
+              // Use this as fallback if no street address found yet
+              contactInfo.address = address;
+              console.log('📍 Found address from navigation button (fallback):', contactInfo.address);
+            }
+          }
+        }
+      }
+      if (contactInfo.address) break;
+    }
+  }
+  
+  // If no address from navigation button, try text patterns
+  if (!contactInfo.address) {
+    const addressPatterns = [
+      /([א-ת\s]+,\s*רחוב\s+[א-ת\s\d]+)/g,
+      /([א-ת\s]+,\s*[א-ת\s\d]+\s+\d+)/g,
+      /(רחוב\s+[א-ת\s\d]+,\s*[א-ת\s]+)/g,
+      /כתובת[:\s]*([^<\n]{5,80})/gi
+    ];
+    
+    for (const pattern of addressPatterns) {
+      const matches = html.match(pattern);
+      if (matches && matches[0]) {
+        let address = matches[0].replace(/כתובת[:\s]*/gi, '').trim();
+        if (address.length > 5) {
+          contactInfo.address = address;
+          console.log('📍 Found address from text pattern:', contactInfo.address);
+          break;
+        }
+      }
+    }
+  }
+  
+  return contactInfo;
+}
+
+// Extract products from HTML (for metadata)
+function extractProductsFromHTML(html) {
+  const products = [];
+  
+  // Get page title and h1 to exclude them
+  const pageTitleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  const pageH1Match = html.match(/<h1[^>]*>([^<]{3,80})<\/h1>/i);
+  const pageTitle = pageTitleMatch ? pageTitleMatch[1].trim() : '';
+  const pageH1 = pageH1Match ? pageH1Match[1].trim() : '';
+  
+  const excludePatterns = [
+    'נגישות', 'אודות', 'צור קשר', 'דף הבית', 'עלינו', 'תקנון', 'מדיניות', 
+    'פרטיות', 'תנאים', 'שירות', 'משלוחים', 'החזרות', 'איך להזמין',
+    'גלרי', 'המוצרים', 'תיאור', 'המיוחדים', 'הכל על', 'כל הזכויות',
+    'זכויות יוצרים', 'ברוכים הבאים', 'לקוחות', 'שאלות', 'תשובות',
+    'מוצרים שלנו', 'המוצרים שלנו', 'תפריט', 'כותרת', 'כותרת ראשית',
+    pageTitle, pageH1
+  ].filter(Boolean);
+  
+  const excludeFromName = [
+    '₪', 'שקל', 'ש"ח', 'מחיר', 'מחירים', 'מחירון',
+    'טלפון', 'מייל', 'אימייל', 'כתובת', 'עיר', 'ישראל',
+    'טוהר', 'יופי', 'איכות', 'השראה', 'חלום', 'אמת', 'נשמה'
+  ];
+  
+  // Strategy 1: product-card elements
+  const productCardPattern = /<div[^>]*class="[^"]*product-card[^"]*"[^>]*>([\s\S]{50,2000})<\/div>/gi;
+  const productCardMatches = [...html.matchAll(productCardPattern)];
+  
+  productCardMatches.forEach(cardMatch => {
+    const cardHtml = cardMatch[1];
+    let nameMatch = cardHtml.match(/<h[34][^>]*>([^<]{3,100})<\/h[34]>/i) ||
+                    cardHtml.match(/<[^>]*class="[^"]*product-name[^"]*"[^>]*>([^<]{3,100})<\/[^>]+>/i);
+    
+    if (nameMatch && nameMatch[1]) {
+      const name = nameMatch[1].replace(/<[^>]*>/g, '').trim();
+      
+      // Check exclusions
+      if (excludePatterns.some(ex => name.includes(ex))) return;
+      if (excludeFromName.some(ex => name.includes(ex))) return;
+      if (name.length <= 2 || name.length > 100) return;
+      
+      // Extract price
+      const priceMatch = cardHtml.match(/₪\s*(\d+(?:[,\s]\d+)*(?:\.\d+)?)/) || 
+                        cardHtml.match(/(\d+(?:[,\s]\d+)*(?:\.\d+)?)\s*(?:₪|שקל|ש"ח)/);
+      
+      if (priceMatch) {
+        const priceStr = priceMatch[1].replace(/[,\s]/g, '');
+        const price = parseFloat(priceStr);
+        if (price >= 50 && price <= 50000) {
+          products.push({ name, price });
+        }
+      }
+    }
+  });
+  
+  // Strategy 2: Direct pattern search (h2-h6, p, span with price nearby)
+  if (products.length === 0 || true) { // Always run this strategy
+    const productPattern = /<(?:h[23456]|p|span|strong|b)[^>]*>([^<]{3,80})<\/[^>]+>/gi;
+    const matches = [...html.matchAll(productPattern)];
+    
+    matches.forEach(match => {
+      const text = match[1].replace(/<[^>]*>/g, '').trim();
+      
+      // Check exclusions
+      if (excludePatterns.some(ex => text.includes(ex))) return;
+      if (excludeFromName.some(ex => text.includes(ex))) return;
+      if (text.length <= 2 || text.length > 80) return;
+      if (text.length <= 8 && !text.match(/\d/)) return; // Skip short non-numeric names
+      
+      // Look for price within 500 chars
+      const startPos = match.index;
+      const searchArea = html.substring(startPos, Math.min(startPos + 500, html.length));
+      const priceMatch = searchArea.match(/₪\s*(\d+(?:[,\s]\d+)*(?:\.\d+)?)/) || 
+                        searchArea.match(/(\d+(?:[,\s]\d+)*(?:\.\d+)?)\s*(?:₪|שקל|ש"ח)/);
+      
+      if (priceMatch) {
+        const priceStr = priceMatch[1].replace(/[,\s]/g, '');
+        const price = parseFloat(priceStr);
+        if (price >= 50 && price <= 50000) {
+          // Check if already exists
+          if (!products.some(p => p.name === text)) {
+            products.push({ name: text, price });
+          }
+        }
+      }
+    });
+  }
+  
+  // Remove duplicates and filter
+  const uniqueProducts = [];
+  products.forEach(p => {
+    if (!uniqueProducts.some(up => up.name === p.name && up.price === p.price)) {
+      uniqueProducts.push(p);
+    }
+  });
+  
+  return uniqueProducts;
+}
+
 app.post('/api/save-page', async (req, res) => {
   try {
     let { userId, fileName, content, pageType, pageName } = req.body;
@@ -1165,7 +1702,7 @@ app.post('/api/save-page', async (req, res) => {
     await fs.writeFile(filePath, content);
 
     // Save metadata with pageType
-    if (pageType || pageName || req.body.expectedGuests) {
+    if (pageType || pageName || req.body.expectedGuests || req.body.hasTickets) {
       const metadataDir = path.join('output', userId, `${fileName.replace('.html', '')}_data`);
       await fs.ensureDir(metadataDir);
       
@@ -1173,30 +1710,16 @@ app.post('/api/save-page', async (req, res) => {
         pageType: pageType || 'other',
         pageName: pageName || '',
         expectedGuests: parseInt(req.body.expectedGuests) || 0,
+        hasTickets: req.body.hasTickets === true || req.body.hasTickets === 'true' || req.body.hasTickets === 'on',
         lastUpdated: new Date().toISOString()
       };
       
-      // Extract products from store pages for bot access
-      if (pageType === 'store') {
-        const products = [];
-        const priceRegex = /<p class="product-price">₪(\d+(?:,\d+)?)<\/p>/g;
-        const nameRegex = /<h3 class="product-name">([^<]+)<\/h3>/g;
-        
-        const prices = [...content.matchAll(priceRegex)];
-        const names = [...content.matchAll(nameRegex)];
-        
-        for (let i = 0; i < Math.min(prices.length, names.length); i++) {
-          products.push({
-            name: names[i][1],
-            price: prices[i][1]
-          });
+        // Extract products from store pages for bot access - LIVE VERSION
+        if (pageType === 'store') {
+          // Force empty products to ensure bot reads from live page
+          metadata.products = [];
+          console.log('✅ Products will be read from live page, not cached');
         }
-        
-        if (products.length > 0) {
-          metadata.products = products;
-          console.log('✅ Extracted products:', products);
-        }
-      }
       
       const metadataPath = path.join(metadataDir, 'metadata.json');
       await fs.writeJSON(metadataPath, metadata, { spaces: 2 });
@@ -1208,6 +1731,454 @@ app.post('/api/save-page', async (req, res) => {
   } catch (error) {
     console.error('Error saving page:', error);
     res.status(500).json({ error: 'Failed to save page' });
+  }
+});
+
+// Submit lead from Message in a Bottle response form
+app.post('/api/submit-lead', async (req, res) => {
+  try {
+    const { userId, pageName, name, phone, email, message } = req.body;
+    
+    console.log('📩 Lead submission:', { userId, pageName, name, phone, email, message });
+    
+    if (!userId || !pageName || !name || !phone) {
+      return res.status(400).json({ error: 'Missing required fields: userId, pageName, name, phone' });
+    }
+    
+    // Create leads directory
+    const leadsDir = path.join('output', userId, `${pageName}_data`);
+    await fs.ensureDir(leadsDir);
+    
+    const leadsPath = path.join(leadsDir, 'leads.json');
+    
+    // Load existing leads or create new array
+    let leads = [];
+    if (await fs.pathExists(leadsPath)) {
+      try {
+        leads = await fs.readJSON(leadsPath);
+      } catch (error) {
+        console.log('⚠️ Could not read existing leads, starting fresh');
+      }
+    }
+    
+    // Add new lead
+    const newLead = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email ? email.trim() : '',
+      message: message ? message.trim() : '',
+      timestamp: new Date().toISOString(),
+      status: 'new'
+    };
+    
+    leads.push(newLead);
+    
+    // Save leads
+    await fs.writeJSON(leadsPath, leads, { spaces: 2 });
+    
+    console.log('✅ Lead saved:', newLead);
+    
+    res.json({ 
+      success: true, 
+      message: 'ההודעה נשלחה בהצלחה! 🎉',
+      leadId: newLead.id 
+    });
+    
+  } catch (error) {
+    console.error('❌ Error saving lead:', error);
+    res.status(500).json({ error: 'Failed to save lead: ' + error.message });
+  }
+});
+
+// Get leads for a specific page
+app.get('/api/leads/:userId/:pageName', async (req, res) => {
+  try {
+    const { userId, pageName } = req.params;
+    
+    console.log('📬 Getting leads for:', { userId, pageName });
+    
+    const leadsPath = path.join('output', userId, `${pageName}_data`, 'leads.json');
+    
+    if (!await fs.pathExists(leadsPath)) {
+      return res.json({ leads: [] });
+    }
+    
+    const leads = await fs.readJSON(leadsPath);
+    
+    console.log(`✅ Found ${leads.length} leads for ${pageName}`);
+    res.json({ leads });
+    
+  } catch (error) {
+    console.error('❌ Error getting leads:', error);
+    res.status(500).json({ error: 'Failed to get leads: ' + error.message });
+  }
+});
+
+// Get ALL pages from ALL users (for Stav bot - includes messageInBottle)
+app.get('/api/pages/all', async (req, res) => {
+  try {
+    console.log('🤖 Getting ALL pages from ALL users (for Stav bot)');
+    
+    const outputDir = path.join('output');
+    const allPages = [];
+    
+    // Read all user directories
+    const allDirs = await fs.readdir(outputDir);
+    
+    // סנן תיקיות שאינן משתמשים אמיתיים
+    const userDirs = [];
+    for (const dirName of allDirs) {
+      const userDirPath = path.join(outputDir, dirName);
+      const stats = await fs.stat(userDirPath);
+      
+      // Skip if not a directory
+      if (!stats.isDirectory()) continue;
+      
+      // התעלם מתיקיות: default, temp_*, USER_ID_PLACEHOLDER, תיקיות שמתחילות ב-user_
+      if (dirName === 'default' || 
+          dirName.startsWith('temp_') || 
+          dirName === 'USER_ID_PLACEHOLDER' ||
+          dirName.startsWith('user_')) {
+        continue;
+      }
+      
+      userDirs.push(dirName);
+    }
+    
+    for (const userId of userDirs) {
+      const userDirPath = path.join(outputDir, userId);
+      
+      console.log(`📂 Reading pages from user: ${userId}`);
+      
+      // Read this user's pages
+      const files = await fs.readdir(userDirPath);
+      
+      // ONLY real HTML files! No ghost pages from _data folders
+      const htmlFiles = files.filter(f => f.endsWith('_html') && !f.endsWith('_html_data'));
+      
+      console.log(`   Found ${htmlFiles.length} pages for user ${userId}`);
+      
+      // Process each page
+      for (const fileName of htmlFiles) {
+        const pageId = fileName.replace('_html', '');
+        const metadataPath = path.join(userDirPath, `${fileName}_data`, 'metadata.json');
+        
+        let pageType = 'unknown';
+        let expectedGuests = 0;
+        let hasTickets = false;
+        
+        // Try to load metadata
+        let metadata = {};
+        if (await fs.pathExists(metadataPath)) {
+          try {
+            metadata = await fs.readJSON(metadataPath);
+            pageType = metadata.pageType || 'unknown';
+            expectedGuests = metadata.expectedGuests || 0;
+            hasTickets = metadata.hasTickets || false;
+          } catch (error) {
+            console.log(`   ⚠️ Could not read metadata for ${fileName}`);
+          }
+        }
+        
+        // Check if HTML file exists
+        const htmlFilePath = path.join(userDirPath, fileName);
+        const hasHtmlFile = await fs.pathExists(htmlFilePath);
+        
+        // For messageInBottle pages, include the metadata fields
+        let title = fileName.replace(/_\d{13}(_html)?$/, '').replace(/_html$/, '').replace(/_/g, ' ').trim();
+        
+        // For messageInBottle, use name from metadata
+        if (pageType === 'messageInBottle' && metadata.name) {
+          title = metadata.name;
+        }
+        
+        const pageData = {
+          fileName: fileName,
+          pageId: pageId,
+          url: `/users/${userId}/${encodeURIComponent(fileName)}`,
+          title: title,
+          description: `${pageType} page`,
+          pageType: pageType,
+          expectedGuests: expectedGuests,
+          hasHtmlFile: hasHtmlFile,
+          userId: userId,
+          hasTickets: hasTickets
+        };
+        
+        // Add messageInBottle specific data
+        if (pageType === 'messageInBottle') {
+          pageData.name = metadata.name;
+          pageData.request = metadata.request;
+          pageData.area = metadata.area;
+          pageData.phone = metadata.phone;
+          pageData.price = metadata.price;
+          pageData.priceType = metadata.priceType;
+        }
+        
+        allPages.push(pageData);
+      }
+    }
+    
+    console.log(`✅ Total pages for Stav: ${allPages.length}`);
+    res.json({ pages: allPages });
+    
+  } catch (error) {
+    console.error('Error getting all pages:', error);
+    res.status(500).json({ error: 'Failed to get all pages: ' + error.message });
+  }
+});
+
+// Get ALL pages from ALL users (for marketplace display - filtered)
+app.get('/api/pages/all/marketplace', async (req, res) => {
+  try {
+    console.log('🌍 Getting ALL pages from ALL users for marketplace');
+    
+    const outputDir = path.join('output');
+    const allPages = [];
+    
+    // 🎯 Define which page types should appear in marketplace
+    const MARKETPLACE_PAGE_TYPES = [
+      'store',            // חנות מקוונת
+      'serviceProvider',  // נותן שירותים
+      'course',           // קורסים דיגיטליים
+      'realEstate',       // נכסים למכירה
+      'product',          // דף מוצר
+      'restaurantMenu'    // תפריט מסעדה
+      // event - will be checked separately for hasTickets
+    ];
+    
+    // Read all user directories
+    const allDirs = await fs.readdir(outputDir);
+    
+    // סנן תיקיות שאינן משתמשים אמיתיים
+    const userDirs = [];
+    for (const dirName of allDirs) {
+      const userDirPath = path.join(outputDir, dirName);
+      const stats = await fs.stat(userDirPath);
+      
+      // Skip if not a directory
+      if (!stats.isDirectory()) continue;
+      
+      // התעלם מתיקיות: default, temp_*, USER_ID_PLACEHOLDER, תיקיות שמתחילות ב-user_
+      if (dirName === 'default' || 
+          dirName.startsWith('temp_') || 
+          dirName === 'USER_ID_PLACEHOLDER' ||
+          dirName.startsWith('user_')) {
+        continue;
+      }
+      
+      userDirs.push(dirName);
+    }
+    
+    for (const userId of userDirs) {
+      const userDirPath = path.join(outputDir, userId);
+      
+      console.log(`📂 Reading pages from user: ${userId}`);
+      
+      // Read this user's pages
+      const files = await fs.readdir(userDirPath);
+      
+      // ⛔ NEW: ONLY real HTML files! No ghost pages from _data folders
+      const htmlFiles = files.filter(f => f.endsWith('_html') && !f.endsWith('_html_data'));
+      
+      console.log(`   Found ${htmlFiles.length} pages for user ${userId}`);
+      
+      // Process each page
+      for (const fileName of htmlFiles) {
+        const pageId = fileName.replace('_html', '');
+        const metadataPath = path.join(userDirPath, `${fileName}_data`, 'metadata.json');
+        
+        let pageType = 'unknown';
+        let expectedGuests = 0;
+        let hasTickets = false;
+        
+        // Try to load metadata (includes contact info, products, city, etc.)
+        let metadata = {};
+        if (await fs.pathExists(metadataPath)) {
+          try {
+            metadata = await fs.readJSON(metadataPath);
+            pageType = metadata.pageType || 'unknown';
+            expectedGuests = metadata.expectedGuests || 0;
+            hasTickets = metadata.hasTickets || false;
+            // Metadata now includes: phone, phones, email, city, address, products
+          } catch (error) {
+            console.log(`   ⚠️ Could not read metadata for ${fileName}`);
+          }
+        } else {
+          // If no metadata exists, try to extract it from HTML (for old pages)
+          try {
+            const htmlFilePath = path.join(userDirPath, fileName);
+            if (await fs.pathExists(htmlFilePath)) {
+              const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+              console.log(`   🔍 Extracting metadata for old page: ${fileName}`);
+              const contactInfo = extractContactInfoFromHTML(htmlContent);
+              const products = extractProductsFromHTML(htmlContent);
+              metadata = {
+                ...metadata,
+                phone: contactInfo.phone,
+                phones: contactInfo.phones || [],
+                email: contactInfo.email,
+                city: contactInfo.city,
+                address: contactInfo.address,
+                products: products || []
+              };
+              // Save metadata for future use
+              await fs.ensureDir(path.join(userDirPath, `${fileName}_data`));
+              await fs.writeFile(metadataPath, JSON.stringify({ pageType, ...metadata }, null, 2));
+              console.log(`   ✅ Saved extracted metadata for ${fileName}`);
+            }
+          } catch (error) {
+            console.log(`   ⚠️ Could not extract metadata for ${fileName}:`, error.message);
+          }
+        }
+        
+        // 🎯 SMART FILTER: Include pages based on content, not just pageType!
+        let shouldInclude = false;
+        let includeReason = '';
+        
+        // 0️⃣ FIRST: Skip messageInBottle pages immediately
+        if (pageType === 'messageInBottle' || pageType === 'message') {
+          console.log(`   🍾 Skipping "${fileName}" - message in bottle (Stav only)`);
+          continue; // Skip immediately, don't even add to array
+        }
+        
+        // Check if page has appointments (for landing pages or any other type)
+        const hasAppointments = metadata.appointments !== undefined && metadata.appointments !== null;
+        
+        // 1️⃣ Check if it's a marketplace-friendly page type
+        if (MARKETPLACE_PAGE_TYPES.includes(pageType)) {
+          shouldInclude = true;
+          includeReason = `pageType: ${pageType}`;
+        }
+        
+        // 1️⃣.5️⃣ Landing pages with appointments should be treated as serviceProvider for marketplace
+        else if (pageType === 'landing' && hasAppointments) {
+          pageType = 'serviceProvider'; // Override pageType to serviceProvider for marketplace
+          shouldInclude = true;
+          includeReason = `landing page with appointments`;
+        }
+        
+        // 2️⃣ Check if event with paid tickets
+        else if (pageType === 'event' && hasTickets) {
+          shouldInclude = true;
+          includeReason = 'event with paid tickets';
+        }
+        
+        // 3️⃣ NEW: Check HTML content for products, services, or prices
+        else {
+          try {
+            const htmlFilePath = path.join(userDirPath, fileName);
+            const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+            const lowerHtml = htmlContent.toLowerCase();
+            
+            // 🍾 CRITICAL: Check if this is a messageInBottle page (by checking for bottle indicators)
+            const isMessageInBottle = lowerHtml.includes('🍾 מסר בבקבוק') || 
+                                     lowerHtml.includes('response-form') ||
+                                     lowerHtml.includes('השאר הודעה') ||
+                                     lowerHtml.includes('hidden info for bot only');
+            
+            if (isMessageInBottle) {
+              console.log(`   🍾 Skipping "${fileName}" - message in bottle page (Stav only)`);
+              continue; // Skip this page entirely
+            }
+            
+            // Check for service provider keywords (including barber, salon, etc.)
+            const serviceProviderKeywords = ['מספרה', 'barber', 'hairdresser', 'salon', 'יפהפה', 'תספורת', 'גילוח', 'טיפול שיער',
+                                             'קוסמטיקאית', 'מסאז', 'פדיקור', 'מניקור', 'ציפורניים', 'אסתטיקאית', 'טיפוח',
+                                             'תור', 'appointment', 'booking', 'קביעת תור', 'schedule', 'calendar',
+                                             'נגר', 'plumber', 'electrician', 'בעל מקצוע', 'נותן שירות', 'service provider',
+                                             'צלמים', 'צלם', 'צילום', 'photographer', 'מורה', 'מאמנת', 'מאמן', 'personal trainer',
+                                             'יועצת', 'יועץ', 'מנעולן', 'locksmith', 'זגג', 'glazier', 'צבעי', 'painter'];
+            const hasServiceProviderKeywords = serviceProviderKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
+            
+            // Check for restaurant keywords
+            const restaurantKeywords = ['מסעדה', 'restaurant', 'תפריט', 'menu', 'אוכל', 'food', 'מזון', 'מטבח', 'kitchen',
+                                       'שף', 'chef', 'פיצה', 'pizza', 'בורגר', 'burger', 'סושי', 'sushi', 'תאילנדי', 'thai',
+                                       'איטלקי', 'italian', 'סיני', 'chinese', 'קונדיטוריה', 'bakery', 'מאפייה'];
+            const hasRestaurantKeywords = restaurantKeywords.some(keyword => lowerHtml.includes(keyword.toLowerCase()));
+            
+            // If landing page has service provider keywords, treat as serviceProvider
+            if (pageType === 'landing' && hasServiceProviderKeywords) {
+              pageType = 'serviceProvider';
+              shouldInclude = true;
+              includeReason = 'landing page with service provider keywords';
+            }
+            
+            // If landing page has restaurant keywords, treat as restaurantMenu
+            else if (pageType === 'landing' && hasRestaurantKeywords) {
+              pageType = 'restaurantMenu';
+              shouldInclude = true;
+              includeReason = 'landing page with restaurant keywords';
+            }
+            
+            // Check for product cards, service listings, or price tags
+            const hasProducts = htmlContent.includes('product-card') || 
+                               htmlContent.includes('class="product') ||
+                               htmlContent.includes('data-product');
+            
+            const hasServices = htmlContent.includes('service-card') ||
+                               htmlContent.includes('שירות');
+            
+            const hasPrices = htmlContent.includes('₪') || 
+                             htmlContent.includes('price') ||
+                             htmlContent.match(/\d+\s*₪/);
+            
+            // Check for "מחיר" BUT exclude message in bottle pages
+            const hasPriceWithoutBottle = htmlContent.includes('מחיר') && 
+                                         !htmlContent.includes('hidden info for bot only');
+            
+            if (hasProducts || (hasServices && !htmlContent.includes('hidden info for bot only')) || 
+                (hasPrices && !htmlContent.includes('hidden info for bot only')) || hasPriceWithoutBottle) {
+              shouldInclude = true;
+              includeReason = 'has products/services/prices';
+            }
+          } catch (error) {
+            console.log(`   ⚠️ Could not read HTML for ${fileName}`);
+          }
+        }
+        
+        // Skip pages that shouldn't be in marketplace
+        if (!shouldInclude) {
+          console.log(`   ⛔ Skipping "${fileName}" - pageType: ${pageType}, no marketplace content`);
+          continue;
+        }
+        
+        console.log(`   ✅ Including "${fileName}" - ${includeReason}`);
+        
+        // Check if HTML file exists
+        const htmlFilePath = path.join(userDirPath, fileName);
+        const hasHtmlFile = await fs.pathExists(htmlFilePath);
+        
+        // Use metadata for contact info, products, etc.
+        allPages.push({
+          fileName: fileName,
+          pageId: pageId,
+          url: `/users/${userId}/${encodeURIComponent(fileName)}`,
+          title: fileName.replace(/_\d{13}(_html)?$/, '').replace(/_html$/, '').replace(/_/g, ' ').trim(),
+          description: metadata.description || `${pageType} page`,
+          pageType: pageType,
+          expectedGuests: expectedGuests,
+          hasHtmlFile: hasHtmlFile,
+          userId: userId,
+          hasTickets: hasTickets,
+          // Include metadata for search and display
+          phone: metadata.phone,
+          phones: metadata.phones || [],
+          email: metadata.email,
+          city: metadata.city,
+          address: metadata.address,
+          products: metadata.products || []
+        });
+      }
+    }
+    
+    console.log(`✅ Total marketplace pages: ${allPages.length}`);
+    res.json({ pages: allPages });
+    
+  } catch (error) {
+    console.error('Error getting all marketplace pages:', error);
+    res.status(500).json({ error: 'Failed to get marketplace pages: ' + error.message });
   }
 });
 
@@ -1234,34 +2205,18 @@ app.get('/api/pages/:userId', async (req, res) => {
       return (file.endsWith('.html') || file.endsWith('_html')) && !file.includes('_data');
     });
     
-    // Also find pages that have only _data folders (historical pages)
-    const dataFolders = files.filter(file => file.endsWith('_html_data') || file.endsWith('_data'));
-    const pagesFromDataFolders = dataFolders
-      .map(folder => {
-        // Remove _html_data or _data suffix to get the original filename
-        let baseName = folder.replace('_html_data', '').replace('_data', '');
-        // Check if this HTML file doesn't already exist in htmlFiles
-        if (!htmlFiles.includes(baseName) && 
-            !htmlFiles.includes(baseName + '.html') && 
-            !htmlFiles.includes(baseName + '_html')) {
-          // Return the base name as if it's an HTML file
-          return baseName.endsWith('_html') ? baseName : baseName + '_html';
-        }
-        return null;
-      })
-      .filter(Boolean);
-    
-    // Combine actual HTML files with pages found from data folders
-    // Remove duplicates
-    const allPagesSet = new Set([...htmlFiles, ...pagesFromDataFolders]);
-    const allPages = Array.from(allPagesSet);
-    console.log('HTML files found:', htmlFiles);
-    console.log('Pages from data folders:', pagesFromDataFolders);
-    console.log('Total unique pages:', allPages.length);
+    // ⛔ NEW: ONLY return pages with actual HTML files!
+    // Don't create "ghost pages" from _data folders without HTML
+    const allPages = [...htmlFiles]; // ONLY real HTML files!
+    console.log('✅ Valid HTML files found:', htmlFiles);
+    console.log('📊 Total REAL pages (with HTML):', allPages.length);
     
     const pages = await Promise.all(allPages.map(async file => {
       // נקה את שם הקובץ להצגה
       let cleanTitle = file.replace('.html', '').replace(/_/g, ' ').replace(/^_+/, '');
+      
+      // נקה את השם מ-timestamps ומספרים ארוכים
+      cleanTitle = cleanTitle.replace(/\d{13,}/g, '').replace(/\s+/g, ' ').trim();
       
       // אם השם ריק או מכיל רק מספרים, השתמש בשם ברירת מחדל
       if (!cleanTitle || cleanTitle.trim() === '' || /^\d+$/.test(cleanTitle.trim())) {
@@ -1288,31 +2243,94 @@ app.get('/api/pages/:userId', async (req, res) => {
             pageType = metadata.pageType;
             expectedGuests = metadata.expectedGuests || 0;
             console.log(`📋 Loaded metadata (alt) for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}`);
+          } else {
+            // If no metadata exists, try to detect from content
+            try {
+              const htmlFilePath = path.join(userDir, file);
+              if (await fs.pathExists(htmlFilePath)) {
+                const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+                const lowerContent = htmlContent.toLowerCase();
+                
+                // Check for messageInBottle indicators
+                if (lowerContent.includes('🍾') || 
+                    lowerContent.includes('מסר בבקבוק') || 
+                    lowerContent.includes('response-form') ||
+                    lowerContent.includes('ערוך פרטי הפוסט')) {
+                  pageType = 'messageInBottle';
+                  console.log(`🔍 Auto-detected messageInBottle from content for ${file}`);
+                  
+                  // Create metadata file for future use
+                  await fs.ensureDir(path.dirname(metadataPath));
+                  await fs.writeFile(metadataPath, JSON.stringify({
+                    pageType: 'messageInBottle',
+                    createdAt: new Date().toISOString(),
+                    fileName: fileNameBase,
+                    autoDetected: true
+                  }, null, 2));
+                  console.log(`💾 Created metadata file for auto-detected messageInBottle: ${metadataPath}`);
+                }
+              }
+            } catch (detectionError) {
+              console.log(`Could not auto-detect page type for ${file}:`, detectionError.message);
+            }
           }
         }
       } catch (err) {
         console.log(`No metadata for ${file}:`, err.message);
       }
       
+      // Check if page is active from metadata
+      let isActive = false;
+      try {
+        const fileNameBase = file.replace('.html', '').replace(/_html$/, '');
+        const metadataPath = path.join(userDir, `${fileNameBase}_data`, 'metadata.json');
+        if (await fs.pathExists(metadataPath)) {
+          const metadata = await fs.readJSON(metadataPath);
+          isActive = metadata.isActive === true;
+        }
+      } catch (err) {
+        console.log(`Could not check isActive for ${file}:`, err.message);
+      }
+      
       // Check if actual HTML file exists
       const htmlFilePath = path.join(userDir, file);
       const hasHtmlFile = await fs.pathExists(htmlFilePath);
       
+      // Create display title with page type
+      let displayTitle = cleanTitle;
+      if (pageType) {
+        const pageTypeLabels = {
+          'messageInBottle': 'מסר בבקבוק',
+          'store': 'חנות',
+          'onlineStore': 'חנות מקוונת',
+          'event': 'הזמנה',
+          'serviceProvider': 'נותן שירותים',
+          'course': 'קורס',
+          'workshop': 'סדנה',
+          'restaurantMenu': 'תפריט מסעדה',
+          'realEstate': 'נדל"ן',
+          'product': 'מוצר'
+        };
+        
+        const typeLabel = pageTypeLabels[pageType] || pageType;
+        displayTitle = `${typeLabel} - ${cleanTitle}`;
+      }
+      
       return {
         fileName: file,
-        title: cleanTitle,
+        title: displayTitle, // Use display title with page type
         url: `/pages/${userId}/${encodeURIComponent(file)}`,
         pageType: pageType, // Add pageType to response
         expectedGuests: expectedGuests, // Add expected guests for table calculations
-        hasHtmlFile: hasHtmlFile // Indicate if HTML file exists
+        hasHtmlFile: hasHtmlFile, // Indicate if HTML file exists
+        isActive: isActive // Add isActive status
       };
     }));
 
-    // Filter out pages without HTML files (historical pages)
-    const validPages = pages.filter(p => p.hasHtmlFile === true);
-    
-    console.log('Returning pages:', validPages.length, 'valid pages out of', pages.length, 'total');
-    res.json({ pages: validPages });
+    // Return ALL pages - including ones with only _data folders
+    // The client can decide whether to display them or not
+    console.log('Returning pages:', pages.length, 'total pages');
+    res.json({ pages: pages });
 
   } catch (error) {
     console.error('Error getting pages:', error);
@@ -1825,49 +2843,110 @@ app.get('/api/users', async (req, res) => {
       const entries = fs.readdirSync(outputDir, { withFileTypes: true });
       console.log('Found directories:', entries.map(e => e.name));
       
-      entries.forEach(entry => {
-        if (entry.isDirectory() && entry.name !== 'default') { // התעלם מתיקיית default
-          const userId = entry.name;
-          const userDir = path.join(outputDir, userId);
-          
-          // חשב נתונים אמיתיים למשתמש
-          let totalPages = 0;
-          
-          if (fs.existsSync(userDir)) {
-            const files = fs.readdirSync(userDir);
-            totalPages = files.filter(file => file.endsWith('_html')).length; // קבצים שמסתיימים ב-_html
-            console.log(`User ${userId}: ${totalPages} pages`);
-          }
-          
-          // בדוק אם זה המנהל
-          const isAdmin = userId === 'fae06b49-1239-4ba5-93db-244ce2851fb4';
-          
-          // הוסף את כל המשתמשים (גם אם אין להם דפים)
-          let userEmail, userName;
-          
-          if (isAdmin) {
-            userEmail = 'admin@autopage.com';
-            userName = 'מנהל המערכת';
-          } else if (userId === '3ed25bfd-680d-4c09-a027-1a846170c13e') {
-            userEmail = 'ehaleiameleh@gmail.com';
-            userName = 'משתמש רגיל';
-          } else {
-            userEmail = `${userId}@example.com`;
-            userName = `משתמש ${userId.substring(0, 8)}`;
-          }
-          
-          users.push({
-            id: userId,
-            email: userEmail,
-            full_name: userName,
-            created_at: new Date().toISOString(),
-            subscription_status: totalPages > 0 ? 'active' : 'inactive',
-            totalPages: totalPages,
-            activeSubscriptions: totalPages, // כל דף פעיל
-            totalRevenue: totalPages * 39, // ₪39 לכל דף
-            isAdmin: isAdmin
-          });
+      // סנן תיקיות שאינן משתמשים אמיתיים - לפני הלולאה
+      // משתמש אמיתי = UUID או user_* שיש להם דפים
+      const UUID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+      
+      const validEntries = entries.filter(entry => {
+        if (!entry.isDirectory()) {
+          console.log(`Skipping non-directory: ${entry.name}`);
+          return false;
         }
+        
+        const userId = entry.name;
+        
+        // התעלם מתיקיות: default, temp_*, USER_ID_PLACEHOLDER
+        if (userId === 'default' || 
+            userId.startsWith('temp_') || 
+            userId === 'USER_ID_PLACEHOLDER') {
+          console.log(`Skipping non-user directory: ${userId}`);
+          return false;
+        }
+        
+        // בדוק אם זה UUID (משתמש אמיתי)
+        if (UUID_PATTERN.test(userId)) {
+          return true;
+        }
+        
+        // בדוק אם זה user_* - כלול אותו אם יש לו תיקייה
+        if (userId.startsWith('user_')) {
+          const userDir = path.join(outputDir, userId);
+          if (fs.existsSync(userDir)) {
+            // כלול את התיקייה גם אם אין לה דפים (יכול להיות משתמש ישן)
+            console.log(`✅ Including user_* directory: ${userId}`);
+            return true;
+          }
+          console.log(`Skipping user_* directory that doesn't exist: ${userId}`);
+          return false;
+        }
+        
+        // כל דבר אחר - התעלם
+        console.log(`Skipping unknown directory format: ${userId}`);
+        return false;
+      });
+      
+      console.log(`✅ /api/users: Valid user directories: ${validEntries.length} (filtered from ${entries.length} total directories)`);
+      console.log(`✅ /api/users: Valid user IDs:`, validEntries.map(e => e.name));
+      
+      if (validEntries.length === 0) {
+        console.warn('⚠️ /api/users: No valid user directories found!');
+      }
+      
+      validEntries.forEach(entry => {
+        const userId = entry.name;
+        
+        const userDir = path.join(outputDir, userId);
+        
+        // חשב נתונים אמיתיים למשתמש
+        let totalPages = 0;
+        
+        if (fs.existsSync(userDir)) {
+          const files = fs.readdirSync(userDir);
+          totalPages = files.filter(file => file.endsWith('_html')).length; // קבצים שמסתיימים ב-_html
+          console.log(`User ${userId}: ${totalPages} pages`);
+        }
+        
+        // בדוק אם זה המנהל
+        const isAdmin = userId === 'fae06b49-1239-4ba5-93db-244ce2851fb4';
+        
+        // הוסף את כל המשתמשים (גם אם אין להם דפים)
+        let userEmail, userName;
+        
+        if (isAdmin) {
+          userEmail = 'admin@autopage.com';
+          userName = 'מנהל המערכת';
+        } else if (userId === '3ed25bfd-680d-4c09-a027-1a846170c13e') {
+          userEmail = 'ehaleiameleh@gmail.com';
+          userName = 'משתמש רגיל';
+        } else if (userId.startsWith('user_')) {
+          // משתמש עם user_ prefix
+          userEmail = `${userId}@autopage.com`;
+          userName = `משתמש ${userId.substring(5, 13)}`; // חלק מה-ID
+        } else {
+          userEmail = `${userId}@example.com`;
+          userName = `משתמש ${userId.substring(0, 8)}`;
+        }
+        
+        // בדוק את תאריך יצירת התיקיה כדי לדעת מתי המשתמש נוצר
+        let createdAt = new Date().toISOString();
+        try {
+          const stats = fs.statSync(userDir);
+          createdAt = stats.birthtime.toISOString();
+        } catch (error) {
+          console.log(`Could not get creation time for ${userId}:`, error.message);
+        }
+        
+        users.push({
+          id: userId,
+          email: userEmail,
+          full_name: userName,
+          created_at: createdAt, // תאריך יצירת התיקיה
+          subscription_status: totalPages > 0 ? 'active' : 'inactive',
+          totalPages: totalPages,
+          activeSubscriptions: totalPages, // כל דף פעיל
+          totalRevenue: totalPages * 39, // ₪39 לכל דף
+          isAdmin: isAdmin
+        });
       });
     }
     
@@ -1888,8 +2967,38 @@ app.get('/api/all-pages', async (req, res) => {
     console.log('Getting all pages from:', outputDir);
     
     if (fs.existsSync(outputDir)) {
-      const userIds = fs.readdirSync(outputDir, { withFileTypes: true })
-        .filter(entry => entry.isDirectory() && entry.name !== 'default')
+      const entries = fs.readdirSync(outputDir, { withFileTypes: true })
+        .filter(entry => entry.isDirectory());
+      
+      // סנן תיקיות שאינן משתמשים אמיתיים (בדיוק כמו ב-/api/users)
+      // משתמש אמיתי = UUID או user_* שיש לו תיקייה
+      const UUID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+      
+      const userIds = entries
+        .filter(entry => {
+          if (!entry.isDirectory()) return false;
+          const userId = entry.name;
+          
+          // התעלם מתיקיות: default, temp_*, USER_ID_PLACEHOLDER
+          if (userId === 'default' || 
+              userId.startsWith('temp_') || 
+              userId === 'USER_ID_PLACEHOLDER') {
+            return false;
+          }
+          
+          // בדוק אם זה UUID (משתמש אמיתי)
+          if (UUID_PATTERN.test(userId)) {
+            return true;
+          }
+          
+          // בדוק אם זה user_* - כלול אותו אם יש לו תיקייה
+          if (userId.startsWith('user_')) {
+            return true;
+          }
+          
+          // כל דבר אחר - התעלם
+          return false;
+        })
         .map(entry => entry.name);
       
       console.log('User IDs found:', userIds);
@@ -1897,24 +3006,101 @@ app.get('/api/all-pages', async (req, res) => {
       for (const userId of userIds) {
         const userDir = path.join(outputDir, userId);
           if (fs.existsSync(userDir)) {
-            const files = fs.readdirSync(userDir);
-            const htmlFiles = files.filter(file => file.endsWith('_html')); // קבצים שמסתיימים ב-_html
+            const entries = fs.readdirSync(userDir, { withFileTypes: true });
             
+            // קודם, תן לנו לזהות את כל הדפים - גם קבצי HTML וגם תיקיות _html_data/_html_html_data
+            const pageMap = new Map(); // נשתמש ב-Map כדי למנוע כפילויות
+            
+            // שלב 1: קבצי HTML רגילים
+            const htmlFiles = entries.filter(entry => !entry.isDirectory() && entry.name.endsWith('_html'));
             console.log(`User ${userId}: ${htmlFiles.length} HTML files`);
-            console.log(`Files found:`, files);
             
-            htmlFiles.forEach(file => {
+            htmlFiles.forEach(entry => {
+              const file = entry.name;
               const filePath = path.join(userDir, file);
               const stats = fs.statSync(filePath);
               
-              allPages.push({
+              // Check if page is active from metadata
+              let isActive = false;
+              const fileNameWithoutExt = file.replace('_html', '');
+              
+              try {
+                // נסה למצוא metadata בשתי תיקיות אפשריות
+                const metaPath1 = path.join(userDir, `${fileNameWithoutExt}_html_data`, 'metadata.json');
+                const metaPath2 = path.join(userDir, `${fileNameWithoutExt}_html_html_data`, 'metadata.json');
+                
+                let metaPath = fs.existsSync(metaPath1) ? metaPath1 : metaPath2;
+                
+                if (fs.existsSync(metaPath)) {
+                  const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+                  isActive = meta.isActive === true;
+                  if (isActive) {
+                    console.log(`✅ Page ${file} is ACTIVE`);
+                  }
+                }
+              } catch (error) {
+                console.log(`⚠️ Error reading isActive from metadata: ${file}`, error.message);
+                isActive = false;
+              }
+
+              pageMap.set(fileNameWithoutExt, {
                 fileName: file,
                 title: file.replace('_html', '').replace(/_/g, ' ').trim(),
                 userId: userId,
                 created_at: stats.birthtime.toISOString(),
-                url: `/output/${userId}/${file}`
+                url: `/output/${userId}/${file}`,
+                isActive: isActive
               });
+              
+              if (isActive) {
+                console.log(`✅ /api/all-pages: Page ${file} is ACTIVE (userId: ${userId})`);
+              }
             });
+            
+            // שלב 2: רק תיקיות _html_html_data שיש להן גם קובץ HTML מקורי
+            // כדי למנוע כפילויות ולבדוק דפים שיש להם רק _html_html_data
+            const htmlHtmlDataDirs = entries.filter(entry => 
+              entry.isDirectory() && entry.name.endsWith('_html_html_data')
+            );
+            
+            htmlHtmlDataDirs.forEach(entry => {
+              const dirName = entry.name;
+              let pageName = dirName.replace('_html_html_data', '');
+              const correspondingHtmlFile = `${pageName}_html`;
+              
+              // בדוק אם יש קובץ HTML שמתאים לתיקייה הזו
+              const htmlFileExists = entries.some(e => !e.isDirectory() && e.name === correspondingHtmlFile);
+              
+              // אם אין קובץ HTML מקורי - זה דף שנמחק, לא נכלול אותו
+              if (!htmlFileExists) {
+                return; // skip deleted pages
+              }
+              
+              // אם כבר ראינו את הדף הזה מקובץ HTML בשלב 1, זה אומר שיש בעיה ב-metadata
+              // נעדכן את ה-isActive מה-_html_html_data אם הוא לא עודכן בשלב 1
+              if (pageMap.has(pageName)) {
+                const existingPage = pageMap.get(pageName);
+                // אם הדף לא פעיל בשלב 1, נבדוק שוב
+                if (!existingPage.isActive) {
+                  try {
+                    const metaPath = path.join(userDir, dirName, 'metadata.json');
+                    if (fs.existsSync(metaPath)) {
+                      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+                      if (meta.isActive === true) {
+                        existingPage.isActive = true;
+                        console.log(`✅ Updated page ${pageName} to ACTIVE from _html_html_data`);
+                      }
+                    }
+                  } catch (error) {
+                    console.log(`⚠️ Error re-checking metadata for ${dirName}:`, error.message);
+                  }
+                }
+              }
+            });
+            
+            // הוסף את כל הדפים מה-Map לרשימה
+            allPages.push(...Array.from(pageMap.values()));
+            
           } else {
             console.log(`User ${userId}: directory not found`);
           }
@@ -1929,14 +3115,178 @@ app.get('/api/all-pages', async (req, res) => {
   }
 });
 
+// API endpoint for bot to get current page data (products, etc.) - LIVE VERSION
+app.get('/api/page-data/:userId/:pageId', async (req, res) => {
+  try {
+    const { userId, pageId } = req.params;
+    const userDir = path.join(__dirname, 'output', userId);
+    
+    if (!await fs.pathExists(userDir)) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Look for the HTML file
+    const files = await fs.readdir(userDir);
+    const htmlFile = files.find(file => file.includes(pageId) && file.endsWith('.html'));
+    
+    if (!htmlFile) {
+      return res.status(404).json({ error: 'Page not found' });
+    }
+    
+    const htmlPath = path.join(userDir, htmlFile);
+    const htmlContent = await fs.readFile(htmlPath, 'utf-8');
+    
+    // Extract products from HTML content using improved patterns
+    const products = [];
+    
+    // More flexible product extraction patterns
+    const productPatterns = [
+      // Standard patterns
+      /<h[1-6][^>]*class="[^"]*product[^"]*"[^>]*>([^<]+)<\/h[1-6]>/gi,
+      /<h[1-6][^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/h[1-6]>/gi,
+      /<h[1-6][^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/h[1-6]>/gi,
+      // Generic heading patterns
+      /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi
+    ];
+    
+    const pricePatterns = [
+      /<[^>]*class="[^"]*price[^"]*"[^>]*>₪(\d+(?:[.,]\d+)?)<\/[^>]*>/gi,
+      /<[^>]*class="[^"]*cost[^"]*"[^>]*>₪(\d+(?:[.,]\d+)?)<\/[^>]*>/gi,
+      /₪(\d+(?:[.,]\d+)?)/gi
+    ];
+    
+    // Extract all potential product names
+    const productNames = [];
+    productPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(htmlContent)) !== null) {
+        const name = match[1].trim();
+        if (name && name.length > 2 && name.length < 100) {
+          productNames.push(name);
+        }
+      }
+    });
+    
+    // Extract all potential prices
+    const prices = [];
+    pricePatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(htmlContent)) !== null) {
+        const price = match[1].replace(',', '.');
+        if (price && !isNaN(parseFloat(price))) {
+          prices.push(parseFloat(price));
+        }
+      }
+    });
+    
+    // Match products with prices (try to pair them intelligently)
+    const minLength = Math.min(productNames.length, prices.length);
+    for (let i = 0; i < minLength; i++) {
+      products.push({
+        name: productNames[i],
+        price: prices[i]
+      });
+    }
+    
+    // If we have more names than prices, add products without prices
+    if (productNames.length > prices.length) {
+      for (let i = prices.length; i < productNames.length; i++) {
+        products.push({
+          name: productNames[i],
+          price: 0 // Will be updated when user edits
+        });
+      }
+    }
+    
+    // Extract page content
+    const pageContent = {
+      title: htmlContent.match(/<title>([^<]+)<\/title>/)?.[1] || '',
+      products: products,
+      headings: productNames,
+      sections: (htmlContent.match(/<section/g) || []).length
+    };
+    
+    res.json({
+      success: true,
+      pageContent: pageContent,
+      products: products,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error getting page data:', error);
+    res.status(500).json({ error: 'Failed to get page data' });
+  }
+});
+
+// API endpoint to update live products for bot
+app.post('/api/update-live-products', async (req, res) => {
+  try {
+    const { userId, pageId, products } = req.body;
+    
+    // Store live products in memory for bot access
+    if (!global.liveProducts) {
+      global.liveProducts = {};
+    }
+    
+    const key = `${userId}_${pageId}`;
+    global.liveProducts[key] = {
+      products: products,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('✅ Live products updated:', key, products);
+    
+    res.json({
+      success: true,
+      message: 'Live products updated',
+      products: products
+    });
+    
+  } catch (error) {
+    console.error('Error updating live products:', error);
+    res.status(500).json({ error: 'Failed to update live products' });
+  }
+});
+
 // Public pages API for marketplace (returns normalized structure)
 app.get('/api/public-pages', async (req, res) => {
   try {
     const pages = [];
     const outputDir = path.join(__dirname, 'output');
     if (fs.existsSync(outputDir)) {
-      const userIds = fs.readdirSync(outputDir, { withFileTypes: true })
-        .filter(entry => entry.isDirectory() && entry.name !== 'default')
+      const entries = fs.readdirSync(outputDir, { withFileTypes: true })
+        .filter(entry => entry.isDirectory());
+      
+      // סנן תיקיות שאינן משתמשים אמיתיים (בדיוק כמו ב-/api/users)
+      // משתמש אמיתי = UUID או user_* שיש לו תיקייה
+      const UUID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+      
+      const userIds = entries
+        .filter(entry => {
+          if (!entry.isDirectory()) return false;
+          const userId = entry.name;
+          
+          // התעלם מתיקיות: default, temp_*, USER_ID_PLACEHOLDER
+          if (userId === 'default' || 
+              userId.startsWith('temp_') || 
+              userId === 'USER_ID_PLACEHOLDER') {
+            return false;
+          }
+          
+          // בדוק אם זה UUID (משתמש אמיתי)
+          if (UUID_PATTERN.test(userId)) {
+            return true;
+          }
+          
+          // בדוק אם זה user_* - כלול אותו אם יש לו תיקייה
+          if (userId.startsWith('user_')) {
+            return true;
+          }
+          
+          // כל דבר אחר - התעלם
+          return false;
+        })
         .map(entry => entry.name);
 
       for (const userId of userIds) {
@@ -2108,16 +3458,154 @@ app.get('/api/public-pages', async (req, res) => {
             console.log(`⚠️ Error extracting title from HTML: ${filePath}`, error.message);
           }
 
+          // Extract description from HTML if not found in metadata
+          if (!description || description.trim() === '') {
+            try {
+              const htmlContent = fs.readFileSync(filePath, 'utf8');
+              
+              // Remove script and style tags to get clean text
+              const cleanHtml = htmlContent
+                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              // Try meta description tag first - simple and effective regex
+              let descMatch = htmlContent.match(/<meta[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i) ||
+                            htmlContent.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*name\s*=\s*["']description["'][^>]*>/i);
+              if (descMatch && descMatch[1] && descMatch[1].trim()) {
+                description = descMatch[1].trim();
+                console.log(`✅ Found description from meta tag: ${description.substring(0, 50)}...`);
+              } else {
+                // Try og:description - simple regex
+                descMatch = htmlContent.match(/<meta[^>]*property\s*=\s*["']og:description["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i) ||
+                          htmlContent.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*property\s*=\s*["']og:description["'][^>]*>/i);
+                if (descMatch && descMatch[1] && descMatch[1].trim()) {
+                  description = descMatch[1].trim();
+                  console.log(`✅ Found description from og:description: ${description.substring(0, 50)}...`);
+                } else {
+                  // Try to extract from common description classes/ids
+                  const descSelectors = [
+                    /<p[^>]*class=["'][^"']*desc[^"']*["'][^>]*>([^<]+)<\/p>/i,
+                    /<div[^>]*class=["'][^"']*desc[^"']*["'][^>]*>([^<]+)<\/div>/i,
+                    /<div[^>]*id=["'][^"']*desc[^"']*["'][^>]*>([^<]+)<\/div>/i,
+                    /<p[^>]*class=["'][^"']*subtitle[^"']*["'][^>]*>([^<]+)<\/p>/i,
+                    /<h2[^>]*>([^<]+)<\/h2>/i,
+                    /<h3[^>]*>([^<]+)<\/h3>/i,
+                  ];
+                  
+                  let found = false;
+                  for (const pattern of descSelectors) {
+                    const match = htmlContent.match(pattern);
+                    if (match && match[1] && match[1].trim() && match[1].trim().length > 10) {
+                      description = match[1].trim().substring(0, 200);
+                      console.log(`✅ Found description from selector: ${description.substring(0, 50)}...`);
+                      found = true;
+                      break;
+                    }
+                  }
+                  
+                  if (!found) {
+                    // Try to extract first meaningful paragraph (after h1)
+                    const pMatches = htmlContent.match(/<p[^>]*>([^<]+)<\/p>/gi);
+                    if (pMatches && pMatches.length > 0) {
+                      // Take first paragraph that has enough text
+                      for (const pMatch of pMatches) {
+                        const textMatch = pMatch.match(/>([^<]+)</);
+                        if (textMatch && textMatch[1] && textMatch[1].trim().length > 20) {
+                          description = textMatch[1].trim().substring(0, 200);
+                          console.log(`✅ Found description from paragraph: ${description.substring(0, 50)}...`);
+                          found = true;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  
+                  if (!found && cleanHtml.length > 100) {
+                    // Extract first meaningful sentence from clean HTML
+                    const sentences = cleanHtml.split(/[.!?]\s+/).filter(s => s.trim().length > 20);
+                    if (sentences.length > 0) {
+                      description = sentences[0].trim().substring(0, 200);
+                      console.log(`✅ Found description from text content: ${description.substring(0, 50)}...`);
+                    }
+                  }
+                  
+                  if (!description || description.trim() === '') {
+                    // Default description based on page type
+                    const typeDescriptions = {
+                      'store': 'חנות מקוונת עם מגוון מוצרים ושירותים',
+                      'event': 'אירוע מיוחד עם אפשרות להרשמה והזמנת כרטיסים',
+                      'course': 'קורס מקצועי עם אפשרות לרישום ותשלום',
+                      'serviceProvider': 'שירות מקצועי איכותי',
+                      'messageInBottle': 'מסר בבקבוק - הזמינו שירות ייחודי',
+                      'other': 'דף נחיתה מקצועי'
+                    };
+                    description = typeDescriptions[pageType] || 'דף נחיתה מקצועי';
+                    console.log(`⚠️ Using default description for ${pageType}: ${description}`);
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`⚠️ Error extracting description from HTML: ${filePath}`, error.message);
+              // Fallback to default description
+              const typeDescriptions = {
+                'store': 'חנות מקוונת',
+                'event': 'אירוע מיוחד',
+                'course': 'קורס מקצועי',
+                'serviceProvider': 'שירות מקצועי',
+                'messageInBottle': 'מסר בבקבוק',
+                'other': 'דף נחיתה'
+              };
+              description = typeDescriptions[pageType] || 'דף נחיתה';
+            }
+          }
+
+          // Ensure description always exists - if still empty, use default
+          if (!description || description.trim() === '') {
+            const typeDescriptions = {
+              'store': 'חנות מקוונת עם מגוון מוצרים ושירותים',
+              'event': 'אירוע מיוחד עם אפשרות להרשמה והזמנת כרטיסים',
+              'course': 'קורס מקצועי עם אפשרות לרישום ותשלום',
+              'serviceProvider': 'שירות מקצועי איכותי',
+              'messageInBottle': 'מסר בבקבוק - הזמינו שירות ייחודי',
+              'other': 'דף נחיתה מקצועי'
+            };
+            description = typeDescriptions[pageType] || 'דף נחיתה מקצועי';
+            console.log(`⚠️ Using default description for ${file} (${pageType}): ${description}`);
+          }
+
+          // Check if page is active (has active subscription) from metadata
+          let isActive = false;
+          try {
+            const metaDir = file.replace(/_html$/, '') + '_html_data';
+            const metaPath = path.join(userDir, metaDir, 'metadata.json');
+            if (fs.existsSync(metaPath)) {
+              const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+              // אם isActive מוגדר כ-true, הדף פעיל. אחרת, לא פעיל (default: false)
+              isActive = meta.isActive === true;
+            } else {
+              // אין metadata.json - נחשב כלא פעיל
+              isActive = false;
+            }
+          } catch (error) {
+            console.log(`⚠️ Error reading isActive from metadata: ${file}`, error.message);
+            // במקרה של שגיאה, נחשב כלא פעיל
+            isActive = false;
+          }
+
           pages.push({
             pageId: file.replace(/_html$/, ''),
             userId,
             pageType,
             title: realTitle,
-            description,
+            description: description || 'דף נחיתה מקצועי', // Always include description
             created_at: stats.birthtime.toISOString(),
             url: `/output/${userId}/${file}`,
             thumbnail,
-            products: products.length > 0 ? products : undefined
+            products: products.length > 0 ? products : undefined,
+            isActive: isActive  // Add isActive status
           });
         });
 
@@ -2211,12 +3699,130 @@ app.get('/api/public-pages', async (req, res) => {
             console.log(`⚠️ Error extracting title from HTML: ${filePath}`, error.message);
           }
 
+          // Extract description from HTML if not found in metadata (same as above)
+          if (!description || description.trim() === '') {
+            try {
+              const htmlContent = fs.readFileSync(filePath, 'utf8');
+              
+              // Remove script and style tags to get clean text
+              const cleanHtml = htmlContent
+                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              // Try meta description tag first - simple and effective regex
+              let descMatch = htmlContent.match(/<meta[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i) ||
+                            htmlContent.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*name\s*=\s*["']description["'][^>]*>/i);
+              if (descMatch && descMatch[1] && descMatch[1].trim()) {
+                description = descMatch[1].trim();
+                console.log(`✅ Found description from meta tag: ${description.substring(0, 50)}...`);
+              } else {
+                // Try og:description - simple regex
+                descMatch = htmlContent.match(/<meta[^>]*property\s*=\s*["']og:description["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i) ||
+                          htmlContent.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*property\s*=\s*["']og:description["'][^>]*>/i);
+                if (descMatch && descMatch[1] && descMatch[1].trim()) {
+                  description = descMatch[1].trim();
+                  console.log(`✅ Found description from og:description: ${description.substring(0, 50)}...`);
+                } else {
+                  // Try to extract from common description classes/ids
+                  const descSelectors = [
+                    /<p[^>]*class=["'][^"']*desc[^"']*["'][^>]*>([^<]+)<\/p>/i,
+                    /<div[^>]*class=["'][^"']*desc[^"']*["'][^>]*>([^<]+)<\/div>/i,
+                    /<div[^>]*id=["'][^"']*desc[^"']*["'][^>]*>([^<]+)<\/div>/i,
+                    /<p[^>]*class=["'][^"']*subtitle[^"']*["'][^>]*>([^<]+)<\/p>/i,
+                    /<h2[^>]*>([^<]+)<\/h2>/i,
+                    /<h3[^>]*>([^<]+)<\/h3>/i,
+                  ];
+                  
+                  let found = false;
+                  for (const pattern of descSelectors) {
+                    const match = htmlContent.match(pattern);
+                    if (match && match[1] && match[1].trim() && match[1].trim().length > 10) {
+                      description = match[1].trim().substring(0, 200);
+                      console.log(`✅ Found description from selector: ${description.substring(0, 50)}...`);
+                      found = true;
+                      break;
+                    }
+                  }
+                  
+                  if (!found) {
+                    // Try to extract first meaningful paragraph (after h1)
+                    const pMatches = htmlContent.match(/<p[^>]*>([^<]+)<\/p>/gi);
+                    if (pMatches && pMatches.length > 0) {
+                      // Take first paragraph that has enough text
+                      for (const pMatch of pMatches) {
+                        const textMatch = pMatch.match(/>([^<]+)</);
+                        if (textMatch && textMatch[1] && textMatch[1].trim().length > 20) {
+                          description = textMatch[1].trim().substring(0, 200);
+                          console.log(`✅ Found description from paragraph: ${description.substring(0, 50)}...`);
+                          found = true;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  
+                  if (!found && cleanHtml.length > 100) {
+                    // Extract first meaningful sentence from clean HTML
+                    const sentences = cleanHtml.split(/[.!?]\s+/).filter(s => s.trim().length > 20);
+                    if (sentences.length > 0) {
+                      description = sentences[0].trim().substring(0, 200);
+                      console.log(`✅ Found description from text content: ${description.substring(0, 50)}...`);
+                    }
+                  }
+                  
+                  if (!description || description.trim() === '') {
+                    // Default description based on page type
+                    const typeDescriptions = {
+                      'store': 'חנות מקוונת עם מגוון מוצרים ושירותים',
+                      'event': 'אירוע מיוחד עם אפשרות להרשמה והזמנת כרטיסים',
+                      'course': 'קורס מקצועי עם אפשרות לרישום ותשלום',
+                      'serviceProvider': 'שירות מקצועי איכותי',
+                      'messageInBottle': 'מסר בבקבוק - הזמינו שירות ייחודי',
+                      'other': 'דף נחיתה מקצועי'
+                    };
+                    description = typeDescriptions[pageType] || 'דף נחיתה מקצועי';
+                    console.log(`⚠️ Using default description for ${pageType}: ${description}`);
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`⚠️ Error extracting description from HTML: ${filePath}`, error.message);
+              // Fallback to default description
+              const typeDescriptions = {
+                'store': 'חנות מקוונת',
+                'event': 'אירוע מיוחד',
+                'course': 'קורס מקצועי',
+                'serviceProvider': 'שירות מקצועי',
+                'messageInBottle': 'מסר בבקבוק',
+                'other': 'דף נחיתה'
+              };
+              description = typeDescriptions[pageType] || 'דף נחיתה';
+            }
+          }
+
+          // Ensure description always exists - if still empty, use default
+          if (!description || description.trim() === '') {
+            const typeDescriptions = {
+              'store': 'חנות מקוונת עם מגוון מוצרים ושירותים',
+              'event': 'אירוע מיוחד עם אפשרות להרשמה והזמנת כרטיסים',
+              'course': 'קורס מקצועי עם אפשרות לרישום ותשלום',
+              'serviceProvider': 'שירות מקצועי איכותי',
+              'messageInBottle': 'מסר בבקבוק - הזמינו שירות ייחודי',
+              'other': 'דף נחיתה מקצועי'
+            };
+            description = typeDescriptions[pageType] || 'דף נחיתה מקצועי';
+            console.log(`⚠️ Using default description for ${pageId} (${pageType}): ${description}`);
+          }
+
           pages.push({
             pageId,
             userId,
             pageType,
             title: realTitle,
-            description,
+            description: description || 'דף נחיתה מקצועי', // Always include description
             created_at: stats.birthtime.toISOString(),
             url: `/output/${userId}/${htmlFile}`,
             thumbnail
@@ -2250,6 +3856,11 @@ app.post('/api/generate-html', async (req, res) => {
 // פונקציה ליצירת HTML מהיר
 function generateQuickHtml(prompt) {
   console.log('Full prompt received:', prompt);
+  
+  // בדוק אם זה "מסר בבקבוק"
+  if (prompt.includes('מסר בבקבוק') || prompt.includes('messageInBottle')) {
+    return generateMessageInBottleHtml(prompt);
+  }
   
   // חילוץ פרטים מהפרומפט
   const titleMatch = prompt.match(/Title:\s*(.+?)(?:\n|$)/);
@@ -2662,6 +4273,83 @@ app.post('/api/purchase', async (req, res) => {
         console.error('Error recording purchase:', error);
         res.status(500).json({ error: 'Failed to record purchase' });
     }
+});
+
+// API endpoint לשמירת מנוי פעיל לדף
+app.post('/api/subscription/activate', async (req, res) => {
+  try {
+    const { userId, pageId } = req.body;
+    
+    if (!userId || !pageId) {
+      return res.status(400).json({ error: 'Missing userId or pageId' });
+    }
+    
+    const userDir = path.join('output', userId);
+    const fileName = `${pageId}_html`;
+    const metaDir = path.join(userDir, `${pageId}_html_data`);
+    const metaPath = path.join(metaDir, 'metadata.json');
+    
+    // Ensure metadata directory exists
+    await fs.ensureDir(metaDir);
+    
+    // Read existing metadata or create new
+    let metadata = {};
+    if (await fs.pathExists(metaPath)) {
+      try {
+        metadata = await fs.readJson(metaPath);
+      } catch (error) {
+        console.log(`⚠️ Error reading metadata: ${metaPath}`, error.message);
+      }
+    }
+    
+    // Update isActive status
+    metadata.isActive = true;
+    metadata.subscriptionActivatedAt = new Date().toISOString();
+    
+    // Save updated metadata
+    await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
+    
+    console.log(`✅ Subscription activated for page: ${userId}/${pageId}`);
+    res.json({ success: true, message: 'Subscription activated' });
+  } catch (error) {
+    console.error('Error activating subscription:', error);
+    res.status(500).json({ error: 'Failed to activate subscription' });
+  }
+});
+
+// API endpoint לביטול מנוי לדף
+app.post('/api/subscription/deactivate', async (req, res) => {
+  try {
+    const { userId, pageId } = req.body;
+    
+    if (!userId || !pageId) {
+      return res.status(400).json({ error: 'Missing userId or pageId' });
+    }
+    
+    const userDir = path.join('output', userId);
+    const metaDir = path.join(userDir, `${pageId}_html_data`);
+    const metaPath = path.join(metaDir, 'metadata.json');
+    
+    if (!await fs.pathExists(metaPath)) {
+      return res.status(404).json({ error: 'Page metadata not found' });
+    }
+    
+    // Read existing metadata
+    const metadata = await fs.readJson(metaPath);
+    
+    // Update isActive status
+    metadata.isActive = false;
+    metadata.subscriptionDeactivatedAt = new Date().toISOString();
+    
+    // Save updated metadata
+    await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
+    
+    console.log(`✅ Subscription deactivated for page: ${userId}/${pageId}`);
+    res.json({ success: true, message: 'Subscription deactivated' });
+  } catch (error) {
+    console.error('Error deactivating subscription:', error);
+    res.status(500).json({ error: 'Failed to deactivate subscription' });
+  }
 });
 
 // Get store analytics
@@ -3433,7 +5121,8 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
             hasFile: !!req.file,
             userId: req.body.userId,
             pageName: req.body.pageName,
-            fileSize: req.file?.size
+            fileSize: req.file?.size,
+            filePath: req.file?.path
         });
         
         if (!req.file) {
@@ -3463,10 +5152,41 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
             }
         }
         
+        // 🔧 FIX: Move file from temp to correct user directory
+        const tempPath = req.file.path; // Where multer saved it (temp_XXX)
+        const correctDir = path.join(__dirname, 'output', userId, 'images', actualPageName);
+        const correctPath = path.join(correctDir, req.file.filename);
+        
+        console.log('📁 Moving file:', {
+            from: tempPath,
+            to: correctPath
+        });
+        
+        // Ensure correct directory exists
+        await fs.ensureDir(correctDir);
+        
+        // Move file to correct location
+        await fs.move(tempPath, correctPath, { overwrite: true });
+        
+        console.log('✅ File moved successfully');
+        
         // Build image URL with pageName
         const imageUrl = `/pages/${userId}/images/${actualPageName}/${req.file.filename}`;
         
-        console.log('✅ Image uploaded:', imageUrl);
+        // Verify file exists on disk in correct location
+        const fileExists = await fs.pathExists(correctPath);
+        
+        console.log('✅ Image uploaded:', {
+            imageUrl,
+            diskPath: correctPath,
+            fileExists,
+            filename: req.file.filename
+        });
+        
+        if (!fileExists) {
+            console.error('❌ File was not saved to disk!', correctPath);
+            return res.status(500).json({ error: 'File was not saved correctly' });
+        }
         
         // Return in BOTH formats for compatibility
         res.json({ 
@@ -4018,6 +5738,73 @@ app.post('/api/clean-orphaned-data', async (req, res) => {
     }
 });
 
+// 🗑️ Clean orphaned _data folders (folders without matching _html files)
+app.post('/api/clean-orphaned-folders', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ error: 'Missing userId' });
+        }
+        
+        const userDir = path.join('output', userId);
+        
+        if (!await fs.pathExists(userDir)) {
+            return res.json({ success: true, deletedFolders: 0, message: 'User directory not found' });
+        }
+        
+        console.log(`🧹 Cleaning orphaned folders for user: ${userId}`);
+        
+        const files = await fs.readdir(userDir);
+        
+        // Get list of existing HTML files (real pages)
+        const htmlFiles = new Set();
+        files.filter(f => f.endsWith('_html')).forEach(f => {
+            htmlFiles.add(f.replace('_html', '')); // Store base name without _html
+        });
+        
+        console.log(`📄 Found ${htmlFiles.size} HTML files:`, Array.from(htmlFiles));
+        
+        // Find all _data folders
+        const dataFolders = files.filter(f => f.endsWith('_data') || f.endsWith('_html_data'));
+        console.log(`📂 Found ${dataFolders.length} data folders`);
+        
+        let deletedFolders = 0;
+        const deletedList = [];
+        
+        for (const folder of dataFolders) {
+            // Extract base name (remove _data or _html_data)
+            let baseName = folder.replace('_html_data', '').replace('_data', '');
+            
+            // Check if corresponding HTML file exists
+            const hasHtml = htmlFiles.has(baseName);
+            
+            if (!hasHtml) {
+                // This is an orphaned folder - delete it!
+                const folderPath = path.join(userDir, folder);
+                await fs.remove(folderPath);
+                console.log(`🗑️ Deleted orphaned folder: ${folder}`);
+                deletedFolders++;
+                deletedList.push(folder);
+            } else {
+                console.log(`✅ Keeping folder (has HTML): ${folder}`);
+            }
+        }
+        
+        console.log(`🧹 Cleanup complete: Deleted ${deletedFolders} orphaned folders`);
+        
+        res.json({
+            success: true,
+            deletedFolders,
+            deletedList,
+            message: `נמחקו ${deletedFolders} תיקיות יתומות`
+        });
+    } catch (error) {
+        console.error('Error cleaning orphaned folders:', error);
+        res.status(500).json({ error: 'Failed to clean folders' });
+    }
+});
+
 // Fix all old event pages - remove WhatsApp and add API submission
 app.post('/api/fix-old-event-pages', async (req, res) => {
     try {
@@ -4557,8 +6344,816 @@ app.post('/api/save-lead', async (req, res) => {
     }
 });
 
+// Fix bot JSON response parsing in all existing pages
+app.get('/api/fix-bot-json-parsing', async (req, res) => {
+  try {
+    console.log('🤖 Starting to fix bot JSON parsing in all pages...');
+    const outputDir = 'output';
+    
+    if (!await fs.pathExists(outputDir)) {
+      return res.json({ message: 'No output directory found', fixed: 0 });
+    }
+    
+    let fixedCount = 0;
+    const userDirs = await fs.readdir(outputDir);
+    
+    for (const userId of userDirs) {
+      const userDir = path.join(outputDir, userId);
+      const stat = await fs.stat(userDir);
+      
+      if (!stat.isDirectory()) continue;
+      
+      const files = await fs.readdir(userDir);
+      
+      for (const file of files) {
+        // Only fix HTML files
+        if (!file.endsWith('.html') && !file.endsWith('_html')) continue;
+        
+        const filePath = path.join(userDir, file);
+        const fileStats = await fs.stat(filePath);
+        
+        if (!fileStats.isFile()) continue;
+        
+        console.log(`🤖 Fixing bot JSON parsing in: ${file}`);
+        
+        let html = await fs.readFile(filePath, 'utf-8');
+        const originalHtml = html;
+        
+        // Find the bot response parsing code and replace it
+        const oldPattern = /if \(data\.message && typeof data\.message === 'string' && data\.message\.startsWith\('\{'\)\) \{[\s\S]*?\}\s*console\.log\('📊 Final parsed data:', data\);/;
+        
+        const newCode = `if (data.message && typeof data.message === 'string' && data.message.startsWith('{')) {
+            try { 
+                const parsed = JSON.parse(data.message); 
+                data = parsed; 
+            } catch (e) { 
+                console.warn('message field looks like JSON but failed to parse'); 
+            }
+        }
+        
+        // 🔍 CRITICAL FIX: If entire response is a JSON string, parse it
+        if (typeof data === 'string' && data.trim().startsWith('{')) {
+            try {
+                console.log('🔍 Entire response is JSON string, parsing...');
+                data = JSON.parse(data);
+            } catch (e) {
+                console.warn('Failed to parse response as JSON:', e);
+            }
+        }
+        
+        // 🔍 Extract "response" field if it exists (n8n sometimes returns {response: "text", pages: []})
+        if (data && typeof data === 'object' && data.response && !data.action) {
+            console.log('🔍 Extracting response field from data');
+            const responseText = data.response;
+            const pages = data.pages;
+            data = {
+                message: responseText,
+                pages: pages
+            };
+        }
+        
+        console.log('📊 Final parsed data:', data);`;
+        
+        // Also fix the else block that displays messages without actions
+        const oldElsePattern = /\} else \{\s*addBotMessage\(data\.message \|\|[^}]+\}(?!\s*else)/;
+        const newElseCode = `} else {
+                    // Display the message from the bot - use response field if no message field
+                    const messageToShow = data.message || data.response || 'מצטערת, לא הצלחתי להבין. נסה שוב?';
+                    console.log('🤖 Displaying bot message (no action):', messageToShow);
+                    addBotMessage(messageToShow);
+                }`;
+        
+        let wasFixed = false;
+        
+        if (oldPattern.test(html)) {
+          html = html.replace(oldPattern, newCode);
+          wasFixed = true;
+        }
+        
+        // Also fix the else block
+        if (oldElsePattern.test(html)) {
+          html = html.replace(oldElsePattern, newElseCode);
+          wasFixed = true;
+        }
+        
+        if (wasFixed) {
+          await fs.writeFile(filePath, html);
+          console.log(`✅ Fixed: ${file}`);
+          fixedCount++;
+        } else {
+          console.log(`⏭️ Skipped (pattern not found or already fixed): ${file}`);
+        }
+      }
+    }
+    
+    console.log(`🎉 Fixed ${fixedCount} pages with new bot JSON parsing`);
+    res.json({ 
+      success: true, 
+      message: `Fixed ${fixedCount} pages with new bot JSON parsing`, 
+      fixed: fixedCount 
+    });
+    
+  } catch (error) {
+    console.error('Error fixing bot JSON parsing:', error);
+    res.status(500).json({ error: 'Failed to fix bot JSON parsing: ' + error.message });
+    }
+});
+
+// פונקציה ליצירת HTML עבור "מסר בבקבוק"
+function generateMessageInBottleHtml(prompt) {
+  console.log('🍾 Generating Message in a Bottle HTML');
+  
+  // חילוץ פרטים מהפרומפט - תמיכה במספר פורמטים
+  console.log('🔍 Full prompt content:');
+  console.log('='.repeat(50));
+  console.log(prompt);
+  console.log('='.repeat(50));
+  
+  // Try multiple patterns for name
+  let name = 'תמר';
+  const namePatterns = [
+    /Project\/Business Name:\s*(.+?)(?:\n|$)/i,
+    /שם[:\s]*(.+?)(?:\n|$)/i,
+    /name[:\s]*(.+?)(?:\n|$)/i,
+    /messageName[:\s]*(.+?)(?:\n|$)/i
+  ];
+  for (const pattern of namePatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1].trim()) {
+      name = match[1].trim();
+      break;
+    }
+  }
+  
+  // Try multiple patterns for request
+  let request = 'נקיון בתים';
+  const requestPatterns = [
+    /Core Message:\s*(.+?)(?:\n|$)/i,
+    /בקשה[:\s]*(.+?)(?:\n|$)/i,
+    /request[:\s]*(.+?)(?:\n|$)/i,
+    /messageRequest[:\s]*(.+?)(?:\n|$)/i,
+    /שירות[:\s]*(.+?)(?:\n|$)/i
+  ];
+  for (const pattern of requestPatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1].trim()) {
+      request = match[1].trim();
+      break;
+    }
+  }
+  
+  // Try multiple patterns for area
+  let area = 'הרצליה';
+  const areaPatterns = [
+    /Area:\s*(.+?)(?:\n|$)/i,
+    /אזור[:\s]*(.+?)(?:\n|$)/i,
+    /area[:\s]*(.+?)(?:\n|$)/i,
+    /messageArea[:\s]*(.+?)(?:\n|$)/i
+  ];
+  for (const pattern of areaPatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1].trim()) {
+      area = match[1].trim();
+      break;
+    }
+  }
+  
+  // Try multiple patterns for price
+  let price = '100';
+  const pricePatterns = [
+    /Price:\s*(.+?)(?:\n|$)/i,
+    /מחיר[:\s]*(.+?)(?:\n|$)/i,
+    /price[:\s]*(.+?)(?:\n|$)/i,
+    /messagePrice[:\s]*(.+?)(?:\n|$)/i
+  ];
+  for (const pattern of pricePatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1].trim()) {
+      price = match[1].trim().replace(/[^\d]/g, '') || '100';
+      break;
+    }
+  }
+  
+  // Try multiple patterns for price type
+  let priceType = 'שעתי';
+  const priceTypePatterns = [
+    /Price Type:\s*(.+?)(?:\n|$)/i,
+    /סוג מחיר[:\s]*(.+?)(?:\n|$)/i,
+    /priceType[:\s]*(.+?)(?:\n|$)/i,
+    /messagePriceType[:\s]*(.+?)(?:\n|$)/i
+  ];
+  for (const pattern of priceTypePatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1].trim()) {
+      priceType = match[1].trim();
+      break;
+    }
+  }
+  
+  // Try multiple patterns for phone
+  let phone = '';
+  const phonePatterns = [
+    /Phone:\s*(.+?)(?:\n|$)/i,
+    /טלפון[:\s]*(.+?)(?:\n|$)/i,
+    /phone[:\s]*(.+?)(?:\n|$)/i,
+    /messagePhone[:\s]*(.+?)(?:\n|$)/i
+  ];
+  for (const pattern of phonePatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1].trim()) {
+      phone = match[1].trim();
+      break;
+    }
+  }
+  
+  console.log('🍾 Extracted Message in a Bottle details:', { name, request, area, phone, price, priceType });
+  
+  // Try to extract from "ACTUAL USER DATA FOR MESSAGE IN BOTTLE" section
+  console.log('🔍 Searching for ACTUAL USER DATA section in prompt...');
+  console.log('Prompt length:', prompt.length);
+  console.log('First 500 chars of prompt:', prompt.substring(0, 500));
+  
+  const actualDataMatch = prompt.match(/ACTUAL USER DATA FOR MESSAGE IN BOTTLE:([\s\S]+?)(?:\*\*JSON DATA:\*\*|JSON DATA:|$)/i);
+  console.log('actualDataMatch found:', !!actualDataMatch);
+  if (actualDataMatch) {
+    console.log('✅ Found ACTUAL USER DATA section:', actualDataMatch[1]);
+    
+    const actualDataSection = actualDataMatch[1];
+    
+    // Extract name - more flexible matching
+    const nameMatch = actualDataSection.match(/messageName[:\s]*([^\n\r]+)/i);
+    if (nameMatch && nameMatch[1].trim() && nameMatch[1].trim() !== '') {
+      name = nameMatch[1].trim();
+      console.log('✅ Extracted name:', name);
+    }
+    
+    // Extract request - more flexible matching
+    const requestMatch = actualDataSection.match(/messageRequest[:\s]*([^\n\r]+)/i);
+    if (requestMatch && requestMatch[1].trim() && requestMatch[1].trim() !== '') {
+      request = requestMatch[1].trim();
+      console.log('✅ Extracted request:', request);
+    }
+    
+    // Extract area - more flexible matching
+    const areaMatch = actualDataSection.match(/messageArea[:\s]*([^\n\r]+)/i);
+    if (areaMatch && areaMatch[1].trim() && areaMatch[1].trim() !== '') {
+      area = areaMatch[1].trim();
+      console.log('✅ Extracted area:', area);
+    }
+    
+    // Extract phone - more flexible matching
+    const phoneMatch = actualDataSection.match(/messagePhone[:\s]*([^\n\r]+)/i);
+    if (phoneMatch && phoneMatch[1].trim() && phoneMatch[1].trim() !== '') {
+      phone = phoneMatch[1].trim();
+      console.log('✅ Extracted phone:', phone);
+    }
+    
+    // Extract price - more flexible matching
+    const priceMatch = actualDataSection.match(/messagePrice[:\s]*([^\n\r]+)/i);
+    if (priceMatch && priceMatch[1].trim() && priceMatch[1].trim() !== '' && priceMatch[1].trim() !== '0') {
+      price = priceMatch[1].trim();
+      console.log('✅ Extracted price:', price);
+    }
+    
+    // Extract price type - more flexible matching
+    const priceTypeMatch = actualDataSection.match(/messagePriceType[:\s]*([^\n\r]+)/i);
+    if (priceTypeMatch && priceTypeMatch[1].trim() && priceTypeMatch[1].trim() !== '') {
+      priceType = priceTypeMatch[1].trim();
+      console.log('✅ Extracted price type:', priceType);
+    }
+  }
+  
+  // Also try to extract from JSON section
+  try {
+    const jsonMatch = prompt.match(/\{[\s\S]*"messageName"[\s\S]*?\}/);
+    if (jsonMatch) {
+      console.log('🔍 Found JSON section:', jsonMatch[0]);
+      const jsonData = JSON.parse(jsonMatch[0]);
+      
+      // Use JSON data if available and not empty
+      if (jsonData.messageName && jsonData.messageName.trim()) {
+        name = jsonData.messageName.trim();
+        console.log('✅ JSON extracted name:', name);
+      }
+      if (jsonData.messageRequest && jsonData.messageRequest.trim()) {
+        request = jsonData.messageRequest.trim();
+        console.log('✅ JSON extracted request:', request);
+      }
+      if (jsonData.messageArea && jsonData.messageArea.trim()) {
+        area = jsonData.messageArea.trim();
+        console.log('✅ JSON extracted area:', area);
+      }
+      if (jsonData.messagePhone && jsonData.messagePhone.trim()) {
+        phone = jsonData.messagePhone.trim();
+        console.log('✅ JSON extracted phone:', phone);
+      }
+      if (jsonData.messagePrice && jsonData.messagePrice.trim() && jsonData.messagePrice.trim() !== '0') {
+        price = jsonData.messagePrice.trim();
+        console.log('✅ JSON extracted price:', price);
+      }
+      if (jsonData.messagePriceType && jsonData.messagePriceType.trim()) {
+        priceType = jsonData.messagePriceType.trim();
+        console.log('✅ JSON extracted price type:', priceType);
+      }
+    }
+  } catch (e) {
+    console.log('Could not parse JSON from prompt:', e.message);
+  }
+  
+  return `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שלח הודעה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <!-- Hidden info for bot only - המידע האמיתי של תמר -->
+    <div style="display:none !important; visibility:hidden !important; position:absolute !important; left:-9999px !important; opacity:0 !important; height:0 !important; overflow:hidden !important; width:0 !important; margin:0 !important; padding:0 !important; font-size:0 !important; line-height:0 !important;">
+        <h1>🍾 מסר בבקבוק</h1>
+        <h2>שם: ${name}</h2>
+        <p>בקשה/שירות: ${request}</p>
+        <p>אזור: ${area}</p>
+        <p>מחיר: ₪${price} ${priceType}</p>
+        <p>זמין עכשיו! צור קשר עם ${name} עבור ${request} באזור ${area}</p>
+        <p>מסר בבקבוק - זמני ודחוף</p>
+    </div>
+    
+    <div class="max-w-md w-full p-8">
+        <!-- No display of post details to users - only to bot in hidden section -->
+        
+        <form id="response-form" class="space-y-4 bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">💬 השאר הודעה</h3>
+            
+            <div>
+                <input type="text" name="name" required placeholder="השם שלך" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+                <input type="tel" name="phone" required placeholder="טלפון ליצירת קשר" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+                <input type="email" name="email" placeholder="אימייל (לא חובה)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+                <textarea name="message" rows="3" placeholder="הודעה קצרה (לא חובה)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                📩 שלח הודעה
+            </button>
+        </form>
+    </div>
+
+    <!-- No management button on the page itself - only in management interface -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // No display or edit on the page - only the form for users
+            // Data editing is done in management interface only
+            
+            const responseForm = document.getElementById('response-form');
+            if (responseForm) {
+                responseForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const data = {
+                        userId: 'USER_ID_PLACEHOLDER',
+                        pageName: 'PAGE_NAME_PLACEHOLDER',
+                        name: formData.get('name'),
+                        phone: formData.get('phone'),
+                        email: formData.get('email') || '',
+                        message: formData.get('message') || ''
+                    };
+                    
+                    if (!data.name || !data.phone) {
+                        alert('נא למלא שם וטלפון');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/submit-lead', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        if (response.ok) {
+                            alert('ההודעה נשלחה! 🎉');
+                            this.reset();
+                        } else {
+                            alert('שגיאה בשליחת ההודעה');
+                        }
+                    } catch (error) {
+                        alert('שגיאה בשליחת ההודעה');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>`;
+}
+
 // Serve expense files
 app.use('/expenses', express.static('output'));
+
+// API endpoint to force update metadata for existing pages
+app.post('/api/update-page-metadata/:userId/:fileName', async (req, res) => {
+  try {
+    const { userId, fileName } = req.params;
+    const { pageType } = req.body;
+    
+    console.log(`🔄 Updating metadata for ${fileName} to pageType: ${pageType}`);
+    
+    const userDir = path.join('output', userId);
+    const fileNameBase = fileName.replace('.html', '').replace(/_html$/, '');
+    const metadataPath = path.join(userDir, `${fileNameBase}_data`, 'metadata.json');
+    
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(metadataPath));
+    
+    // Create or update metadata
+    const metadataContent = {
+      pageType: pageType,
+      createdAt: new Date().toISOString(),
+      fileName: fileNameBase,
+      updatedAt: new Date().toISOString(),
+      forceUpdated: true
+    };
+    
+    await fs.writeFile(metadataPath, JSON.stringify(metadataContent, null, 2));
+    console.log(`✅ Updated metadata for ${fileName}:`, metadataContent);
+    
+    res.json({ success: true, message: 'Metadata updated successfully' });
+  } catch (error) {
+    console.error('Error updating metadata:', error);
+    res.status(500).json({ error: 'Failed to update metadata: ' + error.message });
+  }
+});
+
+// N8N Webhook Proxy - to fix CORS issues
+const https = require('https');
+const N8N_WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbmreketpg';
+
+app.post('/api/n8n-webhook', async (req, res) => {
+  try {
+    const requestData = JSON.stringify(req.body);
+    
+    const url = new URL(N8N_WEBHOOK_URL);
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestData)
+      }
+    };
+    
+    const proxyReq = https.request(options, (proxyRes) => {
+      let data = '';
+      proxyRes.on('data', (chunk) => {
+        data += chunk;
+      });
+      proxyRes.on('end', () => {
+        // Set CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        
+        // Try to parse as JSON, if fails send as text
+        try {
+          const jsonData = JSON.parse(data);
+          res.setHeader('Content-Type', 'application/json');
+          res.status(proxyRes.statusCode);
+          res.json(jsonData);
+        } catch (e) {
+          // Not JSON, send as text
+          res.setHeader('Content-Type', 'text/plain');
+          res.status(proxyRes.statusCode);
+          res.send(data);
+        }
+      });
+    });
+    
+    proxyReq.on('error', (error) => {
+      console.error('❌ N8N proxy error:', error);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.status(500).json({ error: 'Proxy error: ' + error.message });
+    });
+    
+    proxyReq.write(requestData);
+    proxyReq.end();
+  } catch (error) {
+    console.error('❌ N8N proxy error:', error);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.status(500).json({ error: 'Proxy error: ' + error.message });
+  }
+});
+
+// Handle OPTIONS for CORS preflight
+app.options('/api/n8n-webhook', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.status(200).end();
+});
+
+// API endpoint to update all existing pages with descriptions
+app.post('/api/update-all-descriptions', async (req, res) => {
+  try {
+    const outputDir = path.join(__dirname, 'output');
+    let updated = 0;
+    let skipped = 0;
+    let errors = 0;
+    
+    if (!fs.existsSync(outputDir)) {
+      return res.json({ success: true, message: 'No output directory found', updated: 0 });
+    }
+    
+    const userIds = fs.readdirSync(outputDir, { withFileTypes: true })
+      .filter(entry => entry.isDirectory() && entry.name !== 'default')
+      .map(entry => entry.name);
+    
+    console.log(`🔄 Starting to update descriptions for ${userIds.length} users...`);
+    
+    for (const userId of userIds) {
+      const userDir = path.join(outputDir, userId);
+      if (!fs.existsSync(userDir)) continue;
+      
+      const files = fs.readdirSync(userDir);
+      const htmlFiles = files.filter(f => f.endsWith('_html'));
+      
+      for (const file of htmlFiles) {
+        try {
+          const filePath = path.join(userDir, file);
+          const fileNameWithoutExt = file.replace('_html', '');
+          const metaDir = fileNameWithoutExt + '_html_data';
+          const metaPath = path.join(userDir, metaDir, 'metadata.json');
+          
+          // Read existing metadata or create new
+          let metadata = {};
+          if (fs.existsSync(metaPath)) {
+            metadata = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+          }
+          
+          // Skip if description already exists
+          if (metadata.description && metadata.description.trim() !== '') {
+            skipped++;
+            continue;
+          }
+          
+          // Extract description from HTML
+          const htmlContent = fs.readFileSync(filePath, 'utf8');
+          let description = '';
+          
+          // Try meta description tag
+          let descMatch = htmlContent.match(/<meta[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i) ||
+                        htmlContent.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*name\s*=\s*["']description["'][^>]*>/i);
+          if (descMatch && descMatch[1] && descMatch[1].trim()) {
+            description = descMatch[1].trim();
+          } else {
+            // Try og:description
+            descMatch = htmlContent.match(/<meta[^>]*property\s*=\s*["']og:description["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i) ||
+                      htmlContent.match(/<meta[^>]*content\s*=\s*["']([^"']+)["'][^>]*property\s*=\s*["']og:description["'][^>]*>/i);
+            if (descMatch && descMatch[1] && descMatch[1].trim()) {
+              description = descMatch[1].trim();
+            } else {
+              // Try to extract from paragraph or other sources
+              const cleanHtml = htmlContent
+                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+              
+              const pMatches = htmlContent.match(/<p[^>]*>([^<]+)<\/p>/gi);
+              if (pMatches && pMatches.length > 0) {
+                for (const pMatch of pMatches) {
+                  const textMatch = pMatch.match(/>([^<]+)</);
+                  if (textMatch && textMatch[1] && textMatch[1].trim().length > 20) {
+                    description = textMatch[1].trim().substring(0, 200);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          
+          // If still no description, use default based on page type
+          if (!description || description.trim() === '') {
+            const pageType = metadata.pageType || 'other';
+            const typeDescriptions = {
+              'store': 'חנות מקוונת עם מגוון מוצרים ושירותים',
+              'event': 'אירוע מיוחד עם אפשרות להרשמה והזמנת כרטיסים',
+              'course': 'קורס מקצועי עם אפשרות לרישום ותשלום',
+              'serviceProvider': 'שירות מקצועי איכותי',
+              'messageInBottle': 'מסר בבקבוק - הזמינו שירות ייחודי',
+              'other': 'דף נחיתה מקצועי'
+            };
+            description = typeDescriptions[pageType] || 'דף נחיתה מקצועי';
+          }
+          
+          // Update metadata
+          metadata.description = description;
+          if (!metadata.pageType) {
+            // Try to detect page type if missing
+            const lowerHtml = htmlContent.toLowerCase();
+            if (lowerHtml.includes('onlineStore') || lowerHtml.includes('product') || lowerHtml.includes('מוצר')) {
+              metadata.pageType = 'store';
+            } else if (lowerHtml.includes('event') || lowerHtml.includes('אירוע')) {
+              metadata.pageType = 'event';
+            } else if (lowerHtml.includes('course') || lowerHtml.includes('קורס')) {
+              metadata.pageType = 'course';
+            } else {
+              metadata.pageType = 'other';
+            }
+          }
+          
+          // Ensure metadata directory exists
+          const metadataDir = path.join(userDir, metaDir);
+          await fs.ensureDir(metadataDir);
+          
+          // Save updated metadata
+          await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
+          updated++;
+          
+          console.log(`✅ Updated: ${userId}/${file} - Description: ${description.substring(0, 50)}...`);
+        } catch (error) {
+          errors++;
+          console.error(`❌ Error updating ${userId}/${file}:`, error.message);
+        }
+      }
+    }
+    
+    console.log(`✅ Update complete! Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
+    res.json({ 
+      success: true, 
+      updated, 
+      skipped, 
+      errors,
+      message: `Updated ${updated} pages, skipped ${skipped} (already had descriptions), ${errors} errors` 
+    });
+  } catch (error) {
+    console.error('Error updating descriptions:', error);
+    res.status(500).json({ error: 'Failed to update descriptions', message: error.message });
+  }
+});
+
+// Update metadata for existing pages (batch or single)
+app.post('/api/update-metadata', async (req, res) => {
+  try {
+    const { userId, pageId, allPages } = req.body;
+    let updated = 0;
+    let errors = 0;
+    
+    if (allPages) {
+      // Update all pages - iterate through all users
+      const outputDir = path.join('output');
+      const allDirs = await fs.readdir(outputDir);
+      const userDirs = allDirs.filter(d => {
+        const dirPath = path.join(outputDir, d);
+        try {
+          return fs.statSync(dirPath).isDirectory() && 
+                 d !== 'default' && 
+                 !d.startsWith('temp_') && 
+                 d !== 'USER_ID_PLACEHOLDER' &&
+                 !d.startsWith('user_');
+        } catch {
+          return false;
+        }
+      });
+      
+      for (const uid of userDirs) {
+        const userDirPath = path.join(outputDir, uid);
+        const files = await fs.readdir(userDirPath);
+        const htmlFiles = files.filter(f => f.endsWith('_html') && !f.endsWith('_html_data'));
+        
+        for (const fileName of htmlFiles) {
+          try {
+            const metadataPath = path.join(userDirPath, `${fileName}_data`, 'metadata.json');
+            const htmlFilePath = path.join(userDirPath, fileName);
+            
+            // Skip if metadata already exists and is recent
+            if (await fs.pathExists(metadataPath)) {
+              const metadata = await fs.readJSON(metadataPath);
+              if (metadata.city && metadata.phone && metadata.products && metadata.products.length > 0) {
+                continue; // Skip if already has full metadata
+              }
+            }
+            
+            // Extract metadata from HTML
+            const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+            const contactInfo = extractContactInfoFromHTML(htmlContent);
+            const products = extractProductsFromHTML(htmlContent);
+            
+            // Load existing metadata or create new
+            let existingMetadata = {};
+            if (await fs.pathExists(metadataPath)) {
+              existingMetadata = await fs.readJSON(metadataPath);
+            }
+            
+            // Update metadata
+            const updatedMetadata = {
+              ...existingMetadata,
+              phone: contactInfo.phone || existingMetadata.phone,
+              phones: contactInfo.phones || existingMetadata.phones || [],
+              email: contactInfo.email || existingMetadata.email,
+              city: contactInfo.city || existingMetadata.city,
+              address: contactInfo.address || existingMetadata.address,
+              products: products.length > 0 ? products : (existingMetadata.products || []),
+              metadataUpdated: new Date().toISOString()
+            };
+            
+            // Save updated metadata
+            await fs.ensureDir(path.join(userDirPath, `${fileName}_data`));
+            await fs.writeFile(metadataPath, JSON.stringify(updatedMetadata, null, 2));
+            updated++;
+            
+            console.log(`✅ Updated metadata for ${uid}/${fileName}`);
+          } catch (error) {
+            errors++;
+            console.error(`❌ Error updating ${uid}/${fileName}:`, error.message);
+          }
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        updated, 
+        errors,
+        message: `Updated metadata for ${updated} pages, ${errors} errors` 
+      });
+    } else if (userId && pageId) {
+      // Update single page
+      const fileName = `${pageId}_html`;
+      const userDirPath = path.join('output', userId);
+      const htmlFilePath = path.join(userDirPath, fileName);
+      const metadataPath = path.join(userDirPath, `${fileName}_data`, 'metadata.json');
+      
+      if (!await fs.pathExists(htmlFilePath)) {
+        return res.status(404).json({ error: 'Page not found' });
+      }
+      
+      // Extract metadata from HTML
+      const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
+      const contactInfo = extractContactInfoFromHTML(htmlContent);
+      const products = extractProductsFromHTML(htmlContent);
+      
+      // Load existing metadata or create new
+      let existingMetadata = {};
+      if (await fs.pathExists(metadataPath)) {
+        existingMetadata = await fs.readJSON(metadataPath);
+      }
+      
+      // Update metadata
+      const updatedMetadata = {
+        ...existingMetadata,
+        phone: contactInfo.phone || existingMetadata.phone,
+        phones: contactInfo.phones || existingMetadata.phones || [],
+        email: contactInfo.email || existingMetadata.email,
+        city: contactInfo.city || existingMetadata.city,
+        address: contactInfo.address || existingMetadata.address,
+        products: products.length > 0 ? products : (existingMetadata.products || []),
+        metadataUpdated: new Date().toISOString()
+      };
+      
+      // Save updated metadata
+      await fs.ensureDir(path.join(userDirPath, `${fileName}_data`));
+      await fs.writeFile(metadataPath, JSON.stringify(updatedMetadata, null, 2));
+      
+      res.json({ 
+        success: true, 
+        message: 'Metadata updated successfully',
+        metadata: updatedMetadata
+      });
+    } else {
+      res.status(400).json({ error: 'Missing userId and pageId, or allPages flag' });
+    }
+  } catch (error) {
+    console.error('Error updating metadata:', error);
+    res.status(500).json({ error: 'Failed to update metadata: ' + error.message });
+  }
+});
+
+// Get Stav status (active/inactive)
+app.get('/api/stav/status', (req, res) => {
+  try {
+    const db = loadDatabase();
+    const stavSettings = db.settings?.stav || { active: true, enabled: true };
+    res.json({ 
+      active: stavSettings.active !== false && stavSettings.enabled !== false,
+      enabled: stavSettings.enabled !== false
+    });
+  } catch (error) {
+    console.error('Error getting Stav status:', error);
+    // Default to active if error
+    res.json({ active: true, enabled: true });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

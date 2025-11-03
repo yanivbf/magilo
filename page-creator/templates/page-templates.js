@@ -1119,6 +1119,44 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
                 guidance: "<b>דף נותן שירותים</b> נועד לאנשי מקצוע ובעלי מלאכה המספקים שירותים לפי דרישה." 
             }
         }
+    },
+
+    messageInBottle: {
+        img: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=2070&auto=format&fit=crop",
+        
+        fields: ['messageName', 'messageRequest', 'messageArea', 'messagePrice', 'priceType'],
+        
+        structurePrompt: `Build a super simple "Message in a Bottle" post page - ONLY A FORM!
+
+**CRITICAL - THIS IS JUST A SIMPLE FORM, NOT A FULL WEBSITE:**
+
+1. **Hidden Information Section** (id='home', style='display:none !important;'):
+   - Display: 🍾 ${name} ${request} 📍 ${area} ₪${price} ${priceType}
+   - This is ONLY for the bot to read, NOT for users to see
+   - Users should NEVER see this content
+
+2. **Response Form Section** (id='respond'):
+   - Title: "שלח הודעה"
+   - Only 4 fields: name (required), phone (required), email (optional), message (optional)
+   - Submit button: "שלח"
+   - NO other content whatsoever
+
+**ABSOLUTELY NO:**
+- AI Bot
+- WhatsApp bubble
+- Accessibility features
+- Header/Footer
+- Privacy policy
+- Services section
+- Any other content
+
+**ONLY: Hidden info for bot + Simple form`,
+
+        t: {
+            en: { title: "Message in a Bottle", label: "Name", description: "Quick post - Name, Request, Area.", guidance: "A <b>Message in a Bottle</b> is a quick post that Stav works with: Name + What you're offering/looking for + Where. Simple as that!" },
+            
+            he: { title: "מסר בבקבוק", label: "שם", description: "פוסט שסתיו פועלת איתו - שם, בקשה, אזור.", guidance: "<b>מסר בבקבוק</b> זה פוסט שסתיו פועלת איתו: שם + מה אתה מציע/מחפש + איפה. פשוט ככה!" }
+        }
     }
 };
 

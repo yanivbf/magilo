@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ממשק ניהול חנות - AutoPage</title>
+    <title>ממשק ניהול דפים - AutoPage</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -287,7 +287,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center py-6">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">🛒 ממשק ניהול חנות</h1>
+                        <h1 class="text-3xl font-bold text-gray-900">📄 ממשק ניהול דפים</h1>
                         <p class="text-gray-600" id="store-name">AutoPage Store</p>
                     </div>
                     <div class="flex gap-3">
@@ -326,7 +326,7 @@
             
             <!-- Quick Access Buttons -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">ניהול מתקדם</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">ניהול דפים</h2>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
                     <!-- Stats Extended Card -->
                     <button onclick="openModal('stats')" class="category-card-small" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -1302,6 +1302,11 @@
                     const pageType = data.metadata?.pageType || 'store';
                     
                     console.log('📋 Page type detected:', pageType);
+                    console.log('📋 Metadata:', data.metadata);
+                    
+                    // בדוק אם יש תורים בדף (גם landing pages יכולים להיות בעלי מקצוע)
+                    const hasAppointments = data.metadata?.appointments || data.appointments;
+                    console.log('📅 Has appointments:', hasAppointments);
                     
                     if (pageType === 'serviceProvider' || pageType === 'appointment') {
                         // Redirect to appointments manager
@@ -1323,9 +1328,15 @@
                     }
                     
                     if (pageType === 'landing' || pageType === 'general') {
-                        // Landing pages and brand pages → leads management
-                        console.log('📄 Landing/Brand page - redirecting to leads management');
-                        window.location.href = `/leads-manager.html?page=${info.page}&userId=${info.userId}`;
+                        // Landing pages with appointments → appointments manager
+                        // Landing pages without appointments → leads management
+                        if (hasAppointments) {
+                            console.log('📅 Landing page with appointments - redirecting to appointments manager');
+                            window.location.href = `/appointments-manager.html?page=${info.page}&userId=${info.userId}`;
+                        } else {
+                            console.log('📄 Landing/Brand page - redirecting to leads management');
+                            window.location.href = `/leads-manager.html?page=${info.page}&userId=${info.userId}`;
+                        }
                         return;
                     }
                     
@@ -1333,6 +1344,13 @@
                         // Event pages → leads management
                         console.log('🎉 Event page - redirecting to leads management');
                         window.location.href = `/leads-manager.html?page=${info.page}&userId=${info.userId}`;
+                        return;
+                    }
+                    
+                    if (pageType === 'messageInBottle') {
+                        // Message in a Bottle pages → leads management
+                        console.log('🍾 Message in a Bottle page - redirecting to leads management');
+                        window.location.href = `/leads-management.html?page=${info.page}&userId=${info.userId}`;
                         return;
                     }
                 } catch (error) {

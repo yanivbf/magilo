@@ -47,6 +47,17 @@
 
         @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
 
+        /* Bot guidance animations */
+        @keyframes slideInFromRight { 
+            from { opacity: 0; transform: translateX(30px) scale(0.95); } 
+            to { opacity: 1; transform: translateX(0) scale(1); } 
+        }
+
+        @keyframes slideInFromLeft { 
+            from { opacity: 0; transform: translateX(-30px) scale(0.95); } 
+            to { opacity: 1; transform: translateX(0) scale(1); } 
+        }
+
 
 
         /* Loader Styles */
@@ -584,7 +595,7 @@
     
                             
     
-                            <fieldset class="form-fieldset">
+                            <fieldset id="basic-details-fieldset" class="form-fieldset">
     
                                 <legend class="form-legend" data-translate-key="fieldset_basic_details"></legend>
     
@@ -2502,6 +2513,77 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
                 }
 
+            },
+
+            messageInBottle: {
+                img: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=2070&auto=format&fit=crop",
+                
+                fields: ['messageName', 'messageRequest', 'messageArea', 'messagePhone', 'messagePrice', 'priceType'],
+                
+                structurePrompt: `Build a super simple "Message in a Bottle" post page - ONLY A FORM!
+
+**CRITICAL - THIS IS JUST A SIMPLE FORM, NOT A FULL WEBSITE:**
+
+1. **Hidden Information Section** (id='home', style='display:none !important;'):
+   - Display: The person's name, their request/service, their area, price and price type
+   - This is ONLY for the bot to read, NOT for users to see
+   - Users should NEVER see this content
+
+2. **Response Form Section** (id='respond'):
+   - Title: "שלח הודעה"
+   - Only 4 fields: name (required), phone (required), email (optional), message (optional)
+   - Submit button: "שלח"
+   - NO other content whatsoever
+
+**ABSOLUTELY NO:**
+- AI Bot
+- WhatsApp bubble
+- Accessibility features
+- Header/Footer
+- Privacy policy
+- Services section
+- Any other content
+
+**ONLY: Hidden info for bot + Simple form`,
+
+                t: {
+                    en: { title: "Message in a Bottle", label: "Your Name", description: "Social post for instant needs - Quick posts like: 'Looking for a babysitter', 'Looking for friends to play basketball', 'Simple question'", guidance: "A <b>Message in a Bottle</b> is a quick social post. Examples: 'I'm looking for a babysitter for Sunday afternoon' or 'Looking for friends to play basketball'. Stav will find someone in your area and show you the form!" },
+                    
+                    he: { 
+                        title: "מסר בבקבוק", 
+                        label: "השם שלך", 
+                        description: "פוסט חברתי לצרכים מיידיים - פרסם: 'מחפש בייביסיטר', 'מחפש חברים למשחק כדור סל', 'שאלה פשוטה'", 
+                        guidance: `<b>מסר בבקבוק</b> - פונקציה חברתית מהירה!
+                        
+📋 <b>איך זה עובד:</b>
+1. אתה מפרסם פוסט קצר (למשל: "מחפש בייביסיטר ליום א' בצהריים")
+2. סתיו מרקט תמצא מישהו באזור שלך
+3. סתיו תראה למשתמש את הטופס בפרימה ואפשר למלא פרטים
+4. הפרטים נשלחים אליך
+
+🍾 <b>דוגמאות:</b>
+• אם אתה <b>מציע שירות:</b> "שלי - בייביסיטר, זמין היום, הרצליה, ₪50 שעתי"
+• אם אתה <b>מחפש שירות:</b> "מחפש בייביסיטר ליום א' בצהריים"
+• אם אתה <b>מחפש חברים:</b> "מחפש חברים למשחק כדור סל"
+• אם יש לך <b>שאלה:</b> "מישהו יודע איפה...?"
+
+✏️ <b>השדות:</b>
+• <b>שם:</b> השם שלך (חובה)
+• <b>בקשה/שירות:</b> מה אתה מציע או מחפש (חובה)
+• <b>אזור:</b> איפה (תל אביב, נתניה...) (חובה)
+• <b>טלפון:</b> אם זה שירות בתשלום (לא חובה)
+• <b>מחיר:</b> אם זה שירות בתשלום (לא חובה)
+• <b>סוג מחיר:</b> כללי או שעתי (לא חובה)
+
+📝 <b>אפשר להציע/לבקש:</b>
+• שירותים (בייביסיטר, ניקיון, הובלה...)
+• חברים לפעילויות
+• מידע/שאלות
+• הצעות/בקשות אחרות
+
+זה <b>לא עסק</b> - זה פוסט חברתי מהיר!` 
+                    }
+                }
             }
 
         };
@@ -2815,6 +2897,654 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
             }
 
         }
+
+        // 🎯 Interactive Field Guidance System
+        const fieldGuidance = {
+            // Basic Details
+            'mainName': {
+                title: '📝 שם העסק/הפרויקט',
+                message: 'כאן תכתוב את השם של העסק או הפרויקט שלך. לדוגמה: "קפה דליה", "סטודיו צילום רון", "מסעדת השף"',
+                tips: ['השם יופיע בכותרת הדף', 'בחר שם קצר וזכיר', 'אפשר להוסיף תיאור קצר']
+            },
+            'contactName': {
+                title: '👤 שם איש הקשר',
+                message: 'השם של האדם שאנשים יוכלו ליצור איתו קשר. בדרך כלל זה השם שלך או של בעל העסק.',
+                tips: ['השם יופיע בפרטי הקשר', 'השתמש בשם מלא או שם פרטי', 'זה יוצר אמון עם הלקוחות']
+            },
+            'description': {
+                title: '📖 תיאור העסק',
+                message: 'כתוב תיאור קצר ומעניין על העסק שלך. מה אתה מציע? מה מיוחד בשירות שלך?',
+                tips: ['2-3 משפטים מספיקים', 'הדגש את היתרונות שלך', 'כתוב בשפה פשוטה וידידותית']
+            },
+            'phone': {
+                title: '📞 מספר טלפון',
+                message: 'המספר שלקוחות יוכלו להתקשר אליך. כשתכתוב טלפון, אוטומטית תתווסף בועת WhatsApp לדף! 💬',
+                tips: ['כתוב עם מקף: 050-1234567', 'בועת WhatsApp תופיע אוטומטית', 'הלקוחות יוכלו ללחוץ ולהתקשר']
+            },
+            'email': {
+                title: '📧 כתובת מייל',
+                message: 'כתובת המייל לפניות עסקיות. הלקוחות יוכלו ללחוץ ולשלוח מייל ישירות.',
+                tips: ['וודא שהכתובת נכונה', 'השתמש במייל עסקי אם יש', 'הלקוחות יוכלו ללחוץ ולשלוח מייל']
+            },
+            'area': {
+                title: '📍 אזור פעילות',
+                message: 'באיזה אזור אתה פועל? זה עוזר ללקוחות לדעת אם השירות רלוונטי להם.',
+                tips: ['לדוגמה: תל אביב, חיפה, כל הארץ', 'אפשר לכתוב כמה ערים', 'ספציפי עוזר למציאות בחיפוש']
+            },
+            
+            // Message in Bottle specific
+            'messageName': {
+                title: '🍾 השם שלך',
+                message: 'השם שלך לפוסט המהיר. זה יופיע רק "מאחורי הקלעים" לבוט, לא למשתמשים.',
+                tips: ['השם שלך או כינוי', 'זה רק למידע הבוט', 'המשתמשים לא יראו את זה']
+            },
+            'messageRequest': {
+                title: '💬 בקשה או שירות',
+                message: 'מה אתה מחפש או מציע? לדוגמה: "מחפש בייביסיטר", "מציע שירותי ניקיון", "מחפש חברים לכדורסל"',
+                tips: ['כתוב בקצרה ובבירור', 'אפשר בקשה או הצעת שירות', 'זה הפוסט החברתי שלך']
+            },
+            'messageArea': {
+                title: '🗺️ באיזה אזור?',
+                message: 'איפה אתה נמצא או איפה אתה מחפש? זה עוזר לבוט למצוא אנשים באזור שלך.',
+                tips: ['שם העיר או השכונה', 'ככל שיותר ספציפי - יותר טוב', 'הבוט ישתמש בזה לחיפוש']
+            },
+            'messagePrice': {
+                title: '💰 מחיר (אופציונלי)',
+                message: 'אם זה שירות בתשלום, כמה זה עולה? אם זה בחינם או בקשה - השאר ריק.',
+                tips: ['רק אם זה שירות בתשלום', 'כתוב מספר בלבד', 'אם זה בחינם - השאר ריק']
+            },
+            'priceType': {
+                title: '⏰ סוג התמחור',
+                message: 'האם המחיר הוא כללי (סכום קבוע) או שעתי (לפי שעות עבודה)?',
+                tips: ['כללי = מחיר קבוע לכל השירות', 'שעתי = מחיר לשעת עבודה', 'בחר מה שמתאים לשירות שלך']
+            },
+            
+            // Additional common fields
+            'websiteUrl': {
+                title: '🌐 כתובת אתר',
+                message: 'כתובת האתר שלך (אם יש). זה יוסיף קישור לאתר שלך בדף.',
+                tips: ['כתוב עם http:// או https://', 'לדוגמה: https://www.mysite.com', 'אם אין אתר - השאר ריק']
+            },
+            'address': {
+                title: '📍 כתובת מלאה',
+                message: 'הכתובת הפיזית של העסק. זה יוסיף קישור למפות גוגל!',
+                tips: ['כתוב כתובת מלאה עם עיר', 'לדוגמה: רחוב הרצל 15, תל אביב', 'הלקוחות יוכלו ללחוץ ולנווט']
+            },
+            'price': {
+                title: '💰 מחיר',
+                message: 'המחיר של השירות או המוצר. זה יוצג בדף בצורה בולטת.',
+                tips: ['כתוב רק מספר', 'לדוגמה: 150', 'המטבע (₪) יתווסף אוטומטית']
+            },
+            'whatsappCountryCode': {
+                title: '🌍 קוד מדינה לWhatsApp',
+                message: 'קוד המדינה לטלפון WhatsApp. בישראל זה +972.',
+                tips: ['בישראל: +972', 'ארה"ב: +1', 'בריטניה: +44']
+            },
+            
+            // Event specific fields
+            'eventDate': {
+                title: '📅 תאריך האירוע',
+                message: 'מתי האירוע מתקיים? זה יופיע בצורה בולטת בהזמנה.',
+                tips: ['בחר תאריך מהלוח שנה', 'התאריך יופיע בהזמנה', 'אפשר לשנות גם אחרי']
+            },
+            'eventTime': {
+                title: '🕐 שעת האירוע',
+                message: 'באיזו שעה האירוע מתחיל? זה חשוב לאורחים לדעת.',
+                tips: ['כתוב בפורמט 20:00', 'אפשר להוסיף "בערב" או "בבוקר"', 'תזכור לציין אם זה שעת התכנסות או התחלה']
+            },
+            'eventLocation': {
+                title: '📍 מקום האירוع',
+                message: 'איפה האירוע מתקיים? כתוב כתובת מלאה או שם מקום.',
+                tips: ['כתוב כתובת מלאה', 'או שם אולם/מקום מוכר', 'זה יהפוך לקישור לניווט']
+            },
+            
+            // Store specific fields
+            'storeName': {
+                title: '🏪 שם החנות',
+                message: 'השם של החנות או העסק שלך. זה יופיע בכותרת ובכל מקום.',
+                tips: ['בחר שם קצר וזכיר', 'השם יופיע בכותרת', 'אפשר להוסיף סלוגן קצר']
+            },
+            'storeDescription': {
+                title: '📝 תיאור החנות',
+                message: 'ספר על החנות שלך - מה אתה מוכר? מה מיוחד אצלך?',
+                tips: ['2-3 משפטים מספיקים', 'הדגש את היתרונות', 'ספר על איכות המוצרים']
+            },
+            
+            // Course specific fields
+            'courseName': {
+                title: '📚 שם הקורס',
+                message: 'איך קוראים לקורס או לסדנה שלך? בחר שם ברור ומעניין.',
+                tips: ['שם ברור ומובן', 'אפשר להוסיף רמה (מתחילים/מתקדמים)', 'הימנע ממילים מסובכות']
+            },
+            'courseDescription': {
+                title: '📖 תיאור הקורס',
+                message: 'מה לומדים בקורס? מה התלמידים ירוויחו מזה?',
+                tips: ['הסבר מה לומדים', 'ציין את היתרונות', 'כתוב על הניסיון שלך']
+            },
+            'courseDuration': {
+                title: '⏱️ משך הקורס',
+                message: 'כמה זמן לוקח הקורס? שעות, ימים, שבועות?',
+                tips: ['לדוגמה: 8 שעות', 'או: 4 מפגשים של שעתיים', 'ציין אם זה אינטנסיבי או פרוס']
+            },
+            'coursePrice': {
+                title: '💰 מחיר הקורס',
+                message: 'כמה עולה הקורס? זה יוצג בצורה בולטת.',
+                tips: ['כתוב מספר בלבד', 'אפשר להוסיף הנחות', 'ציין אם כולל חומרים']
+            },
+            
+            // Service provider fields
+            'serviceName': {
+                title: '🔧 שם השירות',
+                message: 'איך קוראים לשירות שלך? לדוגמה: "שירותי אינסטלציה", "עיצוב גרפי"',
+                tips: ['שם ברור ומובן', 'הימנע ממילים מסובכות', 'ציין את התחום']
+            },
+            'serviceDescription': {
+                title: '📋 תיאור השירות',
+                message: 'מה השירות כולל? איך אתה עוזר ללקוחות?',
+                tips: ['הסבר מה אתה עושה', 'ציין את הניסיון שלך', 'הדגש את היתרונות']
+            },
+            'serviceArea': {
+                title: '🗺️ אזור השירות',
+                message: 'באילו אזורים אתה נותן שירות? זה עוזר ללקוחות לדעת אם אתה מגיע אליהם.',
+                tips: ['ציין ערים או אזורים', 'לדוגמה: גוש דן, חיפה והקריות', 'אפשר לציין עלות נסיעה']
+            },
+            
+            // Landing page fields
+            'landingTitle': {
+                title: '🎯 כותרת הדף',
+                message: 'הכותרת הראשית של הדף. זה מה שאנשים רואים ראשון!',
+                tips: ['כותרת קצרה וחזקה', 'צריכה לעניין מיד', 'הימנע מכותרות ארוכות']
+            },
+            'landingSubtitle': {
+                title: '📝 תת כותרת',
+                message: 'הסבר קצר מתחת לכותרת הראשית. מה אתה מציע?',
+                tips: ['הרחב על הכותרת', '1-2 משפטים', 'הסבר את הערך שאתה נותן']
+            },
+            
+            // Common fields for all types
+            'companyName': {
+                title: '🏢 שם החברה',
+                message: 'השם הרשמי של החברה או העסק שלך.',
+                tips: ['השם הרשמי', 'כפי שרשום במס הכנסה', 'אפשר לציין ע"מ או בע"מ']
+            },
+            'ownerName': {
+                title: '👨‍💼 שם הבעלים',
+                message: 'השם שלך או של בעל העסק. זה יוצר אמון אישי.',
+                tips: ['שם מלא או שם פרטי', 'זה יוצר קשר אישי', 'אפשר להוסיף תואר מקצועי']
+            },
+            'businessHours': {
+                title: '🕐 שעות פעילות',
+                message: 'מתי העסק פתוח? זה חשוב ללקוחות לדעת.',
+                tips: ['לדוגמה: א-ה 9:00-17:00', 'ציין ימי שישי ושבת', 'אפשר לציין זמינות טלפונית']
+            },
+            'socialMedia': {
+                title: '📱 רשתות חברתיות',
+                message: 'קישורים לפייסבוק, אינסטגרם וכו. זה מחבר אותך ללקוחות.',
+                tips: ['העתק את הקישור המלא', 'וודא שהקישור עובד', 'אפשר להוסיף כמה רשתות']
+            },
+            
+            // Optional sections and features
+            'optionalSections': {
+                title: '📋 סעיפים אופציונליים',
+                message: 'כאן תוכל להוסיף סעיפים נוספים לדף שלך כמו: לקוחות ממליצים, שאלות ותשובות, הצוות שלנו, גלריית תמונות ועוד.',
+                tips: ['בחר רק מה שרלוונטי לעסק שלך', 'לקוחות ממליצים מחזקים אמון', 'שאלות ותשובות עוזרות ללקוחות', 'גלריה מראה את העבודות שלך']
+            },
+            'testimonials': {
+                title: '⭐ לקוחות ממליצים',
+                message: 'המלצות מלקוחות מרוצים. זה אחד הדברים החשובים ביותר לבניית אמון!',
+                tips: ['בקש המלצות מלקוחות מרוצים', 'כלול שם מלא ותמונה אם אפשר', 'המלצות אמיתיות עובדות הכי טוב']
+            },
+            'faq': {
+                title: '❓ שאלות ותשובות',
+                message: 'שאלות נפוצות שלקוחות שואלים. זה חוסך לך זמן ועוזר ללקוחות למצוא תשובות מהר.',
+                tips: ['רשום את השאלות שהכי הרבה שואלים אותך', 'תשובות קצרות וברורות', 'עדכן לפי שאלות חדשות שמגיעות']
+            },
+            'team': {
+                title: '👥 הצוות שלנו',
+                message: 'הצגת חברי הצוות. זה יוצר קשר אישי ואמון עם הלקוחות.',
+                tips: ['תמונות מקצועיות של הצוות', 'תיאור קצר של כל אחד', 'הדגש את הניסיון והמומחיות']
+            },
+            'gallery': {
+                title: '🖼️ גלריית תמונות',
+                message: 'תמונות של העבודות שלך, המוצרים או השירותים. תמונות שווות אלף מילים!',
+                tips: ['תמונות באיכות גבוהה', 'הראה את התוצאות הטובות ביותר', 'עדכן תמונות חדשות מפעם לפעם']
+            },
+            'priceTable': {
+                title: '💰 טבלת מחירים',
+                message: 'טבלה מסודרת עם המחירים שלך. זה עוזר ללקוחות להבין מה הם מקבלים תמורת הכסף.',
+                tips: ['חלק לחבילות ברורות', 'הדגש את החבילה הפופולרית', 'ציין מה כלול בכל חבילה']
+            },
+            
+            // Calendar and appointment system
+            'calendar': {
+                title: '📅 ממשק יומן',
+                message: 'מערכת זימון תורים אוטומטית! הלקוחות יוכלו לקבוע תור ישירות דרך הדף שלך.',
+                tips: ['הלקוחות רואים זמינות בזמן אמת', 'אתה מקבל התראות על תורים חדשים', 'אפשר לנהל את היומן בקלות', 'חוסך לך זמן ושיחות טלפון']
+            },
+            'appointments': {
+                title: '🗓️ קביעת תורים',
+                message: 'מערכת מתקדמת לקביעת תורים. הלקוחות בוחרים תאריך ושעה, ואתה מקבל הודעה.',
+                tips: ['הגדר את השעות הפנויות שלך', 'קבע משך זמן לכל תור', 'הלקוחות יקבלו אישור אוטומטי', 'תוכל לבטל או לשנות תורים']
+            },
+            'bookingSystem': {
+                title: '📋 מערכת הזמנות',
+                message: 'מערכת מקצועית לניהול הזמנות ותורים. מושלמת לעסקים עם לוח זמנים צפוף.',
+                tips: ['ניהול מתקדם של זמינות', 'אפשרות לתשלום מראש', 'שליחת תזכורות ללקוחות', 'דוחות על התורים']
+            },
+            
+            // Design and styling options
+            'designStyle': {
+                title: '🎨 סגנון עיצוב',
+                message: 'בחר את הסגנון הויזואלי של הדף. כל סגנון יוצר אווירה אחרת ומתאים לעסקים שונים.',
+                tips: ['מינימליסטי - נקי ופשוט', 'מודרני - טרנדי ועכשווי', 'קלאסי - אלגנטי ומכובד', 'בחר מה שמתאים לעסק שלך']
+            },
+            'headerImage': {
+                title: '🖼️ תמונת כותרת',
+                message: 'התמונה הראשית של הדף. זה מה שאנשים רואים ראשון - חשוב שתהיה איכותית ורלוונטית!',
+                tips: ['תמונה באיכות גבוהה', 'רלוונטית לעסק שלך', 'לא יותר מדי טקסט בתמונה', 'גודל מתאים לכל המכשירים']
+            },
+            
+            // Additional settings
+            'accessibility': {
+                title: '♿ נגישות',
+                message: 'הוספת כלי נגישות לדף. זה חשוב כדי שכל האנשים יוכלו להשתמש בדף שלך בנוחות.',
+                tips: ['חובה על פי חוק', 'מגדיל את קהל הלקוחות', 'משפר את חוויית המשתמש', 'כולל הגדלת טקסט, ניגודיות ועוד']
+            },
+            'aiBot': {
+                title: '🤖 בוט AI',
+                message: 'בוט חכם שעונה על שאלות הלקוחות 24/7. הוא יכול לעזור עם מידע על השירותים ולהפנות לקוחות אליך.',
+                tips: ['עובד 24 שעות ביממה', 'עונה על שאלות בסיסיות', 'מפנה לקוחות רציניים אליך', 'משפר את השירות ללקוחות']
+            },
+            'whatsapp': {
+                title: '💬 בועת WhatsApp',
+                message: 'כפתור WhatsApp קבוע בדף. הלקוחות יוכלו לפנות אליך ישירות בלחיצה אחת!',
+                tips: ['קשר ישיר ומהיר עם לקוחות', 'הלקוחות אוהבים WhatsApp', 'אתה רואה מי פנה אליך', 'אפשר לשלוח תמונות ומיקום']
+            }
+        };
+
+        // Function to show field guidance
+        function showFieldGuidance(fieldId, customGuidance = null) {
+            const guidance = customGuidance || fieldGuidance[fieldId];
+            if (!guidance) {
+                console.log('❌ No guidance found for field:', fieldId);
+                return;
+            }
+            
+            console.log('🎯 Showing guidance for field:', fieldId, guidance.title);
+            
+            // Try multiple ways to show the guidance
+            console.log('🔍 Searching for bot elements...');
+            
+            // Method 1: Try to find existing chat
+            let aiChatMessages = document.getElementById('ai-chat-messages');
+            if (aiChatMessages) {
+                console.log('✅ Found existing chat, adding message...');
+                addGuidanceMessage(aiChatMessages, guidance);
+                return;
+            }
+            
+            // Method 2: Try to open bot first
+            const aiBotBtn = document.getElementById('ai-bot-btn');
+            if (aiBotBtn) {
+                console.log('✅ Found bot button, opening chat...');
+                aiBotBtn.click();
+                
+                setTimeout(() => {
+                    aiChatMessages = document.getElementById('ai-chat-messages');
+                    if (aiChatMessages) {
+                        console.log('✅ Chat opened, adding message...');
+                        addGuidanceMessage(aiChatMessages, guidance);
+                    } else {
+                        console.log('❌ Chat still not found, trying fallback...');
+                        showGuidanceAsFallback(guidance);
+                    }
+                }, 200);
+                return;
+            }
+            
+            // Method 3: Fallback - show as alert or create our own popup
+            console.log('❌ No bot found, using fallback method...');
+            showGuidanceAsFallback(guidance);
+        }
+        
+        // Helper function to add guidance message
+        function addGuidanceMessage(aiChatMessages, guidance) {
+            const guidanceDiv = document.createElement('div');
+            guidanceDiv.style.cssText = 'background: #FEF3C7; border: 2px solid #F59E0B; padding: 14px; border-radius: 12px; margin-bottom: 12px; animation: slideInFromRight 0.4s ease-out;';
+            
+            let tipsHtml = '';
+            if (guidance.tips && guidance.tips.length > 0) {
+                tipsHtml = `
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #F59E0B;">
+                        <p style="margin: 0 0 6px 0; color: #92400E; font-size: 13px; font-weight: 600;">💡 טיפים:</p>
+                        ${guidance.tips.map(tip => `<p style="margin: 2px 0; color: #92400E; font-size: 12px; line-height: 1.4;">• ${tip}</p>`).join('')}
+                    </div>
+                `;
+            }
+            
+            guidanceDiv.innerHTML = `
+                <p style="margin: 0 0 8px 0; color: #92400E; font-size: 15px; font-weight: 600;">${guidance.title}</p>
+                <p style="margin: 0; color: #92400E; font-size: 14px; line-height: 1.5;">${guidance.message}</p>
+                ${tipsHtml}
+            `;
+            
+            aiChatMessages.appendChild(guidanceDiv);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+            
+            // Auto-open bot if closed
+            const aiChatWindow = document.getElementById('ai-chat-window');
+            if (aiChatWindow && aiChatWindow.style.display === 'none') {
+                aiChatWindow.style.display = 'flex';
+                console.log('🤖 Bot window opened automatically');
+            }
+            
+            console.log('✅ Field guidance message added successfully!');
+        }
+        
+        // Fallback method to show guidance when bot is not available
+        function showGuidanceAsFallback(guidance) {
+            console.log('🚨 Using fallback guidance display');
+            
+            // Create a temporary popup
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #FEF3C7;
+                border: 2px solid #F59E0B;
+                padding: 16px;
+                border-radius: 12px;
+                max-width: 350px;
+                z-index: 10000;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                animation: slideInFromRight 0.4s ease-out;
+            `;
+            
+            let tipsHtml = '';
+            if (guidance.tips && guidance.tips.length > 0) {
+                tipsHtml = `
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #F59E0B;">
+                        <p style="margin: 0 0 6px 0; color: #92400E; font-size: 13px; font-weight: 600;">💡 טיפים:</p>
+                        ${guidance.tips.map(tip => `<p style="margin: 2px 0; color: #92400E; font-size: 12px; line-height: 1.4;">• ${tip}</p>`).join('')}
+                    </div>
+                `;
+            }
+            
+            popup.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <p style="margin: 0; color: #92400E; font-size: 15px; font-weight: 600;">${guidance.title}</p>
+                    <button onclick="this.closest('.fixed').remove()" style="background: none; border: none; color: #92400E; font-size: 18px; cursor: pointer; padding: 0; margin-left: 8px;">×</button>
+                </div>
+                <p style="margin: 0; color: #92400E; font-size: 14px; line-height: 1.5;">${guidance.message}</p>
+                ${tipsHtml}
+            `;
+            
+            document.body.appendChild(popup);
+            
+            // Auto-remove after 8 seconds
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.remove();
+                }
+            }, 8000);
+            
+            console.log('✅ Fallback guidance popup created');
+        }
+
+        // Template selection guidance
+        function showTemplateSelectionGuidance(pageType, templateTitle) {
+            const templateGuidance = {
+                'store': {
+                    icon: '🏪',
+                    message: 'מעולה! בחרת ליצור חנות אונליין. עכשיו נמלא את הפרטים הבסיסיים ואחר כך נוסיף מוצרים ומחירים.',
+                    nextSteps: ['מלא את שם העסק', 'הוסף תיאור קצר', 'הכנס פרטי קשר', 'נוסיף מוצרים בהמשך']
+                },
+                'event': {
+                    icon: '🎉',
+                    message: 'נהדר! אתה יוצר הזמנה לאירוע. בואו נמלא את פרטי האירוע ונוסיף כל המידע החשוב לאורחים.',
+                    nextSteps: ['שם האירוע', 'תאריך ושעה', 'מקום האירוע', 'פרטים נוספים לאורחים']
+                },
+                'serviceProvider': {
+                    icon: '🔧',
+                    message: 'מצוין! אתה יוצר דף לנותן שירותים. נמלא את הפרטים על השירותים שלך ואיך ליצור קשר.',
+                    nextSteps: ['שם העסק/השירות', 'תיאור השירותים', 'אזור פעילות', 'דרכי יצירת קשר']
+                },
+                'messageInBottle': {
+                    icon: '🍾',
+                    message: 'כיף! אתה יוצר "מסר בבקבוק" - פוסט חברתי מהיר. זה מושלם לבקשות דחופות או הצעות זמניות.',
+                    nextSteps: ['השם שלך', 'מה אתה מחפש/מציע', 'באיזה אזור', 'מחיר (אם רלוונטי)']
+                },
+                'course': {
+                    icon: '📚',
+                    message: 'נפלא! אתה יוצר דף לקורס או סדנה. נמלא את כל הפרטים שהתלמידים צריכים לדעת.',
+                    nextSteps: ['שם הקורס', 'תיאור הקורס', 'מועדים ומחירים', 'פרטי הרשמה']
+                }
+            };
+            
+            const guidance = templateGuidance[pageType] || {
+                icon: '📄',
+                message: `בחרת ליצור ${templateTitle}. בואו נמלא את הפרטים הבסיסיים.`,
+                nextSteps: ['מלא את השדות הבסיסיים', 'הוסף תיאור', 'הכנס פרטי קשר']
+            };
+            
+            const aiChatMessages = document.getElementById('ai-chat-messages');
+            if (!aiChatMessages) return;
+            
+            const guidanceDiv = document.createElement('div');
+            guidanceDiv.style.cssText = 'background: #DBEAFE; border: 2px solid #3B82F6; padding: 16px; border-radius: 12px; margin-bottom: 12px; animation: slideInFromLeft 0.4s ease-out;';
+            
+            const stepsHtml = guidance.nextSteps.map((step, index) => 
+                `<p style="margin: 2px 0; color: #1E40AF; font-size: 13px; line-height: 1.4;">${index + 1}. ${step}</p>`
+            ).join('');
+            
+            guidanceDiv.innerHTML = `
+                <p style="margin: 0 0 8px 0; color: #1E40AF; font-size: 16px; font-weight: 600;">${guidance.icon} ${templateTitle}</p>
+                <p style="margin: 0 0 10px 0; color: #1E40AF; font-size: 14px; line-height: 1.5;">${guidance.message}</p>
+                <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 8px;">
+                    <p style="margin: 0 0 6px 0; color: #1E40AF; font-size: 13px; font-weight: 600;">📋 השלבים הבאים:</p>
+                    ${stepsHtml}
+                </div>
+            `;
+            
+            aiChatMessages.appendChild(guidanceDiv);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+            
+            // Auto-open bot if closed
+            const aiChatWindow = document.getElementById('ai-chat-window');
+            if (aiChatWindow && aiChatWindow.style.display === 'none') {
+                aiChatWindow.style.display = 'flex';
+            }
+        }
+
+        // Add event listeners to all form fields
+        function addFieldGuidanceListeners() {
+            console.log('🎯 Initializing field guidance listeners...');
+            
+            // Function to add listeners to a field
+            function addListenersToField(field) {
+                if (field && field.id && fieldGuidance[field.id]) {
+                    console.log('📝 Adding guidance to field:', field.id);
+                    
+                    // Remove existing listeners to avoid duplicates
+                    field.removeEventListener('focus', field._guidanceHandler);
+                    field.removeEventListener('click', field._guidanceHandler);
+                    
+                    // Create new handler
+                    field._guidanceHandler = () => showFieldGuidance(field.id);
+                    
+                    // Add listeners
+                    field.addEventListener('focus', field._guidanceHandler);
+                    field.addEventListener('click', field._guidanceHandler);
+                }
+            }
+            
+            // Add listeners to existing fields
+            function scanAndAddListeners() {
+                Object.keys(fieldGuidance).forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        addListenersToField(field);
+                    }
+                });
+                
+                // Also scan for all input/textarea/select elements
+                const allInputs = document.querySelectorAll('input, textarea, select');
+                allInputs.forEach(input => {
+                    if (input.id && fieldGuidance[input.id]) {
+                        addListenersToField(input);
+                    } else if (input.name && fieldGuidance[input.name]) {
+                        // Try by name attribute too
+                        input._guidanceHandler = () => showFieldGuidance(input.name);
+                        input.addEventListener('focus', input._guidanceHandler);
+                        input.addEventListener('click', input._guidanceHandler);
+                        console.log('📝 Adding guidance to field by name:', input.name);
+                    } else if (input.placeholder) {
+                        // Add generic guidance for fields without specific guidance
+                        addGenericGuidance(input);
+                    }
+                });
+                
+                // Also scan for buttons and other clickable elements
+                const allButtons = document.querySelectorAll('button, .btn, [onclick], label');
+                allButtons.forEach(button => {
+                    const text = button.textContent?.toLowerCase() || '';
+                    const title = button.title?.toLowerCase() || '';
+                    
+                    if (text.includes('יומן') || text.includes('תור') || text.includes('calendar')) {
+                        button._guidanceHandler = () => showFieldGuidance('calendar');
+                        button.addEventListener('click', button._guidanceHandler);
+                        console.log('📝 Adding calendar guidance to button:', text);
+                    } else if (text.includes('סעיף') || text.includes('אופציונ') || text.includes('optional')) {
+                        button._guidanceHandler = () => showFieldGuidance('optionalSections');
+                        button.addEventListener('click', button._guidanceHandler);
+                        console.log('📝 Adding optional sections guidance to button:', text);
+                    } else if (text.includes('עיצוב') || text.includes('סגנון') || text.includes('design')) {
+                        button._guidanceHandler = () => showFieldGuidance('designStyle');
+                        button.addEventListener('click', button._guidanceHandler);
+                        console.log('📝 Adding design guidance to button:', text);
+                    } else if (text.includes('נגישות') || text.includes('accessibility')) {
+                        button._guidanceHandler = () => showFieldGuidance('accessibility');
+                        button.addEventListener('click', button._guidanceHandler);
+                        console.log('📝 Adding accessibility guidance to button:', text);
+                    } else if (text.includes('whatsapp') || text.includes('וואטסאפ')) {
+                        button._guidanceHandler = () => showFieldGuidance('whatsapp');
+                        button.addEventListener('click', button._guidanceHandler);
+                        console.log('📝 Adding WhatsApp guidance to button:', text);
+                    } else if (text.includes('בוט') || text.includes('bot') || text.includes('ai')) {
+                        button._guidanceHandler = () => showFieldGuidance('aiBot');
+                        button.addEventListener('click', button._guidanceHandler);
+                        console.log('📝 Adding AI bot guidance to button:', text);
+                    }
+                });
+            }
+            
+            // Generic guidance for fields without specific guidance
+            function addGenericGuidance(field) {
+                if (field._hasGenericGuidance) return;
+                field._hasGenericGuidance = true;
+                
+                const placeholder = field.placeholder.toLowerCase();
+                let guidance = null;
+                
+                if (placeholder.includes('שם') || placeholder.includes('name')) {
+                    guidance = {
+                        title: '📝 שדה שם',
+                        message: 'כתוב את השם הרלוונטי כאן. וודא שהשם ברור ומדויק.',
+                        tips: ['השתמש בשם מלא', 'בדוק שאין שגיאות כתיב', 'השם יופיע בדף']
+                    };
+                } else if (placeholder.includes('טלפון') || placeholder.includes('phone')) {
+                    guidance = {
+                        title: '📞 שדה טלפון',
+                        message: 'כתוב מספר טלפון תקין. זה יהפוך לקישור שאפשר ללחוץ עליו!',
+                        tips: ['כתוב עם מקף: 050-1234567', 'הלקוחות יוכלו ללחוץ ולהתקשר', 'וודא שהמספר נכון']
+                    };
+                } else if (placeholder.includes('מייל') || placeholder.includes('email')) {
+                    guidance = {
+                        title: '📧 שדה מייל',
+                        message: 'כתוב כתובת מייל תקינה. הלקוחות יוכלו ללחוץ ולשלוח מייל.',
+                        tips: ['וודא שהכתובת נכונה', 'בדוק שיש @ ונקודה', 'השתמש במייל עסקי אם יש']
+                    };
+                } else if (placeholder.includes('תיאור') || placeholder.includes('description')) {
+                    guidance = {
+                        title: '📖 שדה תיאור',
+                        message: 'כתוב תיאור קצר ומעניין. זה מה שאנשים יקראו כדי להבין מה אתה מציע.',
+                        tips: ['2-3 משפטים מספיקים', 'הדגש את היתרונות', 'כתוב בשפה פשוטה']
+                    };
+                } else if (placeholder.includes('כתובת') || placeholder.includes('address')) {
+                    guidance = {
+                        title: '📍 שדה כתובת',
+                        message: 'כתוב כתובת מלאה. זה יהפוך לקישור לניווט במפות גוגל!',
+                        tips: ['כתוב כתובת מלאה עם עיר', 'לדוגמה: רחוב הרצל 15, תל אביב', 'הלקוחות יוכלו ללחוץ ולנווט']
+                    };
+                } else if (placeholder.includes('מחיר') || placeholder.includes('price')) {
+                    guidance = {
+                        title: '💰 שדה מחיר',
+                        message: 'כתוב את המחיר כמספר. זה יוצג בצורה בולטת בדף.',
+                        tips: ['כתוב רק מספר', 'לדוגמה: 150', 'המטבע יתווסף אוטומטית']
+                    };
+                } else if (placeholder.includes('יומן') || placeholder.includes('calendar') || placeholder.includes('תור')) {
+                    guidance = {
+                        title: '📅 מערכת תורים',
+                        message: 'הוספת מערכת זימון תורים מתקדמת! הלקוחות יוכלו לקבוע תור ישירות דרך הדף.',
+                        tips: ['הלקוחות רואים זמינות בזמן אמת', 'אתה מקבל התראות על תורים', 'חוסך זמן ושיחות טלפון', 'מערכת מקצועית ונוחה']
+                    };
+                } else if (placeholder.includes('סעיף') || placeholder.includes('אופציונ')) {
+                    guidance = {
+                        title: '📋 סעיפים נוספים',
+                        message: 'הוספת סעיפים אופציונליים לדף: לקוחות ממליצים, שאלות ותשובות, הצוות שלנו, גלריה ועוד.',
+                        tips: ['בחר רק מה שרלוונטי לעסק', 'לקוחות ממליצים בונים אמון', 'שאלות ותשובות חוסכות זמן', 'גלריה מראה את העבודות']
+                    };
+                }
+                
+                if (guidance) {
+                    field._guidanceHandler = () => showFieldGuidance(null, guidance);
+                    field.addEventListener('focus', field._guidanceHandler);
+                    field.addEventListener('click', field._guidanceHandler);
+                    console.log('📝 Adding generic guidance to field:', field.placeholder);
+                }
+            }
+            
+            // Initial scan
+            scanAndAddListeners();
+            
+            // Scan again after a delay for dynamically created fields
+            setTimeout(scanAndAddListeners, 2000);
+            setTimeout(scanAndAddListeners, 5000);
+            
+            // Observer for dynamically created fields
+            const observer = new MutationObserver((mutations) => {
+                let shouldScan = false;
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT') {
+                                shouldScan = true;
+                            } else if (node.querySelector) {
+                                const hasInputs = node.querySelector('input, textarea, select');
+                                if (hasInputs) shouldScan = true;
+                            }
+                        }
+                    });
+                });
+                
+                if (shouldScan) {
+                    console.log('🔄 New fields detected, rescanning...');
+                    setTimeout(scanAndAddListeners, 100);
+                }
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            // Also rescan when template changes
+            document.addEventListener('templateChanged', () => {
+                console.log('📋 Template changed, rescanning fields...');
+                setTimeout(scanAndAddListeners, 500);
+            });
+        }
+
+        // Initialize field guidance
+        addFieldGuidanceListeners();
 
 
 
@@ -3810,8 +4540,10 @@ window.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div id="ai-chat-messages" style="position: absolute; top: 70px; left: 0; right: 0; bottom: 72px; overflow-y: auto; padding: 16px; background: #F7FAFC;">
-            <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-                <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+            <div style="background: #E9D5FF; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+                <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.6; font-weight: 600;">שלום! 😊 איך אני יכולה לעזור לך?</p>
+                <p style="margin: 8px 0 0 0; color: #1F2937; font-size: 14px; line-height: 1.5;">אני סתיו, העוזרת הוירטואלית שלך! 💜</p>
+                <p style="margin: 8px 0 0 0; color: #1F2937; font-size: 14px; line-height: 1.5;">אני כאן לעזור לך עם כל מה שקשור לעסק - שאלות על המוצרים, הוספת מוצרים לעגלה, מידע נוסף, או כל דבר אחר שאתה צריך! ✨</p>
             </div>
         </div>
         
@@ -3853,7 +4585,9 @@ aiCloseBtn.addEventListener('click', function(e) {
     // 🔄 Clear chat history and reset to initial message
     aiChatMessages.innerHTML = \`
         <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-            <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+            <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! 😊 איך אני יכולה לעזור לך?</p>
+            <p style="margin: 8px 0 0 0; color: #1F2937; font-size: 14px; line-height: 1.5;">אני סתיו, העוזרת הוירטואלית שלך! 💜</p>
+            <p style="margin: 8px 0 0 0; color: #1F2937; font-size: 14px; line-height: 1.5;">אני כאן לעזור לך עם כל מה שקשור לעסק - שאלות על המוצרים, הוספת מוצרים לעגלה, מידע נוסף, או כל דבר אחר שאתה צריך! ✨</p>
         </div>
     \`;
     
@@ -3863,7 +4597,7 @@ aiCloseBtn.addEventListener('click', function(e) {
     console.log('✅ Chat history cleared');
 });
 
-// Send message function
+// Send message function - MUST SUPPORT ADD TO CART
 async function sendAiMessage() {
     const message = aiUserInput.value.trim();
     if (!message) return;
@@ -3892,32 +4626,10 @@ async function sendAiMessage() {
             title: document.querySelector('h1')?.textContent?.trim() || document.title,
             businessName: document.querySelector('meta[name="business-name"]')?.content || '',
             
-            // About section
-            about: Array.from(document.querySelectorAll('#about, [id*="about"], .about-section, [class*="about"]'))
-                .map(el => el.textContent.trim()).filter(t => t).join(' ').substring(0, 1000),
-            
-            // FAQ section
-            faq: Array.from(document.querySelectorAll('#faq details, [id*="faq"] details, .faq-section details'))
-                .map(detail => ({
-                    question: detail.querySelector('summary')?.textContent?.trim() || '',
-                    answer: detail.textContent.replace(detail.querySelector('summary')?.textContent || '', '').trim()
-                })).filter(q => q.question),
-            
-            // Testimonials / Reviews
-            testimonials: Array.from(document.querySelectorAll('#testimonials [class*="testimonial"], [id*="testimonial"]'))
-                .map(el => el.textContent.trim()).filter(t => t).slice(0, 5),
-            
-            // Contact info
-            contact: {
-                phone: document.querySelector('a[href^="tel:"]')?.textContent?.trim() || '',
-                email: document.querySelector('a[href^="mailto:"]')?.textContent?.trim() || '',
-                address: document.querySelector('[class*="address"]')?.textContent?.trim() || ''
-            },
-            
             // Products (if store) - extract from DOM
             products: Array.from(document.querySelectorAll('.product-card, [class*="product-"], .card')).map(card => {
-                const nameEl = card.querySelector('h1, h2, h3, h4, [class*="title"], [class*="name"]');
-                const priceEl = card.querySelector('[class*="price"], .price, span, p');
+                const nameEl = card.querySelector('h1, h2, h3, h4, [class*="title"], [class*="name"], .product-name');
+                const priceEl = card.querySelector('[class*="price"], .product-price, .price');
                 const imgEl = card.querySelector('img');
                 
                 const name = nameEl?.textContent?.trim() || '';
@@ -3941,30 +4653,7 @@ async function sendAiMessage() {
                     };
                 }
                 return null;
-            }).filter(p => p !== null),
-            
-            // Appointments/Queue System
-            appointments: {
-                available: Array.from(document.querySelectorAll('[data-appointment-slot], [class*="appointment-slot"], [class*="time-slot"]'))
-                    .filter(slot => !slot.classList.contains('booked') && !slot.classList.contains('taken'))
-                    .map(slot => ({
-                        time: slot.textContent.trim(),
-                        date: slot.dataset.date || slot.closest('[data-date]')?.dataset.date || '',
-                        available: true
-                    })),
-                booked: Array.from(document.querySelectorAll('[data-appointment-slot].booked, [class*="appointment-slot"].booked, [class*="time-slot"].taken'))
-                    .map(slot => ({
-                        time: slot.textContent.trim(),
-                        date: slot.dataset.date || slot.closest('[data-date]')?.dataset.date || '',
-                        available: false
-                    })),
-                allSlots: Array.from(document.querySelectorAll('[data-appointment-slot], [class*="appointment-slot"], [class*="time-slot"]'))
-                    .map(slot => ({
-                        time: slot.textContent.trim(),
-                        date: slot.dataset.date || slot.closest('[data-date]')?.dataset.date || '',
-                        available: !slot.classList.contains('booked') && !slot.classList.contains('taken')
-                    }))
-            }
+            }).filter(p => p !== null)
         };
         
         console.log('📊 Sending page content to bot:', pageContent);
@@ -4211,6 +4900,7 @@ aiBotBtn.addEventListener('mouseleave', function() {
     this.style.transform = 'scale(1)';
     this.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4)';
 });
+
 \`\`\`
 
 ---
@@ -4724,6 +5414,22 @@ function setupEventListeners() {
 }
 
 // Initialize on page load - UNIVERSAL APPROACH
+// Add exit confirmation for page creator (ONLY in creator, NOT in generated pages)
+if (window.location.pathname.includes('page-creator')) {
+    window.addEventListener('beforeunload', function(e) {
+        // Only show confirmation if there's unsaved work
+        const hasUnsavedWork = document.getElementById('mainName')?.value || 
+                               document.querySelector('input[type="file"]')?.files.length > 0 ||
+                               document.querySelector('textarea')?.value.trim();
+        
+        if (hasUnsavedWork) {
+            e.preventDefault();
+            e.returnValue = 'יש לך שינויים שלא נשמרו. האם אתה בטוח שאתה רוצה לעזוב?';
+            return e.returnValue;
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check if this is an appointment page
     const hasAppointmentForm = document.querySelector('form') && (
@@ -7340,7 +8046,47 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                             </button>
                         </div>
                     </div>
-                </fieldset>`
+                </fieldset>`,
+
+                messageName: `
+                <div class="space-y-2 p-4 bg-blue-50 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700">שם *</label>
+                    <input type="text" name="messageName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="השם שלך">
+                </div>`,
+
+                messageRequest: `
+                <div class="space-y-2 p-4 bg-blue-50 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700">בקשה/שירות *</label>
+                    <textarea name="messageRequest" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="מה אתה מציע או מחפש?"></textarea>
+                </div>`,
+
+                messageArea: `
+                <div class="space-y-2 p-4 bg-blue-50 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700">אזור *</label>
+                    <input type="text" name="messageArea" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="תל אביב, נתניה...">
+                </div>`,
+
+                messagePhone: `
+                <div class="space-y-2 p-4 bg-blue-50 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700">טלפון</label>
+                    <input type="tel" name="messagePhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="טלפון (לא חובה)">
+                </div>`,
+
+                messagePrice: `
+                <div class="space-y-2 p-4 bg-blue-50 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700">מחיר (₪)</label>
+                    <input type="number" name="messagePrice" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="100">
+                </div>`,
+
+                priceType: `
+                <div class="space-y-2 p-4 bg-blue-50 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700">סוג מחיר</label>
+                    <select name="priceType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                        <option value="">בחירת סוג מחיר</option>
+                        <option value="כללי">כללי</option>
+                        <option value="שעתי">שעתי</option>
+                    </select>
+                </div>`
 
             };
 
@@ -8063,6 +8809,14 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             ui.guidanceBubble.innerHTML = template.guidance;
 
             ui.guidanceBubble.classList.remove('hidden');
+            
+            // Add bot guidance for template selection
+            showTemplateSelectionGuidance(state.selectedPageType, template.title);
+            
+            // Trigger event for field guidance system
+            setTimeout(() => {
+                document.dispatchEvent(new CustomEvent('templateChanged'));
+            }, 100);
 
             // Update description label based on page type
             try {
@@ -8100,13 +8854,50 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 console.log('ℹ️ Selected page type:', state.selectedPageType);
             }
 
-            const showExtraSections = !['flyer', 'post', 'businessCard', 'event'].includes(state.selectedPageType);
+            const showExtraSections = !['flyer', 'post', 'businessCard', 'event', 'messageInBottle'].includes(state.selectedPageType);
 
-            const showDesignStyle = true; 
+            const showDesignStyle = state.selectedPageType !== 'messageInBottle'; 
 
-            const showAccessibilityOption = !['flyer', 'post'].includes(state.selectedPageType);
+            const showAccessibilityOption = !['flyer', 'post', 'messageInBottle'].includes(state.selectedPageType);
 
-
+            // Hide basic details fieldset for messageInBottle and remove required attribute
+            if (state.selectedPageType === 'messageInBottle') {
+                const basicDetailsFieldset = document.getElementById('basic-details-fieldset');
+                if (basicDetailsFieldset) {
+                    basicDetailsFieldset.style.display = 'none';
+                }
+                
+                // Remove required attribute from hidden fields
+                const mainNameInput = document.getElementById('mainName');
+                const contactNameInput = document.getElementById('contactName');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+                const descriptionInput = document.getElementById('description');
+                
+                if (mainNameInput) mainNameInput.removeAttribute('required');
+                if (contactNameInput) contactNameInput.removeAttribute('required');
+                if (emailInput) emailInput.removeAttribute('required');
+                if (phoneInput) phoneInput.removeAttribute('required');
+                if (descriptionInput) descriptionInput.removeAttribute('required');
+            } else {
+                const basicDetailsFieldset = document.getElementById('basic-details-fieldset');
+                if (basicDetailsFieldset) {
+                    basicDetailsFieldset.style.display = 'block';
+                }
+                
+                // Restore required attribute
+                const mainNameInput = document.getElementById('mainName');
+                const contactNameInput = document.getElementById('contactName');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+                const descriptionInput = document.getElementById('description');
+                
+                if (mainNameInput) mainNameInput.setAttribute('required', '');
+                if (contactNameInput) contactNameInput.setAttribute('required', '');
+                if (emailInput) emailInput.setAttribute('required', '');
+                if (phoneInput) phoneInput.setAttribute('required', '');
+                if (descriptionInput) descriptionInput.setAttribute('required', '');
+            }
 
             ui.socialMediaFieldset.style.display = showExtraSections ? 'block' : 'none';
 
@@ -8196,7 +8987,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
             event.preventDefault();
 
-            if (!state.selectedStyle) {
+            // Skip style validation for messageInBottle
+            if (!state.selectedStyle && state.selectedPageType !== 'messageInBottle') {
 
                 showModal('modal_error_style');
 
@@ -8219,9 +9011,86 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             data.addAiBot = true;
             data.useAsBackground = document.getElementById('use-as-background').checked;
 
-            data.style = state.selectedStyle;
+            // Set default style for messageInBottle if no style is selected
+            data.style = state.selectedStyle || (state.selectedPageType === 'messageInBottle' ? 'minimal' : state.selectedStyle);
 
             data.pageType = state.selectedPageType;
+
+            // Collect messageInBottle specific data
+            if (state.selectedPageType === 'messageInBottle') {
+                // Debug: Check if elements exist
+                console.log('🔍 Looking for messageInBottle form elements...');
+                const nameEl = document.querySelector('input[name="messageName"]');
+                const requestEl = document.querySelector('textarea[name="messageRequest"]');
+                const areaEl = document.querySelector('input[name="messageArea"]');
+                const phoneEl = document.querySelector('input[name="messagePhone"]');
+                const priceEl = document.querySelector('input[name="messagePrice"]');
+                const priceTypeEl = document.querySelector('select[name="priceType"]');
+                
+                console.log('🔍 Elements found:', {
+                    nameEl: nameEl ? 'FOUND' : 'NOT FOUND',
+                    requestEl: requestEl ? 'FOUND' : 'NOT FOUND', 
+                    areaEl: areaEl ? 'FOUND' : 'NOT FOUND',
+                    phoneEl: phoneEl ? 'FOUND' : 'NOT FOUND',
+                    priceEl: priceEl ? 'FOUND' : 'NOT FOUND',
+                    priceTypeEl: priceTypeEl ? 'FOUND' : 'NOT FOUND'
+                });
+                
+                // If elements not found, try alternative selectors
+                if (!nameEl) {
+                    console.log('❌ messageName not found, trying alternatives...');
+                    const alternatives = document.querySelectorAll('input[type="text"]');
+                    console.log('Available text inputs:', Array.from(alternatives).map(el => el.name || el.id || el.placeholder));
+                }
+                
+                console.log('🔍 Form elements check:', {
+                    nameEl: !!nameEl,
+                    requestEl: !!requestEl,
+                    areaEl: !!areaEl,
+                    phoneEl: !!phoneEl,
+                    priceEl: !!priceEl,
+                    priceTypeEl: !!priceTypeEl
+                });
+                
+                data.messageName = nameEl?.value || '';
+                data.messageRequest = requestEl?.value || '';
+                data.messageArea = areaEl?.value || '';
+                data.messagePhone = phoneEl?.value || '';
+                data.messagePrice = priceEl?.value || '0';
+                data.messagePriceType = priceTypeEl?.value || 'כללי';
+                
+                console.log('🍾 Raw form values:', {
+                    messageName: nameEl?.value,
+                    messageRequest: requestEl?.value,
+                    messageArea: areaEl?.value,
+                    messagePhone: phoneEl?.value,
+                    messagePrice: priceEl?.value,
+                    messagePriceType: priceTypeEl?.value
+                });
+                
+                console.log('🍾 Collected messageInBottle data:', {
+                    messageName: data.messageName,
+                    messageRequest: data.messageRequest,
+                    messageArea: data.messageArea,
+                    messagePhone: data.messagePhone,
+                    messagePrice: data.messagePrice,
+                    messagePriceType: data.messagePriceType
+                });
+                
+                // 🚨 DEBUG: Print actual values
+                console.log('🚨 DEBUG VALUES:');
+                console.log('messageName actual value:', data.messageName);
+                console.log('messageRequest actual value:', data.messageRequest);
+                console.log('messageArea actual value:', data.messageArea);
+                console.log('messagePhone actual value:', data.messagePhone);
+                console.log('messagePrice actual value:', data.messagePrice);
+                console.log('messagePriceType actual value:', data.messagePriceType);
+                
+                // Disable features for messageInBottle
+                data.addAccessibility = false;
+                data.addAiBot = false;
+                data.addWhatsApp = false;
+            }
 
             state.originalDescription = data.description;
 
@@ -8314,11 +9183,68 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
 
             try {
+                let htmlContent;
+                
+                // Force local generation for messageInBottle to ensure data is included
+                if (state.selectedPageType === 'messageInBottle') {
+                    console.log('🍾 Forcing local generation for messageInBottle');
+                    console.log('🍾 Data being sent:', data);
+                    
+                // 🚨 DEBUG FIRST
+                console.log('🚨 CRITICAL DEBUG - Data values:');
+                console.log('  messageName:', data.messageName, '| typeof:', typeof data.messageName);
+                console.log('  messageRequest:', data.messageRequest, '| typeof:', typeof data.messageRequest);
+                console.log('  messageArea:', data.messageArea, '| typeof:', typeof data.messageArea);
+                console.log('  messagePhone:', data.messagePhone, '| typeof:', typeof data.messagePhone);
+                console.log('  messagePrice:', data.messagePrice, '| typeof:', typeof data.messagePrice);
+                console.log('  messagePriceType:', data.messagePriceType, '| typeof:', typeof data.messagePriceType);
+                
+                // Force use actual values - NO defaults!
+                const enhancedPrompt = `${masterPrompt}
 
-                const htmlContent = await generateHtmlFromApi(masterPrompt);
+**ACTUAL USER DATA FOR MESSAGE IN BOTTLE:**
+messageName: ${data.messageName || ''}
+messageRequest: ${data.messageRequest || ''}  
+messageArea: ${data.messageArea || ''}
+messagePhone: ${data.messagePhone || ''}
+messagePrice: ${data.messagePrice || ''}
+messagePriceType: ${data.messagePriceType || ''}
 
-                    // הוסף קישורים לתחתית הדף
-                    let finalHtml = addFooterLinks(htmlContent, data);
+**JSON DATA:**
+${JSON.stringify({
+    messageName: data.messageName || '',
+    messageRequest: data.messageRequest || '',
+    messageArea: data.messageArea || '',
+    messagePhone: data.messagePhone || '',
+    messagePrice: data.messagePrice || '',
+    messagePriceType: data.messagePriceType || ''
+})}`;
+
+                console.log('🚨 CRITICAL DEBUG - Enhanced prompt:');
+                console.log(enhancedPrompt);
+                    
+                    const localResponse = await fetch('/api/generate-html', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            prompt: enhancedPrompt,
+                            pageType: 'messageInBottle'
+                        })
+                    });
+                    
+                    if (localResponse.ok) {
+                        const localData = await localResponse.json();
+                        htmlContent = localData.html;
+                        console.log('✅ Local generation successful for messageInBottle');
+                    } else {
+                        throw new Error('Local generation failed');
+                    }
+                } else {
+                    htmlContent = await generateHtmlFromApi(masterPrompt);
+                }
+
+                    // הוסף קישורים לתחתית הדף (לא למסר בבקבוק)
+                    let finalHtml = state.selectedPageType === 'messageInBottle' ? htmlContent : addFooterLinks(htmlContent, data);
                     
                     // וודא הזרקת meta של סוג הדף לפני כל זיהוי
                     if (!finalHtml.includes('<meta name="page-type"')) {
@@ -9194,6 +10120,17 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                 // אם Supabase נכשל, נסה לשמור מקומית
                 if (!supabaseSuccess) {
                     try {
+                        const messageInBottleData = state.selectedPageType === 'messageInBottle' ? {
+                                    name: document.querySelector('input[name="messageName"]')?.value || '',
+                                    request: document.querySelector('textarea[name="messageRequest"]')?.value || '',
+                                    area: document.querySelector('input[name="messageArea"]')?.value || '',
+                                    phone: document.querySelector('input[name="messagePhone"]')?.value || '',
+                                    price: document.querySelector('input[name="messagePrice"]')?.value || '',
+                                    priceType: document.querySelector('select[name="priceType"]')?.value || ''
+                                } : undefined;
+                        
+                        console.log('🚨 DEBUG messageInBottleData:', messageInBottleData);
+                        
                         const response = await fetch('/api/create-page', {
                     method: 'POST',
 
@@ -9205,10 +10142,12 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                     body: JSON.stringify({
 
                         userId: user.id,
-
-                                title: document.getElementById('mainName').value || 'דף נחיתה',
+                        title: state.selectedPageType === 'messageInBottle' ? 
+                            (document.querySelector('input[name="messageName"]')?.value || 'מסר בבקבוק') :
+                            (document.getElementById('mainName')?.value || 'דף נחיתה'),
                                 htmlContent: finalHtml,
-                                selectedPageType: state.selectedPageType
+                                selectedPageType: state.selectedPageType,
+                                messageInBottleData: messageInBottleData
                     })
 
                 });

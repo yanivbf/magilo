@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול הודעות - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .lead-card {
+            transition: all 0.3s ease;
+        }
+        .lead-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .status-new { @apply bg-blue-100 text-blue-800; }
+        .status-read { @apply bg-green-100 text-green-800; }
+        .status-replied { @apply bg-purple-100 text-purple-800; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">📬 ניהול הודעות</h1>
+                    <p class="text-gray-600 mt-2">צפה וניהול הודעות מדפי "מסר בבקבוק" שלך</p>
+                </div>
+                <button onclick="refreshLeads()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 inline mr-2"></i>
+                    רענן
+                </button>
+            </div>
+        </div>
+
+        <!-- Page Selection -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">בחר דף</h2>
+            <select id="pageSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">טוען דפים...</option>
+            </select>
+        </div>
+
+        <!-- Stats -->
+        <div id="statsContainer" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <i data-lucide="message-circle" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">סה"כ הודעות</p>
+                        <p id="totalLeads" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">הודעות חדשות</p>
+                        <p id="newLeads" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <i data-lucide="reply" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">נענו</p>
+                        <p id="repliedLeads" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Data Container -->
+        <div id="pageDataContainer" class="hidden">
+            <!-- Page editing form will be loaded here -->
+        </div>
+
+        <!-- Leads List -->
+        <div id="leadsContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">הודעות</h3>
+                </div>
+                <div id="leadsList" class="divide-y divide-gray-200">
+                    <!-- Leads will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <i data-lucide="inbox" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">אין הודעות עדיין</h3>
+            <p class="text-gray-600">כאשר אנשים יגיבו לדפי "מסר בבקבוק" שלך, ההודעות יופיעו כאן</p>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = '';
+        let currentPageName = '';
+        let allLeads = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            loadUserPages();
+        });
+
+        // Load user pages
+        async function loadUserPages() {
+            try {
+                // Get current user ID from localStorage or prompt
+                currentUserId = localStorage.getItem('userId') || prompt('הזן את ה-User ID שלך:');
+                
+                if (!currentUserId) {
+                    alert('נדרש User ID כדי להציג הודעות');
+                    return;
+                }
+
+                const response = await fetch(`/api/pages/${currentUserId}`);
+                const data = await response.json();
+                
+                const pageSelect = document.getElementById('pageSelect');
+                pageSelect.innerHTML = '<option value="">בחר דף...</option>';
+                
+                // Filter only messageInBottle pages
+                const messagePages = data.pages.filter(page => page.pageType === 'messageInBottle');
+                
+                if (messagePages.length === 0) {
+                    pageSelect.innerHTML = '<option value="">אין דפי "מסר בבקבוק"</option>';
+                    return;
+                }
+                
+                messagePages.forEach(page => {
+                    const option = document.createElement('option');
+                    option.value = page.fileName.replace('_html', '');
+                    option.textContent = page.title;
+                    pageSelect.appendChild(option);
+                });
+                
+                pageSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        currentPageName = this.value;
+                        loadLeads();
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading pages:', error);
+                alert('שגיאה בטעינת הדפים');
+            }
+        }
+
+        // Load leads for selected page
+        async function loadLeads() {
+            if (!currentUserId || !currentPageName) return;
+            
+            try {
+                const response = await fetch(`/api/leads/${currentUserId}/${currentPageName}`);
+                const data = await response.json();
+                
+                allLeads = data.leads || [];
+                displayLeads();
+                updateStats();
+                
+                // Load page data for editing
+                loadPageData();
+                
+            } catch (error) {
+                console.error('Error loading leads:', error);
+                alert('שגיאה בטעינת ההודעות');
+            }
+        }
+
+        // Load page data for editing
+        async function loadPageData() {
+            try {
+                const response = await fetch(`/api/pages/${currentUserId}`);
+                const data = await response.json();
+                
+                const page = data.pages.find(p => p.fileName.replace('_html', '') === currentPageName);
+                if (page) {
+                    displayPageData(page);
+                }
+                
+            } catch (error) {
+                console.error('Error loading page data:', error);
+            }
+        }
+
+        // Display page data for editing
+        function displayPageData(page) {
+            const pageDataContainer = document.getElementById('pageDataContainer');
+            if (!pageDataContainer) return;
+
+            // For Message in a Bottle, only show the essential fields
+            pageDataContainer.innerHTML = `
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">🍾 עריכת "מסר בבקבוק"</h3>
+                        <div class="flex gap-2">
+                            <button onclick="togglePageStatus()" id="statusBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                ⏸️ השהה
+                            </button>
+                            <button onclick="editPage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                ✏️ שמור שינויים
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-blue-800">
+                            <strong>💡 טיפ:</strong> זהו "מסר בבקבוק" - רק טופס פשוט. המשתמשים רואים רק את הטופס, הבוט רואה את הפרטים.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">שם</label>
+                            <input type="text" id="editName" value="${page.title || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="השם שלך">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">אזור</label>
+                            <input type="text" id="editArea" value="${page.area || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="תל אביב, נתניה...">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">שירות/בקשה</label>
+                            <textarea id="editRequest" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="מה אתה מציע או מחפש?">${page.request || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">מחיר</label>
+                            <input type="number" id="editPrice" value="${page.price || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="50, 100...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">סוג מחיר</label>
+                            <select id="editPriceType" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="כללי" ${page.priceType === 'כללי' ? 'selected' : ''}>כללי</option>
+                                <option value="שעתי" ${page.priceType === 'שעתי' ? 'selected' : ''}>שעתי</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <p class="text-xs text-gray-600">
+                            <strong>ℹ️ מידע:</strong> הפרטים האלה נראים רק לבוט. המשתמשים רואים רק טופס פשוט עם שדות: שם, טלפון, אימייל, הודעה.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Edit page function
+        function editPage() {
+            const name = document.getElementById('editName')?.value || '';
+            const area = document.getElementById('editArea')?.value || '';
+            const request = document.getElementById('editRequest')?.value || '';
+            const price = document.getElementById('editPrice')?.value || '';
+            const priceType = document.getElementById('editPriceType')?.value || 'כללי';
+
+            if (!name || !area || !request) {
+                alert('נא למלא את כל השדות החובה');
+                return;
+            }
+
+            // Save to localStorage (this will be used when regenerating the page)
+            const pageData = {
+                name,
+                area, 
+                request,
+                price,
+                priceType,
+                timestamp: new Date().toISOString()
+            };
+            
+            const currentPageName = new URLSearchParams(window.location.search).get('page');
+            if (currentPageName) {
+                localStorage.setItem(`messageInBottle_${currentPageName}`, JSON.stringify(pageData));
+                alert('השינויים נשמרו! 🎉\nהדף יתעדכן בפעם הבאה שמישהו יכנס אליו.');
+                
+                // Refresh the display
+                location.reload();
+            }
+        }
+        
+        // Toggle page status (suspend/activate)
+        function togglePageStatus() {
+            const statusBtn = document.getElementById('statusBtn');
+            const isActive = statusBtn.textContent.includes('השהה');
+            
+            if (isActive) {
+                statusBtn.textContent = '▶️ הפעל';
+                statusBtn.className = 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors';
+                alert('הדף הושהה - לא יופיע במרקטפלייס');
+            } else {
+                statusBtn.textContent = '⏸️ השהה';
+                statusBtn.className = 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors';
+                alert('הדף הופעל - יופיע במרקטפלייס');
+            }
+        }
+
+        // Display leads
+        function displayLeads() {
+            const leadsList = document.getElementById('leadsList');
+            const leadsContainer = document.getElementById('leadsContainer');
+            const emptyState = document.getElementById('emptyState');
+            const pageDataContainer = document.getElementById('pageDataContainer');
+            
+            if (allLeads.length === 0) {
+                leadsContainer.classList.add('hidden');
+                pageDataContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            leadsContainer.classList.remove('hidden');
+            pageDataContainer.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            
+            leadsList.innerHTML = allLeads.map(lead => `
+                <div class="lead-card p-6 hover:bg-gray-50">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <h4 class="text-lg font-semibold text-gray-900">${lead.name}</h4>
+                                <span class="status-${lead.status} px-2 py-1 rounded-full text-xs font-medium mr-3">
+                                    ${getStatusText(lead.status)}
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">
+                                <span class="font-medium">טלפון:</span> ${lead.phone}
+                                ${lead.email ? `<br><span class="font-medium">אימייל:</span> ${lead.email}` : ''}
+                            </div>
+                            ${lead.message ? `<p class="text-gray-700 mt-2">${lead.message}</p>` : ''}
+                            <div class="text-xs text-gray-500 mt-2">
+                                ${new Date(lead.timestamp).toLocaleString('he-IL')}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 mr-4">
+                            ${lead.status === 'new' ? `
+                                <button onclick="markAsRead('${lead.id}')" class="text-green-600 hover:text-green-800 text-sm">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="markAsReplied('${lead.id}')" class="text-purple-600 hover:text-purple-800 text-sm">
+                                <i data-lucide="reply" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalLeads = allLeads.length;
+            const newLeads = allLeads.filter(lead => lead.status === 'new').length;
+            const repliedLeads = allLeads.filter(lead => lead.status === 'replied').length;
+            
+            document.getElementById('totalLeads').textContent = totalLeads;
+            document.getElementById('newLeads').textContent = newLeads;
+            document.getElementById('repliedLeads').textContent = repliedLeads;
+            
+            document.getElementById('statsContainer').classList.remove('hidden');
+        }
+
+        // Get status text
+        function getStatusText(status) {
+            const statusMap = {
+                'new': 'חדש',
+                'read': 'נקרא',
+                'replied': 'נענה'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Mark as read
+        function markAsRead(leadId) {
+            const lead = allLeads.find(l => l.id === leadId);
+            if (lead) {
+                lead.status = 'read';
+                displayLeads();
+                updateStats();
+            }
+        }
+
+        // Mark as replied
+        function markAsReplied(leadId) {
+            const lead = allLeads.find(l => l.id === leadId);
+            if (lead) {
+                lead.status = 'replied';
+                displayLeads();
+                updateStats();
+            }
+        }
+
+        // Refresh leads
+        function refreshLeads() {
+            if (currentPageName) {
+                loadLeads();
+            }
+        }
+    </script>
+</body>
+</html>

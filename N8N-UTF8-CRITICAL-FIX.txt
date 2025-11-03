@@ -1,0 +1,67 @@
+🚨 CRITICAL: UTF-8 ENCODING FIX FOR N8N
+
+PROBLEM: Hebrew text shows as "�" question marks
+Example: "אולי" becomes "א�לי"
+
+═══════════════════════════════════════════════════════════
+
+SOLUTION 1: Use English System Message (RECOMMENDED)
+───────────────────────────────────────────────────────────
+✅ Use this file for N8N System Message:
+   N8N-QUICK-RULES.txt
+
+This avoids Hebrew encoding issues completely.
+
+═══════════════════════════════════════════════════════════
+
+SOLUTION 2: Fix Hebrew Encoding in N8N
+───────────────────────────────────────────────────────────
+
+Step 1: Add HTTP Response Node
+1. After AI Agent node, add "HTTP Response" node
+2. In HTTP Response settings:
+   - Response Mode: "Text"
+   - Response Body: {{ $json.output }}
+   
+Step 2: Add Headers
+In HTTP Response node, add these headers:
+   • Content-Type: application/json; charset=utf-8
+   • Accept-Charset: utf-8
+
+Step 3: Test
+Send: "מה שלומך?"
+Expected: "הכל בסדר, תודה"
+Wrong: "הכל בס�ר, ת�דה"
+
+═══════════════════════════════════════════════════════════
+
+SOLUTION 3: Code Node Fix (Advanced)
+───────────────────────────────────────────────────────────
+
+Add this Code node BEFORE the HTTP Response:
+
+```javascript
+// Force UTF-8 encoding
+const input = $input.first().json;
+let text = input.output || input.text || '';
+
+// Clean and ensure UTF-8
+text = text.normalize('NFC');
+
+return {
+  json: {
+    ...input,
+    output: text
+  }
+};
+```
+
+═══════════════════════════════════════════════════════════
+
+⚠️ IMPORTANT:
+- Test thoroughly after each change
+- If Hebrew still breaks, use English (Solution 1)
+- The bot responds in user's language anyway
+
+═══════════════════════════════════════════════════════════
+
