@@ -3822,7 +3822,7 @@
             return 'other';
         }
         
-        function getManageButtonText(pageType) {
+        function getManageButtonText(pageType, hasAppointments) {
             switch(pageType) {
                 case 'event': return 'ניהול מוזמנים';
                 case 'store': 
@@ -3830,6 +3830,8 @@
                 case 'course': return 'ניהול קורסים';
                 case 'workshop': return 'ניהול נרשמים';
                 case 'messageInBottle': return 'ניהול הודעות';
+                case 'serviceProvider': 
+                    return hasAppointments ? 'ניהול תורים' : 'ניהול';
                 default: return 'ניהול';
             }
         }
@@ -4336,13 +4338,15 @@
             window.location.href = `/page-creator?edit=${projectId}&redirectUrl=${encodeURIComponent(window.location.href)}`;
         }
 
-        function updateManagementButton(projectCard, pageType) {
+        function updateManagementButton(projectCard, pageType, hasAppointments) {
             const manageButton = projectCard.querySelector('[data-action="manage"]');
             if (manageButton) {
                 if (pageType === 'store' || pageType === 'onlineStore') {
                     manageButton.textContent = '🛒 ניהול חנות';
                 } else if (pageType === 'event') {
                     manageButton.textContent = '🎉 ניהול מוזמנים';
+                } else if (pageType === 'serviceProvider' && hasAppointments) {
+                    manageButton.textContent = '📅 ניהול תורים';
                 } else {
                     manageButton.textContent = '⚙️ ניהול';
                 }
@@ -4356,6 +4360,9 @@
             }
             if (project.pageType === 'event') {
                 return 'ניהול מוזמנים';
+            }
+            if (project.pageType === 'serviceProvider' && project.hasAppointments) {
+                return 'ניהול תורים';
             }
             
             // Fallback: Detect page type from name or description  
@@ -4559,15 +4566,21 @@
             
             // Use detected page type or load from metadata
             let pageType = detectedPageType || project?.pageType;
+            let hasAppointments = project?.hasAppointments || false;
             
-            if (!pageType) {
+            if (!pageType || !hasAppointments) {
                 try {
                     const metadataUrl = `/pages/${userId}/${fileName}_data/metadata.json`;
                     const response = await fetch(metadataUrl);
                     if (response.ok) {
                         const metadata = await response.json();
-                        pageType = metadata.pageType;
-                        console.log('📋 Loaded pageType from metadata:', pageType);
+                        if (!pageType) {
+                            pageType = metadata.pageType;
+                            console.log('📋 Loaded pageType from metadata:', pageType);
+                        }
+                        // Check if page has appointments system
+                        hasAppointments = metadata.appointments !== undefined || metadata.hasAppointments === true;
+                        console.log('📅 hasAppointments:', hasAppointments);
                     }
                 } catch (err) {
                     console.log('⚠️ No metadata, using default');
@@ -4577,7 +4590,7 @@
             // Determine management URL based on pageType
             let managementUrl;
             
-            console.log('🔍 FINAL pageType for routing:', pageType, 'Type:', typeof pageType);
+            console.log('🔍 FINAL pageType for routing:', pageType, 'Type:', typeof pageType, 'hasAppointments:', hasAppointments);
             
             if (pageType === 'event') {
                 // דף אירוע/הזמנה → ניהול מוזמנים
@@ -4591,6 +4604,11 @@
                 // מסר בבקבוק → ניהול הודעות
                 managementUrl = `/messages-management.html?page=${fileName}&userId=${userId}`;
                 console.log('🍾 Opening MESSAGES management for:', fileName);
+            } else if (pageType === 'serviceProvider' && hasAppointments) {
+                // נותן שירות עם תורים → ניהול תורים
+                const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
+                managementUrl = `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
+                console.log('📅 Opening APPOINTMENTS management for:', fileName);
             } else {
                 // דפים אחרים → ניהול לידים
                 managementUrl = `/leads-admin.html?page=${fileName}&userId=${userId}`;
