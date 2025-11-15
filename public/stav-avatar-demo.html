@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - דמות מדברת - DEMO</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .demo-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            min-width: 140px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .test-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        /* Avatar Container */
+        .stav-avatar-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        /* Avatar Circle */
+        .stav-avatar {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Speaking Animation */
+        .stav-avatar.speaking {
+            animation: float 3s ease-in-out infinite, pulse 1s ease-in-out infinite;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.8),
+                        0 0 40px rgba(102, 126, 234, 0.6);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) translateY(0px); }
+            50% { transform: scale(1.08) translateY(-15px); }
+        }
+
+        .stav-avatar-image {
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            object-fit: cover;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
+
+        .stav-face {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .stav-eyes {
+            display: flex;
+            justify-content: space-between;
+            width: 90px;
+            margin: 0 auto 15px;
+        }
+
+        .stav-eye {
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .stav-pupil {
+            width: 9px;
+            height: 9px;
+            background: #667eea;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes blink {
+            0%, 98%, 100% { transform: scaleY(1); }
+            99% { transform: scaleY(0.1); }
+        }
+
+        .stav-mouth {
+            width: 60px;
+            height: 30px;
+            border: 4px solid white;
+            border-top: none;
+            border-radius: 0 0 60px 60px;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+        }
+
+        .stav-avatar.speaking .stav-mouth {
+            animation: talk 0.3s infinite;
+        }
+
+        @keyframes talk {
+            0%, 100% { 
+                height: 30px;
+                border-radius: 0 0 60px 60px;
+            }
+            50% { 
+                height: 45px;
+                border-radius: 0 0 70px 70px;
+            }
+        }
+
+        .stav-sound-waves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stav-avatar.speaking .stav-sound-waves {
+            opacity: 1;
+        }
+
+        .sound-wave {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(102, 126, 234, 0.6);
+            border-radius: 50%;
+            animation: wave 1.5s ease-out infinite;
+        }
+
+        .sound-wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .sound-wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .stav-name-tag {
+            position: absolute;
+            bottom: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: #667eea;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+
+        .stav-thinking {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .stav-avatar.thinking .stav-thinking {
+            display: flex;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dot {
+            width: 7px;
+            height: 7px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: thinking 1.4s infinite ease-in-out;
+        }
+
+        .thinking-dot:nth-child(1) { animation-delay: 0s; }
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinking {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .hide-avatar {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0);
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Stav Animated Avatar -->
+    <div class="stav-avatar-container" id="stavAvatarContainer">
+        <div class="stav-avatar" id="stavAvatar">
+            <!-- Sound Waves -->
+            <div class="stav-sound-waves">
+                <div class="sound-wave"></div>
+                <div class="sound-wave"></div>
+                <div class="sound-wave"></div>
+            </div>
+
+            <!-- Avatar Image (if provided) -->
+            <img class="stav-avatar-image" id="stavAvatarImage" style="display: none;" alt="סתיו">
+
+            <!-- Animated Face (fallback) -->
+            <div class="stav-face" id="stavFace">
+                <div class="stav-eyes">
+                    <div class="stav-eye">
+                        <div class="stav-pupil"></div>
+                    </div>
+                    <div class="stav-eye">
+                        <div class="stav-pupil"></div>
+                    </div>
+                </div>
+                <div class="stav-mouth"></div>
+            </div>
+
+            <!-- Thinking Indicator -->
+            <div class="stav-thinking">
+                <div class="thinking-dots">
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                </div>
+            </div>
+
+            <!-- Name Tag -->
+            <div class="stav-name-tag">סתיו 🤖</div>
+        </div>
+    </div>
+
+    <!-- Demo Controls -->
+    <div class="demo-container">
+        <h1>🎭 דמות סתיו המדברת</h1>
+        <p class="subtitle">בדיקה - DEMO</p>
+
+        <div class="button-group">
+            <button onclick="startSpeaking()">🎤 התחל דיבור</button>
+            <button onclick="stopSpeaking()">🔇 עצור דיבור</button>
+        </div>
+
+        <div class="button-group">
+            <button onclick="startThinking()">🤔 התחל חשיבה</button>
+            <button onclick="stopThinking()">💭 עצור חשיבה</button>
+        </div>
+
+        <div class="button-group">
+            <button onclick="hideAvatar()">👻 הסתר דמות</button>
+            <button onclick="showAvatar()">✨ הצג דמות</button>
+        </div>
+
+        <div class="button-group">
+            <button onclick="testSpeech()">🔊 דיבור מלא (TTS)</button>
+        </div>
+
+        <input type="text" id="customText" class="test-input" placeholder="כתוב טקסט לדיבור...">
+        <button onclick="speakCustomText()" style="width: 100%;">📢 דבר טקסט מותאם</button>
+
+        <div class="info-box">
+            <h3>📋 מידע</h3>
+            <p><strong>מצב:</strong> <span id="status">מוכן</span></p>
+            <p><strong>דיבור:</strong> <span id="speaking">לא</span></p>
+            <p><strong>חשיבה:</strong> <span id="thinking">לא</span></p>
+        </div>
+    </div>
+
+    <script>
+        let isSpeaking = false;
+        let isThinking = false;
+
+        const avatar = document.getElementById('stavAvatar');
+        const container = document.getElementById('stavAvatarContainer');
+
+        function startSpeaking() {
+            isSpeaking = true;
+            avatar.classList.add('speaking');
+            updateStatus();
+            console.log('🎭 Started speaking');
+        }
+
+        function stopSpeaking() {
+            isSpeaking = false;
+            avatar.classList.remove('speaking');
+            updateStatus();
+            console.log('🎭 Stopped speaking');
+        }
+
+        function startThinking() {
+            isThinking = true;
+            avatar.classList.add('thinking');
+            updateStatus();
+            console.log('🤔 Started thinking');
+        }
+
+        function stopThinking() {
+            isThinking = false;
+            avatar.classList.remove('thinking');
+            updateStatus();
+            console.log('🤔 Stopped thinking');
+        }
+
+        function hideAvatar() {
+            container.classList.add('hide-avatar');
+            updateStatus();
+        }
+
+        function showAvatar() {
+            container.classList.remove('hide-avatar');
+            updateStatus();
+        }
+
+        function updateStatus() {
+            document.getElementById('speaking').textContent = isSpeaking ? 'כן ✅' : 'לא ❌';
+            document.getElementById('thinking').textContent = isThinking ? 'כן ✅' : 'לא ❌';
+            document.getElementById('status').textContent = 
+                isSpeaking ? 'מדברת 🗣️' : 
+                isThinking ? 'חושבת 🤔' : 
+                'מוכנה 😊';
+        }
+
+        function testSpeech() {
+            const text = "שלום! אני סתיו, הבוט החכם שלך. אני כאן לעזור לך למצוא שירותים ועסקים בקלות.";
+            speakText(text);
+        }
+
+        function speakCustomText() {
+            const text = document.getElementById('customText').value;
+            if (text.trim()) {
+                speakText(text);
+            } else {
+                alert('אנא כתוב טקסט לדיבור');
+            }
+        }
+
+        function speakText(text) {
+            // Start avatar animation
+            startSpeaking();
+
+            // Use browser TTS
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'he-IL';
+                utterance.rate = 1.2;
+                utterance.pitch = 1.0;
+
+                utterance.onstart = () => {
+                    console.log('🎤 Speech started');
+                };
+
+                utterance.onend = () => {
+                    stopSpeaking();
+                    console.log('🎤 Speech ended');
+                };
+
+                utterance.onerror = (error) => {
+                    stopSpeaking();
+                    console.error('❌ Speech error:', error);
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('הדפדפן שלך לא תומך ב-TTS');
+                stopSpeaking();
+            }
+        }
+
+        // Set custom avatar image
+        function setAvatarImage() {
+            const img = document.getElementById('stavAvatarImage');
+            const face = document.getElementById('stavFace');
+            img.src = '/stav-avatar.png';
+            img.style.display = 'block';
+            face.style.display = 'none';
+            img.onerror = () => {
+                console.log('⚠️ Could not load avatar image, using animated face');
+                img.style.display = 'none';
+                face.style.display = 'block';
+            };
+        }
+
+        // Auto-demo on load
+        window.addEventListener('load', () => {
+            // Try to load custom image
+            setAvatarImage();
+            
+            setTimeout(() => {
+                startThinking();
+                setTimeout(() => {
+                    stopThinking();
+                    testSpeech();
+                }, 2000);
+            }, 1000);
+        });
+
+        console.log('✅ Stav Avatar Demo loaded!');
+    </script>
+</body>
+</html>
+

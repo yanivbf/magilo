@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - דמות דמוית אדם</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        #speakBtn { background: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%); }
+        #listenBtn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
+        button:hover { transform: translateY(-3px); }
+        
+        #status {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            color: #00ff88;
+            font-size: 16px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <div>🎭 סתיו</div>
+        <div id="statusText">טוען...</div>
+    </div>
+    
+    <div id="container"></div>
+    
+    <div id="controls">
+        <button id="speakBtn">🗣️ דבר</button>
+        <button id="listenBtn">👂 הקשב</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script>
+        class StavHumanLike {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.avatar = null;
+                this.clock = new THREE.Clock();
+                this.state = 'listening';
+                
+                this.init();
+            }
+            
+            init() {
+                // Scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x1a1a2e);
+                
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(0, 1.5, 2.5);
+                this.camera.lookAt(0, 1.5, 0);
+                
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
+                document.getElementById('container').appendChild(this.renderer.domElement);
+                
+                // Lights
+                const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambient);
+                
+                const keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                keyLight.position.set(2, 3, 2);
+                this.scene.add(keyLight);
+                
+                const fillLight = new THREE.PointLight(0x667eea, 0.8, 10);
+                fillLight.position.set(-2, 2, 1);
+                this.scene.add(fillLight);
+                
+                const rimLight = new THREE.PointLight(0xec4899, 0.6, 10);
+                rimLight.position.set(0, 2, -2);
+                this.scene.add(rimLight);
+                
+                // Create Avatar
+                this.createHumanLikeAvatar();
+                
+                // Resize
+                window.addEventListener('resize', () => this.onResize());
+                
+                // Animate
+                this.animate();
+                
+                this.updateStatus('✅ מוכן!');
+            }
+            
+            createHumanLikeAvatar() {
+                this.avatar = new THREE.Group();
+                
+                // ===== HEAD (more human-like) =====
+                const headGroup = new THREE.Group();
+                
+                // Face (oval shape)
+                const faceGeo = new THREE.SphereGeometry(0.28, 32, 32);
+                faceGeo.scale(1, 1.2, 0.9); // Make it oval
+                const faceMat = new THREE.MeshPhongMaterial({
+                    color: 0xffdab9, // Peach/skin tone
+                    shininess: 20
+                });
+                this.face = new THREE.Mesh(faceGeo, faceMat);
+                headGroup.add(this.face);
+                
+                // Hair (top part)
+                const hairTopGeo = new THREE.SphereGeometry(0.32, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.6);
+                const hairMat = new THREE.MeshPhongMaterial({
+                    color: 0x4a3728, // Brown hair
+                    shininess: 60
+                });
+                const hairTop = new THREE.Mesh(hairTopGeo, hairMat);
+                hairTop.position.y = 0.1;
+                headGroup.add(hairTop);
+                
+                // Hair strands (left side)
+                const strandGeo = new THREE.CylinderGeometry(0.04, 0.02, 0.4, 8);
+                const leftStrand1 = new THREE.Mesh(strandGeo, hairMat);
+                leftStrand1.position.set(-0.25, -0.1, 0.05);
+                leftStrand1.rotation.z = 0.3;
+                headGroup.add(leftStrand1);
+                
+                const leftStrand2 = new THREE.Mesh(strandGeo, hairMat);
+                leftStrand2.position.set(-0.28, -0.05, -0.05);
+                leftStrand2.rotation.z = 0.4;
+                headGroup.add(leftStrand2);
+                
+                // Hair strands (right side)
+                const rightStrand1 = new THREE.Mesh(strandGeo, hairMat);
+                rightStrand1.position.set(0.25, -0.1, 0.05);
+                rightStrand1.rotation.z = -0.3;
+                headGroup.add(rightStrand1);
+                
+                const rightStrand2 = new THREE.Mesh(strandGeo, hairMat);
+                rightStrand2.position.set(0.28, -0.05, -0.05);
+                rightStrand2.rotation.z = -0.4;
+                headGroup.add(rightStrand2);
+                
+                // Eyes
+                const eyeWhiteGeo = new THREE.SphereGeometry(0.06, 16, 16);
+                const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                
+                this.leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+                this.leftEyeWhite.position.set(-0.12, 0.08, 0.22);
+                headGroup.add(this.leftEyeWhite);
+                
+                this.rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+                this.rightEyeWhite.position.set(0.12, 0.08, 0.22);
+                headGroup.add(this.rightEyeWhite);
+                
+                // Iris (colored part)
+                const irisGeo = new THREE.SphereGeometry(0.035, 16, 16);
+                const irisMat = new THREE.MeshBasicMaterial({ color: 0x4a90e2 }); // Blue eyes
+                
+                this.leftIris = new THREE.Mesh(irisGeo, irisMat);
+                this.leftIris.position.set(-0.12, 0.08, 0.27);
+                headGroup.add(this.leftIris);
+                
+                this.rightIris = new THREE.Mesh(irisGeo, irisMat);
+                this.rightIris.position.set(0.12, 0.08, 0.27);
+                headGroup.add(this.rightIris);
+                
+                // Pupils
+                const pupilGeo = new THREE.SphereGeometry(0.02, 16, 16);
+                const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                
+                this.leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+                this.leftPupil.position.set(-0.12, 0.08, 0.29);
+                headGroup.add(this.leftPupil);
+                
+                this.rightPupil = new THREE.Mesh(pupilGeo, pupilMat);
+                this.rightPupil.position.set(0.12, 0.08, 0.29);
+                headGroup.add(this.rightPupil);
+                
+                // Eyebrows
+                const eyebrowGeo = new THREE.BoxGeometry(0.12, 0.02, 0.01);
+                const eyebrowMat = new THREE.MeshPhongMaterial({ color: 0x3a2818 });
+                
+                const leftEyebrow = new THREE.Mesh(eyebrowGeo, eyebrowMat);
+                leftEyebrow.position.set(-0.12, 0.18, 0.24);
+                leftEyebrow.rotation.z = 0.1;
+                headGroup.add(leftEyebrow);
+                
+                const rightEyebrow = new THREE.Mesh(eyebrowGeo, eyebrowMat);
+                rightEyebrow.position.set(0.12, 0.18, 0.24);
+                rightEyebrow.rotation.z = -0.1;
+                headGroup.add(rightEyebrow);
+                
+                // Nose (simple)
+                const noseGeo = new THREE.ConeGeometry(0.03, 0.08, 8);
+                const noseMat = new THREE.MeshPhongMaterial({ color: 0xffc9a3 });
+                const nose = new THREE.Mesh(noseGeo, noseMat);
+                nose.position.set(0, 0, 0.28);
+                nose.rotation.x = Math.PI / 2;
+                headGroup.add(nose);
+                
+                // Mouth
+                const mouthGeo = new THREE.TorusGeometry(0.08, 0.015, 16, 32, Math.PI);
+                const mouthMat = new THREE.MeshBasicMaterial({ color: 0xff6b8a });
+                this.mouth = new THREE.Mesh(mouthGeo, mouthMat);
+                this.mouth.position.set(0, -0.12, 0.24);
+                this.mouth.rotation.x = Math.PI;
+                headGroup.add(this.mouth);
+                
+                headGroup.position.y = 1.6;
+                this.head = headGroup;
+                this.avatar.add(headGroup);
+                
+                // ===== NECK =====
+                const neckGeo = new THREE.CylinderGeometry(0.12, 0.14, 0.2, 16);
+                const neckMat = new THREE.MeshPhongMaterial({ color: 0xffdab9 });
+                const neck = new THREE.Mesh(neckGeo, neckMat);
+                neck.position.y = 1.35;
+                this.avatar.add(neck);
+                
+                // ===== BODY (more feminine shape) =====
+                // Upper body
+                const upperBodyGeo = new THREE.CylinderGeometry(0.14, 0.22, 0.5, 16);
+                const bodyMat = new THREE.MeshPhongMaterial({
+                    color: 0x667eea, // Purple dress/clothes
+                    emissive: 0x667eea,
+                    emissiveIntensity: 0.2
+                });
+                const upperBody = new THREE.Mesh(upperBodyGeo, bodyMat);
+                upperBody.position.y = 1.0;
+                this.upperBody = upperBody;
+                this.avatar.add(upperBody);
+                
+                // Lower body (skirt-like)
+                const lowerBodyGeo = new THREE.CylinderGeometry(0.22, 0.28, 0.4, 16);
+                const lowerBody = new THREE.Mesh(lowerBodyGeo, bodyMat);
+                lowerBody.position.y = 0.55;
+                this.lowerBody = lowerBody;
+                this.avatar.add(lowerBody);
+                
+                // ===== ARMS =====
+                const armGeo = new THREE.CylinderGeometry(0.05, 0.04, 0.5, 12);
+                const armMat = new THREE.MeshPhongMaterial({ color: 0xffdab9 });
+                
+                // Left arm
+                const leftArm = new THREE.Mesh(armGeo, armMat);
+                leftArm.position.set(-0.25, 0.95, 0);
+                leftArm.rotation.z = 0.3;
+                this.leftArm = leftArm;
+                this.avatar.add(leftArm);
+                
+                // Right arm
+                const rightArm = new THREE.Mesh(armGeo, armMat);
+                rightArm.position.set(0.25, 0.95, 0);
+                rightArm.rotation.z = -0.3;
+                this.rightArm = rightArm;
+                this.avatar.add(rightArm);
+                
+                // Hands
+                const handGeo = new THREE.SphereGeometry(0.05, 12, 12);
+                const leftHand = new THREE.Mesh(handGeo, armMat);
+                leftHand.position.set(-0.32, 0.7, 0);
+                this.avatar.add(leftHand);
+                
+                const rightHand = new THREE.Mesh(handGeo, armMat);
+                rightHand.position.set(0.32, 0.7, 0);
+                this.avatar.add(rightHand);
+                
+                // ===== GLOW EFFECT =====
+                const glowGeo = new THREE.SphereGeometry(0.4, 32, 32);
+                const glowMat = new THREE.MeshBasicMaterial({
+                    color: 0x667eea,
+                    transparent: true,
+                    opacity: 0.15,
+                    side: THREE.BackSide
+                });
+                this.glow = new THREE.Mesh(glowGeo, glowMat);
+                this.glow.position.y = 1.6;
+                this.avatar.add(this.glow);
+                
+                this.scene.add(this.avatar);
+                
+                // Store materials
+                this.bodyMaterial = bodyMat;
+                this.glowMaterial = glowMat;
+            }
+            
+            startSpeaking() {
+                this.state = 'speaking';
+                this.updateStatus('🗣️ מדברת');
+                
+                // Color change
+                this.bodyMaterial.color.setHex(0xec4899);
+                this.bodyMaterial.emissiveIntensity = 0.4;
+                this.glowMaterial.opacity = 0.3;
+                
+                // Lip sync
+                this.animations = setInterval(() => {
+                    if (this.state !== 'speaking') return;
+                    
+                    // Mouth movement
+                    const scale = 0.7 + Math.random() * 0.6;
+                    this.mouth.scale.set(scale, scale, 1);
+                    
+                    // Head slight movement
+                    this.head.rotation.y = Math.sin(Date.now() * 0.008) * 0.08;
+                    this.head.position.y = 1.6 + Math.sin(Date.now() * 0.015) * 0.02;
+                    
+                    // Body gentle sway
+                    this.upperBody.rotation.z = Math.sin(Date.now() * 0.005) * 0.03;
+                }, 50);
+            }
+            
+            startListening() {
+                this.state = 'listening';
+                this.updateStatus('👂 מקשיבה');
+                
+                if (this.animations) clearInterval(this.animations);
+                
+                // Reset colors
+                this.bodyMaterial.color.setHex(0x667eea);
+                this.bodyMaterial.emissiveIntensity = 0.2;
+                this.glowMaterial.opacity = 0.15;
+                
+                // Reset positions
+                this.mouth.scale.set(1, 1, 1);
+                this.head.rotation.y = 0;
+                this.head.position.y = 1.6;
+                this.upperBody.rotation.z = 0;
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                const time = this.clock.getElapsedTime();
+                
+                // Gentle breathing animation
+                if (this.avatar && this.state === 'listening') {
+                    this.avatar.position.y = Math.sin(time * 1.2) * 0.03;
+                    this.avatar.rotation.y = Math.sin(time * 0.3) * 0.05;
+                }
+                
+                // Glow pulse
+                if (this.glow) {
+                    const pulse = 1 + Math.sin(time * 2) * 0.05;
+                    this.glow.scale.set(pulse, pulse, pulse);
+                }
+                
+                // Eye blink
+                if (Math.random() < 0.01) {
+                    this.leftEyeWhite.scale.y = 0.1;
+                    this.rightEyeWhite.scale.y = 0.1;
+                    setTimeout(() => {
+                        this.leftEyeWhite.scale.y = 1;
+                        this.rightEyeWhite.scale.y = 1;
+                    }, 100);
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            updateStatus(text) {
+                document.getElementById('statusText').textContent = text;
+            }
+        }
+        
+        // Initialize
+        let stav = null;
+        window.addEventListener('load', () => {
+            stav = new StavHumanLike();
+            
+            document.getElementById('speakBtn').addEventListener('click', () => {
+                stav.startSpeaking();
+                setTimeout(() => stav.startListening(), 3000);
+            });
+            
+            document.getElementById('listenBtn').addEventListener('click', () => {
+                stav.startListening();
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

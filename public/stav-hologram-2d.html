@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - הולוגרמה 2D</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        /* Canvas for particles */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* Main container */
+        #hologram-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: 400px;
+            height: 600px;
+        }
+        
+        /* Holographic platform */
+        .platform {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            height: 350px;
+        }
+        
+        .hex-platform {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at center, 
+                    rgba(0, 255, 255, 0.3) 0%,
+                    rgba(0, 255, 255, 0.1) 40%,
+                    transparent 70%);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            animation: platform-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes platform-pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.05) rotate(3deg); }
+        }
+        
+        .platform-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(0, 255, 255, 0.4) 0%,
+                rgba(255, 0, 255, 0.2) 50%,
+                transparent 70%);
+            filter: blur(40px);
+            animation: glow-pulse 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow-pulse {
+            0% { opacity: 0.5; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+        
+        /* Avatar container */
+        .avatar-wrapper {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 500px;
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-20px); }
+        }
+        
+        /* Main avatar image */
+        .avatar-image {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            filter: 
+                drop-shadow(0 0 30px rgba(0, 255, 255, 0.8))
+                drop-shadow(0 0 60px rgba(255, 0, 255, 0.6))
+                drop-shadow(0 0 90px rgba(255, 215, 0, 0.4))
+                brightness(1.2)
+                contrast(1.1);
+            animation: hologram-flicker 0.15s infinite;
+        }
+        
+        .avatar-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.95;
+        }
+        
+        @keyframes hologram-flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.98; }
+        }
+        
+        /* Holographic scan lines */
+        .scan-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 2px,
+                rgba(0, 255, 255, 0.03) 4px
+            );
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
+        }
+        
+        /* Energy aura */
+        .energy-aura {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            height: 550px;
+            border-radius: 50%;
+            background: radial-gradient(circle,
+                rgba(0, 255, 255, 0.2) 0%,
+                rgba(255, 0, 255, 0.1) 50%,
+                transparent 70%);
+            filter: blur(30px);
+            animation: aura-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes aura-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+            50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+        }
+        
+        /* Orbiting particles */
+        .orbit-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            animation: orbit-rotate 20s linear infinite;
+        }
+        
+        @keyframes orbit-rotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .orbit-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .orbit-particle:nth-child(1) { top: 0; left: 50%; animation: particle-glow 1s infinite; }
+        .orbit-particle:nth-child(2) { top: 50%; right: 0; animation: particle-glow 1s 0.3s infinite; }
+        .orbit-particle:nth-child(3) { bottom: 0; left: 50%; animation: particle-glow 1s 0.6s infinite; }
+        .orbit-particle:nth-child(4) { top: 50%; left: 0; animation: particle-glow 1s 0.9s infinite; }
+        
+        @keyframes particle-glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        /* Floating orbs */
+        .floating-orb {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 215, 0, 0.9),
+                rgba(255, 215, 0, 0.4));
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.8),
+                inset 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: orb-float 4s ease-in-out infinite;
+        }
+        
+        .floating-orb:nth-child(1) {
+            top: 100px;
+            right: 30px;
+            animation-delay: 0s;
+        }
+        
+        .floating-orb:nth-child(2) {
+            top: 200px;
+            left: 20px;
+            animation-delay: 1s;
+        }
+        
+        @keyframes orb-float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+        
+        /* Speaking mode effects */
+        .speaking .avatar-image {
+            animation: 
+                hologram-flicker 0.1s infinite,
+                speaking-pulse 0.5s ease-in-out infinite;
+            filter: 
+                drop-shadow(0 0 40px rgba(255, 0, 255, 1))
+                drop-shadow(0 0 80px rgba(255, 0, 255, 0.8))
+                drop-shadow(0 0 120px rgba(255, 215, 0, 0.6))
+                brightness(1.4)
+                contrast(1.2);
+        }
+        
+        @keyframes speaking-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        
+        .speaking .energy-aura {
+            background: radial-gradient(circle,
+                rgba(255, 0, 255, 0.4) 0%,
+                rgba(255, 0, 255, 0.2) 50%,
+                transparent 70%);
+        }
+        
+        .speaking .platform-glow {
+            background: radial-gradient(circle, 
+                rgba(255, 0, 255, 0.6) 0%,
+                rgba(255, 0, 255, 0.3) 50%,
+                transparent 70%);
+        }
+        
+        /* Controls */
+        #controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 15px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px currentColor;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        
+        button:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+        
+        #speakBtn {
+            background: rgba(255, 0, 255, 0.2);
+            border-color: #ff00ff;
+            color: #ff00ff;
+        }
+        
+        #speakBtn:hover {
+            background: rgba(255, 0, 255, 0.4);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.6);
+        }
+        
+        #listenBtn {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+            color: #00ffff;
+        }
+        
+        #listenBtn:hover {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+        }
+        
+        /* Status */
+        #status {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-size: 18px;
+            text-align: right;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div id="hologram-container">
+        <div class="platform">
+            <div class="platform-glow"></div>
+            <div class="hex-platform"></div>
+        </div>
+        
+        <div class="avatar-wrapper">
+            <div class="energy-aura"></div>
+            <div class="orbit-container">
+                <div class="orbit-particle"></div>
+                <div class="orbit-particle"></div>
+                <div class="orbit-particle"></div>
+                <div class="orbit-particle"></div>
+            </div>
+            <div class="avatar-image">
+                <img src="/stav-avatar.png" alt="סתיו" id="avatarImg">
+                <div class="scan-lines"></div>
+            </div>
+            <div class="floating-orb"></div>
+            <div class="floating-orb"></div>
+        </div>
+    </div>
+    
+    <div id="status">
+        <div style="font-size: 24px; margin-bottom: 5px;">🎭 סתיו</div>
+        <div id="statusText">👂 מקשיבה</div>
+    </div>
+    
+    <div id="controls">
+        <button id="speakBtn">🗣️ דבר</button>
+        <button id="listenBtn">👂 הקשב</button>
+    </div>
+
+    <script>
+        // Particles system
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const particles = [];
+        const particleCount = 150;
+        
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 3 + 1;
+                
+                const colors = ['#00ffff', '#ff00ff', '#ffd700'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.alpha = Math.random() * 0.5 + 0.3;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                ctx.fill();
+                
+                // Glow effect
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
+        }
+        
+        // Create particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+        
+        // Animate particles
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+        
+        // Resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        // Avatar controls
+        const container = document.getElementById('hologram-container');
+        const statusText = document.getElementById('statusText');
+        const avatarImg = document.getElementById('avatarImg');
+        
+        // Check if image exists, fallback to placeholder
+        avatarImg.onerror = function() {
+            this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iIzFhMWEyZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQwIiBmaWxsPSIjMDBmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj7Xodeq15XXoTwvdGV4dD48L3N2Zz4=';
+        };
+        
+        function startSpeaking() {
+            container.classList.add('speaking');
+            statusText.textContent = '🗣️ מדברת';
+        }
+        
+        function startListening() {
+            container.classList.remove('speaking');
+            statusText.textContent = '👂 מקשיבה';
+        }
+        
+        // Button controls
+        document.getElementById('speakBtn').addEventListener('click', () => {
+            startSpeaking();
+            setTimeout(() => startListening(), 3000);
+        });
+        
+        document.getElementById('listenBtn').addEventListener('click', () => {
+            startListening();
+        });
+        
+        // Auto demo
+        setTimeout(() => {
+            startSpeaking();
+            setTimeout(() => startListening(), 3000);
+        }, 2000);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

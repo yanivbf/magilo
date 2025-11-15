@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - דמות 3D אינטראקטיבית</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            overflow: hidden;
+        }
+
+        #avatar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        #status {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 15px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Avatar Container -->
+    <div id="avatar-container"></div>
+
+    <!-- Status Display -->
+    <div id="status">
+        <div class="loading">
+            <span class="loading-spinner"></span>
+            <span>טוען דמות 3D...</span>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls" style="display: none;">
+        <button class="control-btn" onclick="avatarController.speak('שלום! אני סתיו, העוזרת הדיגיטלית שלך')">🗣️ דבר</button>
+        <button class="control-btn" onclick="avatarController.wave()">👋 נופף</button>
+        <button class="control-btn" onclick="avatarController.point()">👉 הצבע</button>
+        <button class="control-btn" onclick="avatarController.dance()">💃 רקוד</button>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <!-- GLTFLoader for 3D models -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- OrbitControls for camera movement -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // 🎭 Advanced 3D Avatar Controller
+        class Avatar3DController {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.avatar = null;
+                this.mixer = null;
+                this.animations = {};
+                this.clock = new THREE.Clock();
+                this.isSpeaking = false;
+                
+                this.init();
+            }
+
+            init() {
+                console.log('🎬 Initializing 3D Avatar System...');
+                
+                // Create Scene
+                this.scene = new THREE.Scene();
+                this.scene.background = null; // Transparent
+                
+                // Create Camera
+                this.camera = new THREE.PerspectiveCamera(
+                    45, // Field of view
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    1000
+                );
+                this.camera.position.set(0, 1.6, 3);
+                
+                // Create Renderer
+                this.renderer = new THREE.WebGLRenderer({ 
+                    antialias: true, 
+                    alpha: true 
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                // Add renderer to DOM
+                const container = document.getElementById('avatar-container');
+                container.appendChild(this.renderer.domElement);
+                
+                // Add Lights
+                this.setupLights();
+                
+                // Add Holographic Effects
+                this.setupHolographicEffects();
+                
+                // Create Placeholder Avatar (until model loads)
+                this.createPlaceholderAvatar();
+                
+                // Setup Controls
+                this.setupControls();
+                
+                // Handle Window Resize
+                window.addEventListener('resize', () => this.onWindowResize());
+                
+                // Start Animation Loop
+                this.animate();
+                
+                // Update Status
+                setTimeout(() => {
+                    document.getElementById('status').innerHTML = '✨ סתיו מוכנה!';
+                    document.getElementById('controls').style.display = 'flex';
+                    setTimeout(() => {
+                        document.getElementById('status').style.display = 'none';
+                    }, 2000);
+                }, 1000);
+                
+                console.log('✅ 3D Avatar System Ready!');
+            }
+
+            setupLights() {
+                // Ambient Light (soft overall lighting)
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+                
+                // Directional Light (main light source)
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 7.5);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
+                
+                // Point Light (holographic glow)
+                const pointLight1 = new THREE.PointLight(0x667eea, 1, 10);
+                pointLight1.position.set(-2, 2, 2);
+                this.scene.add(pointLight1);
+                
+                const pointLight2 = new THREE.PointLight(0x764ba2, 1, 10);
+                pointLight2.position.set(2, 2, 2);
+                this.scene.add(pointLight2);
+            }
+
+            setupHolographicEffects() {
+                // Add particles for holographic effect
+                const particlesGeometry = new THREE.BufferGeometry();
+                const particlesCount = 1000;
+                const posArray = new Float32Array(particlesCount * 3);
+                
+                for (let i = 0; i < particlesCount * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 10;
+                }
+                
+                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                
+                const particlesMaterial = new THREE.PointsMaterial({
+                    size: 0.02,
+                    color: 0x667eea,
+                    transparent: true,
+                    opacity: 0.6,
+                    blending: THREE.AdditiveBlending
+                });
+                
+                this.particles = new THREE.Points(particlesGeometry, particlesMaterial);
+                this.scene.add(this.particles);
+            }
+
+            createPlaceholderAvatar() {
+                // Create a simple humanoid placeholder
+                const bodyGeometry = new THREE.CapsuleGeometry(0.3, 1.2, 4, 8);
+                const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x667eea,
+                    emissive: 0x667eea,
+                    emissiveIntensity: 0.3,
+                    transparent: true,
+                    opacity: 0.8,
+                    shininess: 100
+                });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.position.y = 1.2;
+                body.castShadow = true;
+                
+                // Head
+                const headGeometry = new THREE.SphereGeometry(0.25, 32, 32);
+                const headMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x764ba2,
+                    emissive: 0x764ba2,
+                    emissiveIntensity: 0.3,
+                    transparent: true,
+                    opacity: 0.8,
+                    shininess: 100
+                });
+                const head = new THREE.Mesh(headGeometry, headMaterial);
+                head.position.y = 2.1;
+                head.castShadow = true;
+                
+                // Add glow effect
+                const glowGeometry = new THREE.SphereGeometry(0.28, 32, 32);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x667eea,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.BackSide
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                glow.position.y = 2.1;
+                
+                this.avatar = new THREE.Group();
+                this.avatar.add(body);
+                this.avatar.add(head);
+                this.avatar.add(glow);
+                
+                this.scene.add(this.avatar);
+                
+                // Add floating animation
+                this.avatar.userData.floatSpeed = 0.001;
+                this.avatar.userData.floatRange = 0.1;
+            }
+
+            setupControls() {
+                // OrbitControls for camera manipulation
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.minDistance = 2;
+                this.controls.maxDistance = 10;
+                this.controls.maxPolarAngle = Math.PI / 2;
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                const delta = this.clock.getDelta();
+                
+                // Update controls
+                if (this.controls) {
+                    this.controls.update();
+                }
+                
+                // Animate avatar (floating effect)
+                if (this.avatar) {
+                    this.avatar.position.y = Math.sin(Date.now() * this.avatar.userData.floatSpeed) * this.avatar.userData.floatRange;
+                    this.avatar.rotation.y += 0.002;
+                }
+                
+                // Animate particles
+                if (this.particles) {
+                    this.particles.rotation.y += 0.0005;
+                }
+                
+                // Render scene
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            // Animation Methods
+            speak(text) {
+                console.log('🗣️ Speaking:', text);
+                this.isSpeaking = true;
+                
+                // Add speaking animation (head bob)
+                if (this.avatar) {
+                    const originalY = this.avatar.position.y;
+                    let time = 0;
+                    const speakInterval = setInterval(() => {
+                        time += 0.1;
+                        this.avatar.position.y = originalY + Math.sin(time * 10) * 0.02;
+                        
+                        if (time > 3) {
+                            clearInterval(speakInterval);
+                            this.isSpeaking = false;
+                        }
+                    }, 16);
+                }
+                
+                // Use browser TTS
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'he-IL';
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.2;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+
+            wave() {
+                console.log('👋 Waving...');
+                // Rotate avatar back and forth
+                if (this.avatar) {
+                    const originalRotation = this.avatar.rotation.z;
+                    let time = 0;
+                    const waveInterval = setInterval(() => {
+                        time += 0.1;
+                        this.avatar.rotation.z = originalRotation + Math.sin(time * 5) * 0.3;
+                        
+                        if (time > 2) {
+                            clearInterval(waveInterval);
+                            this.avatar.rotation.z = originalRotation;
+                        }
+                    }, 16);
+                }
+            }
+
+            point() {
+                console.log('👉 Pointing...');
+                // Rotate avatar to point
+                if (this.avatar) {
+                    const targetRotation = this.avatar.rotation.y + Math.PI / 4;
+                    const originalRotation = this.avatar.rotation.y;
+                    let progress = 0;
+                    const pointInterval = setInterval(() => {
+                        progress += 0.05;
+                        this.avatar.rotation.y = originalRotation + (targetRotation - originalRotation) * Math.min(progress, 1);
+                        
+                        if (progress >= 2) {
+                            clearInterval(pointInterval);
+                            this.avatar.rotation.y = originalRotation;
+                        }
+                    }, 16);
+                }
+            }
+
+            dance() {
+                console.log('💃 Dancing...');
+                // Dance animation
+                if (this.avatar) {
+                    let time = 0;
+                    const danceInterval = setInterval(() => {
+                        time += 0.1;
+                        this.avatar.rotation.y += 0.1;
+                        this.avatar.position.y = Math.sin(time * 5) * 0.2;
+                        this.avatar.rotation.z = Math.sin(time * 3) * 0.2;
+                        
+                        if (time > 5) {
+                            clearInterval(danceInterval);
+                            this.avatar.rotation.z = 0;
+                        }
+                    }, 16);
+                }
+            }
+        }
+
+        // Initialize Avatar System
+        const avatarController = new Avatar3DController();
+
+        console.log('✅ 3D Avatar System Loaded!');
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - דמות מדברת</title>
+    <style>
+        /* Avatar Container */
+        .stav-avatar-container {
+            position: fixed;
+            bottom: 480px;
+            right: 24px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        /* Avatar Circle */
+        .stav-avatar {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Speaking Animation - Glow */
+        .stav-avatar.speaking {
+            animation: float 3s ease-in-out infinite, pulse 1s ease-in-out infinite;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.8),
+                        0 0 40px rgba(102, 126, 234, 0.6);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) translateY(0px); }
+            50% { transform: scale(1.05) translateY(-10px); }
+        }
+
+        /* Avatar Image (if provided) */
+        .stav-avatar-image {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
+
+        /* Animated Face (fallback if no image) */
+        .stav-face {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        /* Eyes */
+        .stav-eyes {
+            display: flex;
+            justify-content: space-between;
+            width: 60px;
+            margin: 0 auto 8px;
+        }
+
+        .stav-eye {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .stav-pupil {
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes blink {
+            0%, 98%, 100% { transform: scaleY(1); }
+            99% { transform: scaleY(0.1); }
+        }
+
+        /* Mouth */
+        .stav-mouth {
+            width: 40px;
+            height: 20px;
+            border: 3px solid white;
+            border-top: none;
+            border-radius: 0 0 40px 40px;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+        }
+
+        /* Speaking Mouth Animation */
+        .stav-avatar.speaking .stav-mouth {
+            animation: talk 0.3s infinite;
+        }
+
+        @keyframes talk {
+            0%, 100% { 
+                height: 20px;
+                border-radius: 0 0 40px 40px;
+            }
+            50% { 
+                height: 30px;
+                border-radius: 0 0 50px 50px;
+            }
+        }
+
+        /* Sound Waves */
+        .stav-sound-waves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stav-avatar.speaking .stav-sound-waves {
+            opacity: 1;
+        }
+
+        .sound-wave {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(102, 126, 234, 0.6);
+            border-radius: 50%;
+            animation: wave 1.5s ease-out infinite;
+        }
+
+        .sound-wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .sound-wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Avatar Name Tag */
+        .stav-name-tag {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: #667eea;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+
+        /* Thinking indicator */
+        .stav-thinking {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .stav-avatar.thinking .stav-thinking {
+            display: flex;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .thinking-dot {
+            width: 5px;
+            height: 5px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: thinking 1.4s infinite ease-in-out;
+        }
+
+        .thinking-dot:nth-child(1) { animation-delay: 0s; }
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinking {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 640px) {
+            .stav-avatar-container {
+                bottom: 400px;
+                right: 50%;
+                transform: translateX(50%);
+            }
+            
+            .stav-avatar {
+                width: 100px;
+                height: 100px;
+            }
+
+            .stav-avatar-image {
+                width: 90px;
+                height: 90px;
+            }
+
+            .stav-face {
+                width: 60px;
+                height: 60px;
+            }
+
+            .stav-name-tag {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Stav Avatar -->
+    <div class="stav-avatar-container" id="stavAvatarContainer">
+        <div class="stav-avatar" id="stavAvatar">
+            <!-- Sound Waves -->
+            <div class="stav-sound-waves">
+                <div class="sound-wave"></div>
+                <div class="sound-wave"></div>
+                <div class="sound-wave"></div>
+            </div>
+
+            <!-- Avatar Image (if provided, otherwise shows animated face) -->
+            <img class="stav-avatar-image" id="stavAvatarImage" style="display: none;" alt="סתיו">
+
+            <!-- Animated Face (fallback) -->
+            <div class="stav-face" id="stavFace">
+                <div class="stav-eyes">
+                    <div class="stav-eye">
+                        <div class="stav-pupil"></div>
+                    </div>
+                    <div class="stav-eye">
+                        <div class="stav-pupil"></div>
+                    </div>
+                </div>
+                <div class="stav-mouth"></div>
+            </div>
+
+            <!-- Thinking Indicator -->
+            <div class="stav-thinking">
+                <div class="thinking-dots">
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                </div>
+            </div>
+
+            <!-- Name Tag -->
+            <div class="stav-name-tag">סתיו 🤖</div>
+        </div>
+    </div>
+
+    <script>
+        // Avatar Controller
+        class StavAvatarController {
+            constructor() {
+                this.avatar = document.getElementById('stavAvatar');
+                this.avatarImage = document.getElementById('stavAvatarImage');
+                this.avatarFace = document.getElementById('stavFace');
+                this.isSpeaking = false;
+                this.isThinking = false;
+
+                // Listen to speech synthesis events
+                this.setupSpeechListeners();
+            }
+
+            // Set custom avatar image
+            setAvatarImage(imageUrl) {
+                if (imageUrl) {
+                    this.avatarImage.src = imageUrl;
+                    this.avatarImage.style.display = 'block';
+                    this.avatarFace.style.display = 'none';
+                } else {
+                    this.avatarImage.style.display = 'none';
+                    this.avatarFace.style.display = 'block';
+                }
+            }
+
+            // Start speaking animation
+            startSpeaking() {
+                console.log('🎭 Avatar: Started speaking');
+                this.isSpeaking = true;
+                this.avatar.classList.add('speaking');
+                this.stopThinking();
+            }
+
+            // Stop speaking animation
+            stopSpeaking() {
+                console.log('🎭 Avatar: Stopped speaking');
+                this.isSpeaking = false;
+                this.avatar.classList.remove('speaking');
+            }
+
+            // Start thinking animation
+            startThinking() {
+                console.log('🤔 Avatar: Started thinking');
+                this.isThinking = true;
+                this.avatar.classList.add('thinking');
+            }
+
+            // Stop thinking animation
+            stopThinking() {
+                console.log('🤔 Avatar: Stopped thinking');
+                this.isThinking = false;
+                this.avatar.classList.remove('thinking');
+            }
+
+            // Setup listeners for speech synthesis
+            setupSpeechListeners() {
+                // Monitor window.currentAudio (Google TTS)
+                const originalAudioPlay = Audio.prototype.play;
+                const controller = this;
+
+                Audio.prototype.play = function() {
+                    if (this === window.currentAudio) {
+                        controller.startSpeaking();
+                        
+                        this.onended = function() {
+                            controller.stopSpeaking();
+                        };
+
+                        this.onerror = function() {
+                            controller.stopSpeaking();
+                        };
+                    }
+                    return originalAudioPlay.call(this);
+                };
+
+                // Monitor speechSynthesis (Browser TTS)
+                if (window.speechSynthesis) {
+                    const originalSpeak = window.speechSynthesis.speak;
+                    window.speechSynthesis.speak = function(utterance) {
+                        controller.startSpeaking();
+                        
+                        utterance.onend = function() {
+                            controller.stopSpeaking();
+                        };
+
+                        utterance.onerror = function() {
+                            controller.stopSpeaking();
+                        };
+
+                        return originalSpeak.call(window.speechSynthesis, utterance);
+                    };
+
+                    const originalCancel = window.speechSynthesis.cancel;
+                    window.speechSynthesis.cancel = function() {
+                        controller.stopSpeaking();
+                        return originalCancel.call(window.speechSynthesis);
+                    };
+                }
+
+                // Listen for custom events from chat
+                window.addEventListener('stavStartSpeaking', () => this.startSpeaking());
+                window.addEventListener('stavStopSpeaking', () => this.stopSpeaking());
+                window.addEventListener('stavStartThinking', () => this.startThinking());
+                window.addEventListener('stavStopThinking', () => this.stopThinking());
+            }
+
+            // Hide avatar
+            hide() {
+                document.getElementById('stavAvatarContainer').style.display = 'none';
+            }
+
+            // Show avatar
+            show() {
+                document.getElementById('stavAvatarContainer').style.display = 'block';
+            }
+        }
+
+        // Initialize avatar
+        window.stavAvatarController = new StavAvatarController();
+
+        // Example: Set custom image (if provided)
+        // window.stavAvatarController.setAvatarImage('/path/to/stav-image.png');
+
+        console.log('✅ Stav Avatar initialized!');
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

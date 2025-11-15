@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - רכיב פשוט ומקצועי</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Chat window */
+        .chat-window {
+            width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Header with avatar */
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        /* Animated avatar circle */
+        .avatar-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-circle.speaking {
+            animation: avatar-pulse 0.8s ease-in-out infinite;
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+        }
+        
+        @keyframes avatar-pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+            }
+        }
+        
+        /* Status indicator */
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #10b981;
+            border: 3px solid white;
+            transition: all 0.3s ease;
+        }
+        
+        .status-indicator.speaking {
+            background: #ef4444;
+            animation: status-blink 0.8s ease-in-out infinite;
+        }
+        
+        @keyframes status-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Header text */
+        .header-info {
+            flex: 1;
+        }
+        
+        .header-info h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .header-info p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* Messages area */
+        .messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+        
+        /* Message bubble */
+        .message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: message-slide-in 0.3s ease-out;
+        }
+        
+        @keyframes message-slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.bot {
+            flex-direction: row;
+        }
+        
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* Typing indicator */
+        .typing-indicator {
+            display: none;
+            gap: 10px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 16px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .typing-indicator.active {
+            display: flex;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s ease-in-out infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        
+        /* Input area */
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+        
+        .input-area button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .input-area button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .input-area button:active {
+            transform: scale(0.95);
+        }
+        
+        /* Voice button */
+        .voice-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        }
+        
+        .voice-btn.recording {
+            animation: voice-pulse 1s ease-in-out infinite;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        }
+        
+        @keyframes voice-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Test controls */
+        .test-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .test-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .test-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="avatar-circle" id="headerAvatar">
+                <img src="/stav-avatar.png" alt="סתיו" id="avatarImage">
+                <div class="status-indicator" id="statusIndicator"></div>
+            </div>
+            <div class="header-info">
+                <h2>סתיו</h2>
+                <p id="statusText">מקשיבה...</p>
+            </div>
+        </div>
+        
+        <div class="messages-area" id="messagesArea">
+            <div class="message bot">
+                <div class="message-avatar"><img src="/stav-avatar.png" alt="סתיו"></div>
+                <div class="message-content">
+                    שלום! אני סתיו, אני כאן לעזור לך. מה אני יכולה לעשות בשבילך?
+                </div>
+            </div>
+            
+            <div class="message bot" id="typingIndicatorContainer" style="display: none;">
+                <div class="message-avatar"><img src="/stav-avatar.png" alt="סתיו"></div>
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <button class="voice-btn" id="voiceBtn" title="הקלט קולי">🎤</button>
+            <input type="text" id="messageInput" placeholder="כתוב הודעה...">
+            <button id="sendBtn" title="שלח">📤</button>
+        </div>
+    </div>
+    
+    <div class="test-controls">
+        <button class="test-btn" onclick="testSpeaking()">🗣️ דבר</button>
+        <button class="test-btn" onclick="testListening()">👂 הקשב</button>
+        <button class="test-btn" onclick="testMessage()">💬 הודעה</button>
+    </div>
+
+    <script>
+        // State management
+        let isSpeaking = false;
+        let isRecording = false;
+        
+        // Elements
+        const headerAvatar = document.getElementById('headerAvatar');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingIndicatorContainer = document.getElementById('typingIndicatorContainer');
+        
+        // Functions
+        function startSpeaking() {
+            isSpeaking = true;
+            headerAvatar.classList.add('speaking');
+            statusIndicator.classList.add('speaking');
+            statusText.textContent = 'מדברת...';
+        }
+        
+        function stopSpeaking() {
+            isSpeaking = false;
+            headerAvatar.classList.remove('speaking');
+            statusIndicator.classList.remove('speaking');
+            statusText.textContent = 'מקשיבה...';
+        }
+        
+        function showTyping() {
+            typingIndicatorContainer.style.display = 'flex';
+            typingIndicator.classList.add('active');
+            scrollToBottom();
+        }
+        
+        function hideTyping() {
+            typingIndicatorContainer.style.display = 'none';
+            typingIndicator.classList.remove('active');
+        }
+        
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const avatarContent = isUser 
+                ? '👤' 
+                : '<img src="/stav-avatar.png" alt="סתיו">';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatarContent}</div>
+                <div class="message-content">${text}</div>
+            `;
+            
+            // Insert before typing indicator
+            messagesArea.insertBefore(messageDiv, typingIndicatorContainer);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }, 100);
+        }
+        
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            // Add user message
+            addMessage(text, true);
+            messageInput.value = '';
+            
+            // Simulate bot response
+            showTyping();
+            
+            setTimeout(() => {
+                hideTyping();
+                startSpeaking();
+                addMessage('הבנתי! אני עובדת על זה עכשיו...');
+                
+                setTimeout(() => {
+                    stopSpeaking();
+                }, 2000);
+            }, 1500);
+        }
+        
+        function toggleVoiceRecording() {
+            isRecording = !isRecording;
+            
+            if (isRecording) {
+                voiceBtn.classList.add('recording');
+                voiceBtn.textContent = '⏹️';
+                statusText.textContent = 'מאזינה...';
+            } else {
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+                statusText.textContent = 'מקשיבה...';
+                
+                // Simulate voice input
+                showTyping();
+                setTimeout(() => {
+                    hideTyping();
+                    startSpeaking();
+                    addMessage('שמעתי אותך! איזה שירות אתה מחפש?');
+                    setTimeout(stopSpeaking, 2000);
+                }, 1000);
+            }
+        }
+        
+        // Image fallback
+        const avatarImage = document.getElementById('avatarImage');
+        if (avatarImage) {
+            avatarImage.onerror = function() {
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🤖' + this.parentElement.innerHTML.replace(/<img[^>]*>/, '');
+            };
+        }
+        
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        voiceBtn.addEventListener('click', toggleVoiceRecording);
+        
+        // Test functions
+        function testSpeaking() {
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                startSpeaking();
+                addMessage('זה דוגמה למצב דיבור! רואה איך האווטר מונפש?');
+                setTimeout(stopSpeaking, 3000);
+            }, 1000);
+        }
+        
+        function testListening() {
+            stopSpeaking();
+            addMessage('עכשיו אני במצב הקשבה 👂', false);
+        }
+        
+        function testMessage() {
+            const messages = [
+                'איך אני יכולה לעזור לך היום?',
+                'יש לי גישה לכל המידע שאתה צריך!',
+                'פשוט תגיד לי מה אתה מחפש 🔍'
+            ];
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                startSpeaking();
+                addMessage(randomMessage);
+                setTimeout(stopSpeaking, 2500);
+            }, 1200);
+        }
+        
+        // Auto scroll on load
+        scrollToBottom();
+    </script>
+</body>
+</html>
+

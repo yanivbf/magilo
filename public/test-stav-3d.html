@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת דמות סתיו 3D</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            right: 50%;
+            transform: translateX(50%);
+            z-index: 10000;
+            display: flex;
+            gap: 15px;
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        #speakBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        #listenBtn {
+            background: linear-gradient(135deg, #4a5568 0%, #6366f1 100%);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        #info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+        }
+        
+        #stav-3d-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 400px;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div>🎭 דמות סתיו 3D - בדיקה</div>
+        <div id="status">טוען...</div>
+    </div>
+    
+    <div id="stav-3d-container"></div>
+    
+    <div id="controls">
+        <button id="speakBtn">🗣️ דבר</button>
+        <button id="listenBtn">👂 הקשב</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script>
+        // 🎭 3D Avatar Controller (same as marketplace.html)
+        class Stav3DController {
+            constructor() {
+                this.container = document.getElementById('stav-3d-container');
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.avatar = null;
+                this.clock = null;
+                this.isSpeaking = false;
+                
+                if (!this.container) {
+                    console.error('❌ Container not found!');
+                    return;
+                }
+                
+                if (typeof THREE === 'undefined') {
+                    console.error('❌ THREE.js not loaded!');
+                    return;
+                }
+                
+                this.init();
+            }
+
+            init() {
+                console.log('🎬 Init 3D Avatar');
+                this.clock = new THREE.Clock();
+                
+                // Scene
+                this.scene = new THREE.Scene();
+                
+                // Camera (positioned for left side view)
+                const containerWidth = 400;
+                const containerHeight = window.innerHeight;
+                this.camera = new THREE.PerspectiveCamera(50, containerWidth / containerHeight, 0.1, 1000);
+                this.camera.position.set(0, 1.6, 2.5);
+                
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setSize(containerWidth, containerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.container.appendChild(this.renderer.domElement);
+                
+                // Lights
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                this.scene.add(ambientLight);
+                
+                const keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                keyLight.position.set(1, 2, 1);
+                this.scene.add(keyLight);
+                
+                const fillLight = new THREE.DirectionalLight(0x667eea, 0.3);
+                fillLight.position.set(-1, 0, -1);
+                this.scene.add(fillLight);
+                
+                const rimLight = new THREE.DirectionalLight(0xec4899, 0.5);
+                rimLight.position.set(0, 0, -2);
+                this.scene.add(rimLight);
+                
+                // Create Avatar
+                this.createAvatar();
+                
+                // Resize handler
+                window.addEventListener('resize', () => {
+                    const containerWidth = 400;
+                    const containerHeight = window.innerHeight;
+                    this.camera.aspect = containerWidth / containerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(containerWidth, containerHeight);
+                });
+                
+                // Start animation
+                this.animate();
+                
+                document.getElementById('status').textContent = '✅ מוכן!';
+            }
+
+            createAvatar() {
+                const avatarGroup = new THREE.Group();
+                
+                // Body (Listening mode - blue/purple)
+                const bodyGeometry = new THREE.CapsuleGeometry(0.25, 1.0, 8, 16);
+                this.bodyMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x4a5568,  // Gray - listening
+                    emissive: 0x667eea,
+                    emissiveIntensity: 0.2,
+                    transparent: true,
+                    opacity: 0.85,
+                    shininess: 100
+                });
+                const body = new THREE.Mesh(bodyGeometry, this.bodyMaterial);
+                body.position.y = 1.0;
+                
+                // Head (Listening mode - softer purple)
+                const headGeometry = new THREE.SphereGeometry(0.22, 32, 32);
+                this.headMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x6366f1,  // Soft purple - listening
+                    emissive: 0x764ba2,
+                    emissiveIntensity: 0.2,
+                    transparent: true,
+                    opacity: 0.85,
+                    shininess: 100
+                });
+                const head = new THREE.Mesh(headGeometry, this.headMaterial);
+                head.position.y = 1.8;
+                
+                // Glow
+                const glowGeometry = new THREE.SphereGeometry(0.26, 32, 32);
+                this.glowMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x667eea,
+                    transparent: true,
+                    opacity: 0.15,
+                    side: THREE.BackSide
+                });
+                const glow = new THREE.Mesh(glowGeometry, this.glowMaterial);
+                glow.position.y = 1.8;
+                
+                avatarGroup.add(body);
+                avatarGroup.add(head);
+                avatarGroup.add(glow);
+                
+                this.avatar = avatarGroup;
+                this.avatarHead = head;
+                this.avatarGlow = glow;
+                this.avatarBody = body;
+                
+                this.scene.add(avatarGroup);
+                
+                this.floatOffset = 0;
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                const delta = this.clock.getDelta();
+                
+                if (this.avatar) {
+                    // Float animation
+                    this.floatOffset += delta;
+                    this.avatar.position.y = Math.sin(this.floatOffset * 1.5) * 0.05;
+                    this.avatar.rotation.y = Math.sin(this.floatOffset * 0.5) * 0.1;
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            show() {
+                if (!this.container || !this.avatar) {
+                    console.error('❌ Cannot show - container or avatar missing');
+                    return;
+                }
+                
+                console.log('🗣️ Stav is speaking - changing colors');
+                this.isSpeaking = true;
+                
+                // Change to speaking colors (brighter, more vibrant)
+                if (this.bodyMaterial) {
+                    this.bodyMaterial.color.setHex(0x667eea);  // Bright purple
+                    this.bodyMaterial.emissiveIntensity = 0.5;
+                }
+                if (this.headMaterial) {
+                    this.headMaterial.color.setHex(0xec4899);  // Bright pink
+                    this.headMaterial.emissiveIntensity = 0.5;
+                }
+                if (this.glowMaterial) {
+                    this.glowMaterial.opacity = 0.4;
+                }
+                
+                // Animate head (talking motion)
+                if (this.avatarHead) {
+                    this.speakingInterval = setInterval(() => {
+                        if (!this.isSpeaking) {
+                            clearInterval(this.speakingInterval);
+                            return;
+                        }
+                        this.avatarHead.position.y = 1.8 + Math.sin(Date.now() * 0.02) * 0.03;
+                    }, 16);
+                }
+                
+                document.getElementById('status').textContent = '🗣️ מדברת';
+            }
+
+            hide() {
+                console.log('👂 Stav is listening - back to listening colors');
+                this.isSpeaking = false;
+                
+                // Change back to listening colors (softer, calmer)
+                if (this.bodyMaterial) {
+                    this.bodyMaterial.color.setHex(0x4a5568);  // Gray
+                    this.bodyMaterial.emissiveIntensity = 0.2;
+                }
+                if (this.headMaterial) {
+                    this.headMaterial.color.setHex(0x6366f1);  // Soft purple
+                    this.headMaterial.emissiveIntensity = 0.2;
+                }
+                if (this.glowMaterial) {
+                    this.glowMaterial.opacity = 0.15;
+                }
+                
+                // Reset head position
+                if (this.avatarHead) {
+                    this.avatarHead.position.y = 1.8;
+                }
+                
+                document.getElementById('status').textContent = '👂 מקשיבה';
+            }
+        }
+
+        // Initialize
+        let stav3DAvatar = null;
+        window.addEventListener('load', () => {
+            stav3DAvatar = new Stav3DController();
+            
+            // Button handlers
+            document.getElementById('speakBtn').addEventListener('click', () => {
+                stav3DAvatar.show();
+                setTimeout(() => stav3DAvatar.hide(), 3000);
+            });
+            
+            document.getElementById('listenBtn').addEventListener('click', () => {
+                stav3DAvatar.hide();
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

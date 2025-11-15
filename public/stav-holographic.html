@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סתיו - הולוגרמה</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #container { width: 100%; height: 100%; }
+        
+        #controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="controls">
+        <button id="speakBtn">🗣️ דבר</button>
+        <button id="listenBtn">👂 הקשב</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script>
+        class HolographicStav {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.avatar = null;
+                this.clock = new THREE.Clock();
+                this.particles = [];
+                this.state = 'listening';
+                
+                this.init();
+            }
+            
+            init() {
+                // Scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x0a0a1a);
+                this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.02);
+                
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(0, 1.5, 3);
+                
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                document.getElementById('container').appendChild(this.renderer.domElement);
+                
+                // Lights
+                this.setupLights();
+                
+                // Create holographic avatar
+                this.createHolographicAvatar();
+                
+                // Particles
+                this.createHolographicParticles();
+                
+                // Ground glow
+                this.createGroundGlow();
+                
+                // Resize
+                window.addEventListener('resize', () => this.onResize());
+                
+                // Animate
+                this.animate();
+            }
+            
+            setupLights() {
+                const ambient = new THREE.AmbientLight(0x4444ff, 0.5);
+                this.scene.add(ambient);
+                
+                // Cyan key light
+                const keyLight = new THREE.PointLight(0x00ffff, 2, 20);
+                keyLight.position.set(2, 3, 2);
+                this.scene.add(keyLight);
+                
+                // Magenta fill light
+                const fillLight = new THREE.PointLight(0xff00ff, 1.5, 15);
+                fillLight.position.set(-2, 2, -1);
+                this.scene.add(fillLight);
+                
+                // Gold accent
+                const accentLight = new THREE.PointLight(0xffd700, 1, 10);
+                accentLight.position.set(0, 4, 0);
+                this.scene.add(accentLight);
+            }
+            
+            createHolographicAvatar() {
+                this.avatar = new THREE.Group();
+                
+                // Holographic material
+                const holoMaterial = new THREE.MeshPhysicalMaterial({
+                    color: 0xaaddff,
+                    metalness: 0.9,
+                    roughness: 0.1,
+                    transparent: true,
+                    opacity: 0.6,
+                    transmission: 0.5,
+                    thickness: 0.5,
+                    envMapIntensity: 1.5,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.1
+                });
+                
+                // === HEAD ===
+                const headGeo = new THREE.SphereGeometry(0.25, 32, 32);
+                this.head = new THREE.Mesh(headGeo, holoMaterial.clone());
+                this.head.position.y = 1.7;
+                this.avatar.add(this.head);
+                
+                // Hair (flowing strands)
+                const hairMaterial = new THREE.MeshPhysicalMaterial({
+                    color: 0xffd700,
+                    metalness: 0.8,
+                    roughness: 0.2,
+                    transparent: true,
+                    opacity: 0.7,
+                    transmission: 0.3
+                });
+                
+                // Multiple hair strands
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2;
+                    const radius = 0.2;
+                    const strand = this.createHairStrand(hairMaterial, angle, radius);
+                    strand.position.y = 1.8;
+                    this.avatar.add(strand);
+                }
+                
+                // === BODY (feminine shape) ===
+                // Upper torso
+                const upperBodyGeo = new THREE.CylinderGeometry(0.12, 0.18, 0.5, 32);
+                const upperBody = new THREE.Mesh(upperBodyGeo, holoMaterial.clone());
+                upperBody.position.y = 1.15;
+                this.upperBody = upperBody;
+                this.avatar.add(upperBody);
+                
+                // Waist
+                const waistGeo = new THREE.SphereGeometry(0.15, 32, 32);
+                waistGeo.scale(1, 0.5, 1);
+                const waist = new THREE.Mesh(waistGeo, holoMaterial.clone());
+                waist.position.y = 0.9;
+                this.avatar.add(waist);
+                
+                // Lower body/dress
+                const lowerBodyGeo = new THREE.CylinderGeometry(0.15, 0.25, 0.6, 32);
+                const lowerBody = new THREE.Mesh(lowerBodyGeo, holoMaterial.clone());
+                lowerBody.position.y = 0.55;
+                this.lowerBody = lowerBody;
+                this.avatar.add(lowerBody);
+                
+                // === ARMS ===
+                const armGeo = new THREE.CylinderGeometry(0.04, 0.035, 0.5, 16);
+                
+                const leftArm = new THREE.Mesh(armGeo, holoMaterial.clone());
+                leftArm.position.set(-0.23, 1.1, 0);
+                leftArm.rotation.z = 0.4;
+                this.leftArm = leftArm;
+                this.avatar.add(leftArm);
+                
+                const rightArm = new THREE.Mesh(armGeo, holoMaterial.clone());
+                rightArm.position.set(0.23, 1.1, 0);
+                rightArm.rotation.z = -0.4;
+                this.rightArm = rightArm;
+                this.avatar.add(rightArm);
+                
+                // Hands
+                const handGeo = new THREE.SphereGeometry(0.045, 16, 16);
+                const leftHand = new THREE.Mesh(handGeo, holoMaterial.clone());
+                leftHand.position.set(-0.32, 0.87, 0);
+                this.avatar.add(leftHand);
+                
+                const rightHand = new THREE.Mesh(handGeo, holoMaterial.clone());
+                rightHand.position.set(0.32, 0.87, 0);
+                this.avatar.add(rightHand);
+                
+                // === GLOW AURA ===
+                const auraGeo = new THREE.SphereGeometry(0.6, 32, 32);
+                const auraMat = new THREE.MeshBasicMaterial({
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.15,
+                    side: THREE.BackSide
+                });
+                this.aura = new THREE.Mesh(auraGeo, auraMat);
+                this.aura.position.y = 1.2;
+                this.avatar.add(this.aura);
+                
+                // === FLOATING ORB (like in image) ===
+                const orbGeo = new THREE.SphereGeometry(0.12, 32, 32);
+                const orbMat = new THREE.MeshPhysicalMaterial({
+                    color: 0xffd700,
+                    metalness: 1,
+                    roughness: 0,
+                    transparent: true,
+                    opacity: 0.8,
+                    transmission: 0.3,
+                    emissive: 0xffd700,
+                    emissiveIntensity: 0.5
+                });
+                this.orb = new THREE.Mesh(orbGeo, orbMat);
+                this.orb.position.set(0.5, 1.3, 0.3);
+                this.avatar.add(this.orb);
+                
+                // Orb glow
+                const orbGlowGeo = new THREE.SphereGeometry(0.15, 32, 32);
+                const orbGlowMat = new THREE.MeshBasicMaterial({
+                    color: 0xffd700,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.BackSide
+                });
+                const orbGlow = new THREE.Mesh(orbGlowGeo, orbGlowMat);
+                orbGlow.position.copy(this.orb.position);
+                this.avatar.add(orbGlow);
+                
+                this.scene.add(this.avatar);
+            }
+            
+            createHairStrand(material, angle, radius) {
+                const group = new THREE.Group();
+                const segments = 5;
+                
+                for (let i = 0; i < segments; i++) {
+                    const segmentGeo = new THREE.CylinderGeometry(
+                        0.015 - i * 0.002,
+                        0.015 - (i + 1) * 0.002,
+                        0.15,
+                        8
+                    );
+                    const segment = new THREE.Mesh(segmentGeo, material);
+                    
+                    const x = Math.cos(angle) * radius * (1 + i * 0.1);
+                    const y = -i * 0.12;
+                    const z = Math.sin(angle) * radius * (1 + i * 0.1);
+                    
+                    segment.position.set(x, y, z);
+                    segment.rotation.z = Math.cos(angle) * 0.3;
+                    segment.rotation.x = Math.sin(angle) * 0.3;
+                    
+                    group.add(segment);
+                }
+                
+                return group;
+            }
+            
+            createHolographicParticles() {
+                // Sparkle particles
+                const particleCount = 300;
+                const positions = new Float32Array(particleCount * 3);
+                const colors = new Float32Array(particleCount * 3);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const i3 = i * 3;
+                    const radius = 0.5 + Math.random() * 2;
+                    const angle = Math.random() * Math.PI * 2;
+                    const height = Math.random() * 3;
+                    
+                    positions[i3] = Math.cos(angle) * radius;
+                    positions[i3 + 1] = height;
+                    positions[i3 + 2] = Math.sin(angle) * radius;
+                    
+                    // Random colors (cyan, magenta, gold)
+                    const colorChoice = Math.random();
+                    if (colorChoice < 0.33) {
+                        colors[i3] = 0; colors[i3 + 1] = 1; colors[i3 + 2] = 1; // Cyan
+                    } else if (colorChoice < 0.66) {
+                        colors[i3] = 1; colors[i3 + 1] = 0; colors[i3 + 2] = 1; // Magenta
+                    } else {
+                        colors[i3] = 1; colors[i3 + 1] = 0.84; colors[i3 + 2] = 0; // Gold
+                    }
+                }
+                
+                const particleGeo = new THREE.BufferGeometry();
+                particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                const particleMat = new THREE.PointsMaterial({
+                    size: 0.08,
+                    transparent: true,
+                    opacity: 0.8,
+                    vertexColors: true,
+                    blending: THREE.AdditiveBlending,
+                    sizeAttenuation: true
+                });
+                
+                this.particleSystem = new THREE.Points(particleGeo, particleMat);
+                this.scene.add(this.particleSystem);
+            }
+            
+            createGroundGlow() {
+                const groundGeo = new THREE.CircleGeometry(1.5, 64);
+                const groundMat = new THREE.MeshBasicMaterial({
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = 0.01;
+                this.scene.add(ground);
+                
+                // Hexagonal platform
+                const hexGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.05, 6);
+                const hexMat = new THREE.MeshPhysicalMaterial({
+                    color: 0x00ffff,
+                    metalness: 1,
+                    roughness: 0.2,
+                    transparent: true,
+                    opacity: 0.4,
+                    emissive: 0x00ffff,
+                    emissiveIntensity: 0.3
+                });
+                const hex = new THREE.Mesh(hexGeo, hexMat);
+                hex.position.y = 0;
+                this.hexPlatform = hex;
+                this.scene.add(hex);
+            }
+            
+            startSpeaking() {
+                this.state = 'speaking';
+                
+                // Intensify colors
+                this.head.material.color.setHex(0xff00ff);
+                this.head.material.emissive = new THREE.Color(0xff00ff);
+                this.head.material.emissiveIntensity = 0.5;
+                
+                this.aura.material.opacity = 0.35;
+                this.aura.material.color.setHex(0xff00ff);
+                
+                // Animate
+                this.speakingAnimation = setInterval(() => {
+                    if (this.state !== 'speaking') return;
+                    
+                    // Pulsing
+                    const pulse = 1 + Math.sin(Date.now() * 0.01) * 0.05;
+                    this.head.scale.set(pulse, pulse, pulse);
+                    
+                    // Head movement
+                    this.head.position.y = 1.7 + Math.sin(Date.now() * 0.015) * 0.03;
+                    
+                    // Body glow
+                    this.upperBody.material.emissiveIntensity = 0.3 + Math.sin(Date.now() * 0.02) * 0.2;
+                }, 16);
+            }
+            
+            startListening() {
+                this.state = 'listening';
+                
+                if (this.speakingAnimation) clearInterval(this.speakingAnimation);
+                
+                // Reset colors
+                this.head.material.color.setHex(0xaaddff);
+                this.head.material.emissive = new THREE.Color(0x000000);
+                this.head.material.emissiveIntensity = 0;
+                this.head.scale.set(1, 1, 1);
+                this.head.position.y = 1.7;
+                
+                this.aura.material.opacity = 0.15;
+                this.aura.material.color.setHex(0x00ffff);
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                const time = this.clock.getElapsedTime();
+                
+                // Avatar floating
+                if (this.avatar && this.state === 'listening') {
+                    this.avatar.position.y = Math.sin(time * 1.5) * 0.1;
+                    this.avatar.rotation.y = Math.sin(time * 0.3) * 0.1;
+                }
+                
+                // Hair flowing
+                this.avatar.children.forEach(child => {
+                    if (child.type === 'Group') {
+                        child.children.forEach((segment, i) => {
+                            segment.rotation.z += Math.sin(time + i) * 0.001;
+                        });
+                    }
+                });
+                
+                // Orb orbit
+                if (this.orb) {
+                    this.orb.position.x = Math.cos(time * 0.8) * 0.5;
+                    this.orb.position.z = Math.sin(time * 0.8) * 0.5;
+                    this.orb.position.y = 1.3 + Math.sin(time * 2) * 0.1;
+                    this.orb.rotation.y += 0.02;
+                }
+                
+                // Aura pulse
+                if (this.aura) {
+                    const pulse = 1 + Math.sin(time * 2) * 0.08;
+                    this.aura.scale.set(pulse, pulse, pulse);
+                }
+                
+                // Particles swirl
+                if (this.particleSystem) {
+                    this.particleSystem.rotation.y += 0.001;
+                    const positions = this.particleSystem.geometry.attributes.position.array;
+                    for (let i = 1; i < positions.length; i += 3) {
+                        positions[i] += Math.sin(time + i) * 0.001;
+                    }
+                    this.particleSystem.geometry.attributes.position.needsUpdate = true;
+                }
+                
+                // Platform rotation
+                if (this.hexPlatform) {
+                    this.hexPlatform.rotation.y += 0.002;
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+        
+        // Initialize
+        let stav = null;
+        window.addEventListener('load', () => {
+            stav = new HolographicStav();
+            
+            document.getElementById('speakBtn').addEventListener('click', () => {
+                stav.startSpeaking();
+                setTimeout(() => stav.startListening(), 3000);
+            });
+            
+            document.getElementById('listenBtn').addEventListener('click', () => {
+                stav.startListening();
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

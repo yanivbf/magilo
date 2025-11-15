@@ -1,0 +1,119 @@
+=== הוראות תיקון ידני ===
+
+הקובץ marketplace.html מסובך מדי לתקון אוטומטי.
+
+כדי לתקן ידנית:
+
+1. פתח את public/marketplace.html
+2. חפש: async function sendStavMessage()
+3. מחק את כל התוכן של הפונקציה (מ-{ עד })
+4. הדבק את הקוד הפשוט הזה:
+
+```javascript
+async function sendStavMessage() {
+    const input = document.getElementById('stavChatInput');
+    const userMessage = input.value.trim();
+    
+    if (!userMessage) return;
+    
+    // מנע כפילויות
+    const now = Date.now();
+    if (userMessage === lastSentUserMessage && (now - lastSentUserMessageTime) < 10000) {
+        return;
+    }
+    
+    lastSentUserMessage = userMessage;
+    lastSentUserMessageTime = now;
+    
+    // הצג הודעת משתמש
+    addStavMessage(userMessage, true);
+    input.value = '';
+    
+    // הצג "מקלידה..."
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'stav-message bot stav-typing-indicator';
+    typingDiv.id = 'stav-typing-indicator';
+    typingDiv.innerHTML = `<div class="stav-loader"><div class="inner one"></div><div class="inner two"></div><div class="inner three"></div></div><span>סתיו מקלידה...</span>`;
+    
+    const messagesDiv = document.getElementById('stavChatMessages');
+    messagesDiv.appendChild(typingDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    try {
+        // קבל דפים
+        const pagesRes = await fetch('/api/pages/all');
+        const pagesData = await pagesRes.json();
+        const allPages = pagesData.pages || [];
+        
+        console.log(`📊 Got ${allPages.length} pages, sending to N8N...`);
+        
+        // שלח ל-N8N
+        const n8nRes = await fetch('/api/n8n-webhook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: userMessage,
+                context: 'stav-marketplace',
+                allPages: allPages.map(p => ({
+                    title: p.title,
+                    description: p.description,
+                    pageType: p.pageType,
+                    category: p.category,
+                    city: p.city,
+                    phone: p.phone,
+                    pageId: p.pageId,
+                    userId: p.userId
+                }))
+            })
+        });
+        
+        // הסר "מקלידה..."
+        document.getElementById('stav-typing-indicator')?.remove();
+        
+        if (!n8nRes.ok) {
+            addStavMessage('אופס, בעיה בחיבור לשרת. נסה שוב.', false);
+            return;
+        }
+        
+        const n8nData = await n8nRes.json();
+        console.log('✅ N8N response:', n8nData);
+        
+        // הצג תשובה
+        let botMessage = '';
+        
+        if (n8nData.pages && n8nData.pages.length > 0) {
+            botMessage = n8nData.message || `מצאתי ${n8nData.pages.length} אפשרויות:\n\n`;
+            n8nData.pages.slice(0, 5).forEach((p, i) => {
+                botMessage += `${i + 1}. ${p.title}`;
+                if (p.description) botMessage += ` - ${p.description}`;
+                if (p.city) botMessage += `\n   📍 ${p.city}`;
+                if (p.phone) botMessage += ` • 📞 ${p.phone}`;
+                botMessage += `\n\n`;
+            });
+        } else {
+            botMessage = n8nData.message || n8nData.response || 'לא הבנתי, תוכל לנסח אחרת?';
+        }
+        
+        addStavMessage(botMessage, false);
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        document.getElementById('stav-typing-indicator')?.remove();
+        addStavMessage('אופס, משהו השתבש. נסה שוב.', false);
+    }
+}
+```
+
+זהו! זה יעבוד!
+
+
+
+
+
+
+
+
+
+
+
+
