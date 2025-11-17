@@ -194,6 +194,12 @@ app.get('/page-creator/templates/page-templates.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'page-creator', 'templates', 'page-templates.js'));
 });
 
+// Get appointment template
+app.get('/page-creator/templates/appointment-template.html', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.sendFile(path.join(__dirname, 'page-creator', 'templates', 'appointment-template.html'));
+});
+
 // Configure multer for image uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -470,12 +476,21 @@ app.post('/api/create-page', async (req, res) => {
       productsCount: products.length
     });
     
+    // 🎯 Check if page has appointments calendar
+    const hasAppointmentsCalendar = pageHtml.includes('WORKING_DAYS') || 
+                                     pageHtml.includes('appointment') ||
+                                     pageHtml.includes('fetchAppointments') ||
+                                     pageHtml.includes('/api/appointments');
+    
     const metadataContent = {
       pageType,
       createdAt: new Date().toISOString(),
       fileName: fileNameWithoutExt,
       description: description || undefined,  // Only include if exists
       isActive: false,  // Default: not active until subscription is purchased
+      // 🎯 Add hasAppointments for serviceProvider pages with calendar
+      hasAppointments: (pageType === 'serviceProvider' && hasAppointmentsCalendar) || undefined,
+      appointments: (pageType === 'serviceProvider' && hasAppointmentsCalendar) || undefined,
       // Contact info
       phone: contactInfo.phone,
       phones: contactInfo.phones || [],
@@ -485,6 +500,12 @@ app.post('/api/create-page', async (req, res) => {
       // Products and prices
       products: products || []
     };
+    
+    console.log('🔍 Appointment detection:', { 
+      pageType, 
+      hasAppointmentsCalendar, 
+      willSetHasAppointments: pageType === 'serviceProvider' && hasAppointmentsCalendar 
+    });
     
     // Add messageInBottle specific data if available
     console.log(`🔍 DEBUG pageType: ${pageType}`);
@@ -1689,6 +1710,15 @@ app.post('/api/save-page', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // 🎯 Replace TEMP placeholders with real IDs (for appointment template)
+    const pageId = fileName.replace('.html', '');
+    if (content.includes('TEMP_USER_ID') || content.includes('TEMP_PAGE_ID')) {
+      console.log('📅 Replacing TEMP placeholders with real IDs');
+      content = content.replace(/TEMP_USER_ID/g, userId);
+      content = content.replace(/TEMP_PAGE_ID/g, pageId);
+      console.log('✅ Placeholders replaced');
+    }
+
     // Fix WhatsApp code for event pages
     content = fixEventPageWhatsApp(content, pageType);
     
@@ -1706,13 +1736,28 @@ app.post('/api/save-page', async (req, res) => {
       const metadataDir = path.join('output', userId, `${fileName.replace('.html', '')}_data`);
       await fs.ensureDir(metadataDir);
       
+      // 🎯 Check if content has appointments calendar
+      const hasAppointmentsCalendar = content.includes('WORKING_DAYS') || 
+                                       content.includes('appointment') ||
+                                       content.includes('fetchAppointments') ||
+                                       content.includes('/api/appointments');
+      
       const metadata = {
         pageType: pageType || 'other',
         pageName: pageName || '',
         expectedGuests: parseInt(req.body.expectedGuests) || 0,
         hasTickets: req.body.hasTickets === true || req.body.hasTickets === 'true' || req.body.hasTickets === 'on',
+        // 🎯 Add hasAppointments for serviceProvider pages with calendar
+        hasAppointments: (pageType === 'serviceProvider' && hasAppointmentsCalendar) ? true : undefined,
+        appointments: (pageType === 'serviceProvider' && hasAppointmentsCalendar) ? true : undefined,
         lastUpdated: new Date().toISOString()
       };
+      
+      console.log('🔍 /api/save-page - Appointment detection:', { 
+        pageType, 
+        hasAppointmentsCalendar, 
+        willSetHasAppointments: pageType === 'serviceProvider' && hasAppointmentsCalendar 
+      });
       
       // For service providers with appointment booking - save workingDays, workingHours, breaks, services
       if (req.body.workingDays) {

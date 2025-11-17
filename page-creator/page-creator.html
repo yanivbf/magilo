@@ -5138,12 +5138,76 @@ const SPECIAL_HOURS = ${JSON.stringify(specialHoursData)}; // Format: [{day: 'fr
 const SERVICES = []; // Will be loaded from metadata.json: [{name: 'תספורת', duration: 30, price: 100}]
 
 let selectedDate = new Date(); // Currently selected date
-let selectedService = null; // Currently selected service
 let appointments = []; // Will be fetched from API
+
+// 🎯 Load services from metadata.json (NEW!)
+async function loadServices() {
+    try {
+        const urlParts = window.location.pathname.split('/');
+        const userId = urlParts[urlParts.length - 2] || 'default';
+        const pageId = urlParts[urlParts.length - 1]?.replace('_html', '') || 'default';
+        
+        const response = await fetch(\`/output/\${userId}/\${pageId}_data/metadata.json\`);
+        if (response.ok) {
+            const metadata = await response.json();
+            SERVICES.length = 0;
+            if (metadata.services && Array.isArray(metadata.services)) {
+                SERVICES.push(...metadata.services);
+            }
+            console.log('✅ Loaded services:', SERVICES);
+            
+            // Populate service selector in form
+            const serviceSelector = document.getElementById('service-selector') || document.querySelector('select[name="service"]');
+            if (serviceSelector && SERVICES.length > 0) {
+                while (serviceSelector.options.length > 1) {
+                    serviceSelector.remove(1);
+                }
+                
+                SERVICES.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.name;
+                    option.textContent = \`\${service.name} - \${service.duration} דקות - ₪\${service.price}\`;
+                    option.dataset.duration = service.duration;
+                    option.dataset.price = service.price;
+                    serviceSelector.appendChild(option);
+                });
+                
+                // Show service info when selected
+                serviceSelector.addEventListener('change', function() {
+                    const serviceInfo = document.getElementById('service-info');
+                    if (this.value && serviceInfo) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const duration = parseInt(selectedOption.dataset.duration);
+                        const price = selectedOption.dataset.price;
+                        const slotsNeeded = Math.ceil(duration / 30);
+                        const blockedTime = slotsNeeded * 30;
+                        let timeInfo = \`⏱️ משך: <strong>\${duration} דקות</strong>\`;
+                        if (blockedTime > duration) {
+                            timeInfo += \` (יחסום \${blockedTime} דקות)\`;
+                        }
+                        serviceInfo.innerHTML = \`\${timeInfo} | 💰 מחיר: <strong>₪\${price}</strong>\`;
+                        serviceInfo.classList.remove('hidden');
+                    } else if (serviceInfo) {
+                        serviceInfo.classList.add('hidden');
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.error('❌ Failed to load services:', error);
+    }
+}
 
 // Initialize calendar - IMPROVED VERSION
 async function initCalendar() {
-    await fetchAppointments();
+    // Check if in preview mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPreview = urlParams.get('preview') === 'true';
+    
+    if (!isPreview) {
+        await fetchAppointments();
+        await loadServices();
+    }
     
     // Always start with today
     selectedDate = new Date();
@@ -5302,12 +5366,42 @@ function renderTimeSlots() {
     for (let hour = startHour; hour < endHour; hour++) {
         for (let min = 0; min < 60; min += 30) { // 30-minute slots
             const timeStr = \`\${hour.toString().padStart(2, '0')}:\${min.toString().padStart(2, '0')}\`;
+            const currentTimeMinutes = hour * 60 + min;
             
             // Check if in break time
             const isBreak = BREAKS.some(b => timeStr >= b.start && timeStr < b.end);
             
-            // Check if booked
-            const isBooked = dayAppointments.some(apt => apt.time === timeStr);
+            // 🎯 IMPROVED: Check if booked OR within a booked appointment's duration
+            let isBooked = false;
+            let bookedReason = '';
+            
+            for (const apt of dayAppointments) {
+                if (apt.status === 'cancelled') continue; // Skip cancelled appointments
+                
+                // Calculate appointment duration and end time
+                const [aptHour, aptMin] = apt.time.split(':').map(Number);
+                const aptStartMinutes = aptHour * 60 + aptMin;
+                
+                // Get duration (from appointment itself, or from service, or default 30)
+                let aptDuration = apt.duration || 30;
+                if (!apt.duration && apt.service) {
+                    const aptService = SERVICES.find(s => s.name === apt.service);
+                    if (aptService) {
+                        aptDuration = aptService.duration;
+                    }
+                }
+                
+                // 🎯 Round up to nearest 30 minutes (so 45 min blocks 60 min)
+                const blockedDuration = Math.ceil(aptDuration / 30) * 30;
+                const aptEndMinutes = aptStartMinutes + blockedDuration;
+                
+                // Check if current slot is within this appointment
+                if (currentTimeMinutes >= aptStartMinutes && currentTimeMinutes < aptEndMinutes) {
+                    isBooked = true;
+                    bookedReason = currentTimeMinutes === aptStartMinutes ? 'start' : 'middle';
+                    break;
+                }
+            }
             
             // Create slot button
             const slot = document.createElement('button');
@@ -5320,23 +5414,34 @@ function renderTimeSlots() {
             } else if (isBooked) {
                 slot.className += ' booked';
                 slot.disabled = true;
-                slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">🔴 תפוס</div>\`;
+                const statusText = bookedReason === 'middle' ? '⏱️ באמצע תור' : '🔴 תפוס';
+                slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">\${statusText}</div>\`;
             } else {
-                slot.className += ' available';
-                slot.dataset.time = timeStr;
+                // 🎯 Check if current time is past (can't book in the past)
+                const now = new Date();
+                const slotDateTime = new Date(selectedDate);
+                slotDateTime.setHours(hour, min, 0, 0);
                 
-                // Highlight if this is a popular time slot (morning/afternoon)
-                const hour = parseInt(timeStr.split(':')[0]);
-                const isPopularTime = (hour >= 9 && hour <= 11) || (hour >= 14 && hour <= 16);
-                const popularIcon = isPopularTime ? '⭐ ' : '';
-                
-                slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">\${popularIcon}🟢 פנוי</div>\`;
-                slot.onclick = () => selectTimeSlot(timeStr);
-                
-                // Add hover effect for popular times
-                if (isPopularTime) {
-                    slot.style.borderColor = '#f59e0b';
-                    slot.style.boxShadow = '0 0 0 2px rgba(245, 158, 11, 0.2)';
+                if (slotDateTime < now) {
+                    slot.className += ' booked';
+                    slot.disabled = true;
+                    slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">⚫ עבר</div>\`;
+                } else {
+                    slot.className += ' available';
+                    slot.dataset.time = timeStr;
+                    slot.dataset.date = dateStr;
+                    
+                    const slotHour = parseInt(timeStr.split(':')[0]);
+                    const isPopularTime = (slotHour >= 9 && slotHour <= 11) || (slotHour >= 14 && slotHour <= 16);
+                    const popularIcon = isPopularTime ? '⭐ ' : '';
+                    
+                    slot.innerHTML = \`<div class="time">\${timeStr}</div><div class="status">\${popularIcon}🟢 פנוי</div>\`;
+                    slot.onclick = () => selectTimeSlot(timeStr);
+                    
+                    if (isPopularTime) {
+                        slot.style.borderColor = '#f59e0b';
+                        slot.style.boxShadow = '0 0 0 2px rgba(245, 158, 11, 0.2)';
+                    }
                 }
             }
             
@@ -5555,9 +5660,16 @@ function initAIBot() {
         <input type="text" name="name" placeholder="שם מלא" required class="px-4 py-3 border rounded-lg">
         <input type="tel" name="phone" placeholder="טלפון" required class="px-4 py-3 border rounded-lg">
         <input type="email" name="email" placeholder="אימייל" class="px-4 py-3 border rounded-lg">
-        <select name="service" class="px-4 py-3 border rounded-lg">
-            <option>בחר שירות</option>
-        </select>
+        
+        <!-- 💇 Service Selector (will be populated by loadServices()) -->
+        <div class="col-span-full">
+            <label for="service-selector" class="block text-base font-bold text-gray-800 mb-2">💇 בחר שירות:</label>
+            <select id="service-selector" name="service" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base font-semibold focus:border-purple-500 focus:outline-none" required>
+                <option value="">בחר שירות</option>
+                <!-- Options will be added by loadServices() from metadata.json -->
+            </select>
+            <p id="service-info" class="mt-2 text-sm text-gray-600 hidden"></p>
+        </div>
     </div>
     <textarea name="notes" placeholder="הערות" class="w-full px-4 py-3 border rounded-lg mt-4"></textarea>
     <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold mt-4 hover:bg-purple-700">
@@ -9282,6 +9394,125 @@ ${JSON.stringify({
                         console.log('✅ Local generation successful for messageInBottle');
                     } else {
                         throw new Error('Local generation failed');
+                    }
+                } else if (state.selectedPageType === 'serviceProvider' && (data.enableAppointmentBooking === true || data.enableAppointmentBooking === 'on')) {
+                    // 🎯 USE READY-MADE TEMPLATE FOR APPOINTMENT PAGES!
+                    console.log('📅 Using appointment template for serviceProvider with calendar');
+                    
+                    try {
+                        // 🎯 COLLECT workDays from checkboxes FIRST
+                        const workDaysCheckboxes = document.querySelectorAll('input[name="workDays"]:checked');
+                        const collectedWorkDays = Array.from(workDaysCheckboxes).map(cb => cb.value);
+                        console.log('🔍 Collected workDays from form:', collectedWorkDays);
+                        
+                        // Override data.workDays with collected values
+                        if (collectedWorkDays.length > 0) {
+                            data.workDays = collectedWorkDays;
+                        }
+                        
+                        // Load template
+                        const templateResponse = await fetch('/page-creator/templates/appointment-template.html');
+                        if (!templateResponse.ok) throw new Error('Failed to load template');
+                        
+                        let templateHtml = await templateResponse.text();
+                        console.log('✅ Template loaded successfully');
+                        
+                        // Replace placeholders
+                        const businessName = data.businessName || data.name || 'עסק';
+                        const businessDescription = data.description || 'שירותים מקצועיים';
+                        const aboutText = data.about || data.description || 'אנחנו מספקים שירותים מקצועיים ברמה הגבוהה ביותר';
+                        const phone = data.phone || '';
+                        const email = data.email || '';
+                        const address = data.address || '';
+                        const currentYear = new Date().getFullYear();
+                        
+                        // Working days and hours
+                        console.log('🔍 DEBUG - data.workDays:', data.workDays, 'type:', typeof data.workDays);
+                        
+                        let workDaysArray = [];
+                        if (Array.isArray(data.workDays)) {
+                            workDaysArray = data.workDays;
+                        } else if (typeof data.workDays === 'string') {
+                            workDaysArray = data.workDays.split(',');
+                        } else {
+                            // Default to Sunday-Friday
+                            workDaysArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+                        }
+                        
+                        console.log('🔍 DEBUG - workDaysArray:', workDaysArray);
+                        
+                        const dayMapping = {
+                            'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
+                            'thursday': 4, 'friday': 5, 'saturday': 6
+                        };
+                        const workDaysNumbers = workDaysArray.map(day => dayMapping[day.toString().toLowerCase()]).filter(n => n !== undefined);
+                        
+                        // If empty, default to Sunday-Friday
+                        if (workDaysNumbers.length === 0) {
+                            workDaysNumbers.push(0, 1, 2, 3, 4, 5);
+                        }
+                        
+                        console.log('🔍 DEBUG - workDaysNumbers:', workDaysNumbers);
+                        
+                        const workingHours = {
+                            start: data.workStartTime || '09:00',
+                            end: data.workEndTime || '17:00'
+                        };
+                        
+                        // Breaks
+                        let breaksData = [];
+                        if (data.breakStart && Array.isArray(data.breakStart)) {
+                            for (let i = 0; i < data.breakStart.length; i++) {
+                                if (data.breakStart[i] && data.breakEnd[i]) {
+                                    breaksData.push({ 
+                                        start: data.breakStart[i], 
+                                        end: data.breakEnd[i] 
+                                    });
+                                }
+                            }
+                        }
+                        
+                        // Services
+                        let servicesData = [];
+                        if (data.serviceName && Array.isArray(data.serviceName)) {
+                            for (let i = 0; i < data.serviceName.length; i++) {
+                                if (data.serviceName[i] && data.serviceDuration && data.serviceDuration[i]) {
+                                    servicesData.push({
+                                        name: data.serviceName[i],
+                                        duration: parseInt(data.serviceDuration[i]) || 30,
+                                        price: parseFloat(data.servicePrice[i]) || 0
+                                    });
+                                }
+                            }
+                        }
+                        
+                        // Generate placeholder userId and pageId (will be replaced when saved)
+                        const tempUserId = 'TEMP_USER_ID';
+                        const tempPageId = 'TEMP_PAGE_ID';
+                        
+                        // Replace all placeholders
+                        htmlContent = templateHtml
+                            .replace(/\{\{BUSINESS_NAME\}\}/g, businessName)
+                            .replace(/\{\{BUSINESS_DESCRIPTION\}\}/g, businessDescription)
+                            .replace(/\{\{ABOUT_TEXT\}\}/g, aboutText)
+                            .replace(/\{\{PHONE\}\}/g, phone)
+                            .replace(/\{\{EMAIL\}\}/g, email)
+                            .replace(/\{\{ADDRESS\}\}/g, address)
+                            .replace(/\{\{CURRENT_YEAR\}\}/g, currentYear)
+                            .replace(/\{\{USER_ID\}\}/g, tempUserId)
+                            .replace(/\{\{PAGE_ID\}\}/g, tempPageId)
+                            .replace(/\{\{WORKING_DAYS\}\}/g, JSON.stringify(workDaysNumbers))
+                            .replace(/\{\{WORKING_HOURS\}\}/g, JSON.stringify(workingHours))
+                            .replace(/\{\{BREAKS\}\}/g, JSON.stringify(breaksData));
+                        
+                        console.log('✅ Template placeholders replaced');
+                        console.log('📊 Services:', servicesData.length);
+                        console.log('📊 Working days:', workDaysNumbers);
+                        console.log('📊 Working hours:', workingHours);
+                        
+                    } catch (templateError) {
+                        console.error('❌ Template loading failed, falling back to N8N:', templateError);
+                        htmlContent = await generateHtmlFromApi(masterPrompt);
                     }
                 } else {
                     htmlContent = await generateHtmlFromApi(masterPrompt);
