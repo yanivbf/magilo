@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 <!DOCTYPE html>
 <!-- The lang and dir attributes will be set dynamically by JavaScript -->
 
@@ -4991,6 +4991,24 @@ aiBotBtn.addEventListener('mouseleave', function() {
                     }
                 }
                 
+                // אסוף רשימת שירותים
+                let servicesData = [];
+                let servicesText = '';
+                if (data.serviceName && Array.isArray(data.serviceName)) {
+                    for (let i = 0; i < data.serviceName.length; i++) {
+                        if (data.serviceName[i] && data.serviceDuration && data.serviceDuration[i]) {
+                            servicesData.push({
+                                name: data.serviceName[i],
+                                duration: parseInt(data.serviceDuration[i]) || 30,
+                                price: parseFloat(data.servicePrice[i]) || 0
+                            });
+                        }
+                    }
+                    if (servicesData.length > 0) {
+                        servicesText = `\n- **SERVICES (רשימת שירותים):** ${servicesData.map(s => `${s.name} (${s.duration} דקות, ₪${s.price})`).join(', ')}`;
+                    }
+                }
+                
                 finalStructurePrompt += `\n\n## 📅 APPOINTMENT BOOKING SYSTEM (MANDATORY - HIGHEST PRIORITY)
 
 **🎯 GOAL:** Create the BEST appointment calendar interface with perfect UX
@@ -5117,8 +5135,10 @@ const WORKING_DAYS = [${workDaysNumbers.join(', ')}]; // Day numbers (0=Sunday)
 const WORKING_HOURS = { start: '${startTime}', end: '${endTime}' };
 const BREAKS = ${JSON.stringify(breaksData)}; // Format: [{start: '13:00', end: '14:00', desc: 'הפסקת צהריים'}]
 const SPECIAL_HOURS = ${JSON.stringify(specialHoursData)}; // Format: [{day: 'friday', dayHebrew: 'שישי', start: '09:00', end: '13:00'}]
+const SERVICES = []; // Will be loaded from metadata.json: [{name: 'תספורת', duration: 30, price: 100}]
 
 let selectedDate = new Date(); // Currently selected date
+let selectedService = null; // Currently selected service
 let appointments = []; // Will be fetched from API
 
 // Initialize calendar - IMPROVED VERSION
@@ -7608,6 +7628,30 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                             </button>
                         </div>
 
+                        <!-- 💇 רשימת שירותים -->
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-300 mt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl">💇</span>
+                                <div>
+                                    <h4 class="font-semibold text-purple-900">רשימת שירותים</h4>
+                                    <p class="text-xs text-purple-700">הגדר את השירותים שאתה מציע (תספורת, זקן, צבע וכו')</p>
+                                </div>
+                            </div>
+                            
+                            <div id="services-list" class="space-y-3">
+                                <!-- Service rows will be added here by JavaScript -->
+                            </div>
+                            
+                            <button type="button" onclick="addServiceRow()" class="mt-3 w-full px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 font-semibold">
+                                <span class="text-lg">➕</span>
+                                <span>הוסף שירות</span>
+                            </button>
+                            
+                            <div class="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                                <strong>💡 דוגמה:</strong> תספורת גברים (30 דקות, ₪80) • תספורת זקן (45 דקות, ₪120) • צבע שיער (90 דקות, ₪250)
+                            </div>
+                        </div>
+
                         <div class="bg-blue-50 p-3 rounded-lg mt-4">
                             <p class="text-sm text-blue-800 mb-2">
                                 <strong>✅ כלול אוטומטית במערכת:</strong>
@@ -8805,7 +8849,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             ui.pageTypeTitle.textContent = template.title;
 
             ui.mainNameLabel.textContent = template.label;
-
+            
             ui.guidanceBubble.innerHTML = template.guidance;
 
             ui.guidanceBubble.classList.remove('hidden');
@@ -12603,6 +12647,69 @@ ${data.pageType === 'restaurantMenu' ? '<script src="/restaurant-menu.js"><' + '
         // Make injectStoreScripts available globally
         window.injectStoreScripts = injectStoreScripts;
         console.log('✅ injectStoreScripts registered globally');
+        
+        // 💇 Service Management Functions
+        window.addServiceRow = function() {
+            const container = document.getElementById('services-list');
+            if (!container) {
+                console.error('❌ services-list container not found');
+                return;
+            }
+            
+            const row = document.createElement('div');
+            row.className = 'service-row flex gap-3 items-start bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all border-2 border-purple-100';
+            row.innerHTML = `
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">שם השירות</label>
+                    <input 
+                        type="text" 
+                        name="serviceName[]" 
+                        placeholder="למשל: תספורת גברים" 
+                        class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all text-sm" 
+                        required
+                    />
+                </div>
+                <div class="w-32">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">משך (דקות)</label>
+                    <input 
+                        type="number" 
+                        name="serviceDuration[]" 
+                        placeholder="30" 
+                        min="15" 
+                        step="15" 
+                        value="30" 
+                        class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all text-sm" 
+                        required
+                    />
+                </div>
+                <div class="w-32">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">מחיר (₪)</label>
+                    <input 
+                        type="number" 
+                        name="servicePrice[]" 
+                        placeholder="100" 
+                        min="0" 
+                        step="10" 
+                        value="80" 
+                        class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all text-sm" 
+                        required
+                    />
+                </div>
+                <button 
+                    type="button" 
+                    onclick="this.closest('.service-row').remove()" 
+                    class="mt-5 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-sm hover:shadow-md text-sm"
+                    title="מחק שירות"
+                >
+                    🗑️
+                </button>
+            `;
+            container.appendChild(row);
+            console.log('✅ Added new service row');
+        }
+        
+        console.log('✅ addServiceRow function registered globally');
+        
         </script>
 
 </html>

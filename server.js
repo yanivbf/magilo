@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs-extra');
@@ -1714,6 +1714,20 @@ app.post('/api/save-page', async (req, res) => {
         lastUpdated: new Date().toISOString()
       };
       
+      // For service providers with appointment booking - save workingDays, workingHours, breaks, services
+      if (req.body.workingDays) {
+        metadata.workingDays = req.body.workingDays;
+      }
+      if (req.body.workingHours) {
+        metadata.workingHours = req.body.workingHours;
+      }
+      if (req.body.breaks) {
+        metadata.breaks = req.body.breaks;
+      }
+      if (req.body.services) {
+        metadata.services = req.body.services;
+      }
+      
         // Extract products from store pages for bot access - LIVE VERSION
         if (pageType === 'store') {
           // Force empty products to ensure bot reads from live page
@@ -1731,6 +1745,43 @@ app.post('/api/save-page', async (req, res) => {
   } catch (error) {
     console.error('Error saving page:', error);
     res.status(500).json({ error: 'Failed to save page' });
+  }
+});
+
+// Update services for an existing page
+app.put('/api/update-services/:userId/:pageId', async (req, res) => {
+  try {
+    const { userId, pageId } = req.params;
+    const { services } = req.body;
+    
+    if (!userId || !pageId) {
+      return res.status(400).json({ error: 'Missing userId or pageId' });
+    }
+    
+    // Load existing metadata
+    const metadataDir = path.join('output', userId, `${pageId.replace('.html', '')}_data`);
+    const metadataPath = path.join(metadataDir, 'metadata.json');
+    
+    if (!await fs.pathExists(metadataPath)) {
+      return res.status(404).json({ error: 'Metadata file not found' });
+    }
+    
+    const metadata = await fs.readJSON(metadataPath);
+    
+    // Update services
+    metadata.services = services || [];
+    metadata.lastUpdated = new Date().toISOString();
+    
+    // Save updated metadata
+    await fs.writeJSON(metadataPath, metadata, { spaces: 2, encoding: 'utf8' });
+    
+    console.log('✅ Services updated for', pageId, ':', services);
+    
+    res.json({ success: true, message: 'Services updated successfully', services });
+    
+  } catch (error) {
+    console.error('Error updating services:', error);
+    res.status(500).json({ error: 'Failed to update services' });
   }
 });
 
@@ -7152,6 +7203,94 @@ app.get('/api/stav/status', (req, res) => {
     console.error('Error getting Stav status:', error);
     // Default to active if error
     res.json({ active: true, enabled: true });
+  }
+});
+
+// ============================================
+// DAY SETTINGS API
+// ============================================
+
+// Manage day settings (close day, block slots, reopen)
+app.post('/api/day-settings', async (req, res) => {
+  try {
+    const { userId, pageId, date, action, startTime, endTime } = req.body;
+    
+    if (!userId || !pageId || !date || !action) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const settingsDir = path.join('output', userId, `${pageId.replace('.html', '')}_data`);
+    const settingsPath = path.join(settingsDir, 'day-settings.json');
+    
+    // Ensure directory exists
+    await fs.ensureDir(settingsDir);
+    
+    // Load existing settings
+    let settings = {};
+    if (await fs.pathExists(settingsPath)) {
+      settings = await fs.readJSON(settingsPath);
+    }
+    
+    // Handle different actions
+    if (action === 'close') {
+      // Close entire day
+      settings[date] = { closed: true };
+      console.log(`✅ Day ${date} closed for ${pageId}`);
+      
+    } else if (action === 'block') {
+      // Block specific time slots
+      if (!startTime || !endTime) {
+        return res.status(400).json({ error: 'Missing startTime or endTime for block action' });
+      }
+      
+      if (!settings[date]) {
+        settings[date] = {};
+      }
+      
+      if (!settings[date].blockedSlots) {
+        settings[date].blockedSlots = [];
+      }
+      
+      settings[date].blockedSlots.push({ start: startTime, end: endTime });
+      console.log(`✅ Blocked ${startTime}-${endTime} on ${date} for ${pageId}`);
+      
+    } else if (action === 'reopen') {
+      // Reopen day (remove all blocks)
+      delete settings[date];
+      console.log(`✅ Day ${date} reopened for ${pageId}`);
+      
+    } else {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+    
+    // Save settings
+    await fs.writeJSON(settingsPath, settings, { spaces: 2, encoding: 'utf8' });
+    
+    res.json({ success: true, message: 'Day settings updated successfully' });
+    
+  } catch (error) {
+    console.error('Error updating day settings:', error);
+    res.status(500).json({ error: 'Failed to update day settings' });
+  }
+});
+
+// Get day settings for a specific page
+app.get('/api/day-settings/:userId/:pageId', async (req, res) => {
+  try {
+    const { userId, pageId } = req.params;
+    
+    const settingsPath = path.join('output', userId, `${pageId.replace('.html', '')}_data`, 'day-settings.json');
+    
+    if (await fs.pathExists(settingsPath)) {
+      const settings = await fs.readJSON(settingsPath);
+      res.json(settings);
+    } else {
+      res.json({});
+    }
+    
+  } catch (error) {
+    console.error('Error loading day settings:', error);
+    res.status(500).json({ error: 'Failed to load day settings' });
   }
 });
 
