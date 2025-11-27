@@ -38,7 +38,7 @@
         .view { display: none; }
 
         .view.active { display: block; }
-
+        
         .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
 
         .fade-out { animation: fadeOut 0.5s ease-in-out forwards; }
@@ -254,6 +254,24 @@
 
             border-radius: 8px;
 
+        }
+        
+        /* Force full width preview */
+        #preview-view {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        #preview-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+        }
+        
+        #preview-iframe {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 100% !important;
         }
 
         .color-picker-wrapper { position: relative; }
@@ -2472,7 +2490,7 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
                 img: "https://images.unsplash.com/photo-1556745753-b2904692b3cd?q=80&w=2073&auto=format&fit=crop",
 
-                fields: ['serviceDetails', 'websiteLink', 'appointmentBooking', 'branches'],
+                fields: ['websiteLink', 'appointmentBooking', 'branches'],
 
                 structurePrompt: `Build a professional service provider page with appointment booking functionality.
 
@@ -2672,21 +2690,61 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
 
             },
 
-            pricingTable: {
+            pricing: {
 
                 icon: "dollar-sign",
 
                 t: {
 
-                    en: { title: "Pricing Table", prompt: "Create a 'Pricing Table' section (id='pricing') with 3 different packages (e.g., Basic, Popular, Premium), including a list of features and a price for each." },
+                    en: { title: "Pricing", prompt: "Create a 'Pricing' section (id='pricing') with 3 different packages (e.g., Basic, Popular, Premium), including a list of features and a price for each." },
 
-                    he: { title: "טבלת מחירים", prompt: "צור מקטע 'טבלת מחירים' (id='pricing') עם 3 חבילות שונות (לדוגמה: בסיסית, פופולרית, פרימיום), כולל רשימת תכונות ומחיר לכל אחת." },
+                    he: { title: "מחירון", prompt: "צור מקטע 'מחירון' (id='pricing') עם 3 חבילות שונות (לדוגמה: בסיסית, פופולרית, פרימיום), כולל רשימת תכונות ומחיר לכל אחת." },
 
                     ar: { title: "جدول الأسعار", prompt: "أنشئ قسم 'جدول الأسعار' (id='pricing') مع 3 حزم مختلفة (مثل: أساسية، شائعة، مميزة)، بما في ذلك قائمة بالميزات وسعر لكل منها." },
 
                     es: { title: "Tabla de Precios", prompt: "Crea una sección de 'Tabla de Precios' (id='pricing') con 3 paquetes diferentes (por ejemplo, Básico, Popular, Premium), incluyendo una lista de características y un precio para cada uno." },
 
                     fr: { title: "Tableau des Prix", prompt: "Créez une section 'Tableau des Prix' (id='pricing') avec 3 forfaits différents (par exemple, Basique, Populaire, Premium), incluant une liste de fonctionnalités et un prix pour chacun." }
+
+                }
+
+            },
+
+            services: {
+
+                icon: "briefcase",
+
+                t: {
+
+                    en: { title: "Services", prompt: "Create a 'Services' section (id='services') with a list of services offered." },
+
+                    he: { title: "שירותים", prompt: "צור מקטע 'שירותים' (id='services') עם רשימת שירותים." },
+
+                    ar: { title: "الخدمات", prompt: "أنشئ قسم 'الخدمات' (id='services') مع قائمة بالخدمات المقدمة." },
+
+                    es: { title: "Servicios", prompt: "Crea una sección de 'Servicios' (id='services') con una lista de servicios ofrecidos." },
+
+                    fr: { title: "Services", prompt: "Créez une section 'Services' (id='services') avec une liste de services offerts." }
+
+                }
+
+            },
+
+            about: {
+
+                icon: "info",
+
+                t: {
+
+                    en: { title: "About", prompt: "Create an 'About' section (id='about') with information about the business." },
+
+                    he: { title: "אודות", prompt: "צור מקטע 'אודות' (id='about') עם מידע על העסק." },
+
+                    ar: { title: "حول", prompt: "أنشئ قسم 'حول' (id='about') مع معلومات حول الأعمال." },
+
+                    es: { title: "Acerca de", prompt: "Crea una sección 'Acerca de' (id='about') con información sobre el negocio." },
+
+                    fr: { title: "À propos", prompt: "Créez une section 'À propos' (id='about') avec des informations sur l'entreprise." }
 
                 }
 
@@ -7486,7 +7544,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
                         <div class="flex items-center">
                             <input type="checkbox" name="enableAppointmentBooking" id="enableAppointmentBooking" 
-                                   class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600" checked>
+                                   class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600">
                             <label for="enableAppointmentBooking" class="ms-2 block text-sm text-gray-900">הפעל מערכת קביעת תורים</label>
                         </div>
 
@@ -7542,7 +7600,8 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                             
                             <div id="special-hours-container" class="space-y-3">
                                 <!-- שעות מיוחדות ראשונות -->
-                                <div class="special-hours-item bg-white p-3 rounded border border-blue-200">
+                                <div class="special-hours-item bg-white p-3 rounded border border-blue-200 relative">
+                                    <button type="button" class="remove-special-hours-btn absolute top-2 left-2 text-red-500 hover:text-red-700 text-xl font-bold" title="הסר שעות מיוחדות">×</button>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">📅 יום</label>
@@ -7567,6 +7626,12 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- תצוגת סיכום השעות המיוחדות -->
+                            <div id="special-hours-summary" class="mt-4 p-3 bg-green-50 rounded border border-green-200 hidden">
+                                <h5 class="font-semibold text-green-900 mb-2">✅ שעות מיוחדות שהוגדרו:</h5>
+                                <div id="special-hours-list" class="text-sm text-green-800 space-y-1"></div>
                             </div>
                             
                             <button type="button" id="add-special-hours-btn" class="mt-3 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">
@@ -7606,6 +7671,41 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
                             <button type="button" id="add-break-btn" class="mt-3 px-3 py-1 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 transition">
                                 ➕ הוסף הפסקה נוספת
                             </button>
+                        </div>
+
+                        <!-- ניהול שירותים -->
+                        <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200 mt-4">
+                            <h4 class="font-semibold text-green-900 mb-3">🔧 ניהול שירותים</h4>
+                            <p class="text-xs text-green-700 mb-3">הוסף את השירותים שלך עם משך זמן ומחיר (למשל: לק 30 דק, גל ידיים רגליים 45 דק)</p>
+                            
+                            <div id="services-container" class="space-y-3">
+                                <!-- שירות ראשון -->
+                                <div class="service-item bg-white p-3 rounded border border-green-200 relative">
+                                    <button type="button" class="remove-service-btn absolute top-2 left-2 text-red-500 hover:text-red-700 text-xl font-bold" title="הסר שירות">×</button>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">🔧 שם השירות</label>
+                                            <input type="text" name="serviceName[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="למשל: לק, גל ידיים רגליים">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">⏱️ משך (דקות)</label>
+                                            <input type="number" name="serviceDuration[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="30" min="1" value="30">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">💰 מחיר (₪)</label>
+                                            <input type="number" name="servicePrice[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="0" min="0" step="0.01" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" id="add-service-btn" class="mt-3 px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition">
+                                ➕ הוסף שירות נוסף
+                            </button>
+                            
+                            <div class="mt-3 p-2 bg-green-100 rounded text-xs text-green-800">
+                                <strong>💡 דוגמה:</strong> לק 30 דק ₪50, גל ידיים רגליים 45 דק ₪80
+                            </div>
                         </div>
 
                         <div class="bg-blue-50 p-3 rounded-lg mt-4">
@@ -8805,7 +8905,7 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             ui.pageTypeTitle.textContent = template.title;
 
             ui.mainNameLabel.textContent = template.label;
-
+            
             ui.guidanceBubble.innerHTML = template.guidance;
 
             ui.guidanceBubble.classList.remove('hidden');
@@ -8925,7 +9025,15 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
                 const optionsGrid = ui.optionalSectionsFieldset.querySelector('.grid');
 
-                optionsGrid.innerHTML = Object.entries(availableSections).map(([key, sectionData]) => {
+                // Filter out 'services' section for serviceProvider - services should only be in appointment booking form
+                const sectionsToShow = Object.entries(availableSections).filter(([key, sectionData]) => {
+                    if (state.selectedPageType === 'serviceProvider' && key === 'services') {
+                        return false; // Hide services for serviceProvider
+                    }
+                    return true;
+                });
+
+                optionsGrid.innerHTML = sectionsToShow.map(([key, sectionData]) => {
 
                      const section = sectionData.t[state.currentLanguage];
 
@@ -9005,6 +9113,75 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
             const formData = new FormData(ui.detailsForm);
 
             let data = Object.fromEntries(formData.entries());
+            
+            // Collect services for serviceProvider pages (arrays need special handling)
+            if (state.selectedPageType === 'serviceProvider' || state.selectedPageType === 'appointment') {
+                console.log('🔍 Collecting services for serviceProvider page...');
+                const serviceNames = formData.getAll('serviceName[]');
+                const serviceDurations = formData.getAll('serviceDuration[]');
+                const servicePrices = formData.getAll('servicePrice[]');
+                
+                console.log('📋 Services found:', {
+                    names: serviceNames,
+                    durations: serviceDurations,
+                    prices: servicePrices
+                });
+                
+                // Store as arrays in data
+                data.serviceName = serviceNames;
+                data.serviceDuration = serviceDurations;
+                data.servicePrice = servicePrices;
+                
+                console.log('✅ Services collected:', data.serviceName.length, 'services');
+                
+                // IMPORTANT: Collect enableAppointmentBooking checkbox value
+                const enableAppointmentBookingCheckbox = document.getElementById('enableAppointmentBooking');
+                if (enableAppointmentBookingCheckbox) {
+                    data.enableAppointmentBooking = enableAppointmentBookingCheckbox.checked;
+                    console.log('📅 enableAppointmentBooking checkbox value:', data.enableAppointmentBooking);
+                } else {
+                    console.warn('⚠️ enableAppointmentBooking checkbox not found!');
+                    data.enableAppointmentBooking = false; // Default to false if not found
+                }
+                
+                // IMPORTANT: Collect working days as array (checkboxes with same name)
+                const workDaysArray = formData.getAll('workDays');
+                data.workDays = workDaysArray;
+                console.log('📅 Working days collected from FormData:', workDaysArray, 'length:', workDaysArray.length);
+                
+                // Debug: Check all checkboxes directly
+                const allWorkDayCheckboxes = document.querySelectorAll('input[name="workDays"]');
+                const checkedDays = [];
+                allWorkDayCheckboxes.forEach(cb => {
+                    console.log(`📅 Checkbox ${cb.value}: checked=${cb.checked}`);
+                    if (cb.checked) checkedDays.push(cb.value);
+                });
+                console.log('📅 Checked days from DOM:', checkedDays);
+                
+                // If FormData didn't get all values, use DOM values
+                if (workDaysArray.length === 0 || workDaysArray.length < checkedDays.length) {
+                    console.log('⚠️ Using DOM values instead of FormData');
+                    data.workDays = checkedDays;
+                }
+                
+                // Collect special hours
+                const specialDays = formData.getAll('specialDay[]');
+                const specialStartTimes = formData.getAll('specialStartTime[]');
+                const specialEndTimes = formData.getAll('specialEndTime[]');
+                data.specialDay = specialDays;
+                data.specialStartTime = specialStartTimes;
+                data.specialEndTime = specialEndTimes;
+                console.log('🕐 Special hours collected:', { days: specialDays, starts: specialStartTimes, ends: specialEndTimes });
+                
+                // Collect breaks
+                const breakStarts = formData.getAll('breakStart[]');
+                const breakEnds = formData.getAll('breakEnd[]');
+                const breakDescs = formData.getAll('breakDesc[]');
+                data.breakStart = breakStarts;
+                data.breakEnd = breakEnds;
+                data.breakDesc = breakDescs;
+                console.log('☕ Breaks collected:', { starts: breakStarts, ends: breakEnds, descs: breakDescs });
+            }
 
             // נגישות, AI Bot ו-WhatsApp תמיד מופיעים
             data.addAccessibility = true;
@@ -9178,12 +9355,14 @@ Your response must contain only HTML code. Start directly with \`<!DOCTYPE html>
 
             
 
-            switchView(ui.formView, ui.previewView);
+            // setLoading already does switchView, so don't do it twice
+            // switchView(ui.formView, ui.previewView);
 
 
 
             try {
                 let htmlContent;
+                let usedTemplateSystem = false; // Flag to prevent duplicate script injection for template-based pages
                 
                 // Force local generation for messageInBottle to ensure data is included
                 if (state.selectedPageType === 'messageInBottle') {
@@ -9240,11 +9419,76 @@ ${JSON.stringify({
                         throw new Error('Local generation failed');
                     }
                 } else {
-                    htmlContent = await generateHtmlFromApi(masterPrompt);
+                    // For serviceProvider and onlineStore, use template-based generation
+                    if (state.selectedPageType === 'serviceProvider' || state.selectedPageType === 'appointment' || state.selectedPageType === 'onlineStore' || state.selectedPageType === 'store') {
+                        console.log('🎯 Using template-based generation for', state.selectedPageType);
+                        usedTemplateSystem = true; // Mark that we used template system - prevents old store scripts injection
+                        
+                        // Collect optional sections - ONLY checked ones
+                        const optionalSections = [];
+                        document.querySelectorAll('input[name="optionalSections"]:checked').forEach(checkbox => {
+                            optionalSections.push(checkbox.value);
+                        });
+                        console.log('📋 Optional sections collected from form:', optionalSections);
+                        
+                        try {
+                            const response = await fetch('/api/create-page-with-template', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userId: data.userId || 'temp_user',
+                                    pageType: state.selectedPageType,
+                                    formData: data,
+                                    optionalSections: optionalSections
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                const result = await response.json();
+                                console.log('✅ Template-based generation result:', result);
+                                
+                                // Fetch the actual HTML from the pageUrl
+                                const pageResponse = await fetch(result.pageUrl);
+                                if (pageResponse.ok) {
+                                    htmlContent = await pageResponse.text();
+                                    console.log('✅ Loaded HTML from template system');
+                                    // Note: Store template already has its own cart/checkout JS built-in
+                                    // No need to inject additional scripts
+                                } else {
+                                    throw new Error('Failed to load generated page');
+                                }
+                            } else {
+                                throw new Error('Template generation failed');
+                            }
+                        } catch (error) {
+                            console.error('❌ Template generation error:', error);
+                            throw new Error(`יצירת דף נכשלה: ${error.message}. אנא בדוק את הפרטים בטופס ונסה שוב.`);
+                        }
+                    } else {
+                        // For other page types (onlineStore, etc.), use local generation
+                        console.log('🎯 Using local generation for page type:', state.selectedPageType);
+                        const localResponse = await fetch('/api/generate-html', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                prompt: masterPrompt,
+                                pageType: state.selectedPageType
+                            })
+                        });
+                        
+                        if (localResponse.ok) {
+                            const localData = await localResponse.json();
+                            htmlContent = localData.html;
+                            console.log('✅ Local generation successful');
+                        } else {
+                            throw new Error('יצירת דף נכשלה. אנא נסה שוב.');
+                        }
+                    }
                 }
 
-                    // הוסף קישורים לתחתית הדף (לא למסר בבקבוק)
-                    let finalHtml = state.selectedPageType === 'messageInBottle' ? htmlContent : addFooterLinks(htmlContent, data);
+                    // הוסף קישורים לתחתית הדף (לא למסר בבקבוק, נותן שירותים או חנות - כי כבר יש להם פוטר)
+                    const skipFooterTypes = ['messageInBottle', 'serviceProvider', 'onlineStore', 'store'];
+                    let finalHtml = skipFooterTypes.includes(state.selectedPageType) ? htmlContent : addFooterLinks(htmlContent, data);
                     
                     // וודא הזרקת meta של סוג הדף לפני כל זיהוי
                     if (!finalHtml.includes('<meta name="page-type"')) {
@@ -9253,18 +9497,67 @@ ${JSON.stringify({
                         } catch (e) { console.warn('Could not inject page-type meta:', e); }
                     }
                     
-                    // הוסף פונקציונליות חנות רק אם התבנית היא חנות
-                    console.log('Checking if need to inject store scripts. selectedPageType:', state.selectedPageType);
+                    // 🔥 CRITICAL: Inject CSS to force vertical layout BEFORE iframe loads
+                    if (state.selectedPageType === 'serviceProvider' || state.selectedPageType === 'appointment') {
+                        const verticalLayoutCSS = `
+<style>
+/* 🔥 ULTIMATE FIX: Force vertical layout - highest priority */
+html, body {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+}
+
+body > * {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    float: none !important;
+    clear: both !important;
+}
+
+section, section.hero, section.section, section.about-section, section.services-section,
+section#hero, section#about, section#services, section#gallery, section#testimonials,
+section#faq, section#team, section#calendar, section#contact, section#pricing, section#youtube {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    float: none !important;
+    clear: both !important;
+    margin: 0 !important;
+    padding: 80px 24px !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+</style>`;
+                        // Inject at the end of <head>
+                        if (finalHtml.includes('</head>')) {
+                            finalHtml = finalHtml.replace('</head>', verticalLayoutCSS + '\n</head>');
+                        } else if (finalHtml.includes('<body')) {
+                            finalHtml = finalHtml.replace('<body', verticalLayoutCSS + '\n<body');
+                        }
+                        console.log('✅ Injected vertical layout CSS');
+                    }
+                    
+                    // הוסף פונקציונליות חנות רק אם התבנית היא חנות ולא השתמשנו בתבנית החדשה
+                    console.log('Checking if need to inject store scripts. selectedPageType:', state.selectedPageType, 'usedTemplateSystem:', usedTemplateSystem);
                     const isStoreTemplate = state.selectedPageType === 'onlineStore' || state.selectedPageType === 'onlineCourse' || state.selectedPageType === 'restaurantMenu';
                     
-                    if (isStoreTemplate) {
-                        console.log('✅ Injecting store/course scripts for preview... (isStore:', isStoreTemplate, ')');
+                    // 🔥 CRITICAL: Skip old store script injection if we used template-based generation
+                    // Template already has cart/checkout built-in
+                    if (isStoreTemplate && !usedTemplateSystem) {
+                        console.log('✅ Injecting store/course scripts for preview (AI-generated page)...');
                         if (typeof window.injectStoreScripts === 'function') {
                             finalHtml = window.injectStoreScripts(finalHtml, data);
                             console.log('✅ Store/Course scripts injected to preview!');
-                    } else {
+                        } else {
                             console.error('❌ window.injectStoreScripts is not defined!');
                         }
+                    } else if (usedTemplateSystem) {
+                        console.log('⏭️ Skipping old store scripts - template already has cart/checkout built-in');
                     } else {
                         console.log('❌ NOT a store/course, skipping store scripts');
                     }
@@ -9273,35 +9566,177 @@ ${JSON.stringify({
                     ui.previewIframe.srcdoc = finalHtml;
                 
                 // Store in window for saving (CRITICAL for page saving!)
-                ui.previewIframe.contentWindow.generatedPageHTML = finalHtml;
+                // 🔥 Store in BOTH parent window AND iframe for reliable access
+                window.generatedPageHTML_backup = finalHtml; // Parent window backup
+                try {
+                    ui.previewIframe.contentWindow.generatedPageHTML = finalHtml;
+                } catch(e) {
+                    console.log('⚠️ Could not store in iframe window, using parent backup');
+                }
+
+                // Hide preview initially, show animation
+                ui.previewContainer.classList.add('hidden');
 
                 ui.previewIframe.onload = () => {
                     
                     // Ensure generatedPageHTML is set AGAIN after iframe loads
-                    ui.previewIframe.contentWindow.generatedPageHTML = finalHtml;
-                    console.log('✅ generatedPageHTML stored in iframe window');
+                    // 🔥 Store in BOTH parent window AND iframe for reliable access
+                    window.generatedPageHTML_backup = finalHtml; // Keep parent backup updated
+                    try {
+                        ui.previewIframe.contentWindow.generatedPageHTML = finalHtml;
+                    } catch(e) {
+                        console.log('⚠️ Could not store in iframe window');
+                    }
+                    console.log('✅ generatedPageHTML stored (backup + iframe attempt)');
 
-                    ui.previewContainer.classList.remove('hidden');
+                    // FORCE VERTICAL LAYOUT - Fix sections directly in DOM (AGGRESSIVE)
+                    function forceVerticalLayout() {
+                        try {
+                            const iframeDoc = ui.previewIframe.contentDocument || ui.previewIframe.contentWindow.document;
+                            if (!iframeDoc) return;
+                            
+                            // Force html
+                            const html = iframeDoc.documentElement;
+                            html.style.setProperty('display', 'block', 'important');
+                            html.style.setProperty('width', '100%', 'important');
+                            html.style.setProperty('max-width', '100%', 'important');
+                            
+                            // Force body to be block container
+                            const body = iframeDoc.body;
+                            body.style.setProperty('display', 'block', 'important');
+                            body.style.setProperty('width', '100%', 'important');
+                            body.style.setProperty('max-width', '100%', 'important');
+                            body.style.setProperty('margin', '0', 'important');
+                            body.style.setProperty('padding', '0', 'important');
+                            body.style.setProperty('flex-direction', 'column', 'important');
+                            body.style.setProperty('flex-wrap', 'nowrap', 'important');
+                            
+                            // Force structural elements to be block - but SKIP hidden elements and floating buttons
+                            const skipIds = ['accessibility-menu', 'admin-mode-btn', 'ai-chat-window', 'ai-bot-bubble', 'whatsapp-bubble'];
+                            const skipTags = ['SCRIPT', 'STYLE', 'LINK', 'META', 'NOSCRIPT', 'A'];
+                            const structuralTags = ['SECTION', 'HEADER', 'FOOTER', 'MAIN', 'NAV', 'ARTICLE'];
+                            
+                            Array.from(body.children).forEach(child => {
+                                // Skip elements that should stay hidden
+                                if (skipIds.includes(child.id) || skipTags.includes(child.tagName)) {
+                                    return;
+                                }
+                                // Only apply to structural elements
+                                if (structuralTags.includes(child.tagName)) {
+                                    child.style.setProperty('display', 'block', 'important');
+                                    child.style.setProperty('width', '100%', 'important');
+                                    child.style.setProperty('max-width', '100%', 'important');
+                                    child.style.setProperty('float', 'none', 'important');
+                                    child.style.setProperty('clear', 'both', 'important');
+                                }
+                            });
+                            
+                            // CRITICAL: Explicitly hide script tags and accessibility menu
+                            const scripts = iframeDoc.querySelectorAll('script');
+                            scripts.forEach(script => {
+                                script.style.setProperty('display', 'none', 'important');
+                                script.style.setProperty('visibility', 'hidden', 'important');
+                            });
+                            
+                            const accessMenu = iframeDoc.getElementById('accessibility-menu');
+                            if (accessMenu) {
+                                accessMenu.style.setProperty('display', 'none', 'important');
+                                accessMenu.style.setProperty('visibility', 'hidden', 'important');
+                            }
+                            
+                            const adminBtn = iframeDoc.getElementById('admin-mode-btn');
+                            if (adminBtn) {
+                                adminBtn.style.setProperty('display', 'none', 'important');
+                            }
+                            
+                            // Force ALL sections to be block-level
+                            const sections = iframeDoc.querySelectorAll('section');
+                            sections.forEach(section => {
+                                // Check and fix parent container
+                                let current = section.parentElement;
+                                while (current && current !== body && current !== html) {
+                                    const computed = getComputedStyle(current);
+                                    if (computed.display === 'flex' || computed.display === 'grid') {
+                                        current.style.setProperty('display', 'block', 'important');
+                                        current.style.setProperty('flex-direction', 'column', 'important');
+                                        current.style.setProperty('grid-template-columns', 'none', 'important');
+                                    }
+                                    current.style.setProperty('width', '100%', 'important');
+                                    current.style.setProperty('max-width', '100%', 'important');
+                                    current.style.setProperty('float', 'none', 'important');
+                                    current.style.setProperty('clear', 'both', 'important');
+                                    current = current.parentElement;
+                                }
+                                
+                                section.style.setProperty('display', 'block', 'important');
+                                section.style.setProperty('width', '100%', 'important');
+                                section.style.setProperty('max-width', '100%', 'important');
+                                section.style.setProperty('float', 'none', 'important');
+                                section.style.setProperty('clear', 'both', 'important');
+                                section.style.setProperty('margin', '0', 'important');
+                                section.style.setProperty('padding', section.style.padding || '80px 24px', 'important');
+                                section.style.setProperty('box-sizing', 'border-box', 'important');
+                                section.style.setProperty('position', 'relative', 'important');
+                                section.style.setProperty('left', '0', 'important');
+                                section.style.setProperty('right', '0', 'important');
+                                section.style.setProperty('flex-direction', 'column', 'important');
+                                section.style.setProperty('flex-wrap', 'nowrap', 'important');
+                                
+                                // Force ALL children of section to be block too
+                                Array.from(section.children).forEach(child => {
+                                    if (!['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div'].includes(child.tagName.toLowerCase())) {
+                                        child.style.setProperty('display', 'block', 'important');
+                                        child.style.setProperty('width', '100%', 'important');
+                                        child.style.setProperty('max-width', '100%', 'important');
+                                    }
+                                });
+                            });
+                            
+                            // Also check for any divs that might be acting as wrappers
+                            const allDivs = iframeDoc.querySelectorAll('body > div, body > div > div');
+                            allDivs.forEach(div => {
+                                const computed = getComputedStyle(div);
+                                if (computed.display === 'flex' || computed.display === 'grid') {
+                                    const hasSections = div.querySelector('section');
+                                    if (hasSections) {
+                                        div.style.setProperty('display', 'block', 'important');
+                                        div.style.setProperty('width', '100%', 'important');
+                                        div.style.setProperty('max-width', '100%', 'important');
+                                    }
+                                }
+                            });
+                            
+                            console.log(`✅ Fixed ${sections.length} sections to be vertical`);
+                        } catch (e) {
+                            console.error('❌ Error fixing vertical layout:', e);
+                        }
+                    }
+                    
+                    // Run immediately
+                    forceVerticalLayout();
+                    
+                    // Run again after delays to catch late-loading styles
+                    setTimeout(forceVerticalLayout, 100);
+                    setTimeout(forceVerticalLayout, 500);
+                    setTimeout(forceVerticalLayout, 1000);
 
-                    ui.generationView.classList.add('hidden');
-
-                    ui.toolsFab.classList.remove('hidden');
-
-                    ui.toolsFab.classList.remove('active');
-
+                    // Wait a bit for iframe to fully render
+                    setTimeout(() => {
+                        // Hide animation and show preview
+                        setLoading(false);
+                        ui.previewContainer.classList.remove('hidden');
+                        ui.toolsFab.classList.remove('hidden');
+                        ui.toolsFab.classList.remove('active');
                     ui.toolsMenu.classList.remove('open');
+                    }, 500); // Small delay to ensure smooth transition
 
                 };
 
             } catch (error) {
 
                 console.error('Error generating page:', error);
-
-                ui.generationView.innerHTML = `<div class="text-center p-8"><h2 class="text-2xl font-semibold text-red-500">${getTranslation('gen_error_title')}</h2><p class="text-slate-600 mt-2">${getTranslation('gen_error_details')}</p><pre class="mt-2 text-left text-xs bg-slate-100 p-2 rounded text-slate-500 whitespace-pre-wrap">${error.message}</pre></div>`;
-
-            } finally {
-
                 setLoading(false);
+                ui.generationView.innerHTML = `<div class="text-center p-8"><h2 class="text-2xl font-semibold text-red-500">${getTranslation('gen_error_title')}</h2><p class="text-slate-600 mt-2">${getTranslation('gen_error_details')}</p><pre class="mt-2 text-left text-xs bg-slate-100 p-2 rounded text-slate-500 whitespace-pre-wrap">${error.message}</pre></div>`;
 
             }
 
@@ -9309,24 +9744,52 @@ ${JSON.stringify({
             function addFooterLinks(htmlContent, formData = null) {
                 // קבל פרטי יצירת קשר מהטופס או מהפרמטרים
                 let contactEmail, contactPhone, businessName, websiteUrl;
+                let facebookLink, instagramLink, linkedinLink, twitterLink, tiktokLink, youtubeLink;
                 
                 if (formData) {
                     contactEmail = formData.email || 'info@example.com';
                     contactPhone = formData.phone || '03-1234567';
                     businessName = formData.mainName || 'החברה שלנו';
                     websiteUrl = formData.websiteUrl || window.location.origin;
+                    facebookLink = formData.facebookLink || '';
+                    instagramLink = formData.instagramLink || '';
+                    linkedinLink = formData.linkedinLink || '';
+                    twitterLink = formData.twitterLink || '';
+                    tiktokLink = formData.tiktokLink || '';
+                    youtubeLink = formData.youtubeLink || '';
                 } else {
                     contactEmail = document.getElementById('email')?.value || 'info@example.com';
                     contactPhone = document.getElementById('phone')?.value || '03-1234567';
                     businessName = document.getElementById('mainName')?.value || 'החברה שלנו';
                     websiteUrl = document.getElementById('websiteUrl')?.value || window.location.origin;
+                    facebookLink = document.getElementById('facebookLink')?.value || '';
+                    instagramLink = document.getElementById('instagramLink')?.value || '';
+                    linkedinLink = document.getElementById('linkedinLink')?.value || '';
+                    twitterLink = document.getElementById('twitterLink')?.value || '';
+                    tiktokLink = document.getElementById('tiktokLink')?.value || '';
+                    youtubeLink = document.getElementById('youtubeLink')?.value || '';
+                }
+                
+                // בניית קישורי רשתות חברתיות - רק אם יש קישורים
+                let socialIconsHtml = '';
+                const socialLinks = [];
+                if (facebookLink) socialLinks.push(`<a href="${facebookLink}" target="_blank" rel="noopener noreferrer" style="color: #1877F2; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block; text-decoration: none;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Facebook"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>`);
+                if (instagramLink) socialLinks.push(`<a href="${instagramLink}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(45deg, #F58529, #DD2A7B, #8134AF, #515BD4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block; text-decoration: none;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Instagram"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>`);
+                if (linkedinLink) socialLinks.push(`<a href="${linkedinLink}" target="_blank" rel="noopener noreferrer" style="color: #0077B5; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block; text-decoration: none;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="LinkedIn"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>`);
+                if (twitterLink) socialLinks.push(`<a href="${twitterLink}" target="_blank" rel="noopener noreferrer" style="color: #1DA1F2; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block; text-decoration: none;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="X (Twitter)"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`);
+                if (tiktokLink) socialLinks.push(`<a href="${tiktokLink}" target="_blank" rel="noopener noreferrer" style="color: #000000; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block; text-decoration: none;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="TikTok"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.43.05-4.84-.94-6.37-2.96-2.2-2.95-2.2-6.82 0-9.78 1.59-2.1 4.3-3.04 6.66-2.49.12.03.24.05.35.08v4.03c-1.11-.35-2.29-.5-3.43-.5-1.72 0-3.34.7-4.52 1.95-1.24 1.3-1.86 3.02-1.86 4.73 0 3.49 2.72 6.36 6.08 6.36 3.35 0 6.08-2.87 6.08-6.36 0-1.52-.57-2.93-1.56-4.02-.98-1.09-2.38-1.68-3.8-1.68-.24 0-.48.01-.7.03v-4.03z"/></svg></a>`);
+                if (youtubeLink) socialLinks.push(`<a href="${youtubeLink}" target="_blank" rel="noopener noreferrer" style="color: #FF0000; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block; text-decoration: none;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="YouTube"><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>`);
+                
+                if (socialLinks.length > 0) {
+                    socialIconsHtml = `<div style="text-align: center; margin: 30px 0 20px 0; padding: 20px 0; border-bottom: 1px solid #e2e8f0;">${socialLinks.join('')}</div>`;
                 }
                 
                 // הוסף קישורים לתחתית הדף עם פרטי יצירת קשר מותאמים
                 const footerHtml = `
                     <footer style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 0; margin-top: 40px; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                         <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-                            <div style="margin-bottom: 15px;">
+                            ${socialIconsHtml}
+                            <div style="margin-bottom: 15px; margin-top: ${socialIconsHtml ? '10px' : '20px'};">
                                 <a href="/privacy-policy.html?business=${encodeURIComponent(businessName)}&email=${encodeURIComponent(contactEmail)}&phone=${encodeURIComponent(contactPhone)}" style="color: #64748b; text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#64748b'">מדיניות פרטיות</a>
                                 <span style="color: #cbd5e1;">|</span>
                                 <a href="/accessibility-statement.html?business=${encodeURIComponent(businessName)}&email=${encodeURIComponent(contactEmail)}&phone=${encodeURIComponent(contactPhone)}" style="color: #64748b; text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#64748b'">הצהרת נגישות</a>
@@ -9352,52 +9815,11 @@ ${JSON.stringify({
             }
 
         async function generateHtmlFromApi(prompt) {
-
-             const N8N_GENERATE_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhfaadsgdrghre546yrthfg';
-
-             const payload = { masterPrompt: prompt };
-
+             // ❌ NO N8N - Use local generation only
+             console.log('⚡ Using LOCAL generation (NO N8N)');
              
-             console.log('Sending request to webhook:', N8N_GENERATE_URL);
-             console.log('Payload:', payload);
-             
-
              try {
-
-                // יצירת AbortController עם timeout של 30 דקות
-                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30 * 60 * 1000); // 30 דקות
-
-                 const response = await fetch(N8N_GENERATE_URL, {
-
-                     method: 'POST',
-
-                     headers: { 'Content-Type': 'application/json' },
-
-                     body: JSON.stringify(payload),
-                     
-                     signal: controller.signal
-
-                 });
-                 
-                 clearTimeout(timeoutId);
-
-                 
-                 console.log('Webhook response status:', response.status);
-                 console.log('Webhook response ok:', response.ok);
-
-
-                const responseText = await response.text();
-
-                console.log('Webhook response text length:', responseText.length);
-                console.log('Webhook response preview:', responseText.substring(0, 200) + '...');
-                
-                // בדוק אם התשובה ריקה
-                if (!responseText || responseText.trim().length === 0) {
-                    console.warn('⚠️ N8N returned empty response - falling back to local generation');
-                    clearTimeout(timeoutId);
-                    
-                    // נסה יצירה מקומית
+                    // Use local generation only
                     const localHtmlResponse = await fetch('/api/generate-html', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -9412,22 +9834,19 @@ ${JSON.stringify({
                         }
                     }
                     
-                    throw new Error('N8N returned empty response and local generation failed');
-                }
-
-                if (!response.ok) {
-
-                    console.error('Webhook error:', response.status, responseText);
-                     
-                     // הצג הודעת שגיאה ידידותית למשתמש
+                    throw new Error('Local generation failed');
+                } catch (error) {
+                    console.error('❌ Local generation error:', error);
+                    
+                    // Show error message
                      ui.generationView.innerHTML = `
                          <div class="max-w-2xl mx-auto text-center">
                              <div class="mb-8">
                                  <h2 class="text-3xl font-bold text-red-400 mb-4">⚠️ בעיה טכנית</h2>
-                                 <p class="text-gray-300 text-lg">השרת שלנו כרגע עמוס, אנא נסה שוב בעוד כמה דקות</p>
+                                <p class="text-gray-300 text-lg">יצירת הדף נכשלה, אנא נסה שוב</p>
                              </div>
                              <div class="bg-red-500/20 backdrop-blur-sm rounded-xl p-6">
-                                 <p class="text-red-300 font-medium">שגיאה ${response.status}: השרת לא זמין כרגע</p>
+                                <p class="text-red-300 font-medium">שגיאה: ${error.message}</p>
                              </div>
                              <div class="mt-6">
                                  <button onclick="window.location.reload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
@@ -9437,132 +9856,8 @@ ${JSON.stringify({
                          </div>
                      `;
                      
-                     throw new Error(`Server Error (${response.status}): ${responseText}`);
-
-                 }
-
-
-
-                 function findHtml(obj) {
-
-                    for (const key in obj) {
-
-                        if (typeof obj[key] === 'string' && (obj[key].trim().startsWith('<!DOCTYPE html') || obj[key].trim().startsWith('<html') || obj[key].trim().startsWith('```html'))) {
-
-                            return obj[key].replace(/^```html\s*/, '').replace(/```$/, '').trim();
-
-                        }
-
-                        if (typeof obj[key] === 'object' && obj[key] !== null) {
-
-                            const result = findHtml(obj[key]);
-
-                            if (result) return result;
-
-                        }
-
-                    }
-
-                    return null;
-
-                 }
-
-                
-
-                 try {
-
-                    const responseData = JSON.parse(responseText);
-
-                    const html = findHtml(responseData);
-
-                    if (html) return html;
-
-                 } catch (e) {
-
-                    if (responseText.trim().startsWith('<!DOCTYPE html') || responseText.trim().startsWith('<html')) {
-
-                        return responseText;
-
-                    }
-
-                 }
-
-                 
-
-                 throw new Error("Could not find valid HTML in the server response.");
-
-
-
-             } catch (error) {
-
-                 console.error("Error in generateHtmlFromApi:", error);
-                 console.error('Error details:', error.message);
-                 console.error('Error stack:', error.stack);
-                 
-                // בדוק אם זה timeout - במקום להראות שגיאה, ניצור HTML בסיסי מקומית
-                 if (error.name === 'AbortError') {
-                    console.log('⚠️ N8N timeout - creating basic HTML locally');
-                    
-                    // יצירת HTML בסיסי מקומית
-                    try {
-                        const localHtmlResponse = await fetch('/api/generate-html', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ masterPrompt: prompt })
-                        });
-                        
-                        if (localHtmlResponse.ok) {
-                            const localData = await localHtmlResponse.json();
-                            if (localData.html) {
-                                console.log('✅ Created HTML locally successfully');
-                                return localData.html;
-                            }
-                        }
-                    } catch (localError) {
-                        console.error('Local generation also failed:', localError);
-                    }
-                    
-                    // אם גם זה נכשל, הצג הודעת שגיאה
-                     ui.generationView.innerHTML = `
-                         <div class="max-w-2xl mx-auto text-center">
-                             <div class="mb-8">
-                                <h2 class="text-3xl font-bold text-yellow-400 mb-4">⏰ השרת עמוס</h2>
-                                <p class="text-gray-300 text-lg">השרת החיצוני שלנו עמוס כרגע</p>
-                             </div>
-                             <div class="bg-yellow-500/20 backdrop-blur-sm rounded-xl p-6">
-                                <p class="text-yellow-300 font-medium">אנא נסה שוב בעוד כמה דקות</p>
-                             </div>
-                             <div class="mt-6">
-                                 <button onclick="window.location.reload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                                     נסה שוב
-                                 </button>
-                             </div>
-                         </div>
-                     `;
                     throw error;
-                 } else {
-                     // הצג הודעת שגיאה ידידותית למשתמש
-                     ui.generationView.innerHTML = `
-                         <div class="max-w-2xl mx-auto text-center">
-                             <div class="mb-8">
-                                 <h2 class="text-3xl font-bold text-red-400 mb-4">⚠️ בעיה בחיבור</h2>
-                                 <p class="text-gray-300 text-lg">לא הצלחנו להתחבר לשרת ה-AI שלנו</p>
-                             </div>
-                             <div class="bg-red-500/20 backdrop-blur-sm rounded-xl p-6">
-                                 <p class="text-red-300 font-medium">${error.message}</p>
-                             </div>
-                             <div class="mt-6">
-                                 <button onclick="window.location.reload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                                     נסה שוב
-                                 </button>
-                             </div>
-                         </div>
-                     `;
-                 }
-                 
-                 throw error;
-
-             }
+                }
 
         }
 
@@ -9967,16 +10262,19 @@ ${JSON.stringify({
 
             showModal(getTranslation('modal_saving'));
 
-
-
-            const { data: { user } } = await sb.auth.getUser();
-
+            // Try to get Supabase user, fallback to temp_user if not available
+            let user = null;
+            try {
+                const { data } = await sb.auth.getUser();
+                user = data?.user;
+            } catch (e) {
+                console.log('⚠️ Supabase not available, using temp_user');
+            }
+            
+            // If no user, create a temp user object for local saving
             if (!user) {
-
-                showModal(getTranslation('modal_error_auth'));
-
-                return;
-
+                console.log('📁 No Supabase user, saving locally with temp_user');
+                user = { id: 'temp_user' };
             }
 
 
@@ -10008,13 +10306,57 @@ ${JSON.stringify({
             await new Promise(r => setTimeout(r, 1000));
             console.log('✅ Iframe fully loaded, cloning document...');
 
-
-
-            const clonedDoc = iframeDoc.cloneNode(true);
-
-            clonedDoc.querySelectorAll('[style*="outline"]').forEach(el => el.style.outline = '');
-
-            let finalHtml = clonedDoc.documentElement.outerHTML;
+            let finalHtml;
+            
+            // 🔥 CRITICAL FIX: For template-based pages, use the ORIGINAL HTML, not the modified DOM
+            // This prevents dynamically added elements (like old cart) from being saved
+            const isTemplateBasedPage = state.selectedPageType === 'serviceProvider' || 
+                                        state.selectedPageType === 'appointment' || 
+                                        state.selectedPageType === 'onlineStore' || 
+                                        state.selectedPageType === 'store';
+            
+            // Also check if the page has template markers (in case state is wrong)
+            const hasTemplateMarkers = iframeDoc.querySelector('meta[name="skip-store-injection"]') ||
+                                       iframeDoc.querySelector('.cart-float-btn') ||
+                                       iframeDoc.querySelector('#cart-float-btn');
+            
+            const shouldUseOriginal = isTemplateBasedPage || hasTemplateMarkers;
+            
+            console.log('🔍 Save detection:', {
+                selectedPageType: state.selectedPageType,
+                isTemplateBasedPage,
+                hasTemplateMarkers: !!hasTemplateMarkers,
+                shouldUseOriginal
+            });
+            
+            // Try to get original HTML from multiple sources
+            const iframeGeneratedHTML = ui.previewIframe.contentWindow?.generatedPageHTML;
+            const backupGeneratedHTML = window.generatedPageHTML_backup;
+            const originalHTML = iframeGeneratedHTML || backupGeneratedHTML;
+            
+            console.log('📄 HTML sources:', {
+                hasIframeHTML: !!iframeGeneratedHTML,
+                hasBackupHTML: !!backupGeneratedHTML,
+                iframeLength: iframeGeneratedHTML?.length || 0,
+                backupLength: backupGeneratedHTML?.length || 0
+            });
+            
+            if (shouldUseOriginal && originalHTML) {
+                console.log('📄 ✅ Using ORIGINAL generatedPageHTML for template-based page (prevents duplicate carts/bots)');
+                console.log('📄 Source:', iframeGeneratedHTML ? 'iframe' : 'parent backup');
+                finalHtml = originalHTML;
+            } else if (shouldUseOriginal && !originalHTML) {
+                console.warn('⚠️ Template page but NO BACKUP HTML! Falling back to DOM clone...');
+                const clonedDoc = iframeDoc.cloneNode(true);
+                clonedDoc.querySelectorAll('[style*="outline"]').forEach(el => el.style.outline = '');
+                finalHtml = clonedDoc.documentElement.outerHTML;
+            } else {
+                // For other page types, clone the DOM as before
+                const clonedDoc = iframeDoc.cloneNode(true);
+                clonedDoc.querySelectorAll('[style*="outline"]').forEach(el => el.style.outline = '');
+                finalHtml = clonedDoc.documentElement.outerHTML;
+                console.log('📄 Using cloned DOM for non-template page');
+            }
             
             // Verify we have RSVP form if this is an event page
             const hasRsvpForm = finalHtml.includes('id="rsvp-form"') || finalHtml.includes('rsvp-name');
@@ -10301,6 +10643,30 @@ ${JSON.stringify({
         window.addEventListener('DOMContentLoaded', (event) => {
 
             initializeApp();
+            
+            // הוסף event listeners לשעות מיוחדות קיימות
+            setTimeout(() => {
+                const existingSpecialInputs = document.querySelectorAll('select[name="specialDay[]"], input[name="specialStartTime[]"], input[name="specialEndTime[]"]');
+                existingSpecialInputs.forEach(input => {
+                    if (!input.classList.contains('special-day-select') && !input.classList.contains('special-time-input')) {
+                        if (input.tagName === 'SELECT') {
+                            input.classList.add('special-day-select');
+                        } else {
+                            input.classList.add('special-time-input');
+                        }
+                    }
+                    input.addEventListener('change', function() {
+                        if (typeof updateSpecialHoursSummary === 'function') {
+                            updateSpecialHoursSummary();
+                        }
+                    });
+                });
+                
+                // עדכן את הסיכום אם יש שעות מיוחדות כבר מלאות
+                if (typeof updateSpecialHoursSummary === 'function') {
+                    updateSpecialHoursSummary();
+                }
+            }, 500);
 
             // הוסף מאזין לכפתור הוספת הפסקה
             document.addEventListener('click', function(e) {
@@ -10333,6 +10699,52 @@ ${JSON.stringify({
                     e.target.closest('.break-item').remove();
                 }
                 
+                // פונקציה לעדכן תצוגת סיכום שעות מיוחדות
+                function updateSpecialHoursSummary() {
+                    const container = document.getElementById('special-hours-container');
+                    const summaryDiv = document.getElementById('special-hours-summary');
+                    const summaryList = document.getElementById('special-hours-list');
+                    
+                    if (!container || !summaryDiv || !summaryList) return;
+                    
+                    const dayNames = {
+                        'sunday': 'ראשון',
+                        'monday': 'שני',
+                        'tuesday': 'שלישי',
+                        'wednesday': 'רביעי',
+                        'thursday': 'חמישי',
+                        'friday': 'שישי',
+                        'saturday': 'שבת'
+                    };
+                    
+                    const items = container.querySelectorAll('.special-hours-item');
+                    const filledItems = [];
+                    
+                    items.forEach(item => {
+                        const daySelect = item.querySelector('select[name="specialDay[]"]');
+                        const startInput = item.querySelector('input[name="specialStartTime[]"]');
+                        const endInput = item.querySelector('input[name="specialEndTime[]"]');
+                        
+                        if (daySelect && daySelect.value && startInput && startInput.value && endInput && endInput.value) {
+                            const dayName = dayNames[daySelect.value] || daySelect.value;
+                            filledItems.push({
+                                day: dayName,
+                                start: startInput.value,
+                                end: endInput.value
+                            });
+                        }
+                    });
+                    
+                    if (filledItems.length > 0) {
+                        summaryList.innerHTML = filledItems.map(item => 
+                            `• <strong>${item.day}</strong>: ${item.start} - ${item.end}`
+                        ).join('<br>');
+                        summaryDiv.classList.remove('hidden');
+                    } else {
+                        summaryDiv.classList.add('hidden');
+                    }
+                }
+                
                 // הוסף שעות מיוחדות
                 if (e.target && e.target.id === 'add-special-hours-btn') {
                     const specialHoursContainer = document.getElementById('special-hours-container');
@@ -10343,7 +10755,7 @@ ${JSON.stringify({
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">📅 יום</label>
-                                <select name="specialDay[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded">
+                                <select name="specialDay[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded special-day-select">
                                     <option value="">בחר יום...</option>
                                     <option value="sunday">ראשון</option>
                                     <option value="monday">שני</option>
@@ -10356,20 +10768,73 @@ ${JSON.stringify({
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">⏰ שעת התחלה</label>
-                                <input type="time" name="specialStartTime[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="09:00">
+                                <input type="time" name="specialStartTime[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded special-time-input" placeholder="09:00">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">⏰ שעת סיום</label>
-                                <input type="time" name="specialEndTime[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="13:00">
+                                <input type="time" name="specialEndTime[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded special-time-input" placeholder="13:00">
                             </div>
                         </div>
                     `;
                     specialHoursContainer.appendChild(specialHoursItem);
+                    
+                    // הוסף event listeners לעדכון הסיכום
+                    const selects = specialHoursItem.querySelectorAll('select.special-day-select');
+                    const inputs = specialHoursItem.querySelectorAll('input.special-time-input');
+                    [...selects, ...inputs].forEach(el => {
+                        el.addEventListener('change', updateSpecialHoursSummary);
+                        el.addEventListener('input', updateSpecialHoursSummary);
+                    });
+                    
+                    updateSpecialHoursSummary();
                 }
                 
                 // הסר שעות מיוחדות
                 if (e.target && e.target.classList.contains('remove-special-hours-btn')) {
                     e.target.closest('.special-hours-item').remove();
+                    updateSpecialHoursSummary();
+                }
+                
+                // הוסף שירות
+                if (e.target && e.target.id === 'add-service-btn') {
+                    const servicesContainer = document.getElementById('services-container');
+                    if (!servicesContainer) return;
+                    
+                    const serviceItem = document.createElement('div');
+                    serviceItem.className = 'service-item bg-white p-3 rounded border border-green-200 relative';
+                    serviceItem.innerHTML = `
+                        <button type="button" class="remove-service-btn absolute top-2 left-2 text-red-500 hover:text-red-700 text-xl font-bold" title="הסר שירות">×</button>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">🔧 שם השירות</label>
+                                <input type="text" name="serviceName[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="למשל: לק, גל ידיים רגליים">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">⏱️ משך (דקות)</label>
+                                <input type="number" name="serviceDuration[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="30" min="1" value="30">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">💰 מחיר (₪)</label>
+                                <input type="number" name="servicePrice[]" class="block w-full px-2 py-1 text-sm border border-gray-300 rounded" placeholder="0" min="0" step="0.01" value="0">
+                            </div>
+                        </div>
+                    `;
+                    servicesContainer.appendChild(serviceItem);
+                }
+                
+                // הסר שירות
+                if (e.target && e.target.classList.contains('remove-service-btn')) {
+                    e.target.closest('.service-item').remove();
+                }
+                
+                // עדכן סיכום כשמשנים שדות קיימים
+                if (e.target && (e.target.classList.contains('special-day-select') || e.target.classList.contains('special-time-input'))) {
+                    updateSpecialHoursSummary();
+                }
+                
+                // גם עבור שדות קיימים שהיו בדף מראש
+                if (e.target && e.target.matches('select[name="specialDay[]"], input[name="specialStartTime[]"], input[name="specialEndTime[]"]')) {
+                    updateSpecialHoursSummary();
                 }
                 
                 // הוסף נכס חדש
@@ -11435,6 +11900,16 @@ ${JSON.stringify({
         // Store functionality injection
         function injectStoreScripts(htmlContent, data) {
             console.log('Injecting store scripts for page:', data.title);
+            
+            // 🔥 CRITICAL: Check if this is a template-based page - SKIP EVERYTHING!
+            const isTemplateSystem = htmlContent.includes('meta name="template-system"') || 
+                                     htmlContent.includes('meta name="skip-store-injection"') ||
+                                     htmlContent.includes('skip-store-injection');
+            
+            if (isTemplateSystem) {
+                console.log('⏭️ SKIPPING ALL INJECTIONS - Template-based page detected');
+                return htmlContent; // Return unchanged - template has everything built-in
+            }
             
             // 🔍 Check if scripts already exist (AI might have added them)
             // Check for multiple indicators that store scripts exist

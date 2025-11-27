@@ -1,0 +1,69 @@
+[
+  {
+    "id": "purchase_1761747464830_u15i0jcol",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "red_1761154714386",
+    "products": [
+      {
+        "id": 1761424074638,
+        "name": "שעון עור קלאסי",
+        "price": 850,
+        "quantity": 3,
+        "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1761422385019-692918545.png"
+      }
+    ],
+    "total": 2585,
+    "customerName": "יניב",
+    "customerPhone": "0535839899",
+    "customerEmail": "britolam1@gmail.com",
+    "customerAddress": "בר אילן 50 נתניה",
+    "shipping": true,
+    "status": "shipped",
+    "createdAt": "2025-10-29T14:17:44.832Z"
+  },
+  {
+    "id": "purchase_1761905515817_f4brd13u9",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "red_1761154714386",
+    "products": [
+      {
+        "id": 1761905488401,
+        "name": "שעון כיס וינטג'",
+        "price": 490,
+        "quantity": 1,
+        "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1761422697721-996156193.png"
+      }
+    ],
+    "total": 490,
+    "customerName": "רמי",
+    "customerPhone": "0538377366",
+    "customerEmail": "ehaleiameleh@gmail.com",
+    "customerAddress": "בר אילן 70 תל אביב",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-31T10:11:55.819Z",
+    "completedAt": "2025-11-18T16:24:38.145Z"
+  },
+  {
+    "id": "purchase_1763483199562_v51zy0qic",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "red_1761154714386",
+    "products": [
+      {
+        "id": 1763483174190,
+        "name": "שעון עור קלאסי",
+        "price": 850,
+        "quantity": 1,
+        "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1761422385019-692918545.png"
+      }
+    ],
+    "total": 885,
+    "customerName": "צחי ",
+    "customerPhone": "0505378108",
+    "customerEmail": "britolam1@gmail.com",
+    "customerAddress": "בר אילן 50 תל אביב",
+    "shipping": true,
+    "status": "processing",
+    "createdAt": "2025-11-18T16:26:39.562Z"
+  }
+]

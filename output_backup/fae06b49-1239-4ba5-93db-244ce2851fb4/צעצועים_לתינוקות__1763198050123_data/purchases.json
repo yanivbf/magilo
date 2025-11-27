@@ -1,0 +1,38 @@
+[
+  {
+    "id": "purchase_1763206104386_j4dfh8bxd",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "צעצועים_לתינוקות__1763198050123",
+    "products": [
+      {
+        "id": 1763206024991,
+        "name": "ספר בד לתינוקות",
+        "price": 69,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1616866982782-6342a8693c48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80"
+      },
+      {
+        "id": 1763206059185,
+        "name": "סט עריסה עם דוגמת כוכבים",
+        "price": 179,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1590205517471-0700710c5d0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80"
+      },
+      {
+        "id": 1763206078439,
+        "name": "מובייל למיטת תינוק",
+        "price": 129,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1589891099149-73d2406e3d0a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80"
+      }
+    ],
+    "total": 412,
+    "customerName": "רונית  ",
+    "customerPhone": "0523925182",
+    "customerEmail": "britolam1@gmail.com",
+    "customerAddress": "רח מור 4",
+    "shipping": true,
+    "status": "new",
+    "createdAt": "2025-11-15T11:28:24.386Z"
+  }
+]

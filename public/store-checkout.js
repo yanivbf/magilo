@@ -12,6 +12,33 @@
     function init() {
         console.log('🔍 Store checkout init() called');
         console.log('📄 Current page:', window.location.href);
+        
+        // 🔥 CRITICAL: Skip EVERYTHING for template-based pages - they have their own cart system!
+        // Check multiple indicators to detect template pages
+        const hasSkipMeta = document.querySelector('meta[name="skip-store-injection"]');
+        const hasTemplateMeta = document.querySelector('meta[name="template-system"]');
+        const hasCartFloatBtn = document.querySelector('.cart-float-btn') || document.getElementById('cart-float-btn');
+        const hasCartButtonWrapper = document.querySelector('.cart-button-wrapper');
+        const hasCartSidebar = document.getElementById('cart-sidebar');
+        const hasTemplateCart = document.querySelector('.cart-overlay');
+        
+        console.log('🔍 Template detection:', {
+            hasSkipMeta: !!hasSkipMeta,
+            hasTemplateMeta: !!hasTemplateMeta,
+            hasCartFloatBtn: !!hasCartFloatBtn,
+            hasCartButtonWrapper: !!hasCartButtonWrapper,
+            hasCartSidebar: !!hasCartSidebar,
+            hasTemplateCart: !!hasTemplateCart
+        });
+        
+        const isTemplateBasedPage = hasSkipMeta || hasTemplateMeta || hasCartFloatBtn || 
+                                    hasCartButtonWrapper || hasCartSidebar || hasTemplateCart;
+        
+        if (isTemplateBasedPage) {
+            console.log('⏭️ Template-based store detected - skipping store-checkout.js (using built-in cart system)');
+            return; // COMPLETELY SKIP - template has its own cart!
+        }
+        
         console.log('🔍 Searching for products...');
         
         // Check if this is a store page
@@ -680,23 +707,32 @@
         updateCartDisplay();
     };
     
-    // CRITICAL: Remove ALL AI-generated cart elements FIRST
-    console.log('🧹 Cleaning up AI-generated cart elements...');
+    // 🔥 Check if this is a template-based page first
+    const isTemplateBasedPageCleanup = document.querySelector('meta[name="template-system"]') || 
+                                       document.querySelector('meta[name="skip-store-injection"]') ||
+                                       document.querySelector('.cart-float-btn') ||
+                                       document.getElementById('cart-float-btn');
     
-    // Find and remove ALL cart-related elements except our own
-    const elementsToRemove = [];
-    
-    // Remove any cart icons in header/navigation
-    document.querySelectorAll('header button, nav button, .cart-icon').forEach(el => {
-        if (el.textContent.includes('🛒') || el.querySelector('[id*="cart"]') || el.querySelector('[class*="cart"]')) {
+    // CRITICAL: Only clean up AI-generated elements if NOT a template page
+    if (isTemplateBasedPageCleanup) {
+        console.log('⏭️ Template-based page - skipping cart element cleanup (using built-in cart)');
+    } else {
+        console.log('🧹 Cleaning up AI-generated cart elements...');
+        
+        // Find and remove ALL cart-related elements except our own
+        const elementsToRemove = [];
+        
+        // Remove any cart icons in header/navigation
+        document.querySelectorAll('header button, nav button, .cart-icon').forEach(el => {
+            if (el.textContent.includes('🛒') || el.querySelector('[id*="cart"]') || el.querySelector('[class*="cart"]')) {
+                elementsToRemove.push(el);
+            }
+        });
+        
+        // Remove any cart badges/counters
+        document.querySelectorAll('[id*="cart-count"], [id*="badge"], .cart-count-badge, [class*="badge"]').forEach(el => {
             elementsToRemove.push(el);
-        }
-    });
-    
-    // Remove any cart badges/counters
-    document.querySelectorAll('[id*="cart-count"], [id*="badge"], .cart-count-badge, [class*="badge"]').forEach(el => {
-        elementsToRemove.push(el);
-    });
+        });
     
     // Remove duplicate cart sidebars (if any have content)
     document.querySelectorAll('#cart-sidebar').forEach((el, index) => {
@@ -814,10 +850,17 @@
             }
         `;
         document.head.appendChild(style);
-    }
+        }
+    } // END of else block (for non-template pages only)
     
-    // Create cart icon if doesn't exist
-    if (!document.getElementById('floating-cart-icon')) {
+    // 🔥 CRITICAL: Check if this is a template-based page - DON'T create extra cart!
+    const isTemplateBasedPage = document.querySelector('meta[name="template-system"]') || 
+                                document.querySelector('meta[name="skip-store-injection"]') ||
+                                document.querySelector('.cart-float-btn') || // Template's cart button
+                                document.getElementById('cart-float-btn');
+    
+    // Create cart icon ONLY if doesn't exist AND not a template-based page
+    if (!document.getElementById('floating-cart-icon') && !isTemplateBasedPage) {
         const cartIcon = document.createElement('div');
         cartIcon.id = 'floating-cart-icon';
         cartIcon.style.cssText = 'position: fixed; top: 100px; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); z-index: 9998; font-size: 32px; transition: transform 0.3s;';
@@ -834,6 +877,8 @@
         };
         document.body.appendChild(cartIcon);
         console.log('✅ Cart icon created');
+    } else if (isTemplateBasedPage) {
+        console.log('⏭️ Template-based page detected - using built-in cart, skipping floating-cart-icon');
     }
     
     // Helper function to unlock course videos

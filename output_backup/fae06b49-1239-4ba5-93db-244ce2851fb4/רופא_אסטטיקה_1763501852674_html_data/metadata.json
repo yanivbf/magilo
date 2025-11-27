@@ -1,0 +1,31 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-18T21:37:32.829Z",
+  "fileName": "רופא_אסטטיקה_1763501852674_html",
+  "description": "ככ",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "050-185-2674",
+    "076-350-1852",
+    "056-006-6984",
+    "052-179-1136",
+    "055-674-5753",
+    "079-113-6064"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום שלישי, 18 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "פריקה",
+      "duration": 30,
+      "price": 200
+    }
+  ],
+  "lastUpdated": "2025-11-18T21:39:44.495Z"
+}

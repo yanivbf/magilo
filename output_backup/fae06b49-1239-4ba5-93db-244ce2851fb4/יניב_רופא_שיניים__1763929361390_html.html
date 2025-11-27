@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta name="page-type" content="onlineStore">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="business-name" content="יניב רופא שיניים ">
+    <meta name="description" content="מומחה">
+    <meta name="keywords" content="יניב רופא שיניים ">
+    <title>יניב רופא שיניים  - מומחה</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 🎨 PREMIUM STYLES - Auto-applied to all pages -->
+    <link rel="stylesheet" href="/premium-styles.css">
+    
+    <style>
+        /* ========================================
+           GLOBAL STYLES & RESET
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            line-height: 1.7;
+            color: #1F2937;
+            background-color: #f9fafb;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Rubik', sans-serif;
+            line-height: 1.3;
+            font-weight: 700;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .section {
+            padding: 80px 24px;
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0 24px;
+        }
+
+        /* ========================================
+           DESIGN STYLE: {{DESIGN_STYLE}}
+           ======================================== */
+        {{DESIGN_STYLE_CSS}}
+
+        /* ========================================
+           HEADER & NAVIGATION
+           ======================================== */
+        .site-header {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0 24px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--heading-color, #1A1A1A);
+            font-family: 'Rubik', sans-serif;
+        }
+        
+        .logo img {
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            position: static; /* CRITICAL: Normal position on desktop */
+        }
+
+        .nav-link {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--heading-color, #1A1A1A);
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color, #D9534F);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color, #D9534F);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Cart Button in Header */
+        .cart-icon-btn {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            margin-left: 16px;
+        }
+
+        .cart-icon-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        /* Mobile menu toggle */
+        .mobile-menu-toggle {
+            display: none;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none !important;
+                position: fixed !important;
+                top: 70px !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                z-index: 9999;
+                max-height: calc(100vh - 70px);
+                overflow-y: auto;
+            }
+
+            .nav-menu.active {
+                display: flex !important;
+            }
+
+            .nav-menu li {
+                padding: 10px 0;
+            }
+        }
+        
+        /* CRITICAL: Ensure mobile menu is hidden on desktop */
+        @media (min-width: 769px) {
+            .mobile-menu-toggle {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            
+            .nav-menu {
+                display: flex !important;
+                position: static !important;
+                left: auto !important;
+                right: auto !important;
+                top: auto !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            
+            .nav-menu.active {
+                display: flex !important;
+                position: static !important;
+            }
+        }
+
+        /* ========================================
+           HERO SECTION
+           ======================================== */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1920') center/cover;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            color: white;
+            max-width: 900px;
+            padding: 0 24px;
+        }
+
+        .hero-content h1 {
+            margin-bottom: 24px;
+            color: white;
+            font-size: clamp(48px, 8vw, 72px);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .hero-content p {
+            font-size: clamp(18px, 3vw, 24px);
+            margin-bottom: 48px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ========================================
+           BUTTONS
+           ======================================== */
+        .btn {
+            display: inline-block;
+            padding: 16px 40px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+            border: none;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark, #c94643);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(217,83,79,0.4);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-color, #D9534F);
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background-color: transparent;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* ========================================
+           PRODUCTS SECTION
+           ======================================== */
+        .products-section {
+            background-color: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(36px, 6vw, 48px);
+            margin-bottom: 24px;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 56px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .product-card {
+            background-color: var(--bg-color, #FDFDFD);
+            padding: 0;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .product-info {
+            padding: 24px;
+        }
+
+        .product-card h3 {
+            margin-bottom: 12px;
+            color: var(--heading-color, #1A1A1A);
+            font-size: 22px;
+        }
+
+        .product-price {
+            font-size: 32px;
+            color: var(--primary-color, #D9534F);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .product-description {
+            font-size: 15px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-add-to-cart {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-add-to-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        /* ========================================
+           CART PLACEHOLDERS (CRITICAL - store-checkout.js will build these)
+           ======================================== */
+        #cart-sidebar {
+            /* store-checkout.js will build this automatically */
+        }
+
+        #cart-overlay {
+            /* store-checkout.js will build this automatically */
+        }
+
+        #cart-button-placeholder {
+            /* store-checkout.js will build this automatically */
+        }
+
+        /* ========================================
+           ABOUT SECTION
+           ======================================== */
+        .about-section {
+            background-color: var(--bg-color, #FDFDFD);
+        }
+
+        .about-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .about-content h2 {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .about-content p {
+            font-size: 18px;
+            color: #4b5563;
+            line-height: 1.9;
+            margin-bottom: 24px;
+        }
+
+        /* ========================================
+           TESTIMONIALS SECTION
+           ======================================== */
+        .testimonials-section {
+            background-color: white;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .testimonial-card {
+            background-color: var(--bg-color, #FDFDFD);
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .testimonial-quote {
+            font-size: 48px;
+            color: var(--primary-color, #D9534F);
+            opacity: 0.3;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .testimonial-text {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.8;
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color, #D9534F);
+        }
+
+        .testimonial-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        .testimonial-rating {
+            color: #fbbf24;
+            font-size: 16px;
+        }
+
+        /* ========================================
+           FAQ SECTION
+           ======================================== */
+        .faq-section {
+            background-color: #f3f4f6;
+        }
+
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .faq-item summary {
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .faq-item p {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+            margin-top: 15px;
+            padding-right: 10px;
+        }
+
+        /* ========================================
+           TEAM SECTION
+           ======================================== */
+        .team-section {
+            background-color: white;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .team-member {
+            text-align: center;
+            padding: 20px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .team-member img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 4px solid #e5e7eb;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .team-member h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .team-member p {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+        .site-footer {
+            background-color: #1F2937;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 64px 24px 32px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 48px;
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto 40px;
+            padding: 0 24px;
+        }
+
+        .footer-section h4 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 24px;
+        }
+
+        .footer-section p {
+            font-size: 16px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.8);
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: 2px solid var(--primary-color, #D9534F);
+        }
+
+        .social-icon:hover {
+            background-color: var(--primary-dark, #c94643);
+            border-color: var(--primary-dark, #c94643);
+            transform: scale(1.1);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        
+        .social-icon i {
+            color: white !important;
+        }
+        
+        /* Header social icons - ensure visibility */
+        .header-social-icons .social-icon {
+            background-color: var(--primary-color, #D9534F) !important;
+            color: white !important;
+        }
+        
+        .header-social-icons .social-icon i {
+            color: white !important;
+        }
+        
+        /* Ensure social icons are visible on light backgrounds */
+        .header-social-icons .social-icon,
+        .footer .social-icon {
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+        }
+        
+        /* Dark mode support - if background is dark, use light icons */
+        body[style*="background:"] .social-icon,
+        .hero .social-icon {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-color, #333);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        body[style*="background:"] .social-icon:hover,
+        .hero .social-icon:hover {
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        /* ========================================
+           FLOATING BUBBLES (WhatsApp + AI Bot)
+           ======================================== */
+        .whatsapp-bubble,
+        .ai-bot-bubble {
+            position: fixed;
+            bottom: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+            border: none;
+            cursor: pointer;
+        }
+
+        .whatsapp-bubble {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            left: 24px; /* שמאל */
+        }
+
+        .ai-bot-bubble {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            right: 24px; /* ימין */
+        }
+
+        .whatsapp-bubble:hover,
+        .ai-bot-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        /* ========================================
+           ADMIN BUTTON
+           ======================================== */
+        /* ⚠️ REMOVED: Admin button styles - store management is accessed from user dashboard */
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 768px) {
+            .section {
+                padding: 60px 20px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn {
+                padding: 14px 32px;
+                font-size: 16px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="layout-default">
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo">יניב רופא שיניים </span>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="#hero" class="nav-link">ראשי</a></li>
+                    <li><a href="#products" class="nav-link">מוצרים</a></li>
+                    <li><a href="#about" class="nav-link">אודות</a></li>{{/SHOW_ABOUT_NAV}}
+                    <li><a href="#testimonials" class="nav-link">המלצות</a></li>{{/SHOW_TESTIMONIALS_NAV}}
+                    {{SHOW_FAQ_NAV}}<li><a href="#faq" class="nav-link">שאלות ותשובות</a></li>{{/SHOW_FAQ_NAV}}
+                    {{SHOW_TEAM_NAV}}<li><a href="#team" class="nav-link">הצוות</a></li>{{/SHOW_TEAM_NAV}}
+                </ul>
+            </nav>
+            <!-- Cart Button -->
+            <button class="cart-icon-btn" onclick="toggleCart()" id="cart-icon-btn" aria-label="עגלת קניות">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count" id="cart-count" style="display: none;">0</span>
+            </button>
+            <button id="accessibility-btn" style="background: #4A5568; color: white; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-left: 12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <line x1="12" y1="2" x2="12" y2="4"></line>
+                    <line x1="12" y1="20" x2="12" y2="22"></line>
+                    <line x1="4" y1="12" x2="2" y2="12"></line>
+                    <line x1="22" y1="12" x2="20" y2="12"></line>
+                </svg>
+                <span>נגישות</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h1>{{HERO_TITLE}}</h1>
+            <p>{{HERO_SUBTITLE}}</p>
+            <div class="hero-buttons">
+                <a href="#products" class="btn btn-primary">🛒 קנה עכשיו</a>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section about-section" style="display: block;">
+        <div class="container">
+            <div class="about-content">
+                <h2 class="section-title">אודותינו</h2>
+                <div>{{ABOUT_TEXT}}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="section products-section">
+        <div class="container">
+            <h2 class="section-title">המוצרים שלנו</h2>
+            <p class="section-subtitle">בחרו מהמבחר הרחב שלנו</p>
+            <div class="products-grid" id="products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 40px;">
+                {{PRODUCTS_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="section testimonials-section" style="display: block;">
+        <div class="container">
+            <h2 class="section-title">מה אומרים עלינו</h2>
+            <p class="section-subtitle">לקוחות מספרים על החוויה שלהם</p>
+            <div class="testimonials-grid" id="testimonials-grid">
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="section faq-section" style="display: block;">
+        <div class="container">
+            <h2 class="section-title">שאלות ותשובות</h2>
+            <p class="section-subtitle">תשובות לשאלות הנפוצות ביותר</p>
+            <div class="faq-container">
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="section team-section" style="display: {{SHOW_TEAM}};">
+        <div class="container">
+            <h2 class="section-title">הצוות שלנו</h2>
+            <p class="section-subtitle">הכירו את הצוות המקצועי שלנו</p>
+            <div class="team-grid">
+                {{TEAM_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>יניב רופא שיניים </h4>
+                <p>מומחה</p>
+                <div class="social-icons">
+                    {{SOCIAL_LINKS_HTML}}
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>צור קשר</h4>
+                <p><i class="fas fa-phone"></i> <a href="tel:9725853781">9725853781</a></p>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:britolam1@gmail.com">britolam1@gmail.com</a></p>
+                <p><i class="fas fa-map-marker-alt"></i> אוסשקין 24 נתניה</p>
+            </div>
+            <div class="footer-section">
+                <h4>שעות פעילות</h4>
+                <p>ראשון - חמישי: 09:00 - 18:00</p>
+                <p>שישי: 09:00 - 14:00</p>
+            </div>
+        </div>
+        <!-- ========================================
+             FOOTER LEGAL LINKS (EXACTLY like serviceProvider)
+             ======================================== -->
+        <div class="footer-legal-links" style="text-align: center; padding: 24px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 32px;">
+            <a href="/privacy-policy.html?business=יניב רופא שיניים &email=britolam1@gmail.com&phone=9725853781" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.8)'">מדיניות פרטיות</a>
+            <span style="color: rgba(255, 255, 255, 0.4);">|</span>
+            <a href="/accessibility-statement.html?business=יניב רופא שיניים &email=britolam1@gmail.com&phone=9725853781" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.8)'">הצהרת נגישות</a>
+            <span style="color: rgba(255, 255, 255, 0.4);">|</span>
+            <a href="/terms-of-service.html?business=יניב רופא שיניים &email=britolam1@gmail.com&phone=9725853781&website={{WEBSITE_URL}}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.8)'">תנאי שירות</a>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 יניב רופא שיניים . כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+
+    <!-- ⚠️ REMOVED: Admin Button - Store management is accessed from user dashboard, not from the public page -->
+    <!-- ⚠️ REMOVED: Cart sidebar placeholder - store-checkout.js creates it dynamically, no need for placeholder -->
+
+    <!-- ========================================
+         FLOATING BUBBLES (WhatsApp + AI Bot)
+         ======================================== -->
+    
+    <!-- WhatsApp Bubble -->
+    <a href="https://wa.me/9725853781" target="_blank" class="whatsapp-bubble" title="שלח הודעה בוואטסאפ">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M27.2 4.7C24.2 1.7 20.2 0 16 0 7.2 0 0 7.2 0 16c0 2.8.7 5.5 2.1 8L0 32l8.2-2.1c2.4 1.3 5.1 2 7.8 2C24.8 32 32 24.8 32 16c0-4.2-1.7-8.2-4.8-11.3zM16 29.3c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-5 1.3 1.3-4.9-.3-.5c-1.3-2.1-2-4.5-2-7.1 0-7.3 6-13.3 13.3-13.3 3.5 0 6.9 1.4 9.4 3.9 2.5 2.5 3.9 5.8 3.9 9.4-.1 7.4-6.1 13.3-13.4 13.3zm7.3-10c-.4-.2-2.4-1.2-2.8-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.3 1.5-.2.3-.5.3-.9.1-.4-.2-1.7-.6-3.2-2-1.2-1.1-2-2.4-2.2-2.8-.2-.4 0-.6.2-.8.2-.2.4-.5.6-.7.2-.2.3-.4.4-.6.1-.3.1-.5 0-.7-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.7c-.3 0-.7.1-1 .5-.4.4-1.4 1.4-1.4 3.3s1.4 3.8 1.6 4.1c.2.3 2.8 4.3 6.8 6 .9.4 1.7.6 2.2.8.9.3 1.8.2 2.4.1.7-.1 2.4-1 2.7-1.9.3-.9.3-1.7.2-1.9-.1-.2-.4-.3-.8-.5z" fill="white"/>
+        </svg>
+    </a>
+
+    <!-- Accessibility Menu -->
+    <div id="accessibility-menu" style="display: none; position: fixed; top: 80px; right: 20px; z-index: 10001; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 20px; min-width: 280px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: bold; color: #2D3748;">נגישות</h3>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #4A5568;">גודל טקסט:</label>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="changeFontSize('decrease')" style="flex: 1; padding: 8px; background: #EDF2F7; border: 1px solid #CBD5E0; border-radius: 6px; cursor: pointer; font-weight: 600;">A-</button>
+                <button onclick="changeFontSize('reset')" style="flex: 1; padding: 8px; background: #EDF2F7; border: 1px solid #CBD5E0; border-radius: 6px; cursor: pointer; font-weight: 600;">A</button>
+                <button onclick="changeFontSize('increase')" style="flex: 1; padding: 8px; background: #EDF2F7; border: 1px solid #CBD5E0; border-radius: 6px; cursor: pointer; font-weight: 600;">A+</button>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">ניגודיות גבוהה</span>
+                <input type="checkbox" id="contrast-toggle" onchange="toggleContrast()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">גופן קריא</span>
+                <input type="checkbox" id="readable-font-toggle" onchange="toggleReadableFont()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">הדגש קישורים</span>
+                <input type="checkbox" id="highlight-links-toggle" onchange="toggleHighlightLinks()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">סמן גדול</span>
+                <input type="checkbox" id="large-cursor-toggle" onchange="toggleLargeCursor()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">ריווח שורות מוגבר</span>
+                <input type="checkbox" id="line-height-toggle" onchange="toggleLineHeight()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">עצור אנימציות</span>
+                <input type="checkbox" id="pause-animations-toggle" onchange="toggleAnimations()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <button onclick="resetAccessibility()" style="width: 100%; padding: 10px; background: #E53E3E; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 10px;">איפוס הגדרות</button>
+    </div>
+
+    <!-- AI Bot "סתיו" Bubble -->
+    <div id="ai-bot-bubble" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button id="ai-bot-btn" style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; border: none; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); transition: all 0.3s; display: flex; align-items: center; justify-content: center;" aria-label="בוט צ'אט סתיו">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M12 7v4"></path>
+                <line x1="8" y1="16" x2="8" y2="16"></line>
+                <line x1="16" y1="16" x2="16" y2="16"></line>
+            </svg>
+        </button>
+        
+        <div id="ai-chat-window" style="display: none; position: fixed; bottom: 90px; right: 20px; width: 350px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); overflow: hidden; flex-direction: column; z-index: 10000;">
+            <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; position: absolute; top: 0; left: 0; right: 0; z-index: 10001; height: 70px; box-sizing: border-box;">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: bold;">סתיו - עוזרת וירטואלית</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">אני כאן לעזור לך! 😊</p>
+                </div>
+                <button id="ai-close-btn" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 20px; line-height: 1;" aria-label="סגור צ'אט">×</button>
+            </div>
+            
+            <div id="ai-chat-messages" style="position: absolute; top: 70px; left: 0; right: 0; bottom: 72px; overflow-y: auto; padding: 16px; background: #F7FAFC;">
+                <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                    <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+                </div>
+            </div>
+            
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; border-top: 1px solid #E2E8F0; background: white; min-height: 72px; box-sizing: border-box;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="ai-user-input" placeholder="הקלד הודעה..." style="flex: 1; padding: 12px; border: 1px solid #CBD5E0; border-radius: 8px; font-size: 16px; font-weight: 500; box-sizing: border-box;">
+                    <button id="ai-send-btn" style="background: #8B5CF6; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; flex-shrink: 0; box-sizing: border-box;">שלח</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONSTANTS FROM METADATA
+        // ========================================
+        const USER_ID = 'fae06b49-1239-4ba5-93db-244ce2851fb4';
+        const PAGE_ID = 'יניב_רופא_שיניים__1763929361390_html';
+
+        // ========================================
+        // MOBILE MENU
+        // ========================================
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            // CRITICAL: Only toggle on mobile devices
+            if (window.innerWidth <= 768) {
+                navMenu.classList.toggle('active');
+            } else {
+                // On desktop, ensure menu is always visible and not in active state
+                navMenu.classList.remove('active');
+            }
+        }
+        
+        // CRITICAL: Close mobile menu when window is resized to desktop size
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                const navMenu = document.getElementById('nav-menu');
+                if (navMenu) {
+                    navMenu.classList.remove('active');
+                }
+            }
+        });
+
+        // ========================================
+        // ⚠️ REMOVED: Admin mode - Store management is accessed from user dashboard
+        // ========================================
+
+        // ========================================
+        // SMOOTH SCROLL FOR NAVIGATION
+        // ======================================== */
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    document.getElementById('nav-menu').classList.remove('active');
+                }
+            });
+        });
+
+        // ========================================
+        // ACCESSIBILITY FUNCTIONS
+        // ========================================
+        let currentFontSize = 100;
+        function changeFontSize(action) {
+            if (action === 'increase') currentFontSize += 10;
+            else if (action === 'decrease') currentFontSize -= 10;
+            else currentFontSize = 100;
+            
+            currentFontSize = Math.max(80, Math.min(140, currentFontSize));
+            document.body.style.fontSize = currentFontSize + '%';
+            localStorage.setItem('fontSize', currentFontSize);
+        }
+
+        function toggleContrast() {
+            const isEnabled = document.getElementById('contrast-toggle').checked;
+            if (isEnabled) {
+                document.body.style.filter = 'contrast(1.5)';
+                document.body.style.background = '#000';
+                document.body.style.color = '#fff';
+            } else {
+                document.body.style.filter = '';
+                document.body.style.background = '';
+                document.body.style.color = '';
+            }
+            localStorage.setItem('highContrast', isEnabled);
+        }
+
+        function toggleReadableFont() {
+            const isEnabled = document.getElementById('readable-font-toggle').checked;
+            document.body.style.fontFamily = isEnabled ? 'Arial, sans-serif' : '';
+            localStorage.setItem('readableFont', isEnabled);
+        }
+
+        function toggleHighlightLinks() {
+            const isEnabled = document.getElementById('highlight-links-toggle').checked;
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                if (isEnabled) {
+                    link.style.textDecoration = 'underline';
+                    link.style.fontWeight = 'bold';
+                    link.style.color = '#0066cc';
+                } else {
+                    link.style.textDecoration = '';
+                    link.style.fontWeight = '';
+                    link.style.color = '';
+                }
+            });
+            localStorage.setItem('highlightLinks', isEnabled);
+        }
+
+        function toggleLargeCursor() {
+            const isEnabled = document.getElementById('large-cursor-toggle').checked;
+            document.body.style.cursor = isEnabled ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Cpath d=\'M0,0 L0,24 L8,18 L12,28 L16,26 L12,16 L20,16 Z\' fill=\'black\' stroke=\'white\' stroke-width=\'2\'/%3E%3C/svg%3E") 0 0, auto' : '';
+            localStorage.setItem('largeCursor', isEnabled);
+        }
+
+        function toggleLineHeight() {
+            const isEnabled = document.getElementById('line-height-toggle').checked;
+            document.body.style.lineHeight = isEnabled ? '1.8' : '';
+            localStorage.setItem('lineHeight', isEnabled);
+        }
+
+        function toggleAnimations() {
+            const isEnabled = document.getElementById('pause-animations-toggle').checked;
+            if (isEnabled) {
+                const style = document.createElement('style');
+                style.id = 'pause-animations-style';
+                style.textContent = '* { animation: none !important; transition: none !important; }';
+                document.head.appendChild(style);
+            } else {
+                const style = document.getElementById('pause-animations-style');
+                if (style) style.remove();
+            }
+            localStorage.setItem('pauseAnimations', isEnabled);
+        }
+
+        function resetAccessibility() {
+            currentFontSize = 100;
+            document.body.style.fontSize = '';
+            document.body.style.filter = '';
+            document.body.style.background = '';
+            document.body.style.color = '';
+            document.body.style.fontFamily = '';
+            document.body.style.cursor = '';
+            document.body.style.lineHeight = '';
+            
+            document.getElementById('contrast-toggle').checked = false;
+            document.getElementById('readable-font-toggle').checked = false;
+            document.getElementById('highlight-links-toggle').checked = false;
+            document.getElementById('large-cursor-toggle').checked = false;
+            document.getElementById('line-height-toggle').checked = false;
+            document.getElementById('pause-animations-toggle').checked = false;
+            
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                link.style.textDecoration = '';
+                link.style.fontWeight = '';
+                link.style.color = '';
+            });
+            
+            const style = document.getElementById('pause-animations-style');
+            if (style) style.remove();
+            
+            localStorage.clear();
+        }
+
+        // ========================================
+        // AI BOT FUNCTIONS
+        // ========================================
+        const WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbkfhkfggyt';
+
+        const aiBotBtn = document.getElementById('ai-bot-btn');
+        const aiChatWindow = document.getElementById('ai-chat-window');
+        const aiCloseBtn = document.getElementById('ai-close-btn');
+        const aiSendBtn = document.getElementById('ai-send-btn');
+        const aiUserInput = document.getElementById('ai-user-input');
+        const aiChatMessages = document.getElementById('ai-chat-messages');
+
+        function initAIBot() {
+            if (!aiBotBtn || !aiChatWindow) return;
+
+            aiBotBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isVisible = aiChatWindow.style.display === 'flex';
+                aiChatWindow.style.display = isVisible ? 'none' : 'flex';
+                if (!isVisible) {
+                    aiUserInput.focus();
+                    aiChatMessages.innerHTML = `
+                        <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                            <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+                        </div>
+                    `;
+                    aiUserInput.value = '';
+                }
+            });
+
+            aiCloseBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                aiChatWindow.style.display = 'none';
+                aiChatMessages.innerHTML = `
+                    <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                        <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+                    </div>
+                `;
+                aiUserInput.value = '';
+            });
+
+            aiSendBtn.addEventListener('click', sendAiMessage);
+            aiUserInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendAiMessage();
+                }
+            });
+
+            aiBotBtn.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.6)';
+            });
+
+            aiBotBtn.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4)';
+            });
+        }
+
+        function addBotMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `background: ${isUser ? '#8B5CF6' : '#E9D5FF'}; color: ${isUser ? 'white' : '#1F2937'}; padding: 12px; border-radius: 12px; margin-bottom: 12px; font-size: 16px; font-weight: 500; line-height: 1.5;`;
+            messageDiv.innerHTML = `<p style="margin: 0;">${message}</p>`;
+            aiChatMessages.appendChild(messageDiv);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.style.cssText = 'background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;';
+            typingDiv.innerHTML = '<p style="margin: 0; color: #1F2937;">סתיו מקלידה...</p>';
+            aiChatMessages.appendChild(typingDiv);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingDiv = document.getElementById('typing-indicator');
+            if (typingDiv) typingDiv.remove();
+        }
+
+        async function sendAiMessage() {
+            const message = aiUserInput.value.trim();
+            if (!message) return;
+            
+            addBotMessage(message, true);
+            aiUserInput.value = '';
+            showTypingIndicator();
+            
+            try {
+                const pageContent = {
+                    title: document.querySelector('h1')?.textContent?.trim() || document.title,
+                    businessName: 'יניב רופא שיניים ',
+                    phone: '9725853781',
+                    email: 'britolam1@gmail.com',
+                    address: 'אוסשקין 24 נתניה'
+                };
+
+                const messageData = {
+                    context: pageContent,
+                    user_message: message,
+                    page_type: "onlineStore",
+                    business_info: {
+                        name: "יניב רופא שיניים ",
+                        phone: "9725853781",
+                        email: "britolam1@gmail.com",
+                        address: "אוסשקין 24 נתניה"
+                    }
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(messageData)
+                });
+
+                let data = await response.json();
+                hideTypingIndicator();
+
+                if (data.action) {
+                    switch(data.action) {
+                        case 'add_to_cart':
+                            if (data.items && Array.isArray(data.items)) {
+                                data.items.forEach(item => {
+                                    if (item.product_name && item.price) {
+                                        if (typeof window.addToCart === 'function') {
+                                            window.addToCart(item.product_name, item.price, item.image || '', null);
+                                        }
+                                    }
+                                });
+                            }
+                            addBotMessage(data.message || 'המוצרים נוספו לעגלה! 🛒');
+                            break;
+                        case 'scroll_to_products':
+                            document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
+                            addBotMessage(data.message || 'הנה המוצרים שלנו! 🛍️');
+                            break;
+                        case 'scroll_to_about':
+                            document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                            addBotMessage(data.message || 'הנה קצת עלינו! ✨');
+                            break;
+                        case 'open_whatsapp':
+                            const whatsappLink = document.querySelector('[href*="wa.me"], [href*="whatsapp"]');
+                            if (whatsappLink) {
+                                window.open(whatsappLink.href, '_blank');
+                            }
+                            addBotMessage(data.message || 'פתחתי את WhatsApp! 💬');
+                            break;
+                        default:
+                            addBotMessage(data.message || data.response || 'מצטערת, לא הצלחתי להבין.');
+                    }
+                } else {
+                    addBotMessage(data.message || data.response || 'מצטערת, קרתה שגיאה.');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addBotMessage('מצטערת, קרתה שגיאה. נסי שוב.');
+            }
+        }
+
+        // ========================================
+        // INITIALIZE ON LOAD
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            initAIBot();
+            
+            // Accessibility menu toggle
+            document.getElementById('accessibility-btn').addEventListener('click', function() {
+                const menu = document.getElementById('accessibility-menu');
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Close accessibility menu when clicking outside
+            document.addEventListener('click', function(e) {
+                const btn = document.getElementById('accessibility-btn');
+                const menu = document.getElementById('accessibility-menu');
+                if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
+            
+            // Restore accessibility settings
+            const savedFontSize = localStorage.getItem('fontSize');
+            if (savedFontSize) {
+                currentFontSize = parseInt(savedFontSize);
+                document.body.style.fontSize = currentFontSize + '%';
+            }
+            
+            if (localStorage.getItem('highContrast') === 'true') {
+                document.getElementById('contrast-toggle').checked = true;
+                toggleContrast();
+            }
+            if (localStorage.getItem('readableFont') === 'true') {
+                document.getElementById('readable-font-toggle').checked = true;
+                toggleReadableFont();
+            }
+            if (localStorage.getItem('highlightLinks') === 'true') {
+                document.getElementById('highlight-links-toggle').checked = true;
+                toggleHighlightLinks();
+            }
+            if (localStorage.getItem('largeCursor') === 'true') {
+                document.getElementById('large-cursor-toggle').checked = true;
+                toggleLargeCursor();
+            }
+            if (localStorage.getItem('lineHeight') === 'true') {
+                document.getElementById('line-height-toggle').checked = true;
+                toggleLineHeight();
+            }
+            if (localStorage.getItem('pauseAnimations') === 'true') {
+                document.getElementById('pause-animations-toggle').checked = true;
+                toggleAnimations();
+            }
+        });
+    </script>
+    
+    <!-- 🛒 STORE CHECKOUT SCRIPT - CRITICAL FOR CART FUNCTIONALITY -->
+    <script src="/store-checkout.js"></script>
+</body>
+</html>
+

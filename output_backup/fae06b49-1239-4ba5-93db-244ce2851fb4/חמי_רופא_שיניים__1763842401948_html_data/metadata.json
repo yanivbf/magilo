@@ -1,0 +1,34 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-22T20:13:22.051Z",
+  "fileName": "חמי_רופא_שיניים__1763842401948_html",
+  "description": "רופא שיניים",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "053-583-9899",
+  "phones": [
+    "053-583-9899",
+    "076-384-2401",
+    "056-006-6984",
+    "052-179-1136",
+    "055-674-5753",
+    "079-113-6064"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום ראשון, 23 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "המרפאה פתוחה בימים ראשון עד חמישי בין השעות 9:00 ל-19:00, וב",
+      "duration": 30,
+      "price": 13
+    },
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

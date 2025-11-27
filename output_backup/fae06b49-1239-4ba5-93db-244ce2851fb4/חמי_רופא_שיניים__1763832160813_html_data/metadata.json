@@ -1,0 +1,34 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-22T17:22:40.876Z",
+  "fileName": "חמי_רופא_שיניים__1763832160813_html",
+  "description": "מומחה",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-383-2160",
+    "056-006-6984",
+    "052-179-1136",
+    "055-674-5753",
+    "079-113-6064"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום ראשון, 23 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "משך הטיפול משתנה בהתאם לסוג ההליך. בדיקה שגרתית נמשכת כ-30",
+      "duration": 30,
+      "price": 45
+    },
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

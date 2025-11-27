@@ -1,0 +1,40 @@
+[
+  {
+    "id": "purchase_1763764250782_7w8pwi67e",
+    "userId": "undefined",
+    "storeId": "srcdoc",
+    "products": [
+      {
+        "id": 1763764175317,
+        "name": "מוצר 6",
+        "price": 149,
+        "quantity": 2,
+        "image": "https://via.placeholder.com/300x250?text=מוצר+6"
+      },
+      {
+        "id": 1763764184584,
+        "name": "פרלינים מובחרים",
+        "price": 15,
+        "quantity": 1,
+        "image": "https://example.com/images/pralines.jpg"
+      },
+      {
+        "id": 1763764197852,
+        "name": "קינוחי שוקולד אישיים",
+        "price": 30,
+        "quantity": 1,
+        "image": "https://example.com/images/desserts.jpg"
+      }
+    ],
+    "subtotal": 343,
+    "shipping": true,
+    "shippingCost": 35,
+    "total": 378,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerEmail": "britolam1@gmail.com",
+    "customerAddress": "בר  יואי 2 נתניה",
+    "status": "new",
+    "createdAt": "2025-11-21T22:30:50.783Z"
+  }
+]

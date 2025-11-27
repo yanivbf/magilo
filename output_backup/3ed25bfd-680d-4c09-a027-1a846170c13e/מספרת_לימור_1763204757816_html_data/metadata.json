@@ -1,0 +1,63 @@
+﻿{
+    "pageType": "serviceProvider",
+    "createdAt": "2025-11-15T11:05:57.845Z",
+    "fileName": "מספרת_לימור_1763204757816_html",
+    "description": "מספרת לימור - מספרה מקצועית לנשים. תספורות, צבע, תסרוקות ועיצוב שיער ברמה גבוהה. קבעי תור עכשיו!",
+    "isActive": true,
+    "workingHours": {
+        "start": "09:00",
+        "end": "17:00"
+    },
+    "workingDays": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+    ],
+    "breaks": [
+        {
+            "start": "13:00",
+            "end": "14:00",
+            "desc": "הפסקת צהריים"
+        }
+    ],
+    "services": [
+        {
+            "name": "תספורת גברים",
+            "duration": 30,
+            "price": 80
+        },
+        {
+            "name": "תספורת זקן",
+            "duration": 45,
+            "price": 120
+        },
+        {
+            "name": "צבע שיער",
+            "duration": 90,
+            "price": 250
+        },
+        {
+            "name": "פן + תספורת",
+            "duration": 60,
+            "price": 150
+        }
+    ],
+    "phone": "072-535-8398",
+    "phones": [
+        "072-535-8398",
+        "053-583-9899",
+        "051-933-1379",
+        "050-222-2222",
+        "050-333-3333",
+        "050-444-4444"
+    ],
+    "email": "britolam1@gmail.com",
+    "city": "תל אביב",
+    "address": "יום שישי, 21 בנובמבר 2025",
+    "products": [],
+    "hasAppointments": true,
+    "appointments": true
+}

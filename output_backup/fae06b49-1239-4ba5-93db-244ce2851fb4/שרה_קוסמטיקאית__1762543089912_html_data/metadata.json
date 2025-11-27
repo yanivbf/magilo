@@ -1,0 +1,27 @@
+﻿{
+    "pageType": "serviceProvider",
+    "createdAt": "2025-11-07T08:18:09.920Z",
+    "fileName": "שרה_קוסמטיקאית__1762543089912_html",
+    "description": "שרה קוסמטיקאית מציעה טיפולי פנים מקצועיים בנתניה. חוויה מחודשת לעור שלך.",
+    "phone": "050-537-8108",
+    "phones": ["050-537-8108", "072-505-3781", "053-891-2345"],
+    "email": "britolam1@gmail.com",
+    "city": "נתניה",
+    "address": "יום חמישי, 7 בנובמבר 2025",
+    "products": [
+        {
+            "name": "טיפול פנים בסיסי",
+            "price": 200
+        },
+        {
+            "name": "טיפול אנטי אייג'ינג",
+            "price": 350
+        },
+        {
+            "name": "פילינג כימי",
+            "price": 400
+        }
+    ],
+    "hasAppointments": true,
+    "appointments": true
+}

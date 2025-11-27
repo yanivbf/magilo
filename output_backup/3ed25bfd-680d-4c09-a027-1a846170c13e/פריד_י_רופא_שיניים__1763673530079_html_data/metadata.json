@@ -1,0 +1,38 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-20T21:18:50.583Z",
+  "fileName": "פריד_י_רופא_שיניים__1763673530079_html",
+  "description": "מומחה",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-367-3530",
+    "056-006-6984",
+    "050-268-2658",
+    "052-179-1136",
+    "055-674-5753",
+    "076-367-3336",
+    "079-113-6064",
+    "076-367-3345"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום שישי, 21 בנובמבר 2025",
+  "products": [
+    {
+      "name": "אישור פרטי התור",
+      "price": 80
+    }
+  ],
+  "services": [
+    {
+      "name": "לק",
+      "duration": 30,
+      "price": 100
+    }
+  ],
+  "lastUpdated": "2025-11-20T21:22:08.129Z"
+}

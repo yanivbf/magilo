@@ -1,0 +1,33 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-22T16:37:22.263Z",
+  "fileName": "גלית_מסאז__1763829442192_html",
+  "description": "מסאזים מקצועי",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-382-9442",
+    "076-382-9355",
+    "056-006-6984",
+    "050-123-4567",
+    "076-382-9394"
+  ],
+  "email": "ofer.dadush@gmail.com",
+  "address": "כן, ניתן לקבוע פגישה בטלפון 505378108",
+  "products": [],
+  "services": [
+    {
+      "name": "משך הטיפול משתנה בהתאם לסוג המסאז והצרכים של הלקוח, אך בדרך",
+      "duration": 30,
+      "price": 90
+    },
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

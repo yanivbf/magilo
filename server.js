@@ -376,7 +376,12 @@ app.post('/api/create-page', async (req, res) => {
     }
     
     // If it's a store OR course (digital courses), inject checkout scripts
-    if (pageType === 'store' || pageType === 'course' || pageType === 'restaurantMenu') {
+    // 🔥 BUT SKIP for template-based pages - they have their own cart system!
+    const isTemplateBasedStore = pageHtml.includes('<meta name="skip-store-injection"') || 
+                                  pageHtml.includes('cart-float-btn') ||
+                                  pageHtml.includes('id="cart-float-btn"');
+    
+    if ((pageType === 'store' || pageType === 'course' || pageType === 'restaurantMenu') && !isTemplateBasedStore) {
       const storeScriptInjection = `
 <script src="/store-checkout.js"></script>
 <!-- CHECKOUT_SCRIPTS_INJECTED -->`;
@@ -398,6 +403,8 @@ app.post('/api/create-page', async (req, res) => {
       } else {
         console.log('🛒 Page has purchase capability - cart & checkout available');
       }
+    } else if (isTemplateBasedStore) {
+      console.log('⏭️ Skipping store-checkout.js injection - template-based store with built-in cart');
     }
     
     // 📊 DEBUG: Log HTML length before fixEventPageWhatsApp
@@ -751,6 +758,17 @@ function extractProductsFromPage() {
 // Function to fix STORE pages (cart, bubbles, etc.)
 function fixStorePageIssues(html) {
   console.log('🛒 Fixing store page issues...');
+  
+  // 🔥 CRITICAL: Skip template-based stores - they have proper cart HTML that should NOT be modified!
+  const isTemplateBasedStore = html.includes('<meta name="skip-store-injection"') || 
+                                html.includes('class="cart-float-btn"') ||
+                                html.includes('id="cart-float-btn"');
+  
+  if (isTemplateBasedStore) {
+    console.log('⏭️ Skipping fixStorePageIssues - template-based store with proper cart HTML');
+    return html; // Return unchanged!
+  }
+  
   let fixedCount = 0;
   
   // 1. FIX: Remove ALL content and attributes from cart placeholders
@@ -1972,14 +1990,14 @@ app.get('/api/pages/all/marketplace', async (req, res) => {
     }
     
     for (const userId of userDirs) {
-      const userDirPath = path.join(outputDir, userId);
-      
-      console.log(`📂 Reading pages from user: ${userId}`);
-      
-      // Read this user's pages
-      const files = await fs.readdir(userDirPath);
-      
-      // ⛔ NEW: ONLY real HTML files! No ghost pages from _data folders
+        const userDirPath = path.join(outputDir, userId);
+        
+        console.log(`📂 Reading pages from user: ${userId}`);
+        
+        // Read this user's pages
+        const files = await fs.readdir(userDirPath);
+        
+        // ⛔ NEW: ONLY real HTML files! No ghost pages from _data folders
       const htmlFiles = files.filter(f => f.endsWith('_html') && !f.endsWith('_html_data'));
       
       console.log(`   Found ${htmlFiles.length} pages for user ${userId}`);
@@ -2338,6 +2356,39 @@ app.get('/api/pages/:userId', async (req, res) => {
   }
 });
 
+// 🔥 Check if a page exists (for cleaning orphaned Supabase entries)
+app.get('/api/check-page-exists', async (req, res) => {
+  try {
+    const { userId, fileName } = req.query;
+    
+    if (!userId || !fileName) {
+      return res.json({ exists: false });
+    }
+    
+    const userDir = path.join('output', userId);
+    
+    // Try multiple possible file names
+    const possibleNames = [
+      fileName,
+      fileName + '.html',
+      fileName.replace(/_html$/, '_html.html'),
+      fileName.replace('.html', '')
+    ];
+    
+    for (const name of possibleNames) {
+      const filePath = path.join(userDir, name);
+      if (await fs.pathExists(filePath)) {
+        return res.json({ exists: true, path: filePath });
+      }
+    }
+    
+    res.json({ exists: false });
+  } catch (error) {
+    console.error('Error checking page exists:', error);
+    res.json({ exists: false });
+  }
+});
+
 // Update page endpoint
 app.put('/api/update-page', async (req, res) => {
   try {
@@ -2465,6 +2516,22 @@ app.delete('/api/delete-page', async (req, res) => {
     if (await fs.pathExists(dataDir3)) {
       await fs.remove(dataDir3);
       console.log('✅ Deleted alternative _data folder:', dataDir3);
+      deletedSomething = true;
+    }
+    
+    // Try to delete _html_html_data folder (created when filename ends with _html)
+    const dataDir4 = path.join(userDir, `${fileNameBase}_html_html_data`);
+    if (await fs.pathExists(dataDir4)) {
+      await fs.remove(dataDir4);
+      console.log('✅ Deleted _html_html_data folder:', dataDir4);
+      deletedSomething = true;
+    }
+    
+    // Try to delete folder with .html extension still in name
+    const dataDir5 = path.join(userDir, `${decodedFileName.replace('.html', '')}_html_data`);
+    if (await fs.pathExists(dataDir5)) {
+      await fs.remove(dataDir5);
+      console.log('✅ Deleted _html_data folder:', dataDir5);
       deletedSomething = true;
     }
     
@@ -4576,7 +4643,7 @@ app.get('/api/analytics/page/:pageName', async (req, res) => {
             pagePurchases = Object.values(db.purchases).filter(p => {
                 // Check multiple matching conditions
                 const nameMatch = p.storeId === pageName || 
-                                p.pageName === pageName || 
+                    p.pageName === pageName ||
                                 pageName.includes(p.storeId) ||
                                 p.storeId?.includes(pageName.replace('_html', ''));
                 
@@ -6798,7 +6865,7 @@ app.post('/api/update-page-metadata/:userId/:fileName', async (req, res) => {
 
 // N8N Webhook Proxy - to fix CORS issues
 const https = require('https');
-const N8N_WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbmreketpg';
+const N8N_WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhfaadsgdrghre546yrthfg12w23';
 
 app.post('/api/n8n-webhook', async (req, res) => {
   try {
@@ -6863,6 +6930,940 @@ app.options('/api/n8n-webhook', (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.status(200).end();
+});
+
+// ========================================
+// STORE TEMPLATE HELPER FUNCTIONS
+// ========================================
+
+// Generate products HTML for store template
+function generateProductsHtml(products, productCount = 6) {
+  // Sample products database
+  const sampleProducts = [
+    { name: 'אוזניות אלחוטיות', price: 299, description: 'אוזניות Bluetooth איכותיות עם ביטול רעשים', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', badge: 'חדש!' },
+    { name: 'מצלמת פולארויד', price: 449, description: 'מצלמה קלאסית עם הדפסה מיידית', image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400', badge: null },
+    { name: 'שעון חכם', price: 399, originalPrice: 599, description: 'שעון ספורט עם מעקב דופק ו-GPS', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', badge: 'מבצע!' },
+    { name: 'רמקול נייד', price: 179, description: 'רמקול Bluetooth עמיד למים', image: 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400', badge: 'חדש!' },
+    { name: 'שעון יד קלאסי', price: 249, description: 'שעון אלגנטי לכל אירוע', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400', badge: null },
+    { name: 'אוזניות גיימינג', price: 279, originalPrice: 399, description: 'אוזניות מקצועיות עם מיקרופון', image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400', badge: '-30%' },
+    { name: 'מקלדת מכנית', price: 359, description: 'מקלדת RGB לגיימרים', image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400', badge: null },
+    { name: 'עכבר אלחוטי', price: 149, description: 'עכבר ארגונומי לעבודה ומשחקים', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400', badge: 'חדש!' },
+    { name: 'מטען נייד', price: 129, description: 'סוללה חיצונית 20,000mAh', image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400', badge: null },
+    { name: 'כבל USB-C', price: 49, description: 'כבל טעינה מהירה 2 מטר', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400', badge: null },
+    { name: 'מעמד לטלפון', price: 79, description: 'מעמד מתכוונן לשולחן', image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400', badge: null },
+    { name: 'נרתיק לאוזניות', price: 59, description: 'נרתיק קשיח עמיד', image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400', badge: null },
+  ];
+  
+  // Use provided products or sample products
+  const productsToUse = (products && Array.isArray(products) && products.length > 0) 
+    ? products 
+    : sampleProducts.slice(0, productCount);
+  
+  console.log('🛒 Generating', productsToUse.length, 'products (requested:', productCount, ')');
+  
+  return productsToUse.map((product, index) => {
+    const badge = product.badge ? `<span class="product-badge ${product.badge.includes('%') || product.badge.includes('מבצע') ? 'badge-sale' : 'badge-new'}">${product.badge}</span>` : '';
+    const originalPrice = product.originalPrice ? `<span class="original-price">₪${product.originalPrice}</span>` : '';
+    const productImage = product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+    const productName = (product.name || 'מוצר').replace(/'/g, "\\'");
+    
+    return `
+      <div class="product-card" data-product-id="p${index + 1}">
+          ${badge}
+          <div class="product-image-wrapper" style="background-image: url('${productImage}');">
+              <img src="${productImage}" alt="${product.name || 'מוצר'}" class="product-image">
+          </div>
+          <div class="product-info">
+              <h3 class="product-name">${product.name || 'מוצר'}</h3>
+              <p class="product-description">${product.description || ''}</p>
+              <div class="product-price">
+                  ${originalPrice}
+                  ₪${product.price || 0}
+              </div>
+              <button class="btn-add-cart" onclick="addToCart('${productName}', ${product.price || 0}, '${productImage}')">
+                  🛒 הוסף לעגלה
+              </button>
+          </div>
+      </div>
+    `;
+  }).join('');
+}
+
+
+// Generate testimonials section for store template
+function generateStoreTestimonialsHtml() {
+  return `
+    <section id="testimonials">
+        <div class="container">
+            <h2 class="section-title">⭐ מה אומרים עלינו</h2>
+            <p class="section-subtitle">לקוחות מרוצים משתפים</p>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">"שירות מעולה! המוצר הגיע מהר והאיכות מדהימה. בהחלט אחזור לקנות."</div>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">ש</div>
+                        <div>
+                            <div class="testimonial-name">שרה כ.</div>
+                            <div class="testimonial-rating">★★★★★</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">"מחירים הוגנים ומוצרים איכותיים. ממליץ בחום לכל מי שמחפש איכות!"</div>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">ד</div>
+                        <div>
+                            <div class="testimonial-name">דני מ.</div>
+                            <div class="testimonial-rating">★★★★★</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">"חנות מומלצת! שירות לקוחות מצוין ומשלוח מהיר. תודה רבה!"</div>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">י</div>
+                        <div>
+                            <div class="testimonial-name">יעל ר.</div>
+                            <div class="testimonial-rating">★★★★☆</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+  `;
+}
+
+// Generate FAQ section for store template
+function generateStoreFaqHtml() {
+  return `
+    <section id="faq">
+        <div class="container">
+            <h2 class="section-title">❓ שאלות ותשובות</h2>
+            <p class="section-subtitle">התשובות לשאלות הנפוצות ביותר</p>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>כמה זמן לוקח המשלוח?</span>
+                        <i class="fas fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>משלוחים מגיעים תוך 3-5 ימי עסקים לכל רחבי הארץ. משלוח אקספרס תוך 24 שעות בתוספת תשלום.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>מה מדיניות ההחזרות?</span>
+                        <i class="fas fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>ניתן להחזיר מוצרים תוך 14 יום מקבלת ההזמנה, במידה והם באריזה מקורית ולא נעשה בהם שימוש.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>האם ניתן לשלם בתשלומים?</span>
+                        <i class="fas fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>כן! אנו מציעים תשלום ב-3 תשלומים ללא ריבית בכל הזמנה מעל ₪300.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>איך אפשר ליצור קשר?</span>
+                        <i class="fas fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>ניתן ליצור קשר דרך וואטסאפ, טלפון או אימייל. אנחנו זמינים בימים א'-ה' בין 09:00-17:00.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+  `;
+}
+
+// ========================================
+// TEMPLATE-BASED PAGE CREATION
+// ========================================
+// This endpoint loads pre-built HTML templates and only sends optional sections to the bot for text generation
+app.post('/api/create-page-with-template', async (req, res) => {
+  try {
+    const { userId, pageType, formData, optionalSections } = req.body;
+    
+    // CRITICAL: Ensure optionalSections is always an array (default to empty array if missing)
+    const safeOptionalSections = Array.isArray(optionalSections) ? optionalSections : [];
+    
+    // CRITICAL: Ensure enableAppointmentBooking is properly checked (default to false if missing/undefined)
+    const hasAppointmentBooking = formData.enableAppointmentBooking === true || 
+                                  formData.enableAppointmentBooking === 'on' || 
+                                  formData.enableAppointmentBooking === 'checked' || 
+                                  formData.enableAppointmentBooking === 1 || 
+                                  formData.enableAppointmentBooking === 'true' ||
+                                  formData.enableAppointmentBooking === true;
+
+    console.log('🎯 Creating page with template system:', { userId, pageType, optionalSections: safeOptionalSections });
+    console.log('📋 Optional sections received:', safeOptionalSections);
+    console.log('📅 enableAppointmentBooking:', formData.enableAppointmentBooking);
+    console.log('📅 workDays received from form:', formData.workDays, 'isArray:', Array.isArray(formData.workDays));
+    console.log('🔍 Checking sections:', {
+      hasPricing: safeOptionalSections.includes('pricing'),
+      hasGallery: safeOptionalSections.includes('gallery'),
+      hasFAQ: safeOptionalSections.includes('faq'),
+      hasServices: safeOptionalSections.includes('services'),
+      hasTestimonials: safeOptionalSections.includes('testimonials'),
+      hasAbout: safeOptionalSections.includes('about'),
+      hasTeam: safeOptionalSections.includes('team'),
+      hasCalendar: hasAppointmentBooking
+    });
+
+    if (!userId || !pageType) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: userId, pageType'
+      });
+    }
+
+    // Load HTML template file
+    let templatePath;
+    if (pageType === 'serviceProvider' || pageType === 'appointment') {
+      templatePath = path.join(__dirname, 'page-creator', 'templates', 'service-provider-template.html');
+    } else if (pageType === 'onlineStore' || pageType === 'store') {
+      templatePath = path.join(__dirname, 'page-creator', 'templates', 'online-store-template.html');
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: `No template available for pageType: ${pageType}`
+      });
+    }
+
+    if (!fs.existsSync(templatePath)) {
+      return res.status(404).json({
+        success: false,
+        error: `Template not found: ${templatePath}`
+      });
+    }
+
+    console.log('📄 Loading template:', templatePath);
+    let htmlTemplate = await fs.readFile(templatePath, 'utf8');
+    
+    // Extract basic info from formData
+    const businessName = formData.mainName || formData.businessName || 'העסק שלי';
+    let phone = formData.phone || '';
+    if (formData.countryCode && phone && !phone.startsWith(formData.countryCode)) {
+      phone = formData.countryCode + phone;
+    }
+    if (!phone) phone = '050-0000000';
+    const email = formData.email || 'info@example.com';
+    const address = formData.address || '';
+    const description = formData.description || '';
+
+    // NO BOT - Use defaults and form data only
+    console.log('⚡ Creating page WITHOUT bot - using template and form data only');
+    
+    // Generate default content from form data (no bot needed)
+    // Ensure description is not empty and properly formatted
+    const cleanDescription = (description && description.trim()) ? description.trim() : '';
+    const defaultHeroText = `ברוכים הבאים ל${businessName}! אנו מספקים שירות מקצועי ואיכותי.`;
+    const defaultAboutText = `אנו ב${businessName} מתמחים במתן שירות מקצועי ואיכותי. הצוות שלנו בעל ניסיון רב ומחויב לספק לכם את השירות הטוב ביותר.`;
+    
+    // Only generate content for checked sections - default to empty if not checked
+    const hasServices = safeOptionalSections.includes('services');
+    const hasTestimonials = safeOptionalSections.includes('testimonials');
+    const hasFAQ = safeOptionalSections.includes('faq');
+    const hasGallery = safeOptionalSections.includes('gallery');
+    const hasAbout = safeOptionalSections.includes('about');
+    const hasTeam = safeOptionalSections.includes('team');
+    
+    const botResponse = {
+      HERO_TEXT: cleanDescription || defaultHeroText,
+      ABOUT_HTML: hasAbout ? (cleanDescription ? `<p>${cleanDescription}</p>` : `<p>${defaultAboutText}</p>`) : '',
+      SERVICES_HTML: hasServices ? '<div class="service-item"><h3>שירות מקצועי</h3><p>אנו מספקים שירותים מקצועיים ואיכותיים</p></div>' : '',
+      TESTIMONIALS_HTML: hasTestimonials ? `
+        <div class="testimonial-card">
+            <div class="testimonial-quote-icon">
+                <svg viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+            </div>
+            <div class="testimonial-header">
+                <div class="testimonial-avatar-wrapper">
+                </div>
+                <div class="testimonial-info">
+                    <div class="testimonial-name">לקוח מרוצה</div>
+                    <div class="testimonial-role">לקוח קבוע</div>
+                    <div class="testimonial-rating">
+                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-text">
+                "שירות מעולה ומקצועי! אני ממליץ בחום לכל מי שמחפש איכות ומקצועיות. הצוות היה אדיב ומסור, והתוצאות עלו על הציפיות שלי."
+            </div>
+            <div class="testimonial-date">📅 לפני שבוע</div>
+        </div>
+        <div class="testimonial-card">
+            <div class="testimonial-quote-icon">
+                <svg viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+            </div>
+            <div class="testimonial-header">
+                <div class="testimonial-avatar-wrapper">
+                </div>
+                <div class="testimonial-info">
+                    <div class="testimonial-name">שרון כהן</div>
+                    <div class="testimonial-role">לקוחה חדשה</div>
+                    <div class="testimonial-rating">
+                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-text">
+                "חוויה נפלאה מההתחלה ועד הסוף! השירות היה מדהים, המחירים הוגנים, ואני בהחלט אחזור בקרוב. תודה רבה!"
+            </div>
+            <div class="testimonial-date">📅 לפני חודש</div>
+        </div>
+        <div class="testimonial-card">
+            <div class="testimonial-quote-icon">
+                <svg viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+            </div>
+            <div class="testimonial-header">
+                <div class="testimonial-avatar-wrapper">
+                </div>
+                <div class="testimonial-info">
+                    <div class="testimonial-name">מיכל לוי</div>
+                    <div class="testimonial-role">לקוחה ותיקה</div>
+                    <div class="testimonial-rating">
+                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star empty">★</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-text">
+                "מקום מקסים עם אנשים מקסימים! השירות תמיד ברמה גבוהה, והיחס האישי עושה את כל ההבדל. ממליצה!"
+            </div>
+            <div class="testimonial-date">📅 לפני שבועיים</div>
+        </div>
+      ` : '',
+      FAQ_HTML: hasFAQ ? `
+        <div class="faq-item active">
+            <div class="faq-question">
+                <div class="faq-question-text">
+                    <div class="faq-question-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    </div>
+                    <span>מה שעות הפעילות שלכם?</span>
+                </div>
+                <div class="faq-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>אנחנו פתוחים בימים א'-ה' בשעות 09:00-17:00. ביום שישי אנחנו פתוחים עד 13:00. בשבת סגור. ניתן לתאם פגישות מראש גם בשעות נוספות לפי הצורך.</p>
+                </div>
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                <div class="faq-question-text">
+                    <div class="faq-question-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    </div>
+                    <span>איך ניתן לקבוע תור?</span>
+                </div>
+                <div class="faq-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>ניתן לקבוע תור בקלות דרך האתר שלנו, בלחיצה על כפתור "קבעו תור עכשיו", או בטלפון. אנחנו ממליצים לקבוע תור מראש כדי להבטיח זמינות.</p>
+                </div>
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                <div class="faq-question-text">
+                    <div class="faq-question-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    </div>
+                    <span>מה אמצעי התשלום המקובלים?</span>
+                </div>
+                <div class="faq-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>אנחנו מקבלים מזומן, כרטיסי אשראי (ויזה, מאסטרקארד, אמריקן אקספרס), העברות בנקאיות, ואפליקציות תשלום כמו ביט ופייבוקס.</p>
+                </div>
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                <div class="faq-question-text">
+                    <div class="faq-question-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    </div>
+                    <span>האם יש לכם חניה?</span>
+                </div>
+                <div class="faq-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <p>כן! יש לנו חניה חינמית ללקוחות ממש ליד העסק. בנוסף, יש חניון ציבורי במרחק הליכה קצר מאיתנו.</p>
+                </div>
+            </div>
+        </div>
+      ` : '',
+      GALLERY_HTML: hasGallery ? `
+        <div class="gallery-item"><img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop" alt="תמונה 1"></div>
+        <div class="gallery-item"><img src="https://images.unsplash.com/photo-1581578731548-c6a0c3f2f7c8?w=400&h=300&fit=crop" alt="תמונה 2"></div>
+        <div class="gallery-item"><img src="https://images.unsplash.com/photo-1556745753-b2904692b3cd?w=400&h=300&fit=crop" alt="תמונה 3"></div>
+        <div class="gallery-item"><img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400&h=300&fit=crop" alt="תמונה 4"></div>
+      ` : '',
+      TEAM_HTML: hasTeam ? `
+        <div class="team-card">
+            <div class="team-card-image-wrapper">
+            </div>
+            <div class="team-card-content">
+                <div class="team-card-name">ישראל ישראלי</div>
+                <div class="team-card-role">מנהל/ת</div>
+                <div class="team-card-bio">מומחה/ית עם ניסיון רב בתחום. מחויב/ת למצוינות ולשירות מעולה ללקוחותינו.</div>
+                <div class="team-card-social">
+                    <a href="#" title="אימייל"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+                    <a href="#" title="טלפון"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></a>
+                </div>
+            </div>
+        </div>
+        <div class="team-card">
+            <div class="team-card-image-wrapper">
+            </div>
+            <div class="team-card-content">
+                <div class="team-card-name">שרה כהן</div>
+                <div class="team-card-role">מומחה/ית בכיר/ה</div>
+                <div class="team-card-bio">בעל/ת הכשרה מקצועית וניסיון של שנים רבות. תמיד שואפ/ת לתוצאות הטובות ביותר.</div>
+                <div class="team-card-social">
+                    <a href="#" title="אימייל"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+                    <a href="#" title="טלפון"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></a>
+                </div>
+            </div>
+        </div>
+        <div class="team-card">
+            <div class="team-card-image-wrapper">
+            </div>
+            <div class="team-card-content">
+                <div class="team-card-name">דני לוי</div>
+                <div class="team-card-role">יועץ/ת</div>
+                <div class="team-card-bio">מתמחה בשירות לקוחות ובפתרונות מותאמים אישית. כאן כדי לעזור בכל שאלה.</div>
+                <div class="team-card-social">
+                    <a href="#" title="אימייל"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+                    <a href="#" title="טלפון"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></a>
+                </div>
+            </div>
+        </div>
+      ` : ''
+    };
+
+    console.log('✅ Using default content (no bot call)');
+
+    // Fill basic placeholders from formData
+    const timestamp = Date.now();
+    const sanitizedName = businessName.replace(/[^a-zA-Z0-9א-ת\s]/g, '').replace(/\s+/g, '_');
+    const pageId = `${sanitizedName}_${timestamp}_html`;
+    const metaDescription = description.substring(0, 150) || businessName;
+
+    // Generate social links HTML
+    const socialLinks = [];
+    if (formData.facebookLink) socialLinks.push(`<a href="${formData.facebookLink}" target="_blank" style="color: #1877F2; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-facebook-f"></i></a>`);
+    if (formData.instagramLink) socialLinks.push(`<a href="${formData.instagramLink}" target="_blank" style="background: linear-gradient(45deg, #F58529, #DD2A7B, #8134AF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-instagram"></i></a>`);
+    if (formData.linkedinLink) socialLinks.push(`<a href="${formData.linkedinLink}" target="_blank" style="color: #0077B5; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-linkedin-in"></i></a>`);
+    if (formData.twitterLink) socialLinks.push(`<a href="${formData.twitterLink}" target="_blank" style="color: #1DA1F2; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-twitter"></i></a>`);
+    if (formData.tiktokLink) socialLinks.push(`<a href="${formData.tiktokLink}" target="_blank" style="color: #000000; font-size: 28px; margin: 0 12px; transition: transform 0.3s; display: inline-block;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-tiktok"></i></a>`);
+    const socialLinksHtml = socialLinks.join('');
+
+    // Parse working days, hours, breaks from formData
+    const dayNameToNumber = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
+      'thursday': 4, 'friday': 5, 'saturday': 6
+    };
+    
+    let workingDays = [];
+    // Handle workDays as array of day names (new format)
+    if (formData.workDays && Array.isArray(formData.workDays)) {
+      workingDays = formData.workDays.map(day => dayNameToNumber[day.toLowerCase()]).filter(n => n !== undefined);
+      console.log('📅 Working days from array:', formData.workDays, '→', workingDays);
+    } else if (typeof formData.workDays === 'string') {
+      // Handle comma-separated string
+      workingDays = formData.workDays.split(',').map(day => dayNameToNumber[day.trim().toLowerCase()]).filter(n => n !== undefined);
+      console.log('📅 Working days from string:', formData.workDays, '→', workingDays);
+    } else {
+      // Fallback to old individual field format
+      if (formData.workingDaySunday === 'on' || formData.workingDaySunday === true) workingDays.push(0);
+      if (formData.workingDayMonday === 'on' || formData.workingDayMonday === true) workingDays.push(1);
+      if (formData.workingDayTuesday === 'on' || formData.workingDayTuesday === true) workingDays.push(2);
+      if (formData.workingDayWednesday === 'on' || formData.workingDayWednesday === true) workingDays.push(3);
+      if (formData.workingDayThursday === 'on' || formData.workingDayThursday === true) workingDays.push(4);
+      if (formData.workingDayFriday === 'on' || formData.workingDayFriday === true) workingDays.push(5);
+      if (formData.workingDaySaturday === 'on' || formData.workingDaySaturday === true) workingDays.push(6);
+      console.log('📅 Working days from individual fields:', workingDays);
+    }
+    
+    console.log('📅 Final working days:', workingDays);
+
+    const workingHours = {
+      start: formData.workingHoursStart || formData.workStartTime || '09:00',
+      end: formData.workingHoursEnd || formData.workEndTime || '17:00'
+    };
+
+    // Parse breaks from formData
+    const breaks = [];
+    if (formData.breakStart && Array.isArray(formData.breakStart)) {
+      for (let i = 0; i < formData.breakStart.length; i++) {
+        if (formData.breakStart[i] && formData.breakEnd && formData.breakEnd[i]) {
+          // Support both breakDesc and breakDescription
+          const desc = (formData.breakDesc && formData.breakDesc[i]) 
+            ? formData.breakDesc[i] 
+            : ((formData.breakDescription && formData.breakDescription[i]) ? formData.breakDescription[i] : '');
+          breaks.push({ start: formData.breakStart[i], end: formData.breakEnd[i], desc: desc });
+        }
+      }
+    }
+    console.log('☕ Breaks parsed:', breaks);
+
+    // Parse special hours from formData - indexed by day number for template
+    const specialHours = {}; // Object indexed by day number (0-6)
+    if (formData.specialDay && Array.isArray(formData.specialDay)) {
+      const dayMapping = {
+        'sunday': { en: 'Sunday', he: 'ראשון', num: 0 },
+        'monday': { en: 'Monday', he: 'שני', num: 1 },
+        'tuesday': { en: 'Tuesday', he: 'שלישי', num: 2 },
+        'wednesday': { en: 'Wednesday', he: 'רביעי', num: 3 },
+        'thursday': { en: 'Thursday', he: 'חמישי', num: 4 },
+        'friday': { en: 'Friday', he: 'שישי', num: 5 },
+        'saturday': { en: 'Saturday', he: 'שבת', num: 6 }
+      };
+      
+      for (let i = 0; i < formData.specialDay.length; i++) {
+        if (formData.specialDay[i] && formData.specialStartTime && formData.specialStartTime[i] && formData.specialEndTime && formData.specialEndTime[i]) {
+          const dayInfo = dayMapping[formData.specialDay[i].toLowerCase()] || { he: formData.specialDay[i], num: -1 };
+          if (dayInfo.num >= 0) {
+            // Index by day number so template can access as SPECIAL_HOURS[dayOfWeek]
+            specialHours[dayInfo.num] = { 
+              start: formData.specialStartTime[i], 
+              end: formData.specialEndTime[i],
+              dayHebrew: dayInfo.he
+            };
+          }
+        }
+      }
+    }
+    console.log('🕐 Special hours parsed:', specialHours);
+
+    // Parse services from formData
+    const services = [];
+    console.log('🔍 Parsing services from formData:', {
+      hasServiceName: !!formData.serviceName,
+      serviceName: formData.serviceName,
+      serviceDuration: formData.serviceDuration,
+      servicePrice: formData.servicePrice
+    });
+    
+    if (formData.serviceName && Array.isArray(formData.serviceName)) {
+      for (let i = 0; i < formData.serviceName.length; i++) {
+        const name = formData.serviceName[i];
+        if (name && name.trim()) {
+          const service = {
+            name: name.trim(),
+            duration: formData.serviceDuration && formData.serviceDuration[i] ? parseInt(formData.serviceDuration[i]) : 30,
+            price: formData.servicePrice && formData.servicePrice[i] ? parseFloat(formData.servicePrice[i]) : 0
+          };
+          services.push(service);
+          console.log(`✅ Added service ${i + 1}:`, service);
+        }
+      }
+    } else if (formData.serviceName && typeof formData.serviceName === 'string') {
+      // Handle single service (not array)
+      const service = {
+        name: formData.serviceName.trim(),
+        duration: formData.serviceDuration ? parseInt(formData.serviceDuration) : 30,
+        price: formData.servicePrice ? parseFloat(formData.servicePrice) : 0
+      };
+      services.push(service);
+      console.log('✅ Added single service:', service);
+    }
+    
+    console.log(`📋 Total services parsed: ${services.length}`, services);
+
+    // Generate working hours text for footer
+    const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    let workingHoursText = '';
+    if (workingDays.length > 0) {
+      const daysText = workingDays.map(day => dayNames[day]).join(', ');
+      workingHoursText = `${daysText}: ${workingHours.start} - ${workingHours.end}`;
+      if (breaks.length > 0) {
+        const breaksText = breaks.map(b => `${b.start}-${b.end}`).join(', ');
+        workingHoursText += ` (הפסקות: ${breaksText})`;
+      }
+      // Add special hours info
+      const specialHoursKeys = Object.keys(specialHours);
+      if (specialHoursKeys.length > 0) {
+        const specialText = specialHoursKeys.map(dayNum => {
+          const sh = specialHours[dayNum];
+          return `${dayNames[dayNum]}: ${sh.start}-${sh.end}`;
+        }).join(', ');
+        workingHoursText += ` | שעות מיוחדות: ${specialText}`;
+                }
+              } else {
+      workingHoursText = 'שעות פעילות: ' + (workingHours.start && workingHours.end ? `${workingHours.start} - ${workingHours.end}` : 'לפי תיאום');
+    }
+
+    // Replace all placeholders in template
+    const placeholders = {
+      '{{BUSINESS_NAME}}': businessName,
+      '{{DESCRIPTION}}': description,
+      '{{PHONE}}': phone,
+      '{{EMAIL}}': email,
+      '{{ADDRESS}}': address,
+      '{{META_DESCRIPTION}}': metaDescription,
+      '{{USER_ID}}': userId,
+      '{{PAGE_ID}}': pageId,
+      '{{SOCIAL_LINKS_HTML}}': socialLinksHtml,
+      '{{WORKING_DAYS_JSON}}': JSON.stringify(workingDays),
+      '{{WORKING_HOURS_JSON}}': JSON.stringify(workingHours),
+      '{{WORKING_HOURS_TEXT}}': workingHoursText,
+      '{{WORKING_HOURS_TEXT}}': workingHoursText,
+      '{{SPECIAL_HOURS_JSON}}': JSON.stringify(specialHours),
+      '{{BREAKS_JSON}}': JSON.stringify(breaks),
+      '{{SERVICES_JSON}}': JSON.stringify(services),
+      '{{BUSINESS_NAME_ENCODED}}': encodeURIComponent(businessName),
+      '{{WEBSITE_URL}}': formData.websiteLink || `${req.protocol}://${req.get('host')}`,
+      // Bot-generated content - only include if section is enabled
+      '{{HERO_TEXT}}': botResponse.HERO_TEXT || `ברוכים הבאים ל${businessName}!`,
+      '{{ABOUT_HTML}}': hasAbout ? (botResponse.ABOUT_HTML || '') : '',
+      '{{SERVICES_HTML}}': hasServices ? (botResponse.SERVICES_HTML || '') : '',
+      '{{TESTIMONIALS_HTML}}': hasTestimonials ? (botResponse.TESTIMONIALS_HTML || '') : '',
+      '{{FAQ_HTML}}': hasFAQ ? (botResponse.FAQ_HTML || '') : '',
+      '{{GALLERY_HTML}}': hasGallery ? (botResponse.GALLERY_HTML || '') : '',
+      '{{TEAM_HTML}}': hasTeam ? (botResponse.TEAM_HTML || '') : '',
+      // Design style (default to minimal)
+      '{{DESIGN_STYLE}}': formData.designStyle || 'minimal',
+      '{{DESIGN_STYLE_CSS}}': '', // Will be injected by premium-styles.css
+      // Show/hide sections based on optionalSections (CRITICAL - only show if checked in form)
+      // IMPORTANT: Default to 'none' if optionalSections is missing or empty
+      '{{SHOW_SERVICES}}': 'none', // Services section removed - services only appear in calendar booking form
+      '{{SHOW_GALLERY}}': safeOptionalSections.includes('gallery') ? 'block' : 'none',
+      '{{SHOW_TESTIMONIALS}}': safeOptionalSections.includes('testimonials') ? 'block' : 'none',
+      '{{SHOW_FAQ}}': safeOptionalSections.includes('faq') ? 'block' : 'none',
+      '{{SHOW_ABOUT}}': safeOptionalSections.includes('about') ? 'block' : 'none',
+      '{{SHOW_YOUTUBE}}': (formData.youtubeLink && formData.youtubeLink.trim() !== '') ? 'block' : 'none',
+      '{{SHOW_PRICING}}': safeOptionalSections.includes('pricing') ? 'block' : 'none',
+      // Calendar/Appointment booking - only show if enabled
+      '{{SHOW_CALENDAR}}': hasAppointmentBooking ? 'block' : 'none',
+      '{{#SHOW_CALENDAR_BUTTON}}': hasAppointmentBooking ? '' : '<!--',
+      '{{/SHOW_CALENDAR_BUTTON}}': hasAppointmentBooking ? '' : '-->',
+      // Navigation placeholders are handled separately with regex
+      // Team section
+      '{{SHOW_TEAM}}': safeOptionalSections.includes('team') ? 'block' : 'none',
+      '{{TEAM_HTML}}': hasTeam ? (botResponse.TEAM_HTML || '') : '',
+      // YouTube embed URL - if no link, use empty placeholder that won't cause errors
+      '{{YOUTUBE_EMBED_URL}}': formData.youtubeLink ? (() => {
+        try {
+          const url = new URL(formData.youtubeLink);
+          const videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
+          if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+          return 'about:blank';
+              } catch (e) {
+          return 'about:blank';
+        }
+      })() : 'about:blank',
+      // STORE-specific placeholders (for online-store-template.html)
+      '{{PRODUCTS_JSON}}': JSON.stringify(formData.products || []),
+      '{{PRODUCTS_JSON_ESCAPED}}': JSON.stringify(formData.products || []).replace(/'/g, "\\'"),
+      '{{PRODUCTS_HTML}}': generateProductsHtml(formData.products || [], parseInt(formData.productCount) || 6),
+      '{{PRIMARY_COLOR}}': formData.primaryColor || '#D9534F',
+      '{{SECONDARY_COLOR}}': formData.secondaryColor || '#B94A48',
+      '{{HERO_IMAGE}}': formData.heroImage || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=2070&auto=format&fit=crop',
+      '{{ABOUT_TEXT}}': description || 'אנחנו מציעים מוצרים איכותיים במחירים הוגנים. שירות מקצועי ואמין.',
+      '{{BUSINESS_DESCRIPTION}}': description || 'החנות המקוונת שלנו',
+      '{{YEAR}}': new Date().getFullYear().toString(),
+      '{{WHATSAPP_NUMBER}}': formData.whatsappNumber || phone.replace(/[^0-9]/g, ''),
+      '{{TESTIMONIALS_SECTION}}': safeOptionalSections.includes('testimonials') ? generateStoreTestimonialsHtml() : '',
+      '{{FAQ_SECTION}}': safeOptionalSections.includes('faq') ? generateStoreFaqHtml() : '',
+      // Store products section
+      '{{SHOW_PRODUCTS}}': (pageType === 'onlineStore' || pageType === 'store') ? 'block' : 'none',
+      '{{#SHOW_PRODUCTS_BUTTON}}': (pageType === 'onlineStore' || pageType === 'store') ? '' : '<!--',
+      '{{/SHOW_PRODUCTS_BUTTON}}': (pageType === 'onlineStore' || pageType === 'store') ? '' : '-->'
+    };
+
+    // Replace conditional placeholders first (those that wrap content)
+    // Replace {{#SHOW_CALENDAR_BUTTON}}...{{/SHOW_CALENDAR_BUTTON}} pattern
+    const calendarButtonRegex = /\{\{#SHOW_CALENDAR_BUTTON\}\}([\s\S]*?)\{\{\/SHOW_CALENDAR_BUTTON\}\}/g;
+    htmlTemplate = htmlTemplate.replace(calendarButtonRegex, (match, content) => {
+      return hasAppointmentBooking ? content : '';
+    });
+    
+    // Replace {{#SHOW_ADMIN_BUTTON}}...{{/SHOW_ADMIN_BUTTON}} pattern - only show when calendar is enabled
+    const adminButtonRegex = /\{\{#SHOW_ADMIN_BUTTON\}\}([\s\S]*?)\{\{\/SHOW_ADMIN_BUTTON\}\}/g;
+    htmlTemplate = htmlTemplate.replace(adminButtonRegex, (match, content) => {
+      return hasAppointmentBooking ? content : '';
+    });
+    
+    // Replace {{#SHOW_PRODUCTS_BUTTON}}...{{/SHOW_PRODUCTS_BUTTON}} pattern - only show for store pages
+    const productsButtonRegex = /\{\{#SHOW_PRODUCTS_BUTTON\}\}([\s\S]*?)\{\{\/SHOW_PRODUCTS_BUTTON\}\}/g;
+    htmlTemplate = htmlTemplate.replace(productsButtonRegex, (match, content) => {
+      return (pageType === 'onlineStore' || pageType === 'store') ? content : '';
+    });
+    
+    // Replace navigation conditional placeholders
+    const isStoreType = (pageType === 'onlineStore' || pageType === 'store');
+    const navItems = [
+      { name: 'ABOUT_NAV', condition: safeOptionalSections.includes('about') },
+      { name: 'GALLERY_NAV', condition: safeOptionalSections.includes('gallery') },
+      { name: 'TESTIMONIALS_NAV', condition: safeOptionalSections.includes('testimonials') },
+      { name: 'FAQ_NAV', condition: safeOptionalSections.includes('faq') },
+      { name: 'TEAM_NAV', condition: safeOptionalSections.includes('team') },
+      { name: 'PRICING_NAV', condition: safeOptionalSections.includes('pricing') },
+      { name: 'YOUTUBE_NAV', condition: formData.youtubeLink && formData.youtubeLink.trim() !== '' },
+      { name: 'CALENDAR_NAV', condition: hasAppointmentBooking },
+      { name: 'PRODUCTS_NAV', condition: isStoreType },
+    ];
+    
+    navItems.forEach(item => {
+      const regex = new RegExp(`\\{\\{#SHOW_${item.name}\\}\\}([\\s\\S]*?)\\{\\{\\/SHOW_${item.name}\\}\\}`, 'g');
+      htmlTemplate = htmlTemplate.replace(regex, (match, content) => {
+        return item.condition ? content : '';
+      });
+    });
+    
+    console.log('✅ Navigation items updated based on selected sections');
+    
+    // CRITICAL: Remove entire sections from HTML if they are NOT selected
+    // This ensures they don't appear at all (not just hidden with display:none)
+    
+    console.log('🗑️ Removing sections that are not selected...');
+    console.log('📋 Selected sections:', safeOptionalSections);
+    
+    // Helper function to completely remove a section by ID (handles nested tags correctly)
+    function removeSectionCompletely(html, sectionId) {
+      console.log(`🗑️ Attempting to remove section: ${sectionId}`);
+      let originalLength = html.length;
+      let result = html;
+      
+      // Find the opening tag - try multiple patterns
+      const openTagPatterns = [
+        new RegExp(`<section[^>]*id=["']${sectionId}["'][^>]*>`, 'gi'),
+        new RegExp(`<section[^>]*id="${sectionId}"[^>]*>`, 'gi'),
+        new RegExp(`<section[^>]*id='${sectionId}'[^>]*>`, 'gi'),
+      ];
+      
+      let openTagRegex = null;
+      for (const pattern of openTagPatterns) {
+        if (pattern.test(html)) {
+          openTagRegex = pattern;
+          break;
+        }
+      }
+      
+      if (!openTagRegex) {
+        // No opening tag found - try fallback immediately
+        console.warn(`⚠️ No opening tag found for section: ${sectionId}`);
+        const simplePattern = new RegExp(`<section[^>]*id=["']${sectionId}["'][^>]*>[\\s\\S]*?<\\/section>`, 'gi');
+        return html.replace(simplePattern, '');
+      }
+      
+      // Reset regex
+      openTagRegex = new RegExp(`<section[^>]*id=["']${sectionId}["'][^>]*>`, 'gi');
+      let match;
+      
+      // Try to find and remove all instances
+      while ((match = openTagRegex.exec(html)) !== null) {
+        const startPos = match.index;
+        let depth = 1;
+        let pos = startPos + match[0].length;
+        
+        // Find matching closing tag by counting depth
+        while (pos < html.length && depth > 0) {
+          const nextOpen = html.indexOf('<section', pos);
+          const nextClose = html.indexOf('</section>', pos);
+          
+          if (nextClose === -1) break; // No closing tag found
+          
+          if (nextOpen !== -1 && nextOpen < nextClose) {
+            // Found nested section - increase depth
+            depth++;
+            pos = html.indexOf('>', nextOpen) + 1;
+          } else {
+            // Found closing tag - decrease depth
+            depth--;
+            if (depth === 0) {
+              // Found matching closing tag - remove the entire section
+              const endPos = nextClose + 10; // 10 = length of '</section>'
+              result = result.substring(0, startPos) + result.substring(endPos);
+              console.log(`✅ Section ${sectionId} removed! Length: ${originalLength} -> ${result.length}`);
+              return result; // Return immediately after removing
+            }
+            pos = nextClose + 10;
+          }
+        }
+      }
+      
+      // Fallback: use a more aggressive regex that matches multiple times
+      // This handles cases where the depth counting might have failed
+      let iterations = 0;
+      let previousLength = result.length;
+      while (iterations < 10) { // Max 10 iterations to avoid infinite loop
+        const simplePattern = new RegExp(`<section[^>]*id=["']${sectionId}["'][^>]*>[\\s\\S]*?<\\/section>`, 'gi');
+        result = result.replace(simplePattern, '');
+        if (result.length === previousLength) break; // No more changes
+        previousLength = result.length;
+        iterations++;
+      }
+      
+      if (result.length < originalLength) {
+        console.log(`✅ Section ${sectionId} removed (fallback after ${iterations} iterations)! Length: ${originalLength} -> ${result.length}`);
+      } else {
+        console.warn(`⚠️ Section ${sectionId} NOT removed! Original length: ${originalLength}, Current length: ${result.length}`);
+      }
+      
+      return result;
+    }
+    
+    // Services section - ALWAYS remove (services only appear in calendar booking form)
+    console.log('🗑️ Removing services section (always removed)');
+    htmlTemplate = removeSectionCompletely(htmlTemplate, 'services');
+    
+    // Gallery section - remove if NOT selected
+    if (!safeOptionalSections.includes('gallery')) {
+      console.log('🗑️ Removing gallery section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'gallery');
+    }
+    
+    // Testimonials section - remove if NOT selected
+    if (!safeOptionalSections.includes('testimonials')) {
+      console.log('🗑️ Removing testimonials section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'testimonials');
+    }
+    
+    // FAQ section - remove if NOT selected
+    if (!safeOptionalSections.includes('faq')) {
+      console.log('🗑️ Removing FAQ section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'faq');
+    }
+    
+    // Team section - remove if NOT selected
+    if (!safeOptionalSections.includes('team')) {
+      console.log('🗑️ Removing team section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'team');
+    }
+    
+    // Pricing section - remove if NOT selected
+    if (!safeOptionalSections.includes('pricing')) {
+      console.log('🗑️ Removing pricing section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'pricing');
+    }
+    
+    // Calendar section - remove if NOT enabled
+    if (!hasAppointmentBooking) {
+      console.log('🗑️ Removing calendar section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'calendar');
+    }
+    
+    // YouTube section - remove if no YouTube link
+    if (!formData.youtubeLink || !formData.youtubeLink.trim()) {
+      console.log('🗑️ Removing YouTube section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'youtube');
+    }
+    
+    // About section - remove if NOT selected
+    if (!safeOptionalSections.includes('about')) {
+      console.log('🗑️ Removing about section');
+      htmlTemplate = removeSectionCompletely(htmlTemplate, 'about');
+    }
+    
+    console.log('✅ Sections removed');
+    
+    // Replace all other placeholders
+    console.log('🔧 Replacing placeholders...');
+    console.log('📋 Placeholders to replace:', Object.keys(placeholders).length);
+    console.log('📋 SHOW_GALLERY will be:', placeholders['{{SHOW_GALLERY}}']);
+    console.log('📋 SHOW_TESTIMONIALS will be:', placeholders['{{SHOW_TESTIMONIALS}}']);
+    console.log('📋 SHOW_FAQ will be:', placeholders['{{SHOW_FAQ}}']);
+    console.log('📋 SHOW_TEAM will be:', placeholders['{{SHOW_TEAM}}']);
+    console.log('📋 SHOW_CALENDAR will be:', placeholders['{{SHOW_CALENDAR}}']);
+    
+    Object.keys(placeholders).forEach(placeholder => {
+      // Skip conditional placeholders that we already handled
+      if (placeholder === '{{#SHOW_CALENDAR_BUTTON}}' || placeholder === '{{/SHOW_CALENDAR_BUTTON}}') {
+        return;
+      }
+      const regex = new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g');
+      const beforeReplace = htmlTemplate.includes(placeholder);
+      htmlTemplate = htmlTemplate.replace(regex, placeholders[placeholder]);
+      const afterReplace = htmlTemplate.includes(placeholder);
+      if (beforeReplace && afterReplace) {
+        console.warn(`⚠️ Placeholder ${placeholder} still exists after replacement!`);
+      }
+    });
+    
+    console.log('✅ Placeholders replaced');
+
+    // ✅ CLEAN: No JavaScript injection needed - CSS in template handles it
+
+    // Save the page
+    const userDir = path.join(__dirname, 'output', userId);
+    await fs.ensureDir(userDir);
+    const fileName = `${pageId}.html`;
+    const pagePath = path.join(userDir, fileName);
+    await fs.writeFile(pagePath, htmlTemplate, 'utf8');
+    
+    // Save metadata
+    const dataDir = path.join(userDir, `${pageId}_data`);
+    await fs.ensureDir(dataDir);
+    const metadata = {
+      userId,
+      pageId,
+      title: businessName,
+      pageType: 'serviceProvider',
+      hasAppointments: true,
+      createdAt: new Date().toISOString(),
+      businessName,
+      phone,
+      email,
+      address,
+      description,
+      optionalSections: safeOptionalSections,
+      templateBased: true,
+      workingDays,
+      workingHours,
+      specialHours,
+      breaks,
+      services
+    };
+    await fs.writeFile(path.join(dataDir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf8');
+
+    console.log('✅ Page created with template system:', fileName);
+
+    res.json({
+      success: true,
+      message: 'Page created successfully with template system!',
+      pageUrl: `/output/${userId}/${fileName}`,
+      pageId,
+      fileName,
+      html: htmlTemplate.substring(0, 1000) // Preview only
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating page with template:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
 });
 
 // API endpoint to update all existing pages with descriptions
@@ -7155,7 +8156,94 @@ app.get('/api/stav/status', (req, res) => {
   }
 });
 
+// ========================================
+// AUTOMATIC CLEANUP - Clean orphaned data folders
+// ========================================
+async function cleanupOrphanedData() {
+  console.log('🧹 Starting automatic cleanup of orphaned data...');
+  
+  try {
+    const outputDir = path.join(__dirname, 'output');
+    if (!await fs.pathExists(outputDir)) return;
+    
+    const userDirs = await fs.readdir(outputDir);
+    let totalCleaned = 0;
+    
+    for (const userId of userDirs) {
+      const userDir = path.join(outputDir, userId);
+      const stat = await fs.stat(userDir);
+      if (!stat.isDirectory()) continue;
+      
+      const entries = await fs.readdir(userDir);
+      
+      // Get all HTML files (without extension for comparison)
+      const htmlFiles = new Set();
+      entries.forEach(entry => {
+        if (entry.endsWith('.html')) {
+          // Store multiple variants for comparison
+          const base = entry.replace('.html', '');
+          htmlFiles.add(base);
+          htmlFiles.add(base.replace(/_html$/, ''));
+          htmlFiles.add(entry);
+        }
+      });
+      
+      // Find orphaned data folders
+      for (const entry of entries) {
+        if (entry.endsWith('_data') || entry.endsWith('_html_data') || entry.endsWith('_html_html_data')) {
+          const folderPath = path.join(userDir, entry);
+          const folderStat = await fs.stat(folderPath);
+          if (!folderStat.isDirectory()) continue;
+          
+          // Extract the page name from folder name
+          const pageName = entry
+            .replace(/_html_html_data$/, '')
+            .replace(/_html_data$/, '')
+            .replace(/_data$/, '');
+          
+          // Check if there's a corresponding HTML file
+          const hasHtmlFile = htmlFiles.has(pageName) || 
+                             htmlFiles.has(pageName + '_html') ||
+                             htmlFiles.has(pageName + '.html') ||
+                             htmlFiles.has(pageName + '_html.html');
+          
+          if (!hasHtmlFile) {
+            console.log(`🗑️ Cleaning orphaned folder: ${entry}`);
+            await fs.remove(folderPath);
+            totalCleaned++;
+          }
+        }
+      }
+    }
+    
+    if (totalCleaned > 0) {
+      console.log(`✅ Cleanup complete: Removed ${totalCleaned} orphaned data folders`);
+    } else {
+      console.log('✅ Cleanup complete: No orphaned data found');
+    }
+  } catch (error) {
+    console.error('❌ Cleanup error:', error);
+  }
+}
+
+// Run cleanup on startup after a delay
+setTimeout(cleanupOrphanedData, 10000); // 10 seconds after start
+
+// Run cleanup every hour
+setInterval(cleanupOrphanedData, 60 * 60 * 1000); // Every hour
+
+// Manual cleanup endpoint
+app.post('/api/cleanup-orphaned', async (req, res) => {
+  try {
+    await cleanupOrphanedData();
+    res.json({ success: true, message: 'Cleanup completed' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log('AutoPage server is ready!');
+  console.log('🧹 Automatic cleanup enabled (runs every hour)');
 });

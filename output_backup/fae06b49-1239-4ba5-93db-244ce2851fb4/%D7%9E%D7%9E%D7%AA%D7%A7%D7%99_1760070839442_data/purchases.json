@@ -1,0 +1,75 @@
+[
+  {
+    "id": "purchase_1760070895019_oesy0zffs",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+    "products": [
+      {
+        "id": 1760070864681,
+        "name": "פרליני קרמל מלוח",
+        "price": 40,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+      },
+      {
+        "id": 1760070872871,
+        "name": "טראפלס שוקולד לבן",
+        "price": 35,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1564993175245-ef75796e6a14?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMGNob2NvbGF0ZSUyMHRydWZmbGVzfGVufDB8fHx8MTcwODE4NTYyNnww&ixlib=rb-4.0.3&q=80&w=1080"
+      }
+    ],
+    "total": 145,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T04:34:55.019Z",
+    "completedAt": "2025-10-10T04:34:55.019Z"
+  },
+  {
+    "id": "purchase_1760071067594_9wt5vbspk",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+    "products": [
+      {
+        "id": 1760071062432,
+        "name": "פרליני קרמל מלוח",
+        "price": 40,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+      }
+    ],
+    "total": 75,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T04:37:47.594Z",
+    "completedAt": "2025-10-10T04:37:47.594Z"
+  },
+  {
+    "id": "purchase_1760071083729_ahrqbnjni",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760070839442",
+    "products": [
+      {
+        "id": 1760071073023,
+        "name": "פרליני קרמל מלוח",
+        "price": 40,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1563212871-067f56173a1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzgyMzJ8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBwcmFsaW5lc3xlbnwwfHx8fDE3MDgxODU2MjV8MA&ixlib=rb-4.0.3&q=80&w=1080"
+      }
+    ],
+    "total": 75,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T04:38:03.729Z",
+    "completedAt": "2025-10-10T04:38:03.729Z"
+  }
+]

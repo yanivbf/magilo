@@ -1,0 +1,111 @@
+[
+  {
+    "id": "purchase_1760086590831_86z5obxya",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760086537516",
+    "products": [
+      {
+        "id": 1760086568917,
+        "name": "מקלות אנרגיה טבעיים",
+        "price": 18,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1582270966779-c5c798ce0e9c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 53,
+    "customerName": "רמי",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T08:56:30.831Z",
+    "completedAt": "2025-10-10T09:17:18.568Z"
+  },
+  {
+    "id": "purchase_1760086775059_3cx3mmiji",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760086537516",
+    "products": [
+      {
+        "id": 1760086762280,
+        "name": "ממתק פירות טרופי",
+        "price": 25,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1579612086208-16e538c366e6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 60,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T08:59:35.059Z",
+    "completedAt": "2025-10-10T09:17:21.426Z"
+  },
+  {
+    "id": "purchase_1760088379578_qb3y9bkyf",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760086537516",
+    "products": [
+      {
+        "id": 1760088354847,
+        "name": "ממתק פירות טרופי",
+        "price": 25,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1579612086208-16e538c366e6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 85,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerEmail": "",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "processing",
+    "createdAt": "2025-10-10T09:26:19.579Z"
+  },
+  {
+    "id": "purchase_1760088533718_brbjmuw3g",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760086537516",
+    "products": [
+      {
+        "id": 1760088481513,
+        "name": "חטיפי פירות יבשים",
+        "price": 22,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1534065609664-df839c4e2358?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760088485605,
+        "name": "מסטיקי מנטה טבעיים",
+        "price": 15,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1580956961138-0dd8ff851241?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760088491246,
+        "name": "חטיפי חלבון פריכים",
+        "price": 20,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1535497258079-668b20df8496?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760088497800,
+        "name": "ג'לי ויטמינים בטעמים",
+        "price": 28,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1582057390234-7a1a2b163e77?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 183,
+    "customerName": "ציון",
+    "customerPhone": "076555555",
+    "customerEmail": "",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "new",
+    "createdAt": "2025-10-10T09:28:53.718Z"
+  }
+]

@@ -1,0 +1,75 @@
+[
+  {
+    "id": "purchase_1760085251800_0epjah0dg",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760084132705",
+    "products": [
+      {
+        "id": 1760085242263,
+        "name": "סוכריות פירות יער אורגניות",
+        "price": 25,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+      }
+    ],
+    "total": 60,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T08:34:11.801Z",
+    "completedAt": "2025-10-10T08:34:11.801Z"
+  },
+  {
+    "id": "purchase_1760085326485_yge6x5e3k",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760084132705",
+    "products": [
+      {
+        "id": 1760085297434,
+        "name": "מרמלדת ג'ינג'ר וכורכום",
+        "price": 22.5,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1610444654519-9c5c24976783?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+      },
+      {
+        "id": 1760085309720,
+        "name": "ליקריץ טבעי ללא סוכר",
+        "price": 18,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1587373898144-8c01d4a8e2e9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+      }
+    ],
+    "total": 98,
+    "customerName": "רמי",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T08:35:26.485Z",
+    "completedAt": "2025-10-10T08:35:26.485Z"
+  },
+  {
+    "id": "purchase_1760085928395_b40h96t5l",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "ממתקי_יובל_1760084132705",
+    "products": [
+      {
+        "id": 1760085918547,
+        "name": "סוכריות פירות יער אורגניות",
+        "price": 25,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+      }
+    ],
+    "total": 60,
+    "customerName": "רמי",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T08:45:28.395Z",
+    "completedAt": "2025-10-10T08:45:28.395Z"
+  }
+]

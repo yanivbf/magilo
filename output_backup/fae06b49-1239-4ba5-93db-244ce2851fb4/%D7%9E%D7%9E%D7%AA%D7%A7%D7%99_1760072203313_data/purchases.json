@@ -1,0 +1,103 @@
+[
+  {
+    "id": "purchase_1760072255527_a2b8gl7p7",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+    "products": [
+      {
+        "id": 1760072235445,
+        "name": "פרליני אשליות מתוקות",
+        "price": 60,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+      },
+      {
+        "id": 1760072238166,
+        "name": "טבלת סוריאליזם מריר",
+        "price": 55,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      }
+    ],
+    "total": 175,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T04:57:35.527Z",
+    "completedAt": "2025-10-10T04:57:35.527Z"
+  },
+  {
+    "id": "purchase_1760072916960_xsgcbmtcj",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+    "products": [
+      {
+        "id": 1760072858797,
+        "name": "פרליני אשליות מתוקות",
+        "price": 60,
+        "quantity": 4,
+        "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+      },
+      {
+        "id": 1760072870535,
+        "name": "טבלת סוריאליזם מריר",
+        "price": 55,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      },
+      {
+        "id": 1760072873717,
+        "name": "מוס אופוריה שוקולד",
+        "price": 50,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1588698943725-3b9e5d4e1a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBtb3Vzc2V8ZW58MHx8fHwxNzE3MzY0ODc5fDA&ixlib=rb-4.0.3&q=80&w=1080"
+      }
+    ],
+    "total": 380,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T05:08:36.960Z",
+    "completedAt": "2025-10-10T05:08:36.960Z"
+  },
+  {
+    "id": "purchase_1760072931485_8b0az8zq7",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760072203313",
+    "products": [
+      {
+        "id": 1760072858797,
+        "name": "פרליני אשליות מתוקות",
+        "price": 60,
+        "quantity": 3,
+        "image": "https://images.unsplash.com/photo-1579737156994-e8544e397c76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHByYWxpbmVzfGVufDB8fHx8MTcxNzM2NDgwMnww&ixlib=rb-4.0.3&q=80&w=1080"
+      },
+      {
+        "id": 1760072870535,
+        "name": "טבלת סוריאליזם מריר",
+        "price": 55,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1553412356-d716503c81e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwY2hvY29sYXRlJTIwYmFyfGVufDB8fHx8MTcxNzM2NDgyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      },
+      {
+        "id": 1760072873717,
+        "name": "מוס אופוריה שוקולד",
+        "price": 50,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1588698943725-3b9e5d4e1a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1ODc0Mjl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBtb3Vzc2V8ZW58MHx8fHwxNzE3MzY0ODc5fDA&ixlib=rb-4.0.3&q=80&w=1080"
+      }
+    ],
+    "total": 285,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T05:08:51.485Z",
+    "completedAt": "2025-10-10T05:08:51.485Z"
+  }
+]

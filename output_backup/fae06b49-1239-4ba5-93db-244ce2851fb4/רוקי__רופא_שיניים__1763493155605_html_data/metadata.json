@@ -1,0 +1,35 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-18T19:12:35.650Z",
+  "fileName": "רוקי__רופא_שיניים__1763493155605_html",
+  "description": "רפואת שיניים",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-349-3155",
+    "056-006-6984",
+    "052-179-1136",
+    "055-674-5753",
+    "079-113-6064"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום שלישי, 18 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "שיננית",
+      "duration": 30,
+      "price": 80
+    },
+    {
+      "name": "ייי",
+      "duration": 45,
+      "price": 100
+    }
+  ],
+  "lastUpdated": "2025-11-18T19:23:19.375Z"
+}

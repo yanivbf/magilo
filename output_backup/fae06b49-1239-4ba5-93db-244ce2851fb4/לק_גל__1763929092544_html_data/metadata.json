@@ -1,0 +1,20 @@
+{
+  "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+  "pageId": "לק_גל__1763929092544_html",
+  "title": "לק גל  ",
+  "pageType": "serviceProvider",
+  "hasAppointments": true,
+  "createdAt": "2025-11-23T20:18:19.945Z",
+  "businessName": "לק גל  ",
+  "phone": "9725853781",
+  "email": "britolam1@gmail.com",
+  "address": "אוסשקין 24 נתניה",
+  "description": "לק",
+  "optionalSections": [
+    "testimonials",
+    "faq",
+    "team",
+    "gallery"
+  ],
+  "templateBased": true
+}

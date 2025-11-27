@@ -1,0 +1,60 @@
+[
+  {
+    "id": "purchase_1760073441841_g2f8n4kpw",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760073388731",
+    "products": [
+      {
+        "id": 1760073421474,
+        "name": "כוח תפוז קומיקס",
+        "price": 11.5,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1550993047-97d8b51ce5ce?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 46.5,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T05:17:21.842Z",
+    "completedAt": "2025-10-10T05:17:21.842Z"
+  },
+  {
+    "id": "purchase_1760082908809_137owz9ov",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760073388731",
+    "products": [
+      {
+        "id": 1760082886057,
+        "name": "טיל אנרגיה אדום",
+        "price": 12.9,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1579294025066-6b22b10a2f7f?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760082889987,
+        "name": "ניצוץ לימוני גיבור",
+        "price": 10,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1582234036686-2c1a89b0d4b9?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760082892470,
+        "name": "כוח תפוז קומיקס",
+        "price": 11.5,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1550993047-97d8b51ce5ce?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 69.4,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T07:55:08.809Z",
+    "completedAt": "2025-10-10T07:55:08.810Z"
+  }
+]

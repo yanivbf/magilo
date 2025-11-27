@@ -1,0 +1,33 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-21T05:47:22.629Z",
+  "fileName": "יניב_רופא_נשים_1763704042557_html",
+  "description": "מרפאת נשים",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-370-4042",
+    "056-006-6984",
+    "057-251-1118",
+    "076-370-4029"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "המרפאה פתוחה בימים ראשון עד חמישי, בין השעות 09",
+  "products": [],
+  "services": [
+    {
+      "name": "המרפאה פתוחה בימים ראשון עד חמישי, בין השעות 09:00 ל",
+      "duration": 30,
+      "price": 18
+    },
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

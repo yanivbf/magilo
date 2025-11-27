@@ -1455,13 +1455,17 @@
                 const serverPages = serverData.pages || [];
                 console.log('Server pages for modal:', serverPages);
                 
-                // קבל גם דפים מקומיים
+                // קבל גם דפים מקומיים - אבל רק דפים שעדיין קיימים בשרת
                 const localData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
                 const localPages = localData.pages || [];
-                console.log('Local pages for modal:', localPages);
+                // 🎯 FIX: Filter out deleted pages - only keep pages that exist on server
+                const validLocalPages = localPages.filter(localPage => {
+                    return serverPages.some(serverPage => serverPage.fileName === localPage.fileName);
+                });
+                console.log('Local pages for modal (filtered):', validLocalPages.length, 'out of', localPages.length);
                 
-                // שלב את הנתונים
-                const allPages = [...serverPages, ...localPages];
+                // שלב את הנתונים - serverPages first, then only valid local pages
+                const allPages = [...serverPages, ...validLocalPages];
                 console.log('All pages for modal:', allPages);
 
                 // ספור מנויים פעילים - בדוק גם localStorage וגם השרת
@@ -3263,13 +3267,17 @@
                 const serverPages = serverData.pages || [];
                 console.log('Server pages:', serverPages);
                 
-                // קבל גם דפים מקומיים
+                // קבל גם דפים מקומיים - אבל רק דפים שעדיין קיימים בשרת
                 const localData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
                 const localPages = localData.pages || [];
-                console.log('Local pages:', localPages);
+                // 🎯 FIX: Filter out deleted pages - only keep pages that exist on server
+                const validLocalPages = localPages.filter(localPage => {
+                    return serverPages.some(serverPage => serverPage.fileName === localPage.fileName);
+                });
+                console.log('Local pages (filtered):', validLocalPages.length, 'out of', localPages.length);
                 
-                // שלב את הדפים מהשרת והדפים המקומיים
-                const allPages = [...serverPages, ...localPages];
+                // שלב את הדפים מהשרת והדפים המקומיים - serverPages first, then only valid local pages
+                const allPages = [...serverPages, ...validLocalPages];
                 console.log('All pages combined:', allPages);
                 
                 // חשב מנויים פעילים
@@ -3725,19 +3733,24 @@
                 name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
             );
             
-            // Event page keywords (הזמנה, חתונה, אירוע)
-            const eventKeywords = ['חתונה', 'אירוע', 'הזמנה', 'בר מצווה', 'בת מצווה', 'חינה', 'ברית', 'wedding', 'event'];
-            const isEventByName = eventKeywords.some(keyword => 
-                name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
-            );
-            
-            // Store page keywords - EXPANDED LIST
+            // Store page keywords - EXPANDED LIST (CHECK FIRST!)
+            // 🔥 CRITICAL: Check store keywords BEFORE event keywords
+            // This prevents "הזמנה" in store names from being detected as event
             const storeKeywords = [
                 'חנות', 'מוצר', 'קטלוג', 'ממתק', 'מכירה', 'קניה', 'מחיר', 'עגלה',
                 'store', 'shop', 'product', 'catalog', 'buy', 'cart', 'price',
-                'sweet', 'candy', 'food', 'bakery', 'מאפה', 'קונדיטוריה'
+                'sweet', 'candy', 'food', 'bakery', 'מאפה', 'קונדיטוריה', 'כלי כתיבה',
+                'כתיבה', 'עט', 'מחברת', 'ציוד משרדי'
             ];
             const isStoreByName = storeKeywords.some(keyword => 
+                name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
+            );
+            
+            // Event page keywords (הזמנה, חתונה, אירוע)
+            // ⚠️ Only check if NOT already detected as store!
+            const eventKeywords = ['חתונה', 'אירוע', 'בר מצווה', 'בת מצווה', 'חינה', 'ברית', 'wedding', 'event'];
+            // Don't use "הזמנה" as event keyword if it's part of a store name
+            const isEventByName = !isStoreByName && eventKeywords.some(keyword => 
                 name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
             );
             
@@ -3805,6 +3818,12 @@
             }
             
             // PRIORITY 2: Content-based detection
+            // 🔥 CRITICAL: Check STORE FIRST (before event) to avoid false positives
+            // "הזמנה" can appear in store names, so we must check store before event!
+            if (isStoreByContent || isStoreByName) {
+                console.log(`✅ Detected store from ${isStoreByContent ? 'content' : 'name'}`);
+                return 'store';
+            }
             if (isMessageInBottleByContent || isMessageInBottleByName) {
                 console.log(`✅ Detected messageInBottle from ${isMessageInBottleByContent ? 'content' : 'name'}`);
                 return 'messageInBottle';
@@ -3813,34 +3832,128 @@
                 console.log(`✅ Detected event from ${isEventByContent ? 'content' : 'name'}`);
                 return 'event';
             }
-            if (isStoreByContent || isStoreByName) {
-                console.log(`✅ Detected store from ${isStoreByContent ? 'content' : 'name'}`);
-                return 'store';
-            }
             
             console.log(`ℹ️ No specific type detected for ${fileName}, defaulting to 'other'`);
             return 'other';
         }
         
-        function getManageButtonText(pageType, hasAppointments) {
+        function getPageTypeDisplayName(pageType, hasAppointments, project) {
+            // אם יש יומן תורים - תמיד "תורים"
+            if (hasAppointments) {
+                return 'תורים';
+            }
+            
+            // 🔥 CRITICAL: ALWAYS check for store FIRST (before event, etc.)
+            if (project) {
+                const fileName = (project.fileName || project.local_file || '').toLowerCase();
+                const name = (project.name || '').toLowerCase();
+                const description = (project.description || '').toLowerCase();
+                
+                // Check for store keywords - ALWAYS check this first!
+                const storeKeywords = ['חנות', 'מוצר', 'קטלוג', 'ממתק', 'מכירה', 'קניה', 'מחיר', 'עגלה', 'store', 'shop', 'product', 'catalog', 'buy', 'cart', 'price', 'onlinestore', 'כלי כתיבה', 'כתיבה', 'עט', 'מחברת', 'ציוד משרדי'];
+                const isStore = pageType === 'store' || 
+                               pageType === 'onlineStore' ||
+                               storeKeywords.some(keyword => 
+                                   name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
+                               );
+                
+                if (isStore) {
+                    return 'חנות';
+                }
+            }
+            
+            switch(pageType) {
+                case 'event': return 'הזמנה';
+                case 'course': return 'קורס';
+                case 'workshop': return 'סדנה';
+                case 'messageInBottle': return 'מסר בבקבוק';
+                case 'serviceProvider': return 'נותן שירות';
+                default: return 'דף נחיתה';
+            }
+        }
+        
+        function getManageButtonText(pageType, hasAppointments, project) {
+            // אם יש יומן תורים - תמיד "ניהול תורים" (לא משנה מה ה-pageType!)
+            if (hasAppointments) {
+                return 'ניהול תורים';
+            }
+            
+            // 🔥 CRITICAL: ALWAYS check for store FIRST (before event, etc.)
+            // This ensures stores always show "ניהול חנות", not "ניהול מוזמנים" or "ניהול"
+            if (project) {
+                const fileName = (project.fileName || project.local_file || '').toLowerCase();
+                const name = (project.name || '').toLowerCase();
+                const description = (project.description || '').toLowerCase();
+                
+                // Check for store keywords - ALWAYS check this first!
+                const storeKeywords = ['חנות', 'מוצר', 'קטלוג', 'ממתק', 'מכירה', 'קניה', 'מחיר', 'עגלה', 'store', 'shop', 'product', 'catalog', 'buy', 'cart', 'price', 'onlinestore', 'כלי כתיבה', 'כתיבה', 'עט', 'מחברת', 'ציוד משרדי'];
+                const isStore = pageType === 'store' || 
+                               pageType === 'onlineStore' ||
+                               storeKeywords.some(keyword => 
+                                   name.includes(keyword) || fileName.includes(keyword) || description.includes(keyword)
+                               );
+                
+                if (isStore) {
+                    console.log(`✅ Detected store (pageType: ${pageType}), returning 'ניהול חנות'`);
+                    return 'ניהול חנות';
+                }
+            }
+            
             switch(pageType) {
                 case 'event': return 'ניהול מוזמנים';
-                case 'store': 
-                case 'onlineStore': return 'ניהול חנות';
                 case 'course': return 'ניהול קורסים';
                 case 'workshop': return 'ניהול נרשמים';
                 case 'messageInBottle': return 'ניהול הודעות';
-                case 'serviceProvider': 
-                    return hasAppointments ? 'ניהול תורים' : 'ניהול';
+                case 'serviceProvider': return 'ניהול';
                 default: return 'ניהול';
             }
         }
         
-        function getManageUrl(pageType, fileName, userId) {
+        function getManageUrl(pageType, fileName, userId, project) {
+            // 🔥 CRITICAL: ALWAYS check for appointments/serviceProvider FIRST!
+            // If page has appointments OR is a serviceProvider, it should ALWAYS go to appointments-admin.html
+            const hasAppointments = project?.metadata?.appointments || 
+                                   project?.metadata?.hasAppointments ||
+                                   project?.hasAppointments ||
+                                   project?.metadata?.enableAppointmentBooking ||
+                                   pageType === 'serviceProvider' ||
+                                   pageType === 'appointment';
+            
+            // Also check if pageType in metadata is serviceProvider
+            const metadataPageType = project?.metadata?.pageType || project?.pageType || '';
+            const isServiceProvider = metadataPageType === 'serviceProvider' || 
+                                     metadataPageType === 'appointment' ||
+                                     pageType === 'serviceProvider' ||
+                                     pageType === 'appointment';
+            
+            if (hasAppointments || isServiceProvider) {
+                console.log(`📅 Detected appointments/serviceProvider (hasAppointments: ${hasAppointments}, isServiceProvider: ${isServiceProvider}), routing to appointments-admin.html`);
+                const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
+                return `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
+            }
+            
+            // 🔥 CRITICAL: ALWAYS check for store SECOND (before event, etc.)
+            // This ensures stores always go to store-admin.html, not event-admin or leads-admin
+            const fileNameLower = (fileName || '').toLowerCase();
+            const name = (project?.name || '').toLowerCase();
+            const description = (project?.description || '').toLowerCase();
+            
+            // Check for store keywords - ALWAYS check this first!
+            const storeKeywords = ['חנות', 'מוצר', 'קטלוג', 'ממתק', 'מכירה', 'קניה', 'מחיר', 'עגלה', 'store', 'shop', 'product', 'catalog', 'buy', 'cart', 'price', 'onlinestore', 'כלי כתיבה', 'כתיבה', 'עט', 'מחברת', 'ציוד משרדי'];
+            const isStore = pageType === 'store' || 
+                           pageType === 'onlineStore' ||
+                           storeKeywords.some(keyword => 
+                               name.includes(keyword) || fileNameLower.includes(keyword) || description.includes(keyword)
+                           );
+            
+            if (isStore) {
+                console.log(`✅ Detected store (pageType: ${pageType}), routing to admin.html`);
+                const pageName = fileName.replace(/_html\.html$/, '').replace(/\.html$/, '');
+                return `/admin.html?page=${encodeURIComponent(pageName)}&userId=${encodeURIComponent(userId)}`;
+            }
+            
             switch(pageType) {
                 case 'event': return `/event-admin.html?page=${fileName}&userId=${userId}`;
-                case 'store':
-                case 'onlineStore': return `/page-management.html?page=${fileName}&userId=${userId}`;
                 case 'course': return `/course-management.html?pageId=${fileName}&userId=${userId}`;
                 case 'workshop': return `/leads-admin.html?page=${fileName}&userId=${userId}`;
                 case 'messageInBottle': return `/messages-management.html?page=${fileName}&userId=${userId}`;
@@ -3857,16 +3970,33 @@
             }
             isLoadingProjects = true;
             
+            // 🎯 FIX: Add global timeout to prevent hanging (for all browsers)
+            let globalTimeout = setTimeout(() => {
+                if (isLoadingProjects) {
+                    console.error('⏰ loadProjects timeout after 10 seconds - forcing unlock');
+                    isLoadingProjects = false;
+                    const projectsList = document.getElementById('projects-list');
+                    if (projectsList && projectsList.innerHTML.includes('טוען דפים')) {
+                        projectsList.innerHTML = '<div class="text-center py-16 col-span-full text-red-500">שגיאה בטעינת הדפים. נסה לרענן את הדף.</div>';
+                    }
+                }
+            }, 10000); // 10 second timeout
+            
             // Edge: Force timeout after 5 seconds
             const isEdgeBrowser = navigator.userAgent.indexOf('Edg') > -1;
+            let edgeTimeout = null;
             if (isEdgeBrowser) {
-                setTimeout(() => {
+                edgeTimeout = setTimeout(() => {
                     if (isLoadingProjects) {
                         console.error('⏰ loadProjects timeout - forcing unlock');
                         isLoadingProjects = false;
+                        if (globalTimeout) clearTimeout(globalTimeout);
                     }
                 }, window.EDGE_TIMEOUT || 5000);
             }
+            
+            // 🎯 FIX: Ensure timeout is cleared on early returns
+            try {
             
             console.log('loadProjects התחיל');
             console.log('currentUser:', currentUser);
@@ -3874,6 +4004,8 @@
             const projectsList = document.getElementById('projects-list');
             if (!projectsList) {
                 console.error('לא נמצא projects-list element');
+                if (globalTimeout) clearTimeout(globalTimeout);
+                if (edgeTimeout) clearTimeout(edgeTimeout);
                 isLoadingProjects = false;
                 return;
             }
@@ -3881,6 +4013,8 @@
             if (!currentUser) {
                 console.error('currentUser לא מוגדר!');
                 projectsList.innerHTML = '<div class="text-center py-16 col-span-full">שגיאה: משתמש לא מחובר</div>';
+                if (globalTimeout) clearTimeout(globalTimeout);
+                if (edgeTimeout) clearTimeout(edgeTimeout);
                 isLoadingProjects = false;
                 return;
             }
@@ -3897,135 +4031,74 @@
             console.log('הוספתי loader');
             
             projects = []; // Reset global projects array
-            let supabaseError = null;
             
-            // נסה לטעון מ-Supabase
+            // 🔥 CHANGED: Load ONLY from local files - Supabase is for AUTH only!
+            // This prevents orphaned Supabase entries from showing up
             try {
-                console.log('מנסה לטעון מ-Supabase...');
-                const { data: supabaseProjects, error } = await supabaseClient
-                    .from('projects')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
+                console.log('📂 Loading projects from LOCAL files only (Supabase is for auth only)...');
                 
-                if (!error && supabaseProjects) {
-                    projects = supabaseProjects;
-                    console.log('נטענו מ-Supabase:', projects.length, 'פרויקטים');
-                    
-                    // Try to enrich Supabase projects with pageType from local API
-                    try {
-                        const localResponse = await fetch(`/api/pages/${currentUser.id}`);
-                        const localData = await localResponse.json();
-                        
-                        if (localData.pages && localData.pages.length > 0) {
-                            // Create a map of fileName -> pageType
-                            const pageTypeMap = {};
-                            localData.pages.forEach(page => {
-                                if (page.pageType) {
-                                    pageTypeMap[page.fileName] = page.pageType;
-                                }
-                            });
-                            
-                            // Enrich Supabase projects with pageType
-                            projects.forEach(project => {
-                                // Try to match by various fields
-                                let matchingPageType = pageTypeMap[project.local_file] || 
-                                                      pageTypeMap[project.id];
-                                
-                                // If no match, try fuzzy matching by name
-                                if (!matchingPageType) {
-                                    const projectName = (project.name || '').toLowerCase();
-                                    for (const [fileName, pageType] of Object.entries(pageTypeMap)) {
-                                        const cleanFileName = fileName.replace(/_html$/, '').replace(/\.html$/, '').replace(/_/g, ' ').toLowerCase();
-                                        if (projectName.includes(cleanFileName) || cleanFileName.includes(projectName)) {
-                                            matchingPageType = pageType;
-                                            console.log(`🔍 Fuzzy matched: "${projectName}" ↔ "${cleanFileName}" → ${pageType}`);
-                                            break;
-                                        }
-                                    }
-                                }
-                                
-                                // If still no match and it's a store-like name, default to 'store'
-                                if (!matchingPageType) {
-                                    const projectName = (project.name || '').toLowerCase();
-                                    const storeKeywords = ['ממתק', 'שוקולד', 'חנות', 'מכירה', 'store', 'shop', 'sweet', 'שעונ'];
-                                    if (storeKeywords.some(kw => projectName.includes(kw))) {
-                                        matchingPageType = 'store';
-                                        console.log(`🏪 Auto-detected as store by name: ${project.name}`);
-                                    }
-                                }
-                                
-                                if (matchingPageType) {
-                                    project.pageType = matchingPageType;
-                                    console.log(`✅ Enriched project with pageType: ${matchingPageType} for ${project.name}`);
-                                }
-                            });
-                        }
-                    } catch (enrichErr) {
-                        console.log('Could not enrich with local pageTypes:', enrichErr);
-                    }
-                } else {
-                    console.log('שגיאה ב-Supabase:', error);
-                    supabaseError = error;
+                // Try user folder first, then temp_user
+                let localResponse = await fetch(`/api/pages/${currentUser.id}`);
+                let localData = await localResponse.json();
+                
+                // If no pages found, try temp_user folder
+                if (!localData.pages || localData.pages.length === 0) {
+                    console.log('📂 No pages in user folder, trying temp_user...');
+                    localResponse = await fetch(`/api/pages/temp_user`);
+                    localData = await localResponse.json();
                 }
-            } catch (err) {
-                console.log('שגיאה ב-Supabase, עובר לנתונים מקומיים:', err);
-                supabaseError = err;
-            }
-            
-            // אם Supabase נכשל, טען מקומית
-            if (supabaseError || projects.length === 0) {
-                try {
-                    console.log('מנסה לטעון נתונים מקומיים...');
-                    const localResponse = await fetch(`/api/pages/${currentUser.id}`);
-                    const localData = await localResponse.json();
-                    
-                    if (localData.pages && localData.pages.length > 0) {
-                        // המר דפים מקומיים לפורמט Supabase
-                        projects = localData.pages.map(page => {
-                            // חלץ שם נקי מתוך שם הקובץ
-                            let cleanName = page.title || 'דף נחיתה';
-                            
-                            // DISABLED: Removed multiple fetch requests that caused Edge to freeze
-                            // Instead, we extract title from filename only
-                            // This prevents dozens of simultaneous HTTP requests
-                            
-                            // אם יש שם קובץ עם timestamp, נסה לחלץ שם יותר טוב
-                            if (page.fileName && page.fileName.includes('_')) {
-                                const namePart = page.fileName.split('_')[0];
-                                if (namePart && namePart !== 'page' && namePart !== 'דף' && namePart.length > 2) {
-                                    cleanName = decodeURIComponent(namePart);
-                                }
+                
+                if (localData.pages && localData.pages.length > 0) {
+                    // המר דפים מקומיים לפורמט תצוגה
+                    projects = localData.pages.map(page => {
+                        // חלץ שם נקי מתוך שם הקובץ
+                        let cleanName = page.title || 'דף נחיתה';
+                        
+                        // אם יש שם קובץ עם timestamp, נסה לחלץ שם יותר טוב
+                        if (page.fileName && page.fileName.includes('_')) {
+                            const namePart = page.fileName.split('_')[0];
+                            if (namePart && namePart !== 'page' && namePart !== 'דף' && namePart.length > 2) {
+                                cleanName = decodeURIComponent(namePart);
                             }
-                            
-                            const projectObj = {
+                        }
+                        
+                        const projectObj = {
                             id: `local_${page.fileName}`,
-                                name: cleanName,
-                                description: 'דף נחיתה מקצועי',
-                            html_content: null, // נטען בנפרד
+                            name: cleanName,
+                            description: 'דף נחיתה מקצועי',
+                            html_content: null,
                             template_type: 'local',
                             status: 'completed',
                             created_at: new Date().toISOString(),
                             local_file: page.fileName,
                             local_url: page.url,
-                                user_id: currentUser.id,
-                                userId: currentUser.id,
-                                pageType: page.pageType // CRITICAL: Pass pageType from server!
-                            };
-                            
-                            console.log(`✅ Local page loaded with pageType: ${page.pageType} for ${page.fileName}`);
-                            
-                            return projectObj;
+                            user_id: currentUser.id,
+                            userId: currentUser.id,
+                            pageType: page.pageType,
+                            hasAppointments: page.hasAppointments,
+                            appointments: page.hasAppointments
+                        };
+                        
+                        console.log(`✅ Local page loaded:`, {
+                            fileName: page.fileName,
+                            pageType: page.pageType,
+                            hasAppointments: page.hasAppointments
                         });
-                        console.log('נטענו דפים מקומיים:', projects.length);
-                    }
-                } catch (localErr) {
-                    console.error('שגיאה בטעינת דפים מקומיים:', localErr);
-                    console.log('מציג הודעה ריקה...');
+                        
+                        return projectObj;
+                    });
+                    console.log('נטענו דפים מקומיים:', projects.length);
                 }
+            } catch (localErr) {
+                console.error('שגיאה בטעינת דפים מקומיים:', localErr);
+                console.log('מציג הודעה ריקה...');
             }
             
             console.log('סיימתי לטעון, יש', projects.length, 'פרויקטים');
+            
+            // 🎯 FIX: Clear timeout on success
+            if (typeof globalTimeout !== 'undefined' && globalTimeout) clearTimeout(globalTimeout);
+            if (typeof edgeTimeout !== 'undefined' && edgeTimeout) clearTimeout(edgeTimeout);
             
             // אם יש שגיאה מ-Supabase אבל יש דפים מקומיים, נמשיך
             // אם אין דפים בכלל, נציג הודעה ריקה
@@ -4034,13 +4107,37 @@
                 console.log('מציג', projects.length, 'פרויקטים');
                 projectsList.innerHTML = '';
                 
-                projects.forEach((project, index) => {
+                // Process all projects with async operations
+                for (let index = 0; index < projects.length; index++) {
+                    const project = projects[index];
                     console.log(`מציג פרויקט ${index + 1}:`, project.name);
                     
                     // Use pageType from server (already detected and saved)
-                    const pageType = project.pageType || 'other';
-                    const manageButtonText = getManageButtonText(pageType);
-                    console.log(`📋 Page type: ${pageType} → Button text: "${manageButtonText}" for ${project.name}`);
+                    let pageType = project.pageType || 'other';
+                    let hasAppointments = project.hasAppointments || project.appointments || false;
+                    
+                    // 🔥 CRITICAL FIX: If pageType is not set or is 'other', use default
+                    // Skip detectPageType to prevent hanging - use metadata only
+                    if (!pageType || pageType === 'other') {
+                        console.log(`⏭️ No pageType in metadata for ${project.name}, using default (skipping detection to prevent hanging)`);
+                        pageType = project.pageType || 'other';
+                    }
+                    
+                    // 🎯 CRITICAL FIX: Skip ALL HTML checks to prevent hanging
+                    // Use only metadata - HTML checks cause the interface to freeze completely
+                    console.log(`⏭️ Skipping HTML check for ${project.name} (using metadata only to prevent hanging)`);
+                    
+                    const manageButtonText = getManageButtonText(pageType, hasAppointments, project);
+                    console.log(`📋 BUTTON DECISION:`, {
+                        projectName: project.name,
+                        fileName: project.fileName || project.local_file,
+                        pageType: pageType,
+                        hasAppointments: hasAppointments,
+                        projectHasAppointments: project.hasAppointments,
+                        projectAppointments: project.appointments,
+                        buttonText: manageButtonText,
+                        fullProject: project
+                    });
                     console.log(`🔍 Full project data:`, project);
                     
                     // Special logging for messageInBottle
@@ -4163,15 +4260,7 @@
                                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                 </svg>
-                                <span class="manage-button-text">${manageButtonText}</span>
-                            </button>` : ''
-                        }
-                        ${!project.pageType || project.pageType === 'other' ? 
-                            `<button onclick="autoDetectAndUpdateMessageBottle(${JSON.stringify(project).replace(/"/g, '&quot;')})" class="w-full text-right px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-100">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                🔍 זהה סוג דף
+                                <span class="manage-button-text" data-page-type="${pageType}" data-has-appointments="${hasAppointments}">${manageButtonText}</span>
                             </button>` : ''
                         }
                         <button onclick="deleteProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
@@ -4187,13 +4276,13 @@
                     
                     projectCard.innerHTML = `
                             <!-- תצוגה מקדימה של האתר -->
-                        <div class="relative rounded-t-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100" style="height: 200px; flex-shrink: 0;">
+                        <div class="relative rounded-t-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100" style="height: 180px; flex-shrink: 0;">
                                 ${pageUrl ? `
-                        <!-- תצוגה מקדימה עם iframe - מצד לצד עד הקצוות -->
+                        <!-- תצוגה מקדימה עם iframe - מרוכז ומותאם -->
                                         <iframe 
                                             src="${window.location.origin}${pageUrl}" 
-                            class="absolute inset-0 w-full h-full border-0"
-                                            style="pointer-events: none; transform: scale(0.6) translateX(65%); transform-origin: top left; width: 166.67%; height: 166.67%;"
+                            class="absolute border-0"
+                                            style="pointer-events: none; transform: scale(0.25); transform-origin: top left; width: 400%; height: 400%; top: 0; left: 0; border-radius: 8px;"
                                             title="תצוגה מקדימה של ${project.name}"
                                             loading="lazy"
                                             importance="low"
@@ -4239,9 +4328,12 @@
                             <!-- כותרת וסטטוס -->
                             <div class="mb-3 flex-shrink-0">
                                     <h3 class="font-semibold text-lg text-gray-800 mb-2" style="min-height: 24px;">${project.name}</h3>
-                                <p class="text-sm text-gray-500 mb-3 line-clamp-2" style="min-height: 32px;">${project.description || 'דף נחיתה מקצועי'}</p>
-                                <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
-                                    <span>נוצר: ${creationDate}</span>
+                                <p class="text-sm text-gray-500 mb-2 line-clamp-2" style="min-height: 32px;">${project.description || 'דף נחיתה מקצועי'}</p>
+                                <div class="flex items-center justify-between text-xs mb-2">
+                                    <span class="text-gray-400">נוצר: ${creationDate}</span>
+                                    <span class="text-indigo-600 font-medium">${getPageTypeDisplayName(pageType, hasAppointments, project)}</span>
+                                </div>
+                                <div class="flex items-center justify-end text-xs text-gray-400 mb-2">
                                     ${statusBadge}
                                 </div>
                             </div>
@@ -4255,7 +4347,7 @@
                     `;
                     console.log(`מוסיף כרטיס ${index + 1} ל-DOM`);
                     projectsList.appendChild(projectCard);
-                });
+                }
                 console.log('סיימתי להוסיף כרטיסים');
                 
                 // עדכן את המודל רק אם המשתמש ביקש זאת במפורש
@@ -4277,7 +4369,21 @@
             }
             
             // Release lock after loading completes
+            // 🎯 FIX: Clear timeout on completion
+            if (globalTimeout) clearTimeout(globalTimeout);
+            if (edgeTimeout) clearTimeout(edgeTimeout);
             isLoadingProjects = false;
+            } catch (error) {
+                console.error('Error in loadProjects:', error);
+                // Clear timeouts on error
+                if (globalTimeout) clearTimeout(globalTimeout);
+                if (edgeTimeout) clearTimeout(edgeTimeout);
+                isLoadingProjects = false;
+                const projectsList = document.getElementById('projects-list');
+                if (projectsList) {
+                    projectsList.innerHTML = '<div class="text-center py-16 col-span-full text-red-500">שגיאה בטעינת הדפים. נסה לרענן את הדף.</div>';
+                }
+            }
         }
 
         async function viewProject(projectId) {
@@ -4338,17 +4444,27 @@
             window.location.href = `/page-creator?edit=${projectId}&redirectUrl=${encodeURIComponent(window.location.href)}`;
         }
 
-        function updateManagementButton(projectCard, pageType, hasAppointments) {
+        function updateManagementButton(projectCard, pageType, hasAppointments, project) {
             const manageButton = projectCard.querySelector('[data-action="manage"]');
             if (manageButton) {
-                if (pageType === 'store' || pageType === 'onlineStore') {
-                    manageButton.textContent = '🛒 ניהול חנות';
-                } else if (pageType === 'event') {
-                    manageButton.textContent = '🎉 ניהול מוזמנים';
-                } else if (pageType === 'serviceProvider' && hasAppointments) {
-                    manageButton.textContent = '📅 ניהול תורים';
+                // ⚠️ CRITICAL: Use getManageButtonText to get the correct text (with project data for store detection)
+                const correctText = getManageButtonText(pageType, hasAppointments, project);
+                const manageTextSpan = manageButton.querySelector('.manage-button-text');
+                
+                // Add emoji based on page type
+                let finalText = correctText;
+                if (correctText === 'ניהול חנות') {
+                    finalText = '🛒 ניהול חנות';
+                } else if (correctText === 'ניהול מוזמנים') {
+                    finalText = '🎉 ניהול מוזמנים';
+                } else if (correctText === 'ניהול תורים') {
+                    finalText = '📅 ניהול תורים';
+                }
+                
+                if (manageTextSpan) {
+                    manageTextSpan.textContent = finalText;
                 } else {
-                    manageButton.textContent = '⚙️ ניהול';
+                    manageButton.textContent = finalText;
                 }
             }
         }
@@ -4568,51 +4684,87 @@
             let pageType = detectedPageType || project?.pageType;
             let hasAppointments = project?.hasAppointments || false;
             
-            if (!pageType || !hasAppointments) {
+            // 🔥 CRITICAL FIX: If pageType is not set or is 'other', try to detect it
+            if (!pageType || pageType === 'other') {
+                console.log('🔍 No pageType detected, trying to detect from project data...');
+                pageType = await detectPageType(project);
+                console.log('✅ Detected pageType:', pageType);
+            }
+            
+            // 🔥 CRITICAL FIX: Check HTML content for appointments calendar
+            // This is a fallback if metadata doesn't have hasAppointments set correctly
+            if (!hasAppointments && project?.local_url) {
+                console.log('🔍 Checking HTML content for appointments calendar...');
                 try {
-                    const metadataUrl = `/pages/${userId}/${fileName}_data/metadata.json`;
-                    const response = await fetch(metadataUrl);
-                    if (response.ok) {
-                        const metadata = await response.json();
-                        if (!pageType) {
-                            pageType = metadata.pageType;
-                            console.log('📋 Loaded pageType from metadata:', pageType);
+                    const htmlResponse = await fetch(project.local_url);
+                    if (htmlResponse.ok) {
+                        const htmlText = await htmlResponse.text();
+                        // Check for strong indicators of appointments system
+                        const hasCalendar = htmlText.includes('time-slots-grid') || 
+                                          htmlText.includes('booking-form') || 
+                                          htmlText.includes('appointment-date') ||
+                                          htmlText.includes('WORKING_DAYS') ||
+                                          htmlText.includes('/api/appointments');
+                        
+                        if (hasCalendar) {
+                            console.log('✅ Found appointments calendar in HTML! Forcing hasAppointments = true');
+                            hasAppointments = true;
+                            // Only set to serviceProvider if not already a store/event/etc
+                            if (pageType === 'other' || !pageType) {
+                                pageType = 'serviceProvider';
+                            }
                         }
-                        // Check if page has appointments system
-                        hasAppointments = metadata.appointments !== undefined || metadata.hasAppointments === true;
-                        console.log('📅 hasAppointments:', hasAppointments);
                     }
                 } catch (err) {
-                    console.log('⚠️ No metadata, using default');
+                    console.log('⚠️ Could not check HTML content:', err);
                 }
             }
             
+            // ALWAYS load metadata to check for appointments (critical fix)
+            try {
+                const metadataUrl = `/pages/${userId}/${fileName}_data/metadata.json`;
+                const response = await fetch(metadataUrl);
+                if (response.ok) {
+                    const metadata = await response.json();
+                    if (!pageType) {
+                        pageType = metadata.pageType;
+                        console.log('📋 Loaded pageType from metadata:', pageType);
+                    }
+                    // Check if page has appointments system - ALWAYS check this
+                    hasAppointments = metadata.appointments !== undefined || metadata.hasAppointments === true;
+                    console.log('📅 hasAppointments from metadata:', hasAppointments);
+                }
+            } catch (err) {
+                console.log('⚠️ No metadata, using default');
+            }
+            
             // Determine management URL based on pageType
-            let managementUrl;
+            // 🔥 CRITICAL: Use getManageUrl to ensure correct routing (it checks for store FIRST!)
+            let managementUrl = getManageUrl(pageType, fileName, userId, project);
             
             console.log('🔍 FINAL pageType for routing:', pageType, 'Type:', typeof pageType, 'hasAppointments:', hasAppointments);
+            console.log('🔗 Management URL:', managementUrl);
             
-            if (pageType === 'event') {
-                // דף אירוע/הזמנה → ניהול מוזמנים
-                managementUrl = `/event-guests.html?eventId=${fileName}&userId=${userId}`;
-                console.log('🎉 Opening EVENT management (guests)');
-            } else if (pageType === 'store' || pageType === 'onlineStore') {
-                // דף חנות → ניהול חנות
-                managementUrl = `/page-management.html?page=${fileName}&userId=${userId}`;
-                console.log('🛒 Opening STORE management for:', fileName);
-            } else if (pageType === 'messageInBottle') {
-                // מסר בבקבוק → ניהול הודעות
-                managementUrl = `/messages-management.html?page=${fileName}&userId=${userId}`;
-                console.log('🍾 Opening MESSAGES management for:', fileName);
-            } else if (pageType === 'serviceProvider' && hasAppointments) {
-                // נותן שירות עם תורים → ניהול תורים
-                const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
-                managementUrl = `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
-                console.log('📅 Opening APPOINTMENTS management for:', fileName);
-            } else {
-                // דפים אחרים → ניהול לידים
-                managementUrl = `/leads-admin.html?page=${fileName}&userId=${userId}`;
-                console.log('📋 Opening LEADS management (pageType was:', pageType, ')');
+            // If getManageUrl didn't return a URL (shouldn't happen), fallback to old logic
+            if (!managementUrl) {
+                if (pageType === 'event') {
+                    // דף אירוע/הזמנה → ניהול מוזמנים
+                    managementUrl = `/event-guests.html?eventId=${fileName}&userId=${userId}`;
+                    console.log('🎉 Opening EVENT management (guests)');
+                } else if (pageType === 'messageInBottle') {
+                    // מסר בבקבוק → ניהול הודעות
+                    managementUrl = `/messages-management.html?page=${fileName}&userId=${userId}`;
+                    console.log('🍾 Opening MESSAGES management for:', fileName);
+                } else if (hasAppointments) {
+                    // יש יומן תורים → ניהול תורים (לא משנה מה ה-pageType!)
+                    const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
+                    managementUrl = `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
+                    console.log('📅 Opening APPOINTMENTS management for:', fileName, '(hasAppointments:', hasAppointments, ')');
+                } else {
+                    // דפים אחרים → ניהול לידים
+                    managementUrl = `/leads-admin.html?page=${fileName}&userId=${userId}`;
+                    console.log('📋 Opening LEADS management (pageType was:', pageType, 'hasAppointments:', hasAppointments, ')');
+                }
             }
             
             console.log('🌐 Opening:', managementUrl);
@@ -4668,10 +4820,40 @@
             if (!confirm('האם אתה בטוח שברצונך למחוק את דף הנחיתה? הפעולה לא ניתנת לביטול.')) return;
             
             try {
+                // 🗑️ מחק מ-localStorage לפני כל דבר
+                const subscriptionKey = `page_subscription_${projectId}`;
+                localStorage.removeItem(subscriptionKey);
+                console.log('✅ Deleted subscription from localStorage:', subscriptionKey);
+                
                 // בדוק אם זה דף מקומי
                 if (projectId.startsWith('local_')) {
                     const fileName = projectId.replace('local_', '');
                     console.log('Deleting local file:', fileName);
+                    
+                    // מחק מנתונים מקומיים
+                    const localData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
+                    if (localData.pages) {
+                        localData.pages = localData.pages.filter(p => p.fileName !== fileName);
+                        localStorage.setItem('autopage_data', JSON.stringify(localData));
+                        console.log('✅ Deleted page from localData');
+                    }
+                    
+                    // 🔥 מחק גם מ-Supabase (לפי שם הקובץ) - כדי למנוע רשומות יתומות
+                    try {
+                        const { error: supabaseError } = await supabaseClient
+                            .from('projects')
+                            .delete()
+                            .eq('user_id', currentUser.id)
+                            .ilike('file_name', `%${fileName.replace(/_html$/, '').replace(/_html\.html$/, '')}%`);
+                        
+                        if (!supabaseError) {
+                            console.log('✅ Deleted from Supabase by filename');
+                        } else {
+                            console.warn('⚠️ Supabase deletion warning:', supabaseError);
+                        }
+                    } catch (supabaseErr) {
+                        console.warn('⚠️ Could not delete from Supabase:', supabaseErr);
+                    }
                     
                     // מחק מהשרת המקומי
                     const response = await fetch(`/api/delete-page`, {
@@ -4685,21 +4867,46 @@
                         })
                     });
                     
+                    // 🔥 גם אם השרת המקומי נכשל (הקובץ כבר נמחק), נחשיב כהצלחה
                     if (response.ok) {
-                        showSuccess('הדף נמחק בהצלחה');
-                        loadProjects(); // רענן את הרשימה
+                        showSuccess('הדף נמחק בהצלחה לצמיתות');
                     } else {
                         const errorData = await response.json();
-                        throw new Error(errorData.error || 'שגיאה במחיקת הדף המקומי');
+                        // אם הקובץ לא קיים - זה בסדר, כבר נמחק
+                        if (errorData.error?.includes('not found') || errorData.error?.includes('לא נמצא')) {
+                            console.log('📝 File already deleted from server');
+                            showSuccess('הדף נמחק בהצלחה לצמיתות');
+                        } else {
+                            throw new Error(errorData.error || 'שגיאה במחיקת הדף המקומי');
+                        }
                     }
+                    loadProjects(); // רענן את הרשימה
                     return;
                 }
                 
-                // דף מ-Supabase
+                // דף מ-Supabase (לא מקומי)
                 const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
                 if (error) throw error;
                 
-                showSuccess('הדף נמחק בהצלחה');
+                // 🔥 מחק גם מהשרת המקומי (אם קיים)
+                try {
+                    const project = projects.find(p => p.id === projectId);
+                    if (project && project.file_name) {
+                        await fetch(`/api/delete-page`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: currentUser.id,
+                                fileName: project.file_name
+                            })
+                        });
+                        console.log('✅ Also deleted from local server');
+                    }
+                } catch (localErr) {
+                    console.warn('⚠️ Could not delete from local server:', localErr);
+                }
+                
+                showSuccess('הדף נמחק בהצלחה לצמיתות');
                 loadProjects(); // רענן את הרשימה
             } catch (error) {
                 console.error('Error deleting project:', error);

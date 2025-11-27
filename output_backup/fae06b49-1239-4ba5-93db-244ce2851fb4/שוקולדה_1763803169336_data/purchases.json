@@ -1,0 +1,26 @@
+[
+  {
+    "id": "purchase_1763803370977_tpz8l86lp",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "שוקולדה_1763803169336",
+    "products": [
+      {
+        "id": 1763803239810,
+        "name": "טראפלס יוקרתיים",
+        "price": 18,
+        "quantity": 1,
+        "image": "https://via.placeholder.com/300x250?text=%D7%98%D7%A8%D7%90%D7%A4%D7%9C%D7%A1%20%D7%99%D7%95%D7%A7%D7%A8%D7%AA%D7%99%D7%99%D7%9D"
+      }
+    ],
+    "subtotal": 18,
+    "shipping": true,
+    "shippingCost": 35,
+    "total": 53,
+    "customerName": "רמי",
+    "customerPhone": "0538377366",
+    "customerEmail": "ehaleiameleh@gmail.com",
+    "customerAddress": "בר אילן 50 תל אביב",
+    "status": "new",
+    "createdAt": "2025-11-22T09:22:50.978Z"
+  }
+]

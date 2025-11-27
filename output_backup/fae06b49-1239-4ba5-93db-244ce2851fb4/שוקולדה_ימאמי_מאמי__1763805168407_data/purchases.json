@@ -1,0 +1,33 @@
+[
+  {
+    "id": "purchase_1763805302225_z5uo34arv",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "שוקולדה_ימאמי_מאמי__1763805168407",
+    "products": [
+      {
+        "id": 1763805274299,
+        "name": "שוקולד חלב קרמלי מלוח",
+        "price": 32,
+        "quantity": 1,
+        "image": "https://via.placeholder.com/300x250?text=%D7%A9%D7%95%D7%A7%D7%95%D7%9C%D7%93%20%D7%97%D7%9C%D7%91%20%D7%A7%D7%A8%D7%9E%D7%9C%D7%99%20%D7%9E%D7%9C%D7%95%D7%97"
+      },
+      {
+        "id": 1763805289411,
+        "name": "מוצר 4",
+        "price": 129,
+        "quantity": 1,
+        "image": "https://via.placeholder.com/300x250?text=מוצר+4"
+      }
+    ],
+    "subtotal": 161,
+    "shipping": true,
+    "shippingCost": 35,
+    "total": 196,
+    "customerName": "רמי",
+    "customerPhone": "0538377366",
+    "customerEmail": "ehaleiameleh@gmail.com",
+    "customerAddress": "בר אילן 50 תל אביב",
+    "status": "new",
+    "createdAt": "2025-11-22T09:55:02.225Z"
+  }
+]

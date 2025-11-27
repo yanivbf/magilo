@@ -1,0 +1,34 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-20T21:41:09.181Z",
+  "fileName": "יניב_רופא_שיניים__1763674869077_html",
+  "description": "מומחה",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-367-4869",
+    "056-006-6984",
+    "052-179-1136",
+    "055-674-5753",
+    "079-113-6064"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום חמישי, 20 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "מומחה בעל שם בתחום רפואת השיניים, עם ניסיון של למעלה מ",
+      "duration": 30,
+      "price": 15
+    },
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

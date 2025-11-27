@@ -1,0 +1,28 @@
+[
+  {
+    "id": "rsvp_1760208779426_7swndmu4y",
+    "name": "יניב",
+    "phone": "34344434",
+    "email": "",
+    "plus": 1,
+    "status": "מאושר",
+    "table": 0,
+    "notes": "",
+    "gift": "",
+    "giftAmount": 0,
+    "createdAt": "2025-10-11T18:52:59.427Z"
+  },
+  {
+    "id": "rsvp_1760209532996_u3gmoawzd",
+    "name": "יניב זרוג",
+    "phone": "34344434",
+    "email": "",
+    "plus": 3,
+    "status": "מאושר",
+    "table": 0,
+    "notes": "חח",
+    "gift": "",
+    "giftAmount": 0,
+    "createdAt": "2025-10-11T19:05:32.998Z"
+  }
+]

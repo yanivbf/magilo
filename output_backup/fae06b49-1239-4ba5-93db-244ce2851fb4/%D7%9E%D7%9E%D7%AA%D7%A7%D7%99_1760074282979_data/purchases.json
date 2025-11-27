@@ -1,0 +1,38 @@
+[
+  {
+    "id": "purchase_1760074359835_ejg6kry7k",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_1760074282979",
+    "products": [
+      {
+        "id": 1760074334135,
+        "name": "מקלות שוקולד פיסטוק לבן",
+        "price": 40,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1594916817293-1002e20b33c1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760074337158,
+        "name": "פרלינים פיסטוק מריר",
+        "price": 45,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1579758782337-658b6c00d604?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      },
+      {
+        "id": 1760074340510,
+        "name": "שוקולד פיסטוק קלאסי",
+        "price": 35,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1616782570179-c56a73c15383?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+      }
+    ],
+    "total": 155,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T05:32:39.835Z",
+    "completedAt": "2025-10-10T05:32:39.835Z"
+  }
+]

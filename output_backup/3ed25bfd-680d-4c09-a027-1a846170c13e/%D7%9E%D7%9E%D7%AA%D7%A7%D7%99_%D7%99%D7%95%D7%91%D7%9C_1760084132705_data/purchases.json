@@ -1,0 +1,24 @@
+[
+  {
+    "id": "purchase_1760084198545_yn82utbbz",
+    "userId": "3ed25bfd-680d-4c09-a027-1a846170c13e",
+    "storeId": "%D7%9E%D7%9E%D7%AA%D7%A7%D7%99_%D7%99%D7%95%D7%91%D7%9C_1760084132705",
+    "products": [
+      {
+        "id": 1760084186810,
+        "name": "סוכריות פירות יער אורגניות",
+        "price": 25,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1542838686-e9105574581f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80"
+      }
+    ],
+    "total": 60,
+    "customerName": "יניב",
+    "customerPhone": "0505378108",
+    "customerAddress": "לא צוין",
+    "shipping": false,
+    "status": "completed",
+    "createdAt": "2025-10-10T08:16:38.545Z",
+    "completedAt": "2025-10-10T08:16:38.545Z"
+  }
+]

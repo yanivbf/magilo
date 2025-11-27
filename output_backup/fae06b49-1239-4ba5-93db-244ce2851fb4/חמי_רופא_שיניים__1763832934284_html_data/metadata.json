@@ -1,0 +1,27 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-22T17:35:34.352Z",
+  "fileName": "חמי_רופא_שיניים__1763832934284_html",
+  "description": "מומחה",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-383-2934",
+    "056-006-6984",
+    "076-383-2800"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום שבת, 22 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

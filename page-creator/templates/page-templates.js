@@ -1103,7 +1103,44 @@ CRITICAL: NO "ניהול" or "Management" buttons anywhere. Return complete vali
     serviceProvider: {
         img: "https://images.unsplash.com/photo-1581578731548-c6a0c3f2f7c8?q=80&w=2070&auto=format&fit=crop",
         fields: ['serviceDetails', 'websiteLink'],
-        structurePrompt: `Build a professional service provider page with appointment booking functionality. Include header, hero section, services list, about section, and contact information. Add appointment booking form with calendar integration.`,
+        structurePrompt: `🚨 CRITICAL: You are using a PRE-BUILT HTML TEMPLATE. DO NOT create the entire HTML structure from scratch!
+
+**YOU MUST:**
+1. Use the existing HTML template structure that is already provided
+2. ONLY fill in TEXT CONTENT for the following sections:
+   - HERO_TEXT: Short compelling text for hero section (2-3 sentences)
+   - ABOUT_HTML: Detailed description about the business (1-2 paragraphs with basic HTML)
+   - SERVICES_HTML: List of services (if requested)
+   - TESTIMONIALS_HTML: Customer testimonials (if requested)
+   - FAQ_HTML: Frequently asked questions (if requested)
+   - GALLERY_HTML: Gallery items (if requested)
+
+**DO NOT:**
+- ❌ DO NOT create the entire HTML page structure
+- ❌ DO NOT create CSS styles (they are already in the template)
+- ❌ DO NOT create the calendar/booking system (it's already in the template)
+- ❌ DO NOT create header, footer, or navigation (they are already in the template)
+
+**YOU MUST RETURN ONLY A JSON OBJECT with the text content:**
+{
+  "HERO_TEXT": "...",
+  "ABOUT_HTML": "<p>...</p>",
+  "SERVICES_HTML": "<div>...</div>",
+  "TESTIMONIALS_HTML": "<div>...</div>",
+  "FAQ_HTML": "<div>...</div>",
+  "GALLERY_HTML": "<div>...</div>"
+}
+
+**IMPORTANT:** The template already includes:
+- Header with navigation
+- Hero section structure
+- Calendar/booking system
+- Footer with contact info
+- WhatsApp bubble
+- AI Bot bubble
+- Accessibility features
+
+You ONLY need to provide the TEXT CONTENT that will be inserted into these sections.`,
 
         t: {
             en: { 

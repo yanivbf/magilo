@@ -1,0 +1,21 @@
+{
+  "pageType": "messageInBottle",
+  "createdAt": "2025-10-28T17:54:52.312Z",
+  "fileName": "מסר_בבקבוק_1761674092280_html",
+  "name": "רינת ",
+  "request": "ניקיון בתים  ",
+  "area": "נתניה",
+  "phone": "5378108",
+  "price": "100",
+  "priceType": "שעתי",
+  "description": "בקשה/שירות: ניקיון בתים",
+  "phones": [],
+  "city": "נתניה",
+  "products": [
+    {
+      "name": "אזור: נתניה",
+      "price": 100
+    }
+  ],
+  "metadataUpdated": "2025-11-01T04:57:22.929Z"
+}

@@ -1,0 +1,26 @@
+{
+  "pageType": "serviceProvider",
+  "createdAt": "2025-11-22T08:18:07.664Z",
+  "fileName": "יניב_רופא_שיניים__1763799485364_html",
+  "description": "מומחה",
+  "isActive": false,
+  "hasAppointments": true,
+  "appointments": true,
+  "phone": "050-537-8108",
+  "phones": [
+    "050-537-8108",
+    "076-379-9485",
+    "056-006-6984"
+  ],
+  "email": "britolam1@gmail.com",
+  "city": "נתניה",
+  "address": "יום שבת, 22 בנובמבר 2025",
+  "products": [],
+  "services": [
+    {
+      "name": "09:00",
+      "duration": 30,
+      "price": 17
+    }
+  ]
+}

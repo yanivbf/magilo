@@ -1,0 +1,24 @@
+[
+  {
+    "id": "purchase_1761337362430_mccuz04ul",
+    "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+    "storeId": "יניב_צעצוע_AI_1760965952188",
+    "products": [
+      {
+        "id": 1761337329258,
+        "name": "רובוט חברותי",
+        "price": 1200,
+        "quantity": 2,
+        "image": "https://images.unsplash.com/photo-1619622285642-1e9a4f4c9c14?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+      }
+    ],
+    "total": 2435,
+    "customerName": "רונית  ",
+    "customerPhone": "0505378108",
+    "customerEmail": "britolam1@gmail.com",
+    "customerAddress": "בר אילן 50 נתניה",
+    "shipping": true,
+    "status": "processing",
+    "createdAt": "2025-10-24T20:22:42.432Z"
+  }
+]
