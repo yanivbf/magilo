@@ -423,6 +423,15 @@
             pageId = params.get('pageId') || '';
             let rawPageName = params.get('pageName') || 'הדף שלי';
             
+            // 🔥 Decode pageId if it's URL-encoded (might contain Hebrew characters)
+            if (pageId) {
+                try {
+                    pageId = decodeURIComponent(pageId);
+                } catch (e) {
+                    console.warn('⚠️ Could not decode pageId, using as-is:', e);
+                }
+            }
+            
             // Clean page name (remove numbers and _html)
             pageName = rawPageName
                 .replace(/_\d+_html$/, '')  // Remove _1234567890_html
@@ -433,6 +442,8 @@
             
             // Show clean page name in title (without the long number)
             document.getElementById('page-title').textContent = `(${pageName})`;
+            
+            console.log('📋 URL Params - userId:', userId, 'pageId:', pageId, 'pageName:', pageName);
             
             if (!userId || !pageId) {
                 alert('חסרים פרטי דף. אנא גש דרך הקישור בדף שלך.');
@@ -445,14 +456,53 @@
         async function loadAppointments() {
             if (!getUrlParams()) return;
             
+            console.log('📅 Loading appointments - userId:', userId, 'pageId:', pageId);
+            console.log('📅 Full URL params:', window.location.search);
+            console.log('📅 Decoded pageId:', pageId);
+            
             try {
-                const response = await fetch(`/api/appointments/${userId}/${pageId}`);
+                // 🔥 Ensure both userId and pageId are properly encoded
+                const encodedUserId = encodeURIComponent(userId);
+                const encodedPageId = encodeURIComponent(pageId);
+                const apiUrl = `/api/appointments/${encodedUserId}/${encodedPageId}`;
+                console.log('📅 Fetching from:', apiUrl);
+                console.log('📅 Encoded userId:', encodedUserId, 'encodedPageId:', encodedPageId);
+                
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch appointments');
+                    const errorText = await response.text();
+                    console.error('❌ Failed to fetch appointments:', response.status, errorText);
+                    throw new Error('Failed to fetch appointments: ' + response.status);
                 }
                 
                 const data = await response.json();
-                allAppointments = data.appointments || [];
+                console.log('📅 Received data:', data);
+                console.log('📅 Data type:', typeof data, 'Is array?', Array.isArray(data));
+                
+                // 🔥 Handle different response formats
+                if (Array.isArray(data)) {
+                    allAppointments = data;
+                    console.log('📅 Response is array, using directly');
+                } else if (data && data.appointments !== undefined) {
+                    if (Array.isArray(data.appointments)) {
+                        allAppointments = data.appointments;
+                        console.log('📅 Response has appointments array, length:', data.appointments.length);
+                    } else {
+                        console.warn('⚠️ Response.appointments is not an array:', typeof data.appointments, data.appointments);
+                        allAppointments = [];
+                    }
+                } else {
+                    console.warn('⚠️ Unexpected response format. Data keys:', Object.keys(data || {}));
+                    allAppointments = [];
+                }
+                
+                console.log('📅 Final loaded appointments:', allAppointments.length);
+                if (allAppointments.length > 0) {
+                    console.log('✅ First appointment:', allAppointments[0]);
+                    console.log('✅ All appointments pageIds:', allAppointments.map(a => a.pageId || '(no pageId)'));
+                } else {
+                    console.log('⚠️ No appointments loaded. Full response:', JSON.stringify(data, null, 2));
+                }
                 
                 allAppointments.sort((a, b) => {
                     const dateA = new Date(a.date + ' ' + a.time);
@@ -480,15 +530,54 @@
 
         // Load Services
         async function loadServices() {
+            if (!getUrlParams()) return;
+            
+            console.log('🔧 Loading services - userId:', userId, 'pageId:', pageId);
+            
             try {
-                const response = await fetch(`/users/${userId}/${pageId}_data/metadata.json`);
-                if (response.ok) {
-                    const metadata = await response.json();
+                // 🔥 Try multiple paths for metadata.json (same logic as other endpoints)
+                const encodedUserId = encodeURIComponent(userId);
+                const encodedPageId = encodeURIComponent(pageId);
+                const decodedPageId = decodeURIComponent(pageId);
+                
+                // Try all possible metadata paths
+                const possiblePaths = [
+                    `/output/${encodedUserId}/${encodedPageId}_data/metadata.json`,
+                    `/output/${encodedUserId}/${encodedPageId}_html_data/metadata.json`,
+                    `/output/${encodedUserId}/${decodedPageId}_data/metadata.json`,
+                    `/output/${encodedUserId}/${decodedPageId}_html_data/metadata.json`,
+                    `/output/${encodedUserId}/${decodedPageId.replace(/_html$/, '')}_data/metadata.json`,
+                    `/output/${encodedUserId}/${decodedPageId.replace(/_html$/, '')}_html_data/metadata.json`,
+                    `/users/${encodedUserId}/${encodedPageId}_data/metadata.json`,
+                    `/users/${encodedUserId}/${encodedPageId}_html_data/metadata.json`
+                ];
+                
+                let metadata = null;
+                let foundPath = null;
+                
+                for (const metadataPath of possiblePaths) {
+                    console.log(`🔍 Trying metadata path: ${metadataPath}`);
+                    const response = await fetch(metadataPath);
+                    if (response.ok) {
+                        metadata = await response.json();
+                        foundPath = metadataPath;
+                        console.log(`✅ Found metadata at: ${metadataPath}`);
+                        break;
+                    }
+                }
+                
+                if (metadata) {
                     services = metadata.services || [];
-                    console.log('✅ Loaded services:', services);
+                    console.log('✅ Loaded services:', services.length, 'services from', foundPath);
+                    if (services.length > 0) {
+                        console.log('✅ Services:', services.map(s => s.name || s));
+                    } else {
+                        console.log('ℹ️ No services in metadata (services array is empty or missing)');
+                    }
                     renderServices();
                 } else {
-                    console.warn('⚠️ No metadata found, using empty services');
+                    console.warn('⚠️ No metadata found in any of the tried paths');
+                    console.log('⚠️ Tried paths:', possiblePaths);
                     services = [];
                     renderServices();
                 }
@@ -638,6 +727,7 @@
                 buildCustomersList();
                 renderCustomers();
             } else if (view === 'services') {
+                // 🔥 Load services when switching to services view
                 loadServices();
             }
         }
@@ -1646,7 +1736,11 @@
         setInterval(refreshData, 30000);
 
         // Initialize on load
-        loadAppointments();
+        if (getUrlParams()) {
+            loadAppointments();
+            // 🔥 Also load services on initial load (if services view might be opened)
+            loadServices();
+        }
     </script>
 </body>
 </html>

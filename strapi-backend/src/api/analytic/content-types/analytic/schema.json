@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "analytics",
+  "info": {
+    "singularName": "analytic",
+    "pluralName": "analytics",
+    "displayName": "Analytics",
+    "description": "Analytics data for pages"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "totalSales": {
+      "type": "decimal",
+      "default": 0
+    },
+    "totalOrders": {
+      "type": "integer",
+      "default": 0
+    },
+    "totalCustomers": {
+      "type": "integer",
+      "default": 0
+    },
+    "totalLeads": {
+      "type": "integer",
+      "default": 0
+    },
+    "dailySales": {
+      "type": "json",
+      "default": {}
+    },
+    "monthlySales": {
+      "type": "json",
+      "default": {}
+    },
+    "topProducts": {
+      "type": "json",
+      "default": []
+    },
+    "recentPurchases": {
+      "type": "json",
+      "default": []
+    },
+    "page": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::page.page",
+      "inversedBy": "analytics"
+    }
+  }
+}

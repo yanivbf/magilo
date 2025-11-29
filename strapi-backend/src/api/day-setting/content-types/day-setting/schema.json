@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "day_settings",
+  "info": {
+    "singularName": "day-setting",
+    "pluralName": "day-settings",
+    "displayName": "Day Setting",
+    "description": "Working hours, breaks, and closed days for service providers"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "pageId": {
+      "type": "string",
+      "required": true
+    },
+    "dayOfWeek": {
+      "type": "enumeration",
+      "enum": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
+      "required": true
+    },
+    "isWorkingDay": {
+      "type": "boolean",
+      "default": true
+    },
+    "workingHours": {
+      "type": "json",
+      "default": {
+        "start": "09:00",
+        "end": "17:00"
+      }
+    },
+    "breaks": {
+      "type": "json",
+      "default": []
+    },
+    "closedDates": {
+      "type": "json",
+      "default": []
+    }
+  }
+}

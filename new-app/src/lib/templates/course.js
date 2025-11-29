@@ -1,0 +1,126 @@
+// Course/Workshop Template Configuration
+export const courseTemplate = {
+	id: 'course',
+	name: 'קורס / סדנה',
+	icon: '🎓',
+	description: 'דף קורס או סדנה עם הרשמה',
+	image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop',
+	
+	// EXACT Legacy Info Box from page-creator.html
+	infoBox: {
+		title: '📚 פלטפורמת קורסים מוקלטים',
+		description: '<strong>מה זה?</strong> כל קורס = סרטון מוקלט + מחיר. הלקוחות רוכשים גישה ויכולים לצפות.<br><strong>כולל:</strong> עגלת קניות, תשלום מאובטח, ממשק ניהול רכישות + נרשמים.',
+		boxColor: 'indigo'
+	},
+	
+	fields: [
+		{
+			name: 'title',
+			label: 'כותרת הדף (URL)',
+			type: 'text',
+			required: true,
+			placeholder: 'לדוגמה: web-development-course',
+			help: 'זה יהיה חלק מכתובת הדף שלך (באנגלית בלבד, ללא רווחים)'
+		},
+		{
+			name: 'courseName',
+			label: 'שם הקורס/סדנה',
+			type: 'text',
+			required: true,
+			placeholder: 'לדוגמה: קורס פיתוח אתרים'
+		},
+		{
+			name: 'instructor',
+			label: 'שם המרצה/מדריך',
+			type: 'text',
+			required: true,
+			placeholder: 'שם המרצה'
+		},
+		{
+			name: 'description',
+			label: 'תיאור הקורס',
+			type: 'textarea',
+			required: true,
+			placeholder: 'תאר את הקורס, מה ילמדו, למי מתאים...'
+		},
+		{
+			name: 'curriculum',
+			label: 'תכנית לימודים',
+			type: 'textarea',
+			required: true,
+			placeholder: 'שיעור 1: מבוא\nשיעור 2: יסודות\nשיעור 3: מתקדם',
+			help: 'הזן נושא אחד בכל שורה'
+		},
+		{
+			name: 'duration',
+			label: 'משך הקורס',
+			type: 'text',
+			required: true,
+			placeholder: 'לדוגמה: 8 שבועות, 3 חודשים'
+		},
+		{
+			name: 'startDate',
+			label: 'תאריך התחלה',
+			type: 'date',
+			required: false
+		},
+		{
+			name: 'price',
+			label: 'מחיר',
+			type: 'number',
+			required: false,
+			placeholder: '1500'
+		},
+		{
+			name: 'maxStudents',
+			label: 'מספר מקסימלי של משתתפים',
+			type: 'number',
+			required: false,
+			placeholder: '20'
+		},
+		{
+			name: 'phone',
+			label: 'טלפון',
+			type: 'tel',
+			required: true,
+			placeholder: '050-1234567'
+		},
+		{
+			name: 'email',
+			label: 'אימייל',
+			type: 'email',
+			required: false,
+			placeholder: 'course@example.com'
+		}
+	],
+	
+	designStyles: [
+		{
+			id: 'academic',
+			name: 'אקדמי',
+			colors: {
+				primary: '#1E40AF',
+				secondary: '#1E3A8A',
+				accent: '#F59E0B'
+			}
+		},
+		{
+			id: 'creative',
+			name: 'יצירתי',
+			colors: {
+				primary: '#8B5CF6',
+				secondary: '#EC4899',
+				accent: '#F59E0B'
+			}
+		},
+		{
+			id: 'professional',
+			name: 'מקצועי',
+			colors: {
+				primary: '#059669',
+				secondary: '#047857',
+				accent: '#3B82F6'
+			}
+		}
+	]
+};

@@ -491,6 +491,9 @@
                     <a href="/marketplace.html" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         Marketplace
                     </a>
+                    <a href="/driver-app.html" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                        🚚 Get Delivery
+                    </a>
                     <button id="stav-chat-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         🤖 סתיו
                     </button>
@@ -3904,7 +3907,8 @@
                 case 'course': return 'ניהול קורסים';
                 case 'workshop': return 'ניהול נרשמים';
                 case 'messageInBottle': return 'ניהול הודעות';
-                case 'serviceProvider': return 'ניהול';
+                case 'serviceProvider': return 'ניהול תורים'; // Always "ניהול תורים" for service provider pages
+                case 'appointment': return 'ניהול תורים'; // Also for appointment pages
                 default: return 'ניהול';
             }
         }
@@ -3928,8 +3932,13 @@
             
             if (hasAppointments || isServiceProvider) {
                 console.log(`📅 Detected appointments/serviceProvider (hasAppointments: ${hasAppointments}, isServiceProvider: ${isServiceProvider}), routing to appointments-admin.html`);
-                const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
-                return `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
+                console.log(`📅 Original fileName: ${fileName}`);
+                // Ensure pageId is properly encoded
+                const cleanPageId = fileName.replace(/\.html$/, ''); // Remove .html if present
+                const encodedPageId = encodeURIComponent(cleanPageId);
+                const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/\.html$/, '').replace(/_/g, ' '));
+                console.log(`📅 Clean pageId: ${cleanPageId}, encoded: ${encodedPageId}`);
+                return `/appointments-admin.html?userId=${encodeURIComponent(userId)}&pageId=${encodedPageId}&pageName=${pageName}`;
             }
             
             // 🔥 CRITICAL: ALWAYS check for store SECOND (before event, etc.)
@@ -4041,16 +4050,33 @@
                 let localResponse = await fetch(`/api/pages/${currentUser.id}`);
                 let localData = await localResponse.json();
                 
-                // If no pages found, try temp_user folder
+                // 🔥 REMOVED: Don't load from temp_user - those are temporary pages
+                // If no pages found for user, that's fine - show empty state
                 if (!localData.pages || localData.pages.length === 0) {
-                    console.log('📂 No pages in user folder, trying temp_user...');
-                    localResponse = await fetch(`/api/pages/temp_user`);
-                    localData = await localResponse.json();
-                }
+                    console.log('📭 No pages found for current user - showing empty state');
+                    projects = [];
+                } else {
                 
-                if (localData.pages && localData.pages.length > 0) {
-                    // המר דפים מקומיים לפורמט תצוגה
-                    projects = localData.pages.map(page => {
+                    // 🔥 Server already filters out deleted pages (pages without HTML files)
+                    // But double-check: filter out any pages without hasHtmlFile=true
+                    const validPages = localData.pages.filter(page => {
+                        // Only include pages that explicitly have hasHtmlFile=true
+                        // This prevents loading pages from corrupted localStorage or server errors
+                        const isValid = page.hasHtmlFile === true;
+                        if (!isValid) {
+                            console.warn(`⚠️ Skipping page without hasHtmlFile: ${page.fileName}`);
+                        }
+                        return isValid;
+                    });
+                    
+                    console.log(`✅ Server returned ${localData.pages.length} pages, ${validPages.length} are valid (filtered ${localData.pages.length - validPages.length} invalid)`);
+                    
+                    if (validPages.length === 0) {
+                        console.log('⚠️ No valid pages found after filtering - showing empty state');
+                        projects = [];
+                    } else {
+                        // המר דפים מקומיים לפורמט תצוגה
+                        projects = validPages.map(page => {
                         // חלץ שם נקי מתוך שם הקובץ
                         let cleanName = page.title || 'דף נחיתה';
                         
@@ -4085,9 +4111,10 @@
                             hasAppointments: page.hasAppointments
                         });
                         
-                        return projectObj;
-                    });
-                    console.log('נטענו דפים מקומיים:', projects.length);
+                            return projectObj;
+                        });
+                        console.log(`✅ Loaded ${projects.length} valid local pages`);
+                    }
                 }
             } catch (localErr) {
                 console.error('שגיאה בטעינת דפים מקומיים:', localErr);
@@ -4099,6 +4126,42 @@
             // 🎯 FIX: Clear timeout on success
             if (typeof globalTimeout !== 'undefined' && globalTimeout) clearTimeout(globalTimeout);
             if (typeof edgeTimeout !== 'undefined' && edgeTimeout) clearTimeout(edgeTimeout);
+            
+            // 🔥 NEW: Clean up localStorage if no pages exist on server
+            // This prevents showing "ghost pages" from localStorage when pages were deleted
+            if (projects.length === 0) {
+                console.log('🧹 No pages found on server - cleaning localStorage...');
+                try {
+                    // Remove all page subscriptions from localStorage
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && (key.startsWith('page_subscription_') || key.startsWith('project_'))) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(key => {
+                        console.log(`🗑️ Removing ${key} from localStorage`);
+                        localStorage.removeItem(key);
+                    });
+                    console.log(`✅ Cleaned ${keysToRemove.length} items from localStorage`);
+                    
+                    // Also clean autopage_data if it contains pages
+                    try {
+                        const autopageData = JSON.parse(localStorage.getItem('autopage_data') || '{}');
+                        if (autopageData.pages && autopageData.pages.length > 0) {
+                            console.log('🧹 Cleaning autopage_data pages...');
+                            autopageData.pages = [];
+                            localStorage.setItem('autopage_data', JSON.stringify(autopageData));
+                            console.log('✅ Cleaned autopage_data');
+                        }
+                    } catch (e) {
+                        console.log('No autopage_data to clean');
+                    }
+                } catch (cleanupError) {
+                    console.error('Error cleaning localStorage:', cleanupError);
+                }
+            }
             
             // אם יש שגיאה מ-Supabase אבל יש דפים מקומיים, נמשיך
             // אם אין דפים בכלל, נציג הודעה ריקה
@@ -4113,14 +4176,24 @@
                     console.log(`מציג פרויקט ${index + 1}:`, project.name);
                     
                     // Use pageType from server (already detected and saved)
-                    let pageType = project.pageType || 'other';
-                    let hasAppointments = project.hasAppointments || project.appointments || false;
+                    // Check metadata first, then project.pageType
+                    let pageType = project?.metadata?.pageType || project.pageType || 'other';
+                    
+                    // 🔥 CRITICAL: Check metadata for appointments (same logic as getManageUrl)
+                    let hasAppointments = project?.metadata?.appointments || 
+                                         project?.metadata?.hasAppointments ||
+                                         project?.hasAppointments ||
+                                         project?.appointments ||
+                                         project?.metadata?.enableAppointmentBooking ||
+                                         pageType === 'serviceProvider' ||
+                                         pageType === 'appointment' ||
+                                         false;
                     
                     // 🔥 CRITICAL FIX: If pageType is not set or is 'other', use default
                     // Skip detectPageType to prevent hanging - use metadata only
                     if (!pageType || pageType === 'other') {
                         console.log(`⏭️ No pageType in metadata for ${project.name}, using default (skipping detection to prevent hanging)`);
-                        pageType = project.pageType || 'other';
+                        pageType = project?.metadata?.pageType || project.pageType || 'other';
                     }
                     
                     // 🎯 CRITICAL FIX: Skip ALL HTML checks to prevent hanging
@@ -4758,7 +4831,9 @@
                 } else if (hasAppointments) {
                     // יש יומן תורים → ניהול תורים (לא משנה מה ה-pageType!)
                     const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
-                    managementUrl = `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
+                    // Ensure pageId is properly encoded (fileName might contain Hebrew characters)
+                    const encodedPageId = encodeURIComponent(fileName);
+                    managementUrl = `/appointments-admin.html?userId=${encodeURIComponent(userId)}&pageId=${encodedPageId}&pageName=${pageName}`;
                     console.log('📅 Opening APPOINTMENTS management for:', fileName, '(hasAppointments:', hasAppointments, ')');
                 } else {
                     // דפים אחרים → ניהול לידים
@@ -4824,6 +4899,16 @@
                 const subscriptionKey = `page_subscription_${projectId}`;
                 localStorage.removeItem(subscriptionKey);
                 console.log('✅ Deleted subscription from localStorage:', subscriptionKey);
+                
+                // 🗑️ מחק כל localStorage keys הקשורים לדף הזה
+                const fileName = projectId.replace('local_', '');
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes(fileName) || key.includes(projectId))) {
+                        localStorage.removeItem(key);
+                        console.log('✅ Deleted localStorage key:', key);
+                    }
+                }
                 
                 // בדוק אם זה דף מקומי
                 if (projectId.startsWith('local_')) {

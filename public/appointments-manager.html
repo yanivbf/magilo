@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -260,6 +260,7 @@
             pageInfo = getPageInfo();
             if (!pageInfo.page || !pageInfo.userId) {
                 console.warn('⚠️ Missing page or userId');
+                document.getElementById('business-name').textContent = '⚠️ חסרים פרמטרים - אנא בדוק את ה-URL';
                 // Still render empty calendar with today's date
                 updateStatistics();
                 renderCalendar();
@@ -269,9 +270,38 @@
             }
 
             try {
-                const response = await fetch(`/api/appointments/${pageInfo.userId}/${pageInfo.page}`);
+                // Load page metadata to get business name
+                try {
+                    const metadataResponse = await fetch(`/api/analytics/page/${encodeURIComponent(pageInfo.page)}?userId=${encodeURIComponent(pageInfo.userId)}`);
+                    if (metadataResponse.ok) {
+                        const metadataData = await metadataResponse.json();
+                        const businessName = metadataData.metadata?.businessName || 
+                                           metadataData.metadata?.name || 
+                                           metadataData.metadata?.title || 
+                                           pageInfo.page.replace(/_html$/, '').replace(/\.html$/, '');
+                        document.getElementById('business-name').textContent = businessName;
+                    }
+                } catch (metaError) {
+                    console.warn('⚠️ Could not load metadata:', metaError);
+                    document.getElementById('business-name').textContent = pageInfo.page.replace(/_html$/, '').replace(/\.html$/, '');
+                }
+
+                // Load appointments
+                console.log('📅 Loading appointments for:', pageInfo.userId, pageInfo.page);
+                const response = await fetch(`/api/appointments/${encodeURIComponent(pageInfo.userId)}/${encodeURIComponent(pageInfo.page)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 appointments = data.appointments || [];
+                
+                console.log(`✅ Loaded ${appointments.length} appointments`);
+                
+                if (appointments.length === 0) {
+                    console.log('ℹ️ No appointments found - this is normal for a new page');
+                }
                 
                 // Load settings
                 breaks = JSON.parse(localStorage.getItem(`breaks_${pageInfo.page}`) || '[]');
@@ -289,6 +319,7 @@
                 selectDate(selectedDate);
             } catch (error) {
                 console.error('❌ Error loading appointments:', error);
+                document.getElementById('business-name').textContent = '❌ שגיאה בטעינת נתונים';
                 // Still render empty calendar even on error
                 updateStatistics();
                 renderCalendar();
@@ -429,7 +460,16 @@
             const dayAppointments = appointments.filter(a => a.date === dateStr);
             
             if (dayAppointments.length === 0) {
-                container.innerHTML = '<p class="text-gray-500">אין תורים ליום זה</p>';
+                if (appointments.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                            <p class="text-blue-800 font-semibold mb-2">📅 אין תורים במערכת</p>
+                            <p class="text-blue-600 text-sm">כשלקוחות יקבעו תורים דרך הדף, הם יופיעו כאן</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<p class="text-gray-500">אין תורים ליום זה</p>';
+                }
                 return;
             }
             

@@ -2177,7 +2177,40 @@ app.post('/api/save-page', async (req, res) => {
       console.log('✅ Saved metadata:', metadata);
     }
 
-    res.json({ success: true, message: 'Page saved successfully' });
+    // 🔥 ALSO SAVE TO STRAPI (new system)
+    try {
+      console.log('📤 Sending page to Strapi...');
+      const strapiResponse = await fetch('http://localhost:3000/api/save-page-to-strapi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId,
+          fileName,
+          content,
+          pageType,
+          pageName
+        })
+      });
+
+      if (strapiResponse.ok) {
+        const strapiResult = await strapiResponse.json();
+        console.log('✅ Page also saved to Strapi:', strapiResult.slug);
+        res.json({ 
+          success: true, 
+          message: 'Page saved successfully',
+          strapiSlug: strapiResult.slug,
+          strapiUrl: strapiResult.pageUrl
+        });
+      } else {
+        console.warn('⚠️ Failed to save to Strapi, but local save succeeded');
+        res.json({ success: true, message: 'Page saved successfully (local only)' });
+      }
+    } catch (strapiError) {
+      console.warn('⚠️ Strapi save failed:', strapiError.message);
+      res.json({ success: true, message: 'Page saved successfully (local only)' });
+    }
 
   } catch (error) {
     console.error('Error saving page:', error);

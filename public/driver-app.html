@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🚚 אפליקציית שליחים - AutoPage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNGVleZ8sYwGRcvuQl-esLPgvy7RhDCbk&libraries=places,geometry&callback=initMap" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .driver-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .driver-status.online {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .driver-status.offline {
+            background: rgba(255,255,255,0.1);
+            color: #aaa;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .online .status-dot {
+            background: #fff;
+        }
+
+        .offline .status-dot {
+            background: #666;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+        }
+
+        /* Order Cards */
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .order-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .order-id {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .order-store {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            color: white;
+        }
+
+        .status-picked {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .status-delivered {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .order-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .detail-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .order-total {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #00b894;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* Navigate Button */
+        .btn-navigate {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state .emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #888;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Products Preview */
+        .products-preview {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .product-chip {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        /* Call Button */
+        .call-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-screen.hidden {
+            display: none;
+        }
+
+        .login-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 400px;
+        }
+
+        .login-logo {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-container h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-container p {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .google-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 15px 30px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .google-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0,0,0,0.3);
+        }
+
+        .login-footer {
+            margin-top: 30px;
+        }
+
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* User Info Header */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #ff6b6b;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            color: #888;
+        }
+
+        #google-signin-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        /* Map Styles */
+        #driver-map {
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .route-info {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .route-info .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .route-info .info-label {
+            color: #888;
+        }
+
+        .route-info .info-value {
+            color: #00b894;
+            font-weight: 700;
+        }
+
+        .distance-badge {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .my-location-btn {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            z-index: 100;
+        }
+
+        /* Optimized order card */
+        .order-card .order-distance {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
+            <div class="login-logo">🚚</div>
+            <h1>אפליקציית שליחים</h1>
+            <p>התחבר כדי לראות את המשלוחים שלך</p>
+            
+            <!-- Google Sign-In Button will be rendered here -->
+            <div id="google-signin-container"></div>
+            
+            <div class="loading-spinner" id="login-loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>מתחבר...</p>
+            </div>
+            
+            <div class="login-footer">
+                <a href="/">🏠 חזרה לדף הבית</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until login) -->
+    <div id="main-app" class="app-container" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="user-info">
+                <img id="user-avatar" class="user-avatar" src="" alt="Avatar" style="display:none;">
+                <div>
+                    <div id="user-name" class="user-name">שליח</div>
+                    <button class="logout-btn" onclick="signOut()">התנתק</button>
+                </div>
+            </div>
+            <div class="driver-status online" onclick="toggleDriverStatus()">
+                <span class="status-dot"></span>
+                <span id="status-text">מחובר</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="today-deliveries">0</div>
+                <div class="stat-label">משלוחים היום</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="today-earnings">₪0</div>
+                <div class="stat-label">הכנסות היום</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pending-orders">0</div>
+                <div class="stat-label">ממתינים</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('pending')" id="tab-pending">
+                <span class="badge" id="pending-badge">0</span>
+                ממתינים
+            </button>
+            <button class="tab" onclick="showTab('active')" id="tab-active">
+                <span class="badge" id="active-badge">0</span>
+                בדרך
+            </button>
+            <button class="tab" onclick="showTab('map')" id="tab-map">
+                🗺️ מפה
+            </button>
+            <button class="tab" onclick="showTab('completed')" id="tab-completed">
+                <span class="badge" id="completed-badge">0</span>
+                הושלמו
+            </button>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map-container" style="display: none;">
+            <div id="driver-map" style="width: 100%; height: 400px; border-radius: 16px; margin-bottom: 15px;"></div>
+            <div id="route-info" class="route-info"></div>
+            <button class="btn btn-primary" onclick="optimizeRoute()" style="width: 100%; margin-bottom: 10px;">
+                🛣️ חשב מסלול אופטימלי
+            </button>
+            <div id="sorted-deliveries" class="orders-list"></div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="orders-list" id="orders-container">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div> <!-- end app-container / main-app -->
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <span class="nav-icon">📦</span>
+            <span>הזמנות</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/'">
+            <span class="nav-icon">🏠</span>
+            <span>בית</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span>סטטיסטיקה</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span>הגדרות</span>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Supabase Configuration - Same as main app
+        const supabaseUrl = 'https://osoqfadqohqcauawzmmq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zb3FmYWRxb2hxY2F1YXd6bW1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2OTIzMjMsImV4cCI6MjA3MzI2ODMyM30.TBLmKIntYGSfBm2StItfWm87-ebojV_NbaKNcYNWMPg';
+        const googleClientId = '589919062235-o6ohhnon54a12dav2lg24goh1m4ks43p.apps.googleusercontent.com';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        
+        let currentUser = null;
+        let allOrders = [];
+        let currentTab = 'pending';
+        let isOnline = true;
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            initGoogleSignIn();
+        });
+
+        function initGoogleSignIn() {
+            if (typeof google === 'undefined') {
+                console.log('Google Identity Services not loaded yet, retrying...');
+                setTimeout(initGoogleSignIn, 500);
+                return;
+            }
+            
+            google.accounts.id.initialize({
+                client_id: googleClientId,
+                callback: handleGoogleCredential,
+                auto_select: false,
+                cancel_on_tap_outside: false,
+            });
+            
+            // Render the Google Sign-In button
+            const container = document.getElementById('google-signin-container');
+            if (container) {
+                google.accounts.id.renderButton(
+                    container,
+                    {
+                        theme: 'filled_blue',
+                        size: 'large',
+                        width: 300,
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        locale: 'he'
+                    }
+                );
+            }
+        }
+
+        async function handleGoogleCredential(response) {
+            console.log('Google credential received');
+            
+            // Show loading
+            document.getElementById('login-loading').style.display = 'block';
+            document.getElementById('google-signin-container').style.display = 'none';
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithIdToken({
+                    provider: 'google',
+                    token: response.credential,
+                });
+                
+                if (error) {
+                    console.error('Supabase auth error:', error);
+                    showNotification('❌ שגיאה בהתחברות: ' + error.message);
+                    document.getElementById('login-loading').style.display = 'none';
+                    document.getElementById('google-signin-container').style.display = 'block';
+                } else if (data && data.user) {
+                    currentUser = data.user;
+                    console.log('✅ Logged in as:', currentUser.email);
+                    showApp();
+                    loadAllOrders();
+                }
+            } catch (err) {
+                console.error('Sign in error:', err);
+                showNotification('❌ שגיאה בהתחברות');
+                document.getElementById('login-loading').style.display = 'none';
+                document.getElementById('google-signin-container').style.display = 'block';
+            }
+        }
+
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (session && session.user) {
+                    currentUser = session.user;
+                    showApp();
+                    loadAllOrders();
+                } else {
+                    showLogin();
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                showLogin();
+            }
+        }
+
+        async function signOut() {
+            try {
+                await supabaseClient.auth.signOut();
+                currentUser = null;
+                showLogin();
+                showNotification('👋 להתראות!');
+                // Re-init Google button
+                setTimeout(initGoogleSignIn, 300);
+            } catch (error) {
+                console.error('Sign out error:', error);
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-loading').style.display = 'none';
+            document.getElementById('google-signin-container').style.display = 'block';
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').style.display = 'block';
+            
+            // Update user info
+            if (currentUser) {
+                const avatar = document.getElementById('user-avatar');
+                const name = document.getElementById('user-name');
+                
+                if (currentUser.user_metadata?.avatar_url) {
+                    avatar.src = currentUser.user_metadata.avatar_url;
+                    avatar.style.display = 'block';
+                }
+                
+                name.textContent = currentUser.user_metadata?.full_name || currentUser.email || 'שליח';
+            }
+        }
+
+        // Listen for auth changes
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                currentUser = session.user;
+                showApp();
+                loadAllOrders();
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                showLogin();
+            }
+        });
+
+        async function loadAllOrders() {
+            try {
+                // Get all users' stores and their orders
+                const response = await fetch('/api/all-delivery-orders');
+                if (response.ok) {
+                    const data = await response.json();
+                    allOrders = data.orders || [];
+                } else {
+                    // Fallback: try to get from database
+                    const dbResponse = await fetch('/api/db-purchases');
+                    if (dbResponse.ok) {
+                        const dbData = await dbResponse.json();
+                        allOrders = dbData.purchases || [];
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                allOrders = []; // No demo data - show empty state
+            }
+
+            updateStats();
+            renderOrders();
+        }
+
+        function updateStats() {
+            const pending = allOrders.filter(o => o.status === 'pending' || o.status === 'new').length;
+            const active = allOrders.filter(o => o.status === 'picked' || o.status === 'in_transit').length;
+            const completed = allOrders.filter(o => o.status === 'delivered' || o.status === 'completed').length;
+            
+            const todayEarnings = allOrders
+                .filter(o => o.status === 'delivered' || o.status === 'completed')
+                .reduce((sum, o) => sum + (o.deliveryFee || 30), 0);
+
+            document.getElementById('today-deliveries').textContent = completed;
+            document.getElementById('today-earnings').textContent = '₪' + todayEarnings;
+            document.getElementById('pending-orders').textContent = pending;
+
+            document.getElementById('pending-badge').textContent = pending;
+            document.getElementById('active-badge').textContent = active;
+            document.getElementById('completed-badge').textContent = completed;
+        }
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            
+            let filteredOrders = allOrders;
+            if (currentTab === 'pending') {
+                filteredOrders = allOrders.filter(o => o.status === 'pending' || o.status === 'new');
+            } else if (currentTab === 'active') {
+                filteredOrders = allOrders.filter(o => o.status === 'picked' || o.status === 'in_transit');
+            } else if (currentTab === 'completed') {
+                filteredOrders = allOrders.filter(o => o.status === 'delivered' || o.status === 'completed');
+            }
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="emoji">${currentTab === 'completed' ? '🎉' : '📭'}</div>
+                        <h3>${currentTab === 'completed' ? 'עדיין אין משלוחים שהושלמו' : 'אין הזמנות ממתינות'}</h3>
+                        <p>${currentTab === 'pending' ? 'הזמנות חדשות יופיעו כאן' : ''}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredOrders.map(order => `
+                <div class="order-card" data-id="${order.id}">
+                    <div class="order-header">
+                        <div>
+                            <div class="order-id">#${order.id}</div>
+                            <div class="order-store">${order.storeName || order.pageName || 'חנות'}</div>
+                        </div>
+                        <span class="order-status status-${order.status}">${getStatusText(order.status)}</span>
+                    </div>
+                    
+                    <div class="products-preview">
+                        ${(order.products || []).map(p => `
+                            <span class="product-chip">${p.name} x${p.quantity || 1}</span>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">👤</div>
+                            <span>${order.customerName || 'לקוח'}</span>
+                            <button class="call-btn" onclick="callCustomer('${order.customerPhone}')">📞</button>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">📍</div>
+                            <span>${order.customerAddress || 'לא צוינה כתובת'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="order-total">₪${order.total || 0}</div>
+                    
+                    <div class="order-actions">
+                        ${getOrderActions(order)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const statuses = {
+                'pending': 'ממתין לאיסוף',
+                'new': 'חדש',
+                'picked': 'נאסף',
+                'in_transit': 'בדרך',
+                'delivered': 'נמסר',
+                'completed': 'הושלם'
+            };
+            return statuses[status] || status;
+        }
+
+        function getOrderActions(order) {
+            if (order.status === 'pending' || order.status === 'new') {
+                return `
+                    <button class="btn btn-primary" onclick="pickupOrder('${order.id}')">
+                        📦 אספתי
+                    </button>
+                    <button class="btn btn-navigate" onclick="navigate('${order.customerAddress}')">
+                        🗺️ נווט
+                    </button>
+                `;
+            } else if (order.status === 'picked' || order.status === 'in_transit') {
+                return `
+                    <button class="btn btn-success" onclick="deliverOrder('${order.id}')">
+                        ✅ נמסר
+                    </button>
+                    <button class="btn btn-navigate" onclick="navigate('${order.customerAddress}')">
+                        🗺️ נווט
+                    </button>
+                `;
+            } else {
+                return `
+                    <button class="btn btn-secondary" disabled>
+                        ✅ הושלם
+                    </button>
+                `;
+            }
+        }
+
+        async function pickupOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'picked';
+                try {
+                    await fetch('/api/update-order-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, status: 'picked' })
+                    });
+                } catch (e) {
+                    console.log('Local update only');
+                }
+                showNotification('📦 ההזמנה נאספה!');
+                updateStats();
+                renderOrders();
+            }
+        }
+
+        async function deliverOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'delivered';
+                try {
+                    await fetch('/api/update-order-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, status: 'delivered' })
+                    });
+                } catch (e) {
+                    console.log('Local update only');
+                }
+                showNotification('✅ המשלוח הושלם!');
+                updateStats();
+                renderOrders();
+            }
+        }
+
+        function navigate(address) {
+            if (!address) {
+                showNotification('❌ אין כתובת לנווט אליה');
+                return;
+            }
+            // Open in Google Maps or Waze
+            const encodedAddress = encodeURIComponent(address);
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+        }
+
+        function callCustomer(phone) {
+            if (phone) {
+                window.location.href = `tel:${phone}`;
+            }
+        }
+
+        function toggleDriverStatus() {
+            isOnline = !isOnline;
+            const statusEl = document.querySelector('.driver-status');
+            const statusText = document.getElementById('status-text');
+            
+            if (isOnline) {
+                statusEl.classList.remove('offline');
+                statusEl.classList.add('online');
+                statusText.textContent = 'מחובר';
+                showNotification('✅ אתה מחובר ומקבל הזמנות');
+            } else {
+                statusEl.classList.remove('online');
+                statusEl.classList.add('offline');
+                statusText.textContent = 'לא מחובר';
+                showNotification('⚠️ אתה לא מחובר - לא תקבל הזמנות חדשות');
+            }
+        }
+
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        // Refresh orders every 30 seconds
+        setInterval(loadAllOrders, 30000);
+
+        // ========================================
+        // GOOGLE MAPS INTEGRATION
+        // ========================================
+        let map = null;
+        let markers = [];
+        let driverMarker = null;
+        let directionsService = null;
+        let directionsRenderer = null;
+        let driverLocation = null;
+        let geocoder = null;
+
+        // Called when Google Maps loads
+        function initMap() {
+            console.log('🗺️ Google Maps initialized');
+            
+            // Default to Tel Aviv
+            const defaultLocation = { lat: 32.0853, lng: 34.7818 };
+            
+            map = new google.maps.Map(document.getElementById('driver-map'), {
+                center: defaultLocation,
+                zoom: 13,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+                    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+                    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+                ]
+            });
+            
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: '#667eea',
+                    strokeWeight: 5
+                }
+            });
+            geocoder = new google.maps.Geocoder();
+            
+            // Get driver's current location
+            getDriverLocation();
+        }
+
+        function getDriverLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        driverLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        console.log('📍 Driver location:', driverLocation);
+                        
+                        // Add/update driver marker
+                        if (driverMarker) {
+                            driverMarker.setPosition(driverLocation);
+                        } else {
+                            driverMarker = new google.maps.Marker({
+                                position: driverLocation,
+                                map: map,
+                                icon: {
+                                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                                            <circle cx="20" cy="20" r="18" fill="#667eea" stroke="white" stroke-width="3"/>
+                                            <text x="20" y="26" text-anchor="middle" fill="white" font-size="18">🚗</text>
+                                        </svg>
+                                    `),
+                                    scaledSize: new google.maps.Size(40, 40)
+                                },
+                                title: 'המיקום שלי'
+                            });
+                        }
+                        
+                        map.setCenter(driverLocation);
+                        
+                        // Update distances for all orders
+                        updateOrderDistances();
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error);
+                        showNotification('⚠️ לא ניתן לקבל מיקום - אנא אשר גישה למיקום');
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
+
+        async function updateOrderDistances() {
+            if (!driverLocation || !allOrders.length) return;
+            
+            for (let order of allOrders) {
+                if (order.customerAddress && !order.distance) {
+                    try {
+                        const location = await geocodeAddress(order.customerAddress);
+                        if (location) {
+                            order.location = location;
+                            order.distance = calculateDistance(driverLocation, location);
+                        }
+                    } catch (e) {
+                        console.error('Geocoding error:', e);
+                    }
+                }
+            }
+            
+            // Re-render if on map tab
+            if (currentTab === 'map') {
+                renderMapMarkers();
+                renderSortedDeliveries();
+            }
+        }
+
+        function geocodeAddress(address) {
+            return new Promise((resolve, reject) => {
+                if (!geocoder) {
+                    reject('Geocoder not initialized');
+                    return;
+                }
+                
+                geocoder.geocode({ address: address + ', ישראל' }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        resolve({
+                            lat: results[0].geometry.location.lat(),
+                            lng: results[0].geometry.location.lng()
+                        });
+                    } else {
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        function calculateDistance(from, to) {
+            if (!from || !to) return null;
+            
+            const R = 6371; // Earth's radius in km
+            const dLat = (to.lat - from.lat) * Math.PI / 180;
+            const dLon = (to.lng - from.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // Distance in km
+        }
+
+        function renderMapMarkers() {
+            // Clear existing markers
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+            
+            const pendingOrders = allOrders.filter(o => 
+                o.status === 'pending' || o.status === 'new' || o.status === 'picked'
+            );
+            
+            pendingOrders.forEach((order, index) => {
+                if (order.location) {
+                    const marker = new google.maps.Marker({
+                        position: order.location,
+                        map: map,
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="16" fill="${order.status === 'picked' ? '#3498db' : '#e74c3c'}" stroke="white" stroke-width="2"/>
+                                    <text x="18" y="24" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${index + 1}</text>
+                                </svg>
+                            `),
+                            scaledSize: new google.maps.Size(36, 36)
+                        },
+                        title: order.customerName + ' - ' + order.customerAddress
+                    });
+                    
+                    marker.addListener('click', () => {
+                        showOrderInfo(order);
+                    });
+                    
+                    markers.push(marker);
+                }
+            });
+            
+            // Fit bounds to show all markers
+            if (markers.length > 0) {
+                const bounds = new google.maps.LatLngBounds();
+                if (driverLocation) bounds.extend(driverLocation);
+                markers.forEach(m => bounds.extend(m.getPosition()));
+                map.fitBounds(bounds);
+            }
+        }
+
+        function renderSortedDeliveries() {
+            const container = document.getElementById('sorted-deliveries');
+            if (!container) return;
+            
+            // Sort by distance
+            const sortedOrders = allOrders
+                .filter(o => o.status === 'pending' || o.status === 'new' || o.status === 'picked')
+                .sort((a, b) => (a.distance || 999) - (b.distance || 999));
+            
+            if (sortedOrders.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><h3>אין משלוחים</h3></div>';
+                return;
+            }
+            
+            container.innerHTML = sortedOrders.map((order, index) => `
+                <div class="order-card" data-id="${order.id}">
+                    <div class="order-header">
+                        <div>
+                            <span class="distance-badge">${index + 1}. ${order.distance ? order.distance.toFixed(1) + ' ק"מ' : 'לא ידוע'}</span>
+                            <div class="order-store">${order.storeName || 'חנות'}</div>
+                        </div>
+                        <span class="order-status status-${order.status}">${getStatusText(order.status)}</span>
+                    </div>
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <div class="detail-icon">👤</div>
+                            <span>${order.customerName || 'לקוח'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-icon">📍</div>
+                            <span>${order.customerAddress || 'לא צוינה'}</span>
+                        </div>
+                    </div>
+                    <div class="order-actions">
+                        ${getOrderActions(order)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showOrderInfo(order) {
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="direction: rtl; padding: 10px; min-width: 200px;">
+                        <h3 style="margin: 0 0 10px 0;">${order.customerName}</h3>
+                        <p style="margin: 5px 0;">📍 ${order.customerAddress}</p>
+                        <p style="margin: 5px 0;">📞 ${order.customerPhone || 'לא צוין'}</p>
+                        <p style="margin: 5px 0; font-weight: bold; color: #00b894;">₪${order.total}</p>
+                        <button onclick="navigateToOrder('${order.id}')" style="
+                            background: #667eea; color: white; border: none; 
+                            padding: 8px 16px; border-radius: 8px; cursor: pointer; width: 100%;
+                        ">🧭 נווט</button>
+                    </div>
+                `
+            });
+            
+            const marker = markers.find(m => 
+                m.getPosition().lat() === order.location?.lat && 
+                m.getPosition().lng() === order.location?.lng
+            );
+            
+            if (marker) {
+                infoWindow.open(map, marker);
+            }
+        }
+
+        function navigateToOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (order && order.location) {
+                // Open in Google Maps app or website
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${driverLocation?.lat},${driverLocation?.lng}&destination=${order.location.lat},${order.location.lng}&travelmode=driving`;
+                window.open(url, '_blank');
+            }
+        }
+
+        async function optimizeRoute() {
+            const pendingOrders = allOrders.filter(o => 
+                (o.status === 'pending' || o.status === 'new') && o.location
+            );
+            
+            if (pendingOrders.length < 2) {
+                showNotification('צריך לפחות 2 משלוחים לחישוב מסלול');
+                return;
+            }
+            
+            if (!driverLocation) {
+                showNotification('⚠️ לא ניתן לקבל את המיקום שלך');
+                return;
+            }
+            
+            showNotification('🛣️ מחשב מסלול אופטימלי...');
+            
+            // Create waypoints
+            const waypoints = pendingOrders.slice(0, -1).map(order => ({
+                location: new google.maps.LatLng(order.location.lat, order.location.lng),
+                stopover: true
+            }));
+            
+            const lastOrder = pendingOrders[pendingOrders.length - 1];
+            
+            const request = {
+                origin: new google.maps.LatLng(driverLocation.lat, driverLocation.lng),
+                destination: new google.maps.LatLng(lastOrder.location.lat, lastOrder.location.lng),
+                waypoints: waypoints,
+                optimizeWaypoints: true, // Let Google optimize the order!
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+            
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    
+                    // Calculate total distance and time
+                    let totalDistance = 0;
+                    let totalDuration = 0;
+                    result.routes[0].legs.forEach(leg => {
+                        totalDistance += leg.distance.value;
+                        totalDuration += leg.duration.value;
+                    });
+                    
+                    // Update route info
+                    document.getElementById('route-info').innerHTML = `
+                        <div class="info-row">
+                            <span class="info-label">מרחק כולל:</span>
+                            <span class="info-value">${(totalDistance / 1000).toFixed(1)} ק"מ</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">זמן משוער:</span>
+                            <span class="info-value">${Math.round(totalDuration / 60)} דקות</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">עצירות:</span>
+                            <span class="info-value">${pendingOrders.length} משלוחים</span>
+                        </div>
+                    `;
+                    
+                    showNotification('✅ מסלול מחושב!');
+                } else {
+                    console.error('Directions error:', status);
+                    showNotification('❌ שגיאה בחישוב המסלול');
+                }
+            });
+        }
+
+        // ========================================
+        // REAL-TIME STORE SYNC
+        // ========================================
+        async function updateOrderStatusWithSync(orderId, status) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            order.status = status;
+            
+            try {
+                // Update on server - this syncs with store management
+                const response = await fetch('/api/update-order-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        orderId, 
+                        status,
+                        driverId: currentUser?.id,
+                        driverName: currentUser?.user_metadata?.full_name || 'שליח',
+                        updatedAt: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    const statusText = status === 'picked' ? 'נאסף ונשלח!' : 'נמסר!';
+                    showNotification(`✅ ${statusText} (מסונכרן עם החנות)`);
+                }
+            } catch (e) {
+                console.error('Sync error:', e);
+                showNotification('⚠️ עודכן מקומית - סנכרון יתבצע בהמשך');
+            }
+            
+            updateStats();
+            renderOrders();
+            
+            if (currentTab === 'map') {
+                renderMapMarkers();
+                renderSortedDeliveries();
+            }
+        }
+
+        // Override the original functions to use sync
+        async function pickupOrder(orderId) {
+            await updateOrderStatusWithSync(orderId, 'picked');
+        }
+
+        async function deliverOrder(orderId) {
+            await updateOrderStatusWithSync(orderId, 'delivered');
+        }
+
+        // Update showTab to handle map
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab)?.classList.add('active');
+            
+            const mapContainer = document.getElementById('map-container');
+            const ordersContainer = document.getElementById('orders-container');
+            
+            if (tab === 'map') {
+                mapContainer.style.display = 'block';
+                ordersContainer.style.display = 'none';
+                
+                // Refresh map
+                if (map) {
+                    google.maps.event.trigger(map, 'resize');
+                    getDriverLocation();
+                    renderMapMarkers();
+                    renderSortedDeliveries();
+                }
+            } else {
+                mapContainer.style.display = 'none';
+                ordersContainer.style.display = 'block';
+                renderOrders();
+            }
+        }
+    </script>
+</body>
+</html>
+

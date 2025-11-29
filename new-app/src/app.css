@@ -1,0 +1,419 @@
+/* AutoPage Original Design - Migrated from Legacy HTML */
+/* Using Tailwind CSS + Custom Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Rubik', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl;
+}
+
+/* Purple Gradient Background (Original AutoPage Colors) */
+.hero-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Loading Animations */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 4px solid #4f46e5;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top-color: #4f46e5;
+    animation: spin 1s ease-in-out infinite;
+}
+
+/* Page Card Hover Effects */
+.page-card {
+    transition: all 0.3s ease;
+}
+
+.page-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.status-completed {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-processing {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* Tooltips */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+[data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    margin-bottom: 1px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Dropdown Menus */
+.dropdown-menu {
+    min-width: 180px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Project Saved Indicator */
+.project-saved-indicator {
+    background: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Option Cards */
+.option-card { 
+    transition: all 0.3s ease-in-out; 
+}
+
+.option-card.selected { 
+    transform: scale(1.03); 
+    box-shadow: 0 0 0 3px #8b5cf6; 
+}
+
+
+/* ========================================
+   LEGACY ANIMATIONS - EXACT COPY FROM page-creator/page-creator.html
+   ======================================== */
+
+/* Generation Loading Animation */
+.gen-view-container { 
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+}
+
+.gen-loader {
+    width: 80px; 
+    height: 80px;
+    border-radius: 50%;
+    perspective: 800px;
+    position: relative;
+}
+
+.gen-loader .inner {
+    position: absolute;
+    box-sizing: border-box;
+    width: 100%; 
+    height: 100%;
+    border-radius: 50%;
+}
+
+.gen-loader .inner.one {
+    left: 0%; 
+    top: 0%;
+    animation: rotate-one 1.5s linear infinite;
+    border-bottom: 3px solid #8b5cf6;
+}
+
+.gen-loader .inner.two {
+    right: 0%; 
+    top: 0%;
+    animation: rotate-two 1.5s linear infinite;
+    border-right: 3px solid #ec4899;
+}
+
+.gen-loader .inner.three {
+    right: 0%; 
+    bottom: 0%;
+    animation: rotate-three 1.5s linear infinite;
+    border-top: 3px solid #3b82f6;
+}
+
+@keyframes rotate-one { 
+    0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); } 
+    100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } 
+}
+
+@keyframes rotate-two { 
+    0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); } 
+    100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); } 
+}
+
+@keyframes rotate-three { 
+    0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); } 
+    100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); } 
+}
+
+.gen-text {
+    font-family: 'Heebo', sans-serif;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 2rem;
+    min-height: 2em;
+}
+
+/* Form Styles - Legacy */
+.form-fieldset {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    background-color: rgba(255,255,255,0.5);
+}
+
+.form-legend {
+    padding: 0 0.5rem;
+    font-weight: 600;
+    color: #4c1d95;
+}
+
+/* Template Card Styles - Legacy */
+.template-card { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.template-card:hover .overlay { 
+    opacity: 1; 
+}
+
+.template-card:hover img { 
+    transform: scale(1.05); 
+}
+
+.template-card img { 
+    transition: transform 0.3s ease-in-out; 
+}
+
+.overlay { 
+    transition: opacity 0.3s ease-in-out; 
+}
+
+/* Option Card Styles - Legacy */
+.option-card { 
+    transition: all 0.3s ease-in-out; 
+}
+
+.option-card.selected { 
+    transform: scale(1.03); 
+    box-shadow: 0 0 0 3px #8b5cf6; 
+    border-color: #8b5cf6;
+}
+
+/* View Transitions - Legacy */
+.view { 
+    display: none; 
+}
+
+.view.active { 
+    display: block; 
+}
+
+.fade-in { 
+    animation: fadeIn 0.5s ease-in-out forwards; 
+}
+
+.fade-out { 
+    animation: fadeOut 0.5s ease-in-out forwards; 
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes fadeOut { 
+    from { opacity: 1; transform: translateY(0); } 
+    to { opacity: 0; transform: translateY(-10px); } 
+}
+
+/* Chat Bubble - Legacy */
+.chat-bubble { 
+    max-width: 100%; 
+    padding: 12px 18px; 
+    border-radius: 20px; 
+    line-height: 1.5;
+    animation: bubbleIn 0.4s ease-in-out;
+    word-wrap: break-word;
+    background-color: #eef2ff; 
+    color: #4338ca; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+html[dir="rtl"] .chat-bubble { 
+    border-bottom-right-radius: 4px; 
+}
+
+html[dir="ltr"] .chat-bubble { 
+    border-bottom-left-radius: 4px; 
+}
+
+@keyframes bubbleIn {
+    from { opacity: 0; transform: scale(0.8) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Typing Indicator - Legacy */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-style: italic;
+    color: #6b7280;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #8b5cf6;
+    animation: bounce 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { 
+        transform: translateY(0); 
+    }
+    40% { 
+        transform: translateY(-10px); 
+    }
+    60% { 
+        transform: translateY(-5px); 
+    }
+}
+
+
+/* ========================================
+   COURIER/DRIVER APP STYLES - Legacy Port
+   ======================================== */
+.courier-manager {
+	background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+	min-height: 100vh;
+	color: #fff;
+	padding: 20px;
+}
