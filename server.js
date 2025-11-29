@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs-extra');
@@ -100,13 +100,104 @@ app.get('/marketplace.html', (req, res) => {
 });
 
 // Serve generated pages from output directory with proper HTML content type
-app.use('/pages', (req, res, next) => {
-    // Set content type to HTML for .html files
-    if (req.path.endsWith('.html') || req.path.includes('html')) {
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+app.get('/pages/*', async (req, res) => {
+    try {
+        // Get the file path after /pages/
+        // req.path will be like "/pages/userId/filename.html"
+        // We need to remove the "/pages" prefix
+        let filePath = req.path;
+        if (filePath.startsWith('/pages/')) {
+            filePath = filePath.substring(7); // Remove "/pages/" (7 characters)
+        } else if (filePath.startsWith('/pages')) {
+            filePath = filePath.substring(6); // Remove "/pages" (6 characters)
+        }
+        
+        // Decode URL encoding
+        filePath = decodeURIComponent(filePath);
+        
+        const fullPath = path.join(__dirname, 'output', filePath);
+        
+        console.log('📄 Serving page:', filePath);
+        console.log('📄 Full path:', fullPath);
+        
+        // Check if file exists
+        if (!await fs.pathExists(fullPath)) {
+            console.error('❌ File not found:', fullPath);
+            return res.status(404).send('File not found: ' + filePath);
+        }
+        
+        // Set correct Content-Type for HTML files
+        if (filePath.endsWith('.html') || filePath.includes('html')) {
+            // CRITICAL: Set Content-Type BEFORE reading file to ensure proper MIME type
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            
+            // Read file and ensure it has DOCTYPE
+            try {
+                let htmlContent = await fs.readFile(fullPath, 'utf8');
+                
+                // 🔥 CRITICAL: Clean HTML - remove any duplicate content
+                // Check if HTML contains duplicate closing tags
+                const htmlCloseCount = (htmlContent.match(/<\/html>/gi) || []).length;
+                if (htmlCloseCount > 1) {
+                    console.warn('⚠️ Found multiple </html> tags in file! Cleaning...');
+                    // Keep only the first complete HTML document
+                    const firstHtmlClose = htmlContent.indexOf('</html>');
+                    if (firstHtmlClose !== -1) {
+                        htmlContent = htmlContent.substring(0, firstHtmlClose + 7); // +7 for '</html>'
+                        // Save the cleaned version
+                        await fs.writeFile(fullPath, htmlContent, 'utf8');
+                        console.log('✅ Cleaned duplicate HTML content and saved');
+                    }
+                }
+                
+                // Remove any content after </html> tag
+                const lastHtmlClose = htmlContent.lastIndexOf('</html>');
+                if (lastHtmlClose !== -1 && lastHtmlClose < htmlContent.length - 7) {
+                    const afterHtml = htmlContent.substring(lastHtmlClose + 7).trim();
+                    if (afterHtml.length > 0) {
+                        console.warn('⚠️ Found content after </html> tag! Removing', afterHtml.length, 'characters');
+                        htmlContent = htmlContent.substring(0, lastHtmlClose + 7);
+                        // Save the cleaned version
+                        await fs.writeFile(fullPath, htmlContent, 'utf8');
+                        console.log('✅ Removed content after </html> tag and saved');
+                    }
+                }
+                
+                // Add DOCTYPE if missing (prevents HTML being displayed as plain text)
+                if (!htmlContent.trim().toLowerCase().startsWith('<!doctype')) {
+                    htmlContent = '<!DOCTYPE html>\n' + htmlContent;
+                    // Save the fixed version back
+                    await fs.writeFile(fullPath, htmlContent, 'utf8');
+                    console.log('✅ Added DOCTYPE and saved');
+                }
+                
+                // Ensure Content-Type is set correctly (double-check)
+                res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                return res.send(htmlContent);
+            } catch (readError) {
+                console.error('❌ Error reading HTML file:', readError);
+                // Fall back to sendFile if read fails
+            }
+        }
+        
+        // Send the file (for non-HTML files or if read failed)
+        res.sendFile(fullPath, (err) => {
+            if (err) {
+                console.error('❌ Error sending file:', err);
+                if (!res.headersSent) {
+                    res.status(500).send('Error loading file');
+                }
+            } else {
+                console.log('✅ File sent successfully:', filePath);
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error serving page:', error);
+        if (!res.headersSent) {
+            res.status(500).send('Error loading page: ' + error.message);
+        }
     }
-    next();
-}, express.static('output'));
+});
 
 // Serve HTML files with correct Content-Type under /users route
 app.get('/users/:userId/:fileName', (req, res) => {
@@ -121,7 +212,7 @@ app.get('/users/:userId/:fileName', (req, res) => {
     });
 });
 
-// Serve all assets
+// Serve all assets (CSS, JS, images, etc.) from output directory
 app.use('/output', express.static(path.join(__dirname, 'output')));
 
 // Serve clean pages for viewing (without editor tools)
@@ -430,9 +521,29 @@ app.post('/api/create-page', async (req, res) => {
     console.log('📊 First 500 chars after:', pageHtml.substring(0, 500));
     console.log('📊 Last 500 chars after:', pageHtml.substring(pageHtml.length - 500));
     
-    // Save HTML file
+    // 🔥 CRITICAL: Clean HTML - remove any duplicate content that might appear as visible text
+    // Check if HTML contains duplicate closing tags
+    const htmlCloseCount = (pageHtml.match(/<\/html>/gi) || []).length;
+    if (htmlCloseCount > 1) {
+      console.warn('⚠️ Found multiple </html> tags in HTML! Cleaning duplicate content...');
+      // Keep only the first complete HTML document
+      const firstHtmlClose = pageHtml.indexOf('</html>');
+      if (firstHtmlClose !== -1) {
+        pageHtml = pageHtml.substring(0, firstHtmlClose + 7); // +7 for '</html>'
+        console.log('✅ Removed duplicate HTML content before saving');
+      }
+    }
+    
+    // Ensure HTML has DOCTYPE (prevents browser from displaying HTML as plain text)
+    if (!pageHtml.trim().toLowerCase().startsWith('<!doctype')) {
+      pageHtml = '<!DOCTYPE html>\n' + pageHtml;
+      console.log('✅ Added DOCTYPE to HTML before saving');
+    }
+    
+    // Save HTML file with UTF-8 encoding to ensure Hebrew text is saved correctly
     const filePath = path.join(userDir, fileName);
-    await fs.writeFile(filePath, pageHtml);
+    await fs.writeFile(filePath, pageHtml, 'utf8');
+    console.log('✅ HTML file saved successfully:', fileName);
     
     // Create data folder for the page
     const fileNameWithoutExt = fileName.replace('.html', '');
@@ -635,7 +746,10 @@ function extractPageData() {
     });
     
     data.products = products;
-    console.log(\`🛒 Extracted \${products.length} products from live page\`, products);
+    // Only log if products found (reduced console spam)
+    if (products.length > 0) {
+      console.log(\`🛒 Extracted \${products.length} products from live page\`, products);
+    }
   }
   
   // For ALL pages: Extract general content
@@ -645,7 +759,10 @@ function extractPageData() {
     sections: Array.from(document.querySelectorAll('section, .section, [class*="section"]')).length
   };
   
-  console.log('📊 Page data extracted:', data);
+  // Only log if products found (reduced console spam)
+  if (data.products && data.products.length > 0) {
+    console.log('📊 Page data extracted:', data);
+  }
   return data;
 }
 
@@ -687,12 +804,22 @@ function checkForProductChanges() {
   if (currentHash !== lastProductsHash) {
     lastProductsHash = currentHash;
     getLivePageData();
-    console.log('🔄 Products changed, updating bot data');
+    // Only log if products actually changed (reduced console spam)
+    if (currentData.products && currentData.products.length > 0) {
+      console.log('🔄 Products changed, updating bot data');
+    }
   }
 }
 
-// Check for changes every 2 seconds
-setInterval(checkForProductChanges, 2000);
+// Check for changes every 30 seconds (reduced frequency to prevent console spam)
+// Only for store pages, not service provider pages
+let productCheckInterval = null;
+if (typeof document !== 'undefined') {
+  const isServiceProviderPage = document.querySelector('#calendar, .time-slot, #service-select');
+  if (!isServiceProviderPage) {
+    productCheckInterval = setInterval(checkForProductChanges, 30000);
+  }
+}
 
 // 🚀 Force update products when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -709,26 +836,42 @@ function forceUpdateProducts() {
 // 🎯 Make forceUpdateProducts available globally
 window.forceUpdateProducts = forceUpdateProducts;
 
-// 🚀 Auto-update products when page content changes
+// 🚀 Auto-update products when page content changes (with debounce to prevent spam)
+// DISABLED for service provider pages to prevent console spam
+let productUpdateTimeout = null;
 const observer = new MutationObserver(function(mutations) {
-  mutations.forEach(function(mutation) {
-    if (mutation.type === 'childList' || mutation.type === 'characterData') {
-      // Check if content changed
-      setTimeout(() => {
-        checkForProductChanges();
-      }, 500);
+  // Skip for service provider pages (they don't need product extraction)
+  if (typeof document !== 'undefined') {
+    const isServiceProviderPage = document.querySelector('#calendar, .time-slot, #service-select');
+    if (isServiceProviderPage) {
+      return; // Don't observe service provider pages
     }
-  });
+  }
+  
+  // Debounce: only check after 5 seconds of no changes
+  if (productUpdateTimeout) {
+    clearTimeout(productUpdateTimeout);
+  }
+  productUpdateTimeout = setTimeout(() => {
+    checkForProductChanges();
+  }, 5000);
 });
 
-// Start observing
-document.addEventListener('DOMContentLoaded', function() {
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true
+// Start observing (only for non-service-provider pages)
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.body) {
+      const isServiceProviderPage = document.querySelector('#calendar, .time-slot, #service-select');
+      if (!isServiceProviderPage) {
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
+      }
+    }
   });
-});
+}
 
 // 🎯 Manual trigger for testing
 window.updateBotProducts = function() {
@@ -1707,6 +1850,282 @@ app.post('/api/save-page', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // 🔥 Detect pageType from content if not provided
+    if (!pageType) {
+      if (content.includes('page-type') && content.includes('content="serviceProvider"')) {
+        pageType = 'serviceProvider';
+      } else if (content.includes('id="calendar"') || content.includes('time-slot') || content.includes('initCalendar')) {
+        pageType = 'serviceProvider';
+      } else if (content.includes('page-type') && content.includes('content="store"')) {
+        pageType = 'store';
+      }
+      console.log('🔍 Detected pageType from content:', pageType || 'unknown');
+    }
+
+    // 🔥 CRITICAL FIX: Remove ALL JavaScript code that appears as visible text (outside <script> tags)
+    // This happens when the editor saves content incorrectly
+    // Strategy: Find everything between </script> and </body> that looks like JavaScript and remove it
+    
+    // First, find ALL </script> tags and their positions
+    const scriptCloseMatches = [];
+    let searchIndex = 0;
+    while ((searchIndex = content.indexOf('</script>', searchIndex)) !== -1) {
+      scriptCloseMatches.push(searchIndex);
+      searchIndex += 9; // Move past this match
+    }
+    
+    // Find the last </script> tag
+    const lastScriptIndex = content.lastIndexOf('</script>');
+    const bodyIndex = content.indexOf('</body>');
+    const htmlIndex = content.indexOf('</html>');
+    
+    // Find the end of the document (</body> or </html>, whichever comes first)
+    let documentEndIndex = -1;
+    if (htmlIndex !== -1 && bodyIndex !== -1) {
+      documentEndIndex = Math.min(htmlIndex, bodyIndex);
+    } else if (htmlIndex !== -1) {
+      documentEndIndex = htmlIndex;
+    } else if (bodyIndex !== -1) {
+      documentEndIndex = bodyIndex;
+    }
+    
+    // If we found both </script> and document end, check what's between them
+    if (lastScriptIndex !== -1 && documentEndIndex !== -1 && lastScriptIndex < documentEndIndex) {
+      const betweenScriptAndEnd = content.substring(lastScriptIndex + 9, documentEndIndex); // +9 for </script>
+      
+      // Check if there's JavaScript code in this section (more comprehensive check)
+      const jsIndicators = [
+        '// ========================================',
+        'CONSTANTS FROM METADATA',
+        'const USER_ID',
+        'const PAGE_ID',
+        'let WORKING_HOURS',
+        'let SPECIAL_HOURS',
+        'let BREAKS',
+        'let SERVICES',
+        'function ',
+        'async function',
+        'document.addEventListener',
+        'window.location',
+        'console.log',
+        'console.warn',
+        'console.error',
+        'await fetch',
+        'if (response.ok)',
+        'WORKING_DAYS =',
+        'WORKING_HOURS =',
+        'SPECIAL_HOURS =',
+        'BREAKS =',
+        'SERVICES =',
+        'initCalendar',
+        'loadServices',
+        'renderCalendar',
+        'selectTimeSlot',
+        'handleFormSubmit'
+      ];
+      
+      const hasJavaScript = jsIndicators.some(indicator => betweenScriptAndEnd.includes(indicator));
+      
+      // Also check for common JavaScript patterns - more aggressive
+      const jsPattern = /(const|let|var)\s+\w+\s*=|function\s+\w+|async\s+function|console\.(log|warn|error)|document\.(addEventListener|querySelector|getElementById)|window\.(location|addEventListener)|=>\s*\{|setInterval|setTimeout|addEventListener/;
+      const hasJsPattern = jsPattern.test(betweenScriptAndEnd);
+      
+      // Check if it looks like JavaScript code (starts with comment or const/let/var/function)
+      const startsWithJS = /^\s*(\/\/|const|let|var|function|async|document|window)/.test(betweenScriptAndEnd.trim());
+      
+      // Check if it contains multiple JavaScript statements (more than 5 lines of code)
+      const linesOfCode = betweenScriptAndEnd.split('\n').filter(line => {
+        const trimmed = line.trim();
+        return trimmed.length > 0 && 
+               !trimmed.startsWith('//') && 
+               !trimmed.startsWith('<!--') &&
+               !trimmed.startsWith('</') &&
+               !trimmed.startsWith('<');
+      }).length;
+      const hasMultipleStatements = linesOfCode > 5;
+      
+      // If it's more than 50 characters and looks like JavaScript, remove it (lowered threshold for service provider pages)
+      // Service provider pages have more JavaScript code that can appear as text
+      const minLength = (pageType === 'serviceProvider' || pageType === 'appointment') ? 50 : 100;
+      
+      if ((hasJavaScript || hasJsPattern || startsWithJS || hasMultipleStatements) && betweenScriptAndEnd.trim().length > minLength) {
+        console.log('⚠️ Found visible JavaScript code between </script> and document end - removing...');
+        console.log('⚠️ Code length:', betweenScriptAndEnd.length, 'characters');
+        console.log('⚠️ Code preview:', betweenScriptAndEnd.substring(0, 500));
+        
+        // Remove everything between </script> and document end
+        content = content.substring(0, lastScriptIndex + 9) + 
+                 '\n' + 
+                 content.substring(documentEndIndex);
+        console.log('✅ Removed visible JavaScript code from page');
+      }
+      
+      // 🔥 ADDITIONAL FIX FOR SERVICE PROVIDER PAGES: Remove any remaining JavaScript code patterns
+      // Even if the first check didn't catch it, do a more aggressive cleanup
+      if (pageType === 'serviceProvider' || pageType === 'appointment' || content.includes('initCalendar') || content.includes('WORKING_HOURS')) {
+        // Find any remaining JavaScript code between </script> and </body> or </html>
+        const remainingContent = content.substring(lastScriptIndex + 9, documentEndIndex);
+        if (remainingContent.trim().length > 20) {
+          // Check for any JavaScript-like patterns
+          const jsLikePattern = /(const|let|var|function|async|await|console|document|window|if\s*\(|for\s*\(|while\s*\()/;
+          if (jsLikePattern.test(remainingContent)) {
+            console.log('⚠️ Found additional JavaScript code in service provider page - removing...');
+            content = content.substring(0, lastScriptIndex + 9) + '\n' + content.substring(documentEndIndex);
+            console.log('✅ Removed additional JavaScript code from service provider page');
+          }
+        }
+      }
+    }
+    
+    // 🔥 ADDITIONAL FIX: Remove any JavaScript code that appears AFTER </html> tag
+    const htmlCloseIndexForCleanup = content.lastIndexOf('</html>');
+    if (htmlCloseIndexForCleanup !== -1) {
+      const afterHtml = content.substring(htmlCloseIndexForCleanup + 7);
+      const jsPatternAfterHtml = /(const|let|var)\s+\w+\s*=|function\s+\w+|async\s+function|console\.(log|warn|error)|document\.(addEventListener|querySelector|getElementById)|window\.(location|addEventListener)|CONSTANTS FROM METADATA|const USER_ID|const PAGE_ID/;
+      if (jsPatternAfterHtml.test(afterHtml) && afterHtml.trim().length > 50) {
+        console.log('⚠️ Found visible JavaScript code AFTER </html> tag - removing...');
+        console.log('⚠️ Code preview:', afterHtml.substring(0, 300));
+        content = content.substring(0, htmlCloseIndexForCleanup + 7);
+        console.log('✅ Removed visible JavaScript code after </html>');
+      }
+    }
+    
+    // Also check for JavaScript code patterns that might appear anywhere after </script>
+    // More comprehensive patterns to catch all JavaScript code
+    const jsPatterns = [
+      /\/\/ ========================================\s*\/\/ CONSTANTS FROM METADATA[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /const USER_ID\s*=[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /const PAGE_ID\s*=[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /let WORKING_HOURS[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /let SPECIAL_HOURS[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /let BREAKS[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /let SERVICES[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /async function loadSettingsFromMetadata[\s\S]*?(?=<script|<\/body|<\/html|$)/i,
+      /async function loadServices[\s\S]*?(?=<script|<\/body|<\/html|$)/i
+    ];
+    
+    let cleanedContent = content;
+    let foundVisibleCode = false;
+    
+    // Find last </script> and document end
+    const lastScriptCloseIndex = cleanedContent.lastIndexOf('</script>');
+    const bodyCloseIndex = cleanedContent.lastIndexOf('</body>');
+    const htmlCloseIndex = cleanedContent.lastIndexOf('</html>');
+    
+    // Determine document end
+    let docEndIndex = -1;
+    if (htmlCloseIndex !== -1 && bodyCloseIndex !== -1) {
+      docEndIndex = Math.min(htmlCloseIndex, bodyCloseIndex);
+    } else if (htmlCloseIndex !== -1) {
+      docEndIndex = htmlCloseIndex;
+    } else if (bodyCloseIndex !== -1) {
+      docEndIndex = bodyCloseIndex;
+    }
+    
+    // Only process if we have both </script> and document end
+    if (lastScriptCloseIndex !== -1 && docEndIndex !== -1 && lastScriptCloseIndex < docEndIndex) {
+      const searchArea = cleanedContent.substring(lastScriptCloseIndex + 9, docEndIndex);
+      
+      for (const pattern of jsPatterns) {
+        let match;
+        // Reset pattern
+        pattern.lastIndex = 0;
+        while ((match = pattern.exec(searchArea)) !== null) {
+          const codeStartIndex = lastScriptCloseIndex + 9 + match.index;
+          console.log('⚠️ Found visible JavaScript code pattern - removing:', match[0].substring(0, 100));
+          cleanedContent = cleanedContent.substring(0, codeStartIndex) + 
+                          cleanedContent.substring(codeStartIndex + match[0].length);
+          foundVisibleCode = true;
+          // Recalculate search area after modification
+          const newLastScriptCloseIndex = cleanedContent.lastIndexOf('</script>');
+          const newDocEndIndex = cleanedContent.lastIndexOf('</html>') !== -1 ? 
+                                 Math.min(cleanedContent.lastIndexOf('</html>'), cleanedContent.lastIndexOf('</body>')) :
+                                 cleanedContent.lastIndexOf('</body>');
+          if (newLastScriptCloseIndex !== -1 && newDocEndIndex !== -1 && newLastScriptCloseIndex < newDocEndIndex) {
+            // Continue searching in the updated area
+            pattern.lastIndex = 0;
+            break; // Exit inner while, continue with next pattern
+          }
+        }
+      }
+    }
+    
+    if (foundVisibleCode) {
+      console.log('✅ Removed additional visible JavaScript code from page');
+      content = cleanedContent;
+    }
+    
+    // 🔥 CRITICAL: Remove ALL content after </html> tag (if exists)
+    // This prevents duplicate HTML from being saved
+    // BUT: Check if it's JavaScript code first - if so, remove it more aggressively
+    const finalHtmlCloseIndex = content.lastIndexOf('</html>');
+    if (finalHtmlCloseIndex !== -1) {
+      const contentAfterHtml = content.substring(finalHtmlCloseIndex + 7).trim();
+      if (contentAfterHtml.length > 0) {
+        // Check if it looks like JavaScript code - more comprehensive check
+        const jsPatternAfterHtml = /(const|let|var)\s+\w+\s*=|function\s+\w+|async\s+function|console\.(log|warn|error)|document\.(addEventListener|querySelector|getElementById)|window\.(location|addEventListener)|CONSTANTS FROM METADATA|const USER_ID|const PAGE_ID|let WORKING_HOURS|let SPECIAL_HOURS|let BREAKS|let SERVICES|initCalendar|loadServices|renderCalendar|selectTimeSlot|handleFormSubmit|WORKING_DAYS|SPECIAL_HOURS|BREAKS|SERVICES|CONSTANTS FROM METADATA/;
+        // Also check if it starts with JavaScript-like patterns
+        const startsWithJS = /^\s*(\/\/|const|let|var|function|async|document|window)/.test(contentAfterHtml);
+        // Check if it has multiple lines that look like code
+        const lines = contentAfterHtml.split('\n').filter(l => l.trim().length > 0);
+        const codeLikeLines = lines.filter(l => {
+          const trimmed = l.trim();
+          return /^(const|let|var|function|async|console|document|window|if|for|while|return|await|async)/.test(trimmed) ||
+                 trimmed.startsWith('//') ||
+                 trimmed.includes('=>') ||
+                 trimmed.includes('()');
+        }).length;
+        const looksLikeCode = codeLikeLines > 3 || (codeLikeLines > 0 && lines.length > 5);
+        
+        if (jsPatternAfterHtml.test(contentAfterHtml) || startsWithJS || looksLikeCode) {
+          console.log('⚠️ Found JavaScript code after </html> tag - removing', contentAfterHtml.length, 'characters');
+          console.log('⚠️ Code preview:', contentAfterHtml.substring(0, 500));
+        } else {
+          console.log('⚠️ Found content after </html> tag - removing', contentAfterHtml.length, 'characters');
+        }
+        content = content.substring(0, finalHtmlCloseIndex + 7);
+      }
+    }
+    
+    // 🔥 CRITICAL: Remove ALL content after </body> tag if no </html> exists
+    // This prevents duplicate HTML from being saved
+    if (finalHtmlCloseIndex === -1) {
+      const bodyCloseIndex = content.lastIndexOf('</body>');
+      if (bodyCloseIndex !== -1) {
+        const contentAfterBody = content.substring(bodyCloseIndex + 7).trim();
+        if (contentAfterBody.length > 0) {
+          console.log('⚠️ Found content after </body> tag - removing', contentAfterBody.length, 'characters');
+          content = content.substring(0, bodyCloseIndex + 7);
+          // Add </html> if missing
+          if (!content.includes('</html>')) {
+            content += '\n</html>';
+          }
+        }
+      }
+    }
+    
+    // 🔥 Remove any duplicate DOCTYPE or <html> tags
+    const doctypeMatches = content.match(/<!DOCTYPE[^>]*>/gi);
+    if (doctypeMatches && doctypeMatches.length > 1) {
+      console.log('⚠️ Found multiple DOCTYPE tags - keeping only the first one');
+      const firstDoctypeIndex = content.indexOf('<!DOCTYPE');
+      const firstDoctypeEnd = content.indexOf('>', firstDoctypeIndex) + 1;
+      // Remove all other DOCTYPE tags
+      content = content.substring(0, firstDoctypeEnd) + 
+                content.substring(firstDoctypeEnd).replace(/<!DOCTYPE[^>]*>/gi, '');
+    }
+    
+    // 🔥 Remove any duplicate <html> opening tags
+    const htmlOpenMatches = content.match(/<html[^>]*>/gi);
+    if (htmlOpenMatches && htmlOpenMatches.length > 1) {
+      console.log('⚠️ Found multiple <html> opening tags - keeping only the first one');
+      const firstHtmlIndex = content.indexOf('<html');
+      const firstHtmlEnd = content.indexOf('>', firstHtmlIndex) + 1;
+      // Remove all other <html> opening tags
+      content = content.substring(0, firstHtmlEnd) + 
+                content.substring(firstHtmlEnd).replace(/<html[^>]*>/gi, '');
+    }
+
     // Fix WhatsApp code for event pages
     content = fixEventPageWhatsApp(content, pageType);
     
@@ -1732,6 +2151,20 @@ app.post('/api/save-page', async (req, res) => {
         lastUpdated: new Date().toISOString()
       };
       
+      // For service providers with appointment booking - save workingDays, workingHours, breaks, services
+      if (req.body.workingDays) {
+        metadata.workingDays = req.body.workingDays;
+      }
+      if (req.body.workingHours) {
+        metadata.workingHours = req.body.workingHours;
+      }
+      if (req.body.breaks) {
+        metadata.breaks = req.body.breaks;
+      }
+      if (req.body.services) {
+        metadata.services = req.body.services;
+      }
+      
         // Extract products from store pages for bot access - LIVE VERSION
         if (pageType === 'store') {
           // Force empty products to ensure bot reads from live page
@@ -1749,6 +2182,55 @@ app.post('/api/save-page', async (req, res) => {
   } catch (error) {
     console.error('Error saving page:', error);
     res.status(500).json({ error: 'Failed to save page' });
+  }
+});
+
+// Update services for an existing page
+app.put('/api/update-services/:userId/:pageId', async (req, res) => {
+  try {
+    const { userId, pageId } = req.params;
+    const { services } = req.body;
+    
+    if (!userId || !pageId) {
+      return res.status(400).json({ error: 'Missing userId or pageId' });
+    }
+    
+    // Load existing metadata
+    const metadataDir = path.join('output', userId, `${pageId.replace('.html', '')}_data`);
+    const metadataPath = path.join(metadataDir, 'metadata.json');
+    
+    if (!await fs.pathExists(metadataPath)) {
+      return res.status(404).json({ error: 'Metadata file not found' });
+    }
+    
+    const metadata = await fs.readJSON(metadataPath);
+    
+    // 🔥 Filter out demo/default services before saving
+    const demoServices = ['שיננית', 'דוגמה', 'demo', 'test', 'example'];
+    const filteredServices = (services || []).filter(service => {
+        if (!service || !service.name) return false;
+        const serviceNameLower = service.name.toLowerCase();
+        return !demoServices.some(demo => serviceNameLower.includes(demo));
+    });
+    
+    // Update services (only non-demo services)
+    metadata.services = filteredServices;
+    metadata.lastUpdated = new Date().toISOString();
+    
+    if (services && services.length > filteredServices.length) {
+        console.log(`⚠️ Filtered out ${services.length - filteredServices.length} demo/default services before saving`);
+    }
+    
+    // Save updated metadata
+    await fs.writeJSON(metadataPath, metadata, { spaces: 2, encoding: 'utf8' });
+    
+    console.log('✅ Services updated for', pageId, ':', services);
+    
+    res.json({ success: true, message: 'Services updated successfully', services });
+    
+  } catch (error) {
+    console.error('Error updating services:', error);
+    res.status(500).json({ error: 'Failed to update services' });
   }
 });
 
@@ -2345,10 +2827,17 @@ app.get('/api/pages/:userId', async (req, res) => {
       };
     }));
 
-    // Return ALL pages - including ones with only _data folders
-    // The client can decide whether to display them or not
-    console.log('Returning pages:', pages.length, 'total pages');
-    res.json({ pages: pages });
+    // 🔥 CRITICAL: Filter out pages without HTML files (deleted pages)
+    // Only return pages that actually exist
+    const validPages = pages.filter(page => page.hasHtmlFile === true);
+    const filteredCount = pages.length - validPages.length;
+    
+    if (filteredCount > 0) {
+      console.log(`⚠️ Filtered out ${filteredCount} pages without HTML files (deleted pages)`);
+    }
+    
+    console.log('Returning pages:', validPages.length, 'valid pages (filtered', filteredCount, 'deleted)');
+    res.json({ pages: validPages });
 
   } catch (error) {
     console.error('Error getting pages:', error);
@@ -2452,7 +2941,7 @@ app.put('/api/update-page', async (req, res) => {
     }
     
     // עדכן את הקובץ
-    await fs.writeFile(filePath, htmlContent);
+    await fs.writeFile(filePath, htmlContent, 'utf8');
     
     console.log('File updated successfully:', fileName);
     res.json({ success: true, message: 'File updated successfully' });
@@ -2493,7 +2982,8 @@ app.delete('/api/delete-page', async (req, res) => {
     }
     
     // מחק את תיקיות הנתונים (_data folders)
-    const fileNameBase = decodedFileName.replace('.html', '').replace(/_html$/, '');
+    const fileNameBase = decodedFileName.replace('.html', '').replace(/_html$/, '').replace(/_html\.html$/, '');
+    const pageId = fileNameBase; // For use in database cleanup later
     
     // Try to delete _data folder
     const dataDir1 = path.join(userDir, `${fileNameBase}_data`);
@@ -2535,6 +3025,64 @@ app.delete('/api/delete-page', async (req, res) => {
       deletedSomething = true;
     }
     
+    // Delete purchases from all data folders (before deleting the folders themselves)
+    const allPossibleDataDirs = [dataDir1, dataDir2, dataDir3, dataDir4, dataDir5];
+    for (const dataDir of allPossibleDataDirs) {
+      if (await fs.pathExists(dataDir)) {
+        const purchasesFile = path.join(dataDir, 'purchases.json');
+        if (await fs.pathExists(purchasesFile)) {
+          try {
+            const purchases = await fs.readJSON(purchasesFile);
+            console.log(`🗑️ Deleting ${purchases.length} purchases from ${dataDir}`);
+            await fs.remove(purchasesFile);
+          } catch (e) {
+            console.error('Error reading/deleting purchases.json:', e);
+          }
+        }
+      }
+    }
+    
+    // Also scan for any other _data folders with URL-encoded names
+    try {
+      const userDirEntries = await fs.readdir(userDir);
+      for (const entry of userDirEntries) {
+        if (entry.endsWith('_data') || entry.endsWith('_html_data')) {
+          const entryPath = path.join(userDir, entry);
+          const entryStat = await fs.stat(entryPath);
+          if (entryStat.isDirectory()) {
+            // Check if this folder belongs to the page being deleted
+            const entryBase = entry.replace('_data', '').replace('_html_data', '').replace('_html', '');
+            const decodedEntryBase = decodeURIComponent(entryBase);
+            
+            if (decodedEntryBase === fileNameBase || 
+                decodedEntryBase === pageId || 
+                entryBase.includes(fileNameBase) ||
+                fileNameBase.includes(decodedEntryBase)) {
+              
+              // Delete purchases.json from this folder
+              const purchasesFile = path.join(entryPath, 'purchases.json');
+              if (await fs.pathExists(purchasesFile)) {
+                try {
+                  const purchases = await fs.readJSON(purchasesFile);
+                  console.log(`🗑️ Deleting ${purchases.length} purchases from ${entry}`);
+                  await fs.remove(purchasesFile);
+                } catch (e) {
+                  console.error('Error deleting purchases.json:', e);
+                }
+              }
+              
+              // Delete the entire folder
+              await fs.remove(entryPath);
+              console.log(`✅ Deleted data folder: ${entry}`);
+              deletedSomething = true;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error scanning for data folders:', e);
+    }
+    
     // מחק את תיקיית התמונות הספציפית לדף הזה
     const pageImagesDir = path.join(userDir, 'images', fileNameBase);
     if (await fs.pathExists(pageImagesDir)) {
@@ -2554,12 +3102,47 @@ app.delete('/api/delete-page', async (req, res) => {
       const db = loadDatabase();
       const pageId = fileNameBase;
       
-      // Delete purchases related to this page
+      // Delete purchases related to this page - check all possible variations
       let deletedPurchases = 0;
+      const possiblePageIds = [
+        pageId,
+        decodedFileName,
+        decodedFileName.replace('.html', ''),
+        decodedFileName.replace(/_html$/, ''),
+        decodedFileName.replace(/_html\.html$/, ''),
+        encodeURIComponent(pageId),
+        encodeURIComponent(decodedFileName),
+        `${pageId}_html`,
+        `${pageId}.html`,
+        fileNameBase
+      ];
+      
       Object.keys(db.purchases).forEach(purchaseId => {
         const purchase = db.purchases[purchaseId];
-        if (purchase.storeId === pageId || purchase.storeId === decodedFileName || 
-            purchase.pageName === pageId || purchase.pageName === decodedFileName) {
+        if (!purchase) return;
+        
+        // Check all possible matching conditions
+        const matches = possiblePageIds.some(id => 
+          purchase.storeId === id || 
+          purchase.storeId?.includes(id) ||
+          id.includes(purchase.storeId || '') ||
+          purchase.pageName === id || 
+          purchase.pageName?.includes(id) ||
+          id.includes(purchase.pageName || '') ||
+          purchase.storeId?.replace(/%../g, '') === id ||
+          purchase.pageName?.replace(/%../g, '') === id
+        );
+        
+        // Also check if purchase is related to this user's page
+        const isRelatedPurchase = purchase.userId === userId && (
+          purchase.storeId?.includes(pageId) ||
+          purchase.pageName?.includes(pageId) ||
+          purchase.storeId?.includes(fileNameBase) ||
+          purchase.pageName?.includes(fileNameBase)
+        );
+        
+        if (matches || isRelatedPurchase) {
+          console.log(`🗑️ Deleting purchase ${purchaseId} (storeId: ${purchase.storeId}, pageName: ${purchase.pageName})`);
           delete db.purchases[purchaseId];
           deletedPurchases++;
         }
@@ -4620,20 +5203,30 @@ app.get('/api/analytics/page/:pageName', async (req, res) => {
         // Try to load from page-specific data folder first
         if (userId && pageName) {
             // Remove '_html' suffix if it exists (it's already part of the folder name)
-            const cleanPageName = pageName.replace(/_html$/, '');
-            const pageDataDir = path.join('output', userId, cleanPageName + '_data');
-            const purchasesFile = path.join(pageDataDir, 'purchases.json');
+            const cleanPageName = pageName.replace(/_html$/, '').replace(/\.html$/, '');
             
-            console.log('Looking for purchases in:', pageDataDir);
+            // Try multiple possible folder paths (decoded Hebrew & URL-encoded)
+            const possiblePaths = [
+                path.join('output', userId, cleanPageName + '_data'),
+                path.join('output', userId, cleanPageName + '_html_data'),
+                path.join('output', userId, encodeURIComponent(cleanPageName) + '_data'),
+                path.join('output', userId, encodeURIComponent(cleanPageName + '_html') + '_data'),
+            ];
             
+            console.log('Looking for purchases in multiple paths:', possiblePaths);
+            
+            for (const pageDataDir of possiblePaths) {
+                const purchasesFile = path.join(pageDataDir, 'purchases.json');
             try {
                 if (await fs.pathExists(purchasesFile)) {
                     const fileContent = await fs.readFile(purchasesFile, 'utf8');
                     pagePurchases = JSON.parse(fileContent);
-                    console.log('Loaded purchases from page data folder:', pagePurchases.length);
+                        console.log('✅ Loaded purchases from:', pageDataDir, 'count:', pagePurchases.length);
+                        break; // Found it, stop searching
                 }
             } catch (error) {
-                console.error('Error reading page purchases file:', error);
+                    console.error('Error reading purchases from:', pageDataDir, error.message);
+                }
             }
         }
         
@@ -4764,7 +5357,7 @@ app.post('/api/order/:orderId/status', async (req, res) => {
             if (status === 'completed') {
                 db.purchases[orderId].completedAt = new Date().toISOString();
             }
-            saveDatabase(db);
+        saveDatabase(db);
             console.log('✅ Order status updated in database');
         }
         
@@ -4789,7 +5382,7 @@ app.post('/api/order/:orderId/status', async (req, res) => {
                         console.log('✅ Order status updated in folder');
                     }
                 }
-            } catch (error) {
+    } catch (error) {
                 console.error('Error updating order in folder:', error);
             }
         }
@@ -4805,21 +5398,348 @@ app.post('/api/order/:orderId/status', async (req, res) => {
 app.get('/api/appointments/:userId/:pageId', async (req, res) => {
     try {
         const { userId, pageId } = req.params;
-        const cleanPageId = pageId.replace(/_html$/, '');
-        const appointmentsFile = path.join('output', userId, cleanPageId + '_data', 'appointments.json');
         
-        console.log('📅 Getting appointments from:', appointmentsFile);
+        // Decode URL encoding for both userId and pageId
+        const decodedUserId = decodeURIComponent(userId);
+        const decodedPageId = decodeURIComponent(pageId);
+        // Try different cleaning patterns
+        const cleanPageId1 = decodedPageId.replace(/_html\.html$/, '').replace(/_html$/, '').replace(/\.html$/, '');
+        const cleanPageId2 = decodedPageId.replace(/\.html$/, '').replace(/_html$/, '');
+        const cleanPageId3 = decodedPageId.replace(/_html$/, '');
+        const cleanPageId4 = decodedPageId; // Keep original as-is
+        
+        console.log('📅 Getting appointments - userId:', userId, 'pageId:', pageId);
+        console.log('📅 Decoded userId:', decodedUserId);
+        console.log('📅 Decoded pageId:', decodedPageId);
+        console.log('📅 Trying clean variants:', [cleanPageId1, cleanPageId2, cleanPageId3, cleanPageId4]);
+        
+        // 🔥 CRITICAL: For multi-user system, ONLY check the specific userId's directory
+        // Do NOT check temp_user or other users' directories - this causes data mixing between pages
+        const alsoTryTempUser = false; // Disabled for multi-user system - prevents data mixing
+        
+        // First, try to find where metadata.json is stored (this tells us the correct data folder)
+        // Try all possible clean variants + original decoded pageId (might already have _html)
+        const allCleanIds = [decodedPageId, cleanPageId1, cleanPageId2, cleanPageId3, cleanPageId4].filter((id, index, arr) => arr.indexOf(id) === index); // Unique only
+        const possibleMetadataPaths = [];
+        
+        for (const cleanId of allCleanIds) {
+            possibleMetadataPaths.push(
+                path.join('output', decodedUserId, cleanId + '_data', 'metadata.json'),
+                path.join('output', decodedUserId, cleanId + '_html_data', 'metadata.json'),
+                path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_data', 'metadata.json'),
+                path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_html_data', 'metadata.json')
+            );
+            // 🔥 Also try temp_user for metadata lookup (for pages created before login)
+            if (alsoTryTempUser) {
+                possibleMetadataPaths.push(
+                    path.join('output', 'temp_user', cleanId + '_data', 'metadata.json'),
+                    path.join('output', 'temp_user', cleanId + '_html_data', 'metadata.json'),
+                    path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_data', 'metadata.json'),
+                    path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_html_data', 'metadata.json')
+                );
+            }
+        }
+        
+        // Remove duplicates
+        const uniqueMetadataPaths = [...new Set(possibleMetadataPaths)];
+        
+        let appointmentsFile = null;
+        
+        // Find metadata to determine correct data folder
+        for (const metadataPath of uniqueMetadataPaths) {
+            try {
+                if (await fs.pathExists(metadataPath)) {
+                    const pageDataDir = path.dirname(metadataPath);
+                    appointmentsFile = path.join(pageDataDir, 'appointments.json');
+                    console.log('✅ Found metadata in:', pageDataDir.replace('output\\', ''), '- checking appointments there');
+                    if (await fs.pathExists(appointmentsFile)) {
+                        break; // Found it!
+                    }
+                    appointmentsFile = null; // metadata found but no appointments yet
+                }
+            } catch (pathError) {
+                console.warn(`⚠️ Error checking metadata path ${metadataPath}:`, pathError.message);
+                // Continue to next path
+            }
+        }
+        
+        // If no metadata found, try all possible paths with all clean variants + original
+        if (!appointmentsFile) {
+            const possiblePaths = [];
+            for (const cleanId of allCleanIds) {
+                possiblePaths.push(
+                    path.join('output', decodedUserId, cleanId + '_data', 'appointments.json'),
+                    path.join('output', decodedUserId, cleanId + '_html_data', 'appointments.json'),
+                    path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_data', 'appointments.json'),
+                    path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_html_data', 'appointments.json')
+                );
+                // 🔥 Also try temp_user if userId doesn't match (for pages created before user login)
+                if (alsoTryTempUser) {
+                    possiblePaths.push(
+                        path.join('output', 'temp_user', cleanId + '_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId + '_html_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_html_data', 'appointments.json')
+                    );
+                }
+            }
+            // Also try with original decoded pageId (might already be the full filename with _html)
+            possiblePaths.push(
+                path.join('output', decodedUserId, decodedPageId + '_data', 'appointments.json'),
+                path.join('output', decodedUserId, decodedPageId + '_html_data', 'appointments.json'),
+                // Try removing _html from end if it exists
+                path.join('output', decodedUserId, decodedPageId.replace(/_html$/, '') + '_data', 'appointments.json'),
+                path.join('output', decodedUserId, decodedPageId.replace(/_html$/, '') + '_html_data', 'appointments.json')
+            );
+            // 🔥 ALWAYS try temp_user with original decoded pageId (appointments are often saved there)
+            if (alsoTryTempUser) {
+                possiblePaths.push(
+                    path.join('output', 'temp_user', decodedPageId + '_data', 'appointments.json'),
+                    path.join('output', 'temp_user', decodedPageId + '_html_data', 'appointments.json'),
+                    path.join('output', 'temp_user', decodedPageId.replace(/_html$/, '') + '_data', 'appointments.json'),
+                    path.join('output', 'temp_user', decodedPageId.replace(/_html$/, '') + '_html_data', 'appointments.json'),
+                    // Also try with similar pageId patterns (in case there are slight variations)
+                    ...allCleanIds.flatMap(cleanId => [
+                        path.join('output', 'temp_user', cleanId + '_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId + '_html_data', 'appointments.json')
+                    ])
+                );
+                
+                // 🔥 SEARCH for appointments.json files with similar names (same prefix, different timestamps)
+                // This handles cases where pageId has different timestamp but same name
+                try {
+                    // Extract page name without timestamp (e.g., "יניב_הספר__1764317964933_html" -> "יניב_הספר")
+                    // Try multiple patterns to extract the base name
+                    let pageNameWithoutTimestamp = decodedPageId.replace(/__\d+_html$/, '').replace(/_html$/, '').replace(/__\d+$/, '');
+                    // If still contains numbers, try removing them
+                    if (pageNameWithoutTimestamp.match(/\d/)) {
+                        pageNameWithoutTimestamp = pageNameWithoutTimestamp.replace(/__\d+$/, '').replace(/\d+$/, '');
+                    }
+                    console.log(`🔍 Searching for similar pageIds. Original: "${decodedPageId}", Without timestamp: "${pageNameWithoutTimestamp}"`);
+                    // Always search for similar pageIds if we have a meaningful name (more than 2 characters)
+                    if (pageNameWithoutTimestamp && pageNameWithoutTimestamp.length > 2) {
+                        const tempUserDir = path.join('output', 'temp_user');
+                        try {
+                            if (await fs.pathExists(tempUserDir)) {
+                                const entries = await fs.readdir(tempUserDir, { withFileTypes: true });
+                                for (const entry of entries) {
+                                    try {
+                                        if (entry.isDirectory() && (entry.name.endsWith('_data') || entry.name.endsWith('_html_data'))) {
+                                            const dirNameWithoutSuffix = entry.name.replace(/_data$/, '').replace(/_html_data$/, '');
+                                            // Remove timestamp from directory name too
+                                            const dirNameWithoutTimestamp = dirNameWithoutSuffix.replace(/__\d+_html$/, '').replace(/_html$/, '').replace(/__\d+$/, '').replace(/\d+$/, '');
+                                            // Check if directory name matches the page name (without timestamp)
+                                            const dirMatches = dirNameWithoutTimestamp === pageNameWithoutTimestamp ||
+                                                              dirNameWithoutSuffix.startsWith(pageNameWithoutTimestamp) || 
+                                                              dirNameWithoutSuffix.includes(pageNameWithoutTimestamp) ||
+                                                              pageNameWithoutTimestamp.includes(dirNameWithoutTimestamp);
+                                            if (dirMatches) {
+                                                console.log(`🔍 Checking directory in temp_user: ${entry.name}, dirNameWithoutSuffix: ${dirNameWithoutSuffix}, dirNameWithoutTimestamp: ${dirNameWithoutTimestamp}, pageNameWithoutTimestamp: ${pageNameWithoutTimestamp}`);
+                                                const candidateFile = path.join(tempUserDir, entry.name, 'appointments.json');
+                                                if (await fs.pathExists(candidateFile)) {
+                                                    // Check if not already in possiblePaths (using normalized path comparison)
+                                                    const normalizedCandidate = candidateFile.replace(/\\/g, '/');
+                                                    const alreadyExists = possiblePaths.some(p => p.replace(/\\/g, '/') === normalizedCandidate);
+                                                    if (!alreadyExists) {
+                                                        console.log(`✅ Found similar pageId directory in temp_user: ${entry.name} (matches prefix: ${pageNameWithoutTimestamp})`);
+                                                        possiblePaths.push(candidateFile);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (entryError) {
+                                        console.warn(`⚠️ Error processing entry ${entry.name}:`, entryError.message);
+                                        // Continue to next entry
+                                    }
+                                }
+                            }
+                        } catch (dirError) {
+                            console.warn(`⚠️ Error reading temp_user directory:`, dirError.message);
+                            // Continue to next search location
+                        }
+                        
+                        // Also search in the actual userId directory
+                        const userDir = path.join('output', decodedUserId);
+                        try {
+                            if (await fs.pathExists(userDir)) {
+                                const entries = await fs.readdir(userDir, { withFileTypes: true });
+                                for (const entry of entries) {
+                                    try {
+                                        if (entry.isDirectory() && (entry.name.endsWith('_data') || entry.name.endsWith('_html_data'))) {
+                                            const dirNameWithoutSuffix = entry.name.replace(/_data$/, '').replace(/_html_data$/, '');
+                                            // Check if directory name matches the page name (without timestamp)
+                                            // Remove timestamp from directory name too
+                                            const dirNameWithoutTimestamp = dirNameWithoutSuffix.replace(/__\d+_html$/, '').replace(/_html$/, '').replace(/__\d+$/, '').replace(/\d+$/, '');
+                                            const dirMatches = dirNameWithoutTimestamp === pageNameWithoutTimestamp ||
+                                                              dirNameWithoutSuffix.startsWith(pageNameWithoutTimestamp) || 
+                                                              dirNameWithoutSuffix.includes(pageNameWithoutTimestamp) ||
+                                                              pageNameWithoutTimestamp.includes(dirNameWithoutTimestamp);
+                                            if (dirMatches) {
+                                                console.log(`🔍 Checking directory: ${entry.name}, dirNameWithoutSuffix: ${dirNameWithoutSuffix}, dirNameWithoutTimestamp: ${dirNameWithoutTimestamp}, pageNameWithoutTimestamp: ${pageNameWithoutTimestamp}`);
+                                                const candidateFile = path.join(userDir, entry.name, 'appointments.json');
+                                                if (await fs.pathExists(candidateFile)) {
+                                                    // Check if not already in possiblePaths (using normalized path comparison)
+                                                    const normalizedCandidate = candidateFile.replace(/\\/g, '/');
+                                                    const alreadyExists = possiblePaths.some(p => p.replace(/\\/g, '/') === normalizedCandidate);
+                                                    if (!alreadyExists) {
+                                                        console.log(`✅ Found similar pageId directory in ${userId}: ${entry.name} (matches prefix: ${pageNameWithoutTimestamp})`);
+                                                        possiblePaths.push(candidateFile);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (entryError) {
+                                        console.warn(`⚠️ Error processing entry ${entry.name}:`, entryError.message);
+                                        // Continue to next entry
+                                    }
+                                }
+                            }
+                        } catch (dirError) {
+                            console.warn(`⚠️ Error reading user directory ${decodedUserId}:`, dirError.message);
+                            // Continue to next search location
+                        }
+                    }
+                } catch (searchError) {
+                    console.warn('⚠️ Error searching for similar pageIds:', searchError.message);
+                }
+            }
+            
+            // Remove duplicates
+            const uniquePaths = [...new Set(possiblePaths)];
+            
+            console.log(`🔍 Searching for appointments.json in ${uniquePaths.length} possible locations...`);
+            for (const possibleFile of uniquePaths) {
+                try {
+                    const exists = await fs.pathExists(possibleFile);
+                    console.log(`  ${exists ? '✅' : '❌'} ${possibleFile.replace('output\\', '')}`);
+                    if (exists) {
+                        appointmentsFile = possibleFile;
+                        console.log('✅ Found appointments in:', appointmentsFile.replace('output\\', ''));
+                        break;
+                    }
+                } catch (pathError) {
+                    console.warn(`⚠️ Error checking path ${possibleFile}:`, pathError.message);
+                    // Continue to next path
+                }
+            }
+        }
         
         let appointments = [];
-        if (await fs.pathExists(appointmentsFile)) {
-            const fileContent = await fs.readFile(appointmentsFile, 'utf8');
-            appointments = JSON.parse(fileContent);
+        if (appointmentsFile && await fs.pathExists(appointmentsFile)) {
+            try {
+                const fileContent = await fs.readFile(appointmentsFile, 'utf8');
+                let allAppointments = [];
+                
+                // Safely parse JSON
+                try {
+                    allAppointments = JSON.parse(fileContent);
+                    if (!Array.isArray(allAppointments)) {
+                        console.warn('⚠️ appointments.json is not an array, converting...');
+                        allAppointments = [];
+                    }
+                } catch (parseError) {
+                    console.error('❌ Error parsing appointments.json:', parseError);
+                    allAppointments = [];
+                }
+                
+                // 🔥 CRITICAL: Filter appointments to ONLY include those matching the EXACT pageId
+                // STRICT FILTERING - no fuzzy matching, only exact matches
+                try {
+                    appointments = allAppointments.filter(apt => {
+                        try {
+                            const aptPageId = apt.pageId || '';
+                            const aptUserId = apt.userId || '';
+                            
+                            // 🔥 STRICT MATCHING: Must match BOTH userId AND pageId exactly
+                            // Normalize both IDs for comparison
+                            const normalizeId = (id) => {
+                                if (!id) return '';
+                                // Remove _html suffix, .html extension, and trim
+                                return id.toString().replace(/_html$/, '').replace(/\.html$/, '').trim();
+                            };
+                            
+                            const normalizedAptPageId = normalizeId(aptPageId);
+                            const normalizedCurrentPageId = normalizeId(decodedPageId);
+                            const normalizedOriginalPageId = normalizeId(pageId);
+                            
+                            // Check userId match first (CRITICAL for multi-user system)
+                            const userIdMatches = !aptUserId || aptUserId === decodedUserId || aptUserId === userId;
+                            
+                            // Check pageId match - must be EXACT after normalization
+                            const pageIdMatches = normalizedAptPageId === normalizedCurrentPageId || 
+                                                normalizedAptPageId === normalizedOriginalPageId ||
+                                                aptPageId === decodedPageId ||
+                                                aptPageId === pageId;
+                            
+                            // BOTH must match
+                            const matches = userIdMatches && pageIdMatches;
+                            
+                            if (!matches && aptPageId) {
+                                console.log(`❌ FILTERED OUT appointment:`, {
+                                    aptPageId: aptPageId,
+                                    aptUserId: aptUserId,
+                                    lookingForPageId: decodedPageId,
+                                    lookingForUserId: decodedUserId,
+                                    userIdMatch: userIdMatches,
+                                    pageIdMatch: pageIdMatches
+                                });
+                            } else if (matches) {
+                                console.log(`✅ INCLUDED appointment: "${aptPageId}" for userId "${decodedUserId}"`);
+                            }
+                            
+                            // ONLY include if BOTH userId and pageId match exactly
+                            return matches;
+                        } catch (filterError) {
+                            console.error('❌ Error filtering appointment:', filterError, apt);
+                            return false; // Exclude if error
+                        }
+                    });
+                } catch (filterError) {
+                    console.error('❌ Error in filter function:', filterError);
+                    appointments = [];
+                }
+                
+                const totalAppointments = Array.isArray(allAppointments) ? allAppointments.length : 0;
+                console.log(`✅ Loaded ${appointments.length} appointments (filtered from ${totalAppointments} total) from: ${appointmentsFile.replace('output\\', '')}`);
+            } catch (e) {
+                console.error('❌ Error reading appointments file:', appointmentsFile, e);
+                appointments = [];
+            }
+        } else {
+            console.log('⚠️ No appointments file found after searching all paths');
+            // 🔥 REMOVED: Last resort fuzzy matching was causing appointments from other pages to appear
+            // If appointments.json doesn't exist for this specific pageId, return empty array
+            // This ensures a new page doesn't show appointments from other pages
+            console.log('ℹ️ No appointments found for this pageId - returning empty array (new page has no appointments yet)');
+        }
+        
+        if (appointments.length === 0) {
+            console.log('ℹ️ No appointments found for this page (file may be empty or not exist yet)');
+            console.log('🔍 Search details:', {
+                userId: decodedUserId,
+                pageId: decodedPageId,
+                searchedPaths: uniquePaths?.length || 0,
+                foundFile: appointmentsFile || 'none'
+            });
+        } else {
+            console.log(`✅ Returning ${appointments.length} appointments for userId: ${decodedUserId}, pageId: ${decodedPageId}`);
         }
         
         res.json({ appointments });
     } catch (error) {
-        console.error('Error getting appointments:', error);
-        res.status(500).json({ error: 'Failed to get appointments', appointments: [] });
+        console.error('❌ Error getting appointments:', error);
+        console.error('❌ Error stack:', error.stack);
+        console.error('❌ Error details:', {
+            userId: req.params.userId,
+            pageId: req.params.pageId,
+            message: error.message
+        });
+        // Return error response - only send once!
+        res.status(500).json({ 
+            error: 'Failed to get appointments', 
+            errorMessage: error.message,
+            appointments: [] 
+        });
     }
 });
 
@@ -4827,14 +5747,124 @@ app.get('/api/appointments/:userId/:pageId', async (req, res) => {
 app.post('/api/appointments', async (req, res) => {
     try {
         const appointmentData = req.body;
-        const { userId, pageId } = appointmentData;
+        let { userId, pageId } = appointmentData;
         
         if (!userId || !pageId) {
             return res.status(400).json({ error: 'Missing userId or pageId' });
         }
         
-        const cleanPageId = pageId.replace(/_html$/, '');
-        const pageDataDir = path.join('output', userId, cleanPageId + '_data');
+        // Decode both userId and pageId
+        const decodedUserId = typeof userId === 'string' ? decodeURIComponent(userId) : String(userId);
+        const decodedPageId = typeof pageId === 'string' ? decodeURIComponent(pageId) : String(pageId);
+        // Try different cleaning patterns
+        const cleanPageId1 = decodedPageId.replace(/_html\.html$/, '').replace(/_html$/, '').replace(/\.html$/, '');
+        const cleanPageId2 = decodedPageId.replace(/\.html$/, '').replace(/_html$/, '');
+        const cleanPageId3 = decodedPageId.replace(/_html$/, '');
+        const cleanPageId4 = decodedPageId; // Keep original as-is
+        
+        const allCleanIds = [decodedPageId, cleanPageId1, cleanPageId2, cleanPageId3, cleanPageId4].filter((id, index, arr) => arr.indexOf(id) === index); // Unique only
+        
+        console.log('📅 Creating appointment - userId:', userId, 'decoded:', decodedUserId);
+        console.log('📅 Creating appointment - pageId:', pageId, 'decoded:', decodedPageId);
+        console.log('📅 Trying clean variants:', allCleanIds);
+        
+        // 🔥 CRITICAL: For multi-user system, ONLY check the specific userId's directory
+        // Do NOT check temp_user or other users' directories - this causes data mixing between pages
+        const alsoTryTempUser = false; // Disabled for multi-user system - prevents data mixing
+        
+        // First, try to find where metadata.json is stored (this tells us the correct data folder)
+        const possibleMetadataPaths = [];
+        for (const cleanId of allCleanIds) {
+            possibleMetadataPaths.push(
+                path.join('output', decodedUserId, cleanId + '_data', 'metadata.json'),
+                path.join('output', decodedUserId, cleanId + '_html_data', 'metadata.json'),
+                path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_data', 'metadata.json'),
+                path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_html_data', 'metadata.json')
+            );
+            // 🔥 Also try temp_user for metadata lookup (for pages created before login)
+            if (alsoTryTempUser) {
+                possibleMetadataPaths.push(
+                    path.join('output', 'temp_user', cleanId + '_data', 'metadata.json'),
+                    path.join('output', 'temp_user', cleanId + '_html_data', 'metadata.json'),
+                    path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_data', 'metadata.json'),
+                    path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_html_data', 'metadata.json')
+                );
+            }
+        }
+        const uniqueMetadataPaths = [...new Set(possibleMetadataPaths)];
+        
+        let pageDataDir = null;
+        
+        // Find metadata to determine correct data folder
+        for (const metadataPath of possibleMetadataPaths) {
+            if (await fs.pathExists(metadataPath)) {
+                pageDataDir = path.dirname(metadataPath);
+                console.log('✅ Found metadata in:', pageDataDir, '- using this folder for appointments');
+                break;
+            }
+        }
+        
+        // If no metadata found, try to find existing appointments file with all clean variants + original
+        if (!pageDataDir) {
+            const possiblePaths = [];
+            for (const cleanId of allCleanIds) {
+                possiblePaths.push(
+                    path.join('output', decodedUserId, cleanId + '_data', 'appointments.json'),
+                    path.join('output', decodedUserId, cleanId + '_html_data', 'appointments.json'),
+                    path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_data', 'appointments.json'),
+                    path.join('output', decodedUserId, cleanId.replace(/\.html$/, '') + '_html_data', 'appointments.json')
+                );
+                // 🔥 Also try temp_user if userId doesn't match (for pages created before user login)
+                if (alsoTryTempUser) {
+                    possiblePaths.push(
+                        path.join('output', 'temp_user', cleanId + '_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId + '_html_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_data', 'appointments.json'),
+                        path.join('output', 'temp_user', cleanId.replace(/\.html$/, '') + '_html_data', 'appointments.json')
+                    );
+                }
+            }
+            // Also try with original decoded pageId (might already be the full filename with _html)
+            possiblePaths.push(
+                path.join('output', decodedUserId, decodedPageId + '_data', 'appointments.json'),
+                path.join('output', decodedUserId, decodedPageId + '_html_data', 'appointments.json')
+            );
+            // 🔥 DISABLED: Do NOT try temp_user - causes data mixing in multi-user system
+            // Each user should only see appointments from their own directory
+            if (false && alsoTryTempUser) {
+                possiblePaths.push(
+                    path.join('output', 'temp_user', decodedPageId + '_data', 'appointments.json'),
+                    path.join('output', 'temp_user', decodedPageId + '_html_data', 'appointments.json'),
+                    path.join('output', 'temp_user', decodedPageId.replace(/_html$/, '') + '_data', 'appointments.json'),
+                    path.join('output', 'temp_user', decodedPageId.replace(/_html$/, '') + '_html_data', 'appointments.json')
+                );
+            }
+            const uniquePaths = [...new Set(possiblePaths)];
+            
+            for (const possibleFile of uniquePaths) {
+                if (await fs.pathExists(possibleFile)) {
+                    pageDataDir = path.dirname(possibleFile);
+                    console.log('✅ Found existing appointments in:', pageDataDir.replace('output\\', ''));
+                    break;
+                }
+            }
+        }
+        
+        // If still no folder found, use _html_data as default (matching create-page-with-template behavior)
+        if (!pageDataDir) {
+            // Check if pageId ends with _html - if so, use _html_data, otherwise use _data
+            const bestCleanId = cleanPageId1 || cleanPageId2 || cleanPageId3 || cleanPageId4;
+            // 🔥 Use decodedPageId (which might already have _html) to match the actual folder name
+            if (decodedPageId.endsWith('_html') || decodedPageId.includes('_html')) {
+                // If pageId already has _html, use it as-is (e.g., "לק_גל___1764310069035_html")
+                pageDataDir = path.join('output', decodedUserId, decodedPageId.replace(/_html$/, '') + '_html_data');
+        } else {
+                pageDataDir = path.join('output', decodedUserId, bestCleanId + '_data');
+            }
+            console.log('📅 Creating new data folder:', pageDataDir.replace('output\\', ''));
+            console.log('📅 Folder will be created at:', pageDataDir);
+        }
+        
         const appointmentsFile = path.join(pageDataDir, 'appointments.json');
         
         // Ensure directory exists
@@ -4843,14 +5873,32 @@ app.post('/api/appointments', async (req, res) => {
         // Load existing appointments
         let appointments = [];
         if (await fs.pathExists(appointmentsFile)) {
+            try {
             const fileContent = await fs.readFile(appointmentsFile, 'utf8');
             appointments = JSON.parse(fileContent);
+            } catch (e) {
+                console.error('Error reading existing appointments:', e);
+                appointments = [];
+            }
         }
         
         // Create new appointment
+        // 🔥 CRITICAL: Override pageId and userId with decoded values to ensure exact match for filtering
+        // Normalize pageId to ensure consistent format across all appointments
+        const normalizePageId = (id) => {
+            if (!id) return '';
+            // Remove _html suffix and .html extension for consistency
+            return id.toString().replace(/_html$/, '').replace(/\.html$/, '').trim();
+        };
+        
+        const normalizedPageId = normalizePageId(decodedPageId);
+        
         const newAppointment = {
             id: Date.now().toString(),
             ...appointmentData,
+            userId: decodedUserId, // Exact userId - CRITICAL for multi-user system
+            pageId: normalizedPageId, // Normalized pageId for consistent filtering
+            originalPageId: decodedPageId, // Keep original for reference
             status: 'pending',
             createdAt: new Date().toISOString()
         };
@@ -4858,9 +5906,14 @@ app.post('/api/appointments', async (req, res) => {
         appointments.push(newAppointment);
         
         // Save appointments
-        await fs.writeFile(appointmentsFile, JSON.stringify(appointments, null, 2));
+        await fs.writeFile(appointmentsFile, JSON.stringify(appointments, null, 2), 'utf8');
         
         console.log('✅ Appointment created:', newAppointment.id);
+        console.log('📁 Saved to:', appointmentsFile.replace('output\\', ''));
+        console.log('👤 userId:', decodedUserId);
+        console.log('📄 pageId:', decodedPageId);
+        console.log('📊 Total appointments now:', appointments.length);
+        console.log('📋 Appointment data:', JSON.stringify(newAppointment, null, 2));
         res.json({ success: true, appointment: newAppointment });
     } catch (error) {
         console.error('Error creating appointment:', error);
@@ -6209,7 +7262,7 @@ app.get('/api/update-bot-actions', async (req, res) => {
         if (oldActionPattern.test(html)) {
           html = html.replace(oldActionPattern, newBotActions);
           
-          await fs.writeFile(filePath, html);
+          await fs.writeFile(filePath, html, 'utf8');
           console.log(`✅ Updated: ${file}`);
           updatedCount++;
         } else {
@@ -6293,7 +7346,7 @@ app.get('/api/fix-old-store-pages', async (req, res) => {
         
         // Only save if something changed
         if (html !== originalHtml) {
-          await fs.writeFile(filePath, html);
+          await fs.writeFile(filePath, html, 'utf8');
           console.log(`✅ Fixed: ${file}`);
           fixedCount++;
         } else {
@@ -6504,7 +7557,7 @@ app.get('/api/fix-bot-json-parsing', async (req, res) => {
         }
         
         if (wasFixed) {
-          await fs.writeFile(filePath, html);
+          await fs.writeFile(filePath, html, 'utf8');
           console.log(`✅ Fixed: ${file}`);
           fixedCount++;
         } else {
@@ -7515,8 +8568,8 @@ app.post('/api/create-page-with-template', async (req, res) => {
           return `${dayNames[dayNum]}: ${sh.start}-${sh.end}`;
         }).join(', ');
         workingHoursText += ` | שעות מיוחדות: ${specialText}`;
-                }
-              } else {
+              }
+            } else {
       workingHoursText = 'שעות פעילות: ' + (workingHours.start && workingHours.end ? `${workingHours.start} - ${workingHours.end}` : 'לפי תיאום');
     }
 
@@ -7814,22 +8867,87 @@ app.post('/api/create-page-with-template', async (req, res) => {
 
     // ✅ CLEAN: No JavaScript injection needed - CSS in template handles it
 
+    // 🔥 CRITICAL: Clean HTML before saving - remove any duplicate content
+    // Check if HTML contains duplicate closing tags
+    const htmlCloseCount = (htmlTemplate.match(/<\/html>/gi) || []).length;
+    if (htmlCloseCount > 1) {
+      console.warn('⚠️ Found multiple </html> tags in template HTML! Cleaning duplicate content...');
+      // Keep only the first complete HTML document
+      const firstHtmlClose = htmlTemplate.indexOf('</html>');
+      if (firstHtmlClose !== -1) {
+        htmlTemplate = htmlTemplate.substring(0, firstHtmlClose + 7); // +7 for '</html>'
+        console.log('✅ Removed duplicate HTML content before saving');
+      }
+    }
+    
+    // 🔥 CRITICAL: Remove any content after </html> tag
+    const lastHtmlClose = htmlTemplate.lastIndexOf('</html>');
+    if (lastHtmlClose !== -1 && lastHtmlClose < htmlTemplate.length - 7) {
+      const afterHtml = htmlTemplate.substring(lastHtmlClose + 7).trim();
+      if (afterHtml.length > 0) {
+        console.warn('⚠️ Found content after </html> tag in template! Removing', afterHtml.length, 'characters');
+        htmlTemplate = htmlTemplate.substring(0, lastHtmlClose + 7);
+        console.log('✅ Removed content after </html> tag before saving');
+      }
+    }
+    
+    // 🔥 CRITICAL: Remove any duplicate DOCTYPE or <html> tags
+    const doctypeMatches = htmlTemplate.match(/<!DOCTYPE[^>]*>/gi);
+    if (doctypeMatches && doctypeMatches.length > 1) {
+      console.warn('⚠️ Found multiple DOCTYPE tags! Keeping only the first one');
+      const firstDoctypeIndex = htmlTemplate.indexOf('<!DOCTYPE');
+      const firstDoctypeEnd = htmlTemplate.indexOf('>', firstDoctypeIndex) + 1;
+      htmlTemplate = htmlTemplate.substring(0, firstDoctypeEnd) + 
+                    htmlTemplate.substring(firstDoctypeEnd).replace(/<!DOCTYPE[^>]*>/gi, '');
+      console.log('✅ Removed duplicate DOCTYPE tags');
+    }
+    
+    // 🔥 CRITICAL: Remove any duplicate <html> opening tags
+    const htmlOpenMatches = htmlTemplate.match(/<html[^>]*>/gi);
+    if (htmlOpenMatches && htmlOpenMatches.length > 1) {
+      console.warn('⚠️ Found multiple <html> opening tags! Keeping only the first one');
+      const firstHtmlOpen = htmlTemplate.indexOf('<html');
+      const firstHtmlOpenEnd = htmlTemplate.indexOf('>', firstHtmlOpen) + 1;
+      htmlTemplate = htmlTemplate.substring(0, firstHtmlOpenEnd) + 
+                    htmlTemplate.substring(firstHtmlOpenEnd).replace(/<html[^>]*>/gi, '');
+      console.log('✅ Removed duplicate <html> opening tags');
+    }
+    
+    // Ensure HTML starts with DOCTYPE
+    if (!htmlTemplate.trim().toLowerCase().startsWith('<!doctype')) {
+      console.warn('⚠️ HTML missing DOCTYPE! Adding it...');
+      htmlTemplate = '<!DOCTYPE html>\n' + htmlTemplate;
+    }
+
     // Save the page
     const userDir = path.join(__dirname, 'output', userId);
     await fs.ensureDir(userDir);
     const fileName = `${pageId}.html`;
     const pagePath = path.join(userDir, fileName);
     await fs.writeFile(pagePath, htmlTemplate, 'utf8');
+    console.log('✅ Template page saved successfully:', fileName);
     
     // Save metadata
+    // 🔥 CRITICAL: Create NEW data directory for this specific page - never reuse existing directories
     const dataDir = path.join(userDir, `${pageId}_data`);
     await fs.ensureDir(dataDir);
+    
+    // 🔥 CRITICAL: Initialize appointments.json as empty array for new page (prevents mixing with old appointments)
+    const appointmentsFile = path.join(dataDir, 'appointments.json');
+    if (!await fs.pathExists(appointmentsFile)) {
+      await fs.writeFile(appointmentsFile, JSON.stringify([], null, 2), 'utf8');
+      console.log('✅ Created new empty appointments.json for page:', pageId);
+    } else {
+      console.log('⚠️ appointments.json already exists - keeping existing appointments');
+    }
+    
     const metadata = {
       userId,
       pageId,
       title: businessName,
       pageType: 'serviceProvider',
       hasAppointments: true,
+      appointments: true, // Also set this for compatibility
       createdAt: new Date().toISOString(),
       businessName,
       phone,
@@ -7845,6 +8963,7 @@ app.post('/api/create-page-with-template', async (req, res) => {
       services
     };
     await fs.writeFile(path.join(dataDir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf8');
+    console.log('✅ Saved metadata for new page:', pageId, 'in directory:', dataDir);
 
     console.log('✅ Page created with template system:', fileName);
 
@@ -8239,6 +9358,313 @@ app.post('/api/cleanup-orphaned', async (req, res) => {
     res.json({ success: true, message: 'Cleanup completed' });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// DAY SETTINGS API
+// ============================================
+
+// Manage day settings (close day, block slots, reopen)
+app.post('/api/day-settings', async (req, res) => {
+  try {
+    const { userId, pageId, date, action, startTime, endTime } = req.body;
+    
+    if (!userId || !pageId || !date || !action) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // 🔥 Determine correct data folder (same logic as appointments)
+    const decodedPageId = decodeURIComponent(pageId);
+    const cleanPageId = decodedPageId.replace('.html', '').replace(/_html$/, '');
+    let pageDataDir = path.join('output', userId, `${cleanPageId}_data`);
+    
+    // Check if _html_data folder exists (for newer pages)
+    const htmlDataDir = path.join('output', userId, `${cleanPageId}_html_data`);
+    if (await fs.pathExists(htmlDataDir)) {
+      pageDataDir = htmlDataDir;
+    }
+    
+    const settingsPath = path.join(pageDataDir, 'day-settings.json');
+    
+    // Ensure directory exists
+    await fs.ensureDir(settingsDir);
+    
+    // Load existing settings
+    let settings = {};
+    if (await fs.pathExists(settingsPath)) {
+      settings = await fs.readJSON(settingsPath);
+    }
+    
+    // Handle different actions
+    if (action === 'close') {
+      // Close entire day
+      settings[date] = { closed: true };
+      console.log(`✅ Day ${date} closed for ${pageId}`);
+      
+    } else if (action === 'block') {
+      // Block specific time slots
+      if (!startTime || !endTime) {
+        return res.status(400).json({ error: 'Missing startTime or endTime for block action' });
+      }
+      
+      if (!settings[date]) {
+        settings[date] = {};
+      }
+      
+      if (!settings[date].blockedSlots) {
+        settings[date].blockedSlots = [];
+      }
+      
+      settings[date].blockedSlots.push({ start: startTime, end: endTime });
+      console.log(`✅ Blocked ${startTime}-${endTime} on ${date} for ${pageId}`);
+      
+    } else if (action === 'reopen') {
+      // Reopen day (remove all blocks)
+      delete settings[date];
+      console.log(`✅ Day ${date} reopened for ${pageId}`);
+      
+    } else {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+    
+    // Save settings
+    await fs.writeJSON(settingsPath, settings, { spaces: 2, encoding: 'utf8' });
+    
+    // 🔥 Also update metadata.json with working hours if provided (for day-specific hours)
+    try {
+      const metadataPath = path.join(pageDataDir, 'metadata.json');
+      if (await fs.pathExists(metadataPath)) {
+        const metadata = await fs.readJSON(metadataPath);
+        // Update special hours if this is a day-specific time change
+        if (action === 'block' && startTime && endTime) {
+          if (!metadata.specialHours) metadata.specialHours = {};
+          const dayOfWeek = new Date(date).getDay();
+          metadata.specialHours[dayOfWeek] = { start: startTime, end: endTime };
+          await fs.writeJSON(metadataPath, metadata, { spaces: 2, encoding: 'utf8' });
+          console.log(`✅ Updated metadata.json with special hours for day ${dayOfWeek}`);
+        }
+      }
+    } catch (metadataError) {
+      console.warn('⚠️ Could not update metadata.json:', metadataError.message);
+      // Don't fail the request if metadata update fails
+    }
+    
+    res.json({ success: true, message: 'Day settings updated successfully' });
+    
+  } catch (error) {
+    console.error('Error updating day settings:', error);
+    res.status(500).json({ error: 'Failed to update day settings' });
+  }
+});
+
+// Get day settings for a specific page
+app.get('/api/day-settings/:userId/:pageId', async (req, res) => {
+  try {
+    const userId = decodeURIComponent(req.params.userId);
+    const pageId = decodeURIComponent(req.params.pageId);
+    
+    // 🔥 Try multiple possible paths (same logic as appointments)
+    const cleanPageId = pageId.replace('.html', '').replace(/_html$/, '');
+    const possiblePaths = [
+      path.join('output', userId, `${cleanPageId}_data`, 'day-settings.json'),
+      path.join('output', userId, `${cleanPageId}_html_data`, 'day-settings.json'),
+      path.join('output', userId, `${pageId.replace('.html', '')}_data`, 'day-settings.json'),
+      path.join('output', userId, `${pageId.replace('.html', '')}_html_data`, 'day-settings.json')
+    ];
+    
+    let settings = {};
+    for (const settingsPath of possiblePaths) {
+    if (await fs.pathExists(settingsPath)) {
+        settings = await fs.readJSON(settingsPath);
+        console.log(`✅ Found day-settings.json at: ${settingsPath}`);
+        break;
+      }
+    }
+    
+    res.json(settings);
+    
+  } catch (error) {
+    console.error('Error loading day settings:', error);
+    res.status(500).json({ error: 'Failed to load day settings' });
+  }
+});
+
+// ============================================
+// DELIVERY / DRIVER APP API
+// ============================================
+
+// Get all delivery orders from all stores
+app.get('/api/all-delivery-orders', async (req, res) => {
+  try {
+    const db = loadDatabase();
+    const allOrders = [];
+    
+    // Get orders from database
+    if (db.purchases) {
+      Object.values(db.purchases).forEach(purchase => {
+        if (purchase.shipping === true || purchase.shipping === 'delivery') {
+          allOrders.push({
+            ...purchase,
+            storeName: purchase.pageName || purchase.storeId || 'חנות',
+            status: purchase.status || 'pending'
+          });
+        }
+      });
+    }
+    
+    // Also scan output folders for purchases.json files
+    const outputDir = path.join(__dirname, 'output');
+    if (await fs.pathExists(outputDir)) {
+      const userDirs = await fs.readdir(outputDir);
+      
+      for (const userId of userDirs) {
+        const userDir = path.join(outputDir, userId);
+        const stat = await fs.stat(userDir);
+        if (!stat.isDirectory()) continue;
+        
+        const entries = await fs.readdir(userDir);
+        for (const entry of entries) {
+          if (entry.endsWith('_data')) {
+            const purchasesFile = path.join(userDir, entry, 'purchases.json');
+            if (await fs.pathExists(purchasesFile)) {
+              try {
+                const purchases = await fs.readJSON(purchasesFile);
+                purchases.forEach(p => {
+                  if (p.shipping === true || p.shipping === 'delivery') {
+                    // Check if not already in allOrders
+                    if (!allOrders.find(o => o.id === p.id)) {
+                      allOrders.push({
+                        ...p,
+                        storeName: p.pageName || p.storeId || entry.replace('_data', ''),
+                        status: p.status || 'pending'
+                      });
+                    }
+                  }
+                });
+              } catch (e) {
+                console.error('Error reading purchases:', purchasesFile, e.message);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Sort by date (newest first)
+    allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    console.log('🚚 Delivery orders found:', allOrders.length);
+    res.json({ orders: allOrders });
+    
+  } catch (error) {
+    console.error('Error getting delivery orders:', error);
+    res.status(500).json({ error: 'Failed to get delivery orders' });
+  }
+});
+
+// Get all purchases for driver app (including non-delivery)
+app.get('/api/db-purchases', async (req, res) => {
+  try {
+    const db = loadDatabase();
+    const purchases = Object.values(db.purchases || {});
+    res.json({ purchases });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update order status (for driver app) - with store sync
+app.post('/api/update-order-status', async (req, res) => {
+  try {
+    const { orderId, status, driverId, driverName } = req.body;
+    
+    if (!orderId || !status) {
+      return res.status(400).json({ error: 'Missing orderId or status' });
+    }
+    
+    const db = loadDatabase();
+    const now = new Date().toISOString();
+    
+    // Status text for Hebrew
+    const statusTextMap = {
+      'picked': 'נאסף על ידי שליח',
+      'in_transit': 'בדרך ללקוח',
+      'delivered': 'נמסר ללקוח',
+      'completed': 'הושלם'
+    };
+    
+    // Update in global database
+    if (db.purchases[orderId]) {
+      db.purchases[orderId].status = status;
+      db.purchases[orderId].statusText = statusTextMap[status] || status;
+      db.purchases[orderId].updatedAt = now;
+      db.purchases[orderId].driverId = driverId;
+      db.purchases[orderId].driverName = driverName;
+      
+      if (status === 'picked') {
+        db.purchases[orderId].pickedAt = now;
+      } else if (status === 'delivered') {
+        db.purchases[orderId].deliveredAt = now;
+      }
+      
+      saveDatabase(db);
+      console.log(`✅ Order ${orderId} status updated to: ${status} by ${driverName}`);
+    }
+    
+    // Also try to update in page-specific files
+    const outputDir = path.join(__dirname, 'output');
+    if (await fs.pathExists(outputDir)) {
+      const userDirs = await fs.readdir(outputDir);
+      
+      for (const userId of userDirs) {
+        const userDir = path.join(outputDir, userId);
+        const stat = await fs.stat(userDir);
+        if (!stat.isDirectory()) continue;
+        
+        const entries = await fs.readdir(userDir);
+        for (const entry of entries) {
+          if (entry.endsWith('_data')) {
+            const purchasesFile = path.join(userDir, entry, 'purchases.json');
+            if (await fs.pathExists(purchasesFile)) {
+              try {
+                let purchases = await fs.readJSON(purchasesFile);
+                const orderIndex = purchases.findIndex(p => p.id === orderId);
+                if (orderIndex !== -1) {
+                  purchases[orderIndex].status = status;
+                  purchases[orderIndex].statusText = statusTextMap[status] || status;
+                  purchases[orderIndex].updatedAt = now;
+                  purchases[orderIndex].driverId = driverId;
+                  purchases[orderIndex].driverName = driverName;
+                  
+                  if (status === 'picked') {
+                    purchases[orderIndex].pickedAt = now;
+                  } else if (status === 'delivered') {
+                    purchases[orderIndex].deliveredAt = now;
+                  }
+                  
+                  await fs.writeJSON(purchasesFile, purchases, { spaces: 2 });
+                  console.log(`✅ Updated order in file: ${purchasesFile}`);
+                }
+              } catch (e) {
+                // Continue to next file
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Order status updated and synced',
+      status: status,
+      statusText: statusTextMap[status] || status
+    });
+    
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
   }
 });
 
