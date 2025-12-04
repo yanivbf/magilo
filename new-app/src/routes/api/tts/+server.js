@@ -1,5 +1,6 @@
 // @ts-check
 import { json } from '@sveltejs/kit';
+import { GOOGLE_TTS_API_KEY } from '$env/static/private';
 
 /**
  * Text-to-Speech API using Google Cloud TTS
@@ -15,10 +16,13 @@ export async function POST({ request }) {
 		
 		// Use Google Cloud TTS API
 		// Note: In production, you should use proper API keys and authentication
-		const GOOGLE_TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY || '';
+		const API_KEY = GOOGLE_TTS_API_KEY || '';
 		
-		if (!GOOGLE_TTS_API_KEY) {
+		console.log('🔑 Google TTS API Key:', API_KEY ? 'Found ✅' : 'Missing ❌');
+		
+		if (!API_KEY) {
 			// Fallback: Use browser's built-in speech synthesis
+			console.log('⚠️ Using browser fallback TTS');
 			return json({ 
 				error: 'TTS not configured',
 				fallback: true 
@@ -26,7 +30,7 @@ export async function POST({ request }) {
 		}
 		
 		const response = await fetch(
-			`https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`,
+			`https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`,
 			{
 				method: 'POST',
 				headers: {
@@ -49,6 +53,8 @@ export async function POST({ request }) {
 		);
 		
 		if (!response.ok) {
+			const errorData = await response.text();
+			console.error('❌ Google TTS API Error:', response.status, errorData);
 			throw new Error('TTS API request failed');
 		}
 		
@@ -56,6 +62,8 @@ export async function POST({ request }) {
 		
 		// Convert base64 audio to buffer
 		const audioBuffer = Buffer.from(data.audioContent, 'base64');
+		
+		console.log('✅ Google TTS Success! Audio size:', audioBuffer.length, 'bytes');
 		
 		return new Response(audioBuffer, {
 			headers: {

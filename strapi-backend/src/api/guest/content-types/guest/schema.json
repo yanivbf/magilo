@@ -1,0 +1,60 @@
+{
+  "kind": "collectionType",
+  "collectionName": "guests",
+  "info": {
+    "singularName": "guest",
+    "pluralName": "guests",
+    "displayName": "Guest",
+    "description": "Event guest/RSVP management"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "page": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::page.page",
+      "inversedBy": "guests"
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "confirmed", "declined"],
+      "default": "pending"
+    },
+    "plus": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "table": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "notes": {
+      "type": "text"
+    },
+    "gift": {
+      "type": "string"
+    },
+    "giftAmount": {
+      "type": "decimal",
+      "default": 0
+    },
+    "submittedAt": {
+      "type": "datetime"
+    }
+  }
+}

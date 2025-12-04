@@ -5,14 +5,21 @@ import { generateSlug } from '$lib/server/htmlGenerator.js';
 import { extractContactInfo, extractProducts, extractDescription, detectPageType } from '$lib/server/dataExtractor.js';
 import { extractContactInfoFromHTML, extractProductsFromHTML } from '$lib/server/dataExtractorLegacy.js';
 import { processPage } from '$lib/server/pageProcessor.js';
+import { validatePageData, isRateLimited, sanitizeHtml } from '$lib/server/security.js';
 
 /**
  * POST /api/create-page-with-template
  * Create a new page using template system (legacy compatibility)
  * @type {import('./$types').RequestHandler}
  */
-export async function POST({ request }) {
+export async function POST({ request, getClientAddress }) {
 	try {
+		// Rate limiting
+		const clientIp = getClientAddress();
+		if (isRateLimited(clientIp, 20, 60000)) { // 20 requests per minute
+			return json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+		}
+		
 		const body = await request.json();
 		
 		console.log('🔍 CREATE PAGE WITH TEMPLATE REQUEST (RAW):', JSON.stringify(body).substring(0, 200));
@@ -21,6 +28,35 @@ export async function POST({ request }) {
 		const userId = body.userId || body.user_id;
 		const pageData = body.formData || body.pageData || body.data || body;
 		let pageType = body.pageType || pageData.pageType;
+		const optionalSections = body.optionalSections || [];
+		
+		// Validate and sanitize page data
+		const validation = validatePageData(pageData);
+		if (!validation.valid) {
+			console.error('❌ Validation errors:', validation.errors);
+			return json({ 
+				error: 'Invalid page data', 
+				details: validation.errors 
+			}, { status: 400 });
+		}
+		
+		// Use sanitized data
+		Object.assign(pageData, validation.sanitized);
+		
+		console.log('📋 Optional sections received:', optionalSections);
+		
+		// Map optional sections to boolean flags
+		pageData.includeGallery = optionalSections.includes('gallery');
+		pageData.includeFAQ = optionalSections.includes('faq');
+		pageData.includeTestimonials = optionalSections.includes('testimonials');
+		pageData.includeAbout = optionalSections.includes('about');
+		
+		console.log('✅ Mapped optional sections:', {
+			includeGallery: pageData.includeGallery,
+			includeFAQ: pageData.includeFAQ,
+			includeTestimonials: pageData.includeTestimonials,
+			includeAbout: pageData.includeAbout
+		});
 		
 		// Map legacy page types to Strapi schema
 		const pageTypeMap = {
@@ -59,15 +95,76 @@ export async function POST({ request }) {
 		// Extract title from pageData
 		const title = pageData.mainName || pageData.title || pageData.storeName || pageData.businessName || pageData.eventName || 'Untitled';
 		
+		// CRITICAL: Ensure products exist for store pages
+		if (pageType === 'store' || pageType === 'onlineStore') {
+			if (!pageData.products || !Array.isArray(pageData.products) || pageData.products.length === 0) {
+				console.log('⚠️ No products found, generating sample products');
+				// Generate sample products based on productCount or default to 6
+				const productCount = parseInt(pageData.productCount) || 6;
+				pageData.products = generateSampleProducts(productCount);
+			} else {
+				console.log('🛍️ Found', pageData.products.length, 'products in pageData');
+			}
+		}
+		
+		// Generate AI content AUTOMATICALLY for optional sections
+		// Check if any optional sections are enabled
+		const hasOptionalSections = pageData.includeGallery || pageData.includeFAQ || 
+		                            pageData.includeTestimonials || pageData.includeAbout;
+		
+		if (hasOptionalSections) {
+			console.log('🤖 Generating AI content automatically for optional sections...');
+			try {
+				const aiResponse = await fetch('https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhfaadsgdrghre546yrthfg12w23', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						businessName: pageData.mainName || title,
+						pageType: pageType,
+						description: pageData.description || '',
+						phone: pageData.phone || '',
+						email: pageData.email || '',
+						includeGallery: pageData.includeGallery,
+						includeFAQ: pageData.includeFAQ,
+						includeTestimonials: pageData.includeTestimonials,
+						includeAbout: pageData.includeAbout,
+						action: 'generate_page_content'
+					})
+				});
+				
+				if (aiResponse.ok) {
+					const aiContent = await aiResponse.json();
+					console.log('✅ AI content generated:', Object.keys(aiContent));
+					console.log('📝 AI content sample (GALLERY_HTML):', aiContent.GALLERY_HTML?.substring(0, 200));
+					// Merge AI content into pageData - support both formats
+					if (aiContent.ABOUT_HTML) pageData.ABOUT_HTML = aiContent.ABOUT_HTML;
+					if (aiContent.aboutText) pageData.aboutText = aiContent.aboutText;
+					if (aiContent.GALLERY_HTML) pageData.GALLERY_HTML = aiContent.GALLERY_HTML;
+					if (aiContent.gallery) pageData.gallery = aiContent.gallery;
+					if (aiContent.TESTIMONIALS_HTML) pageData.TESTIMONIALS_HTML = aiContent.TESTIMONIALS_HTML;
+					if (aiContent.testimonials) pageData.testimonials = aiContent.testimonials;
+					if (aiContent.FAQ_HTML) pageData.FAQ_HTML = aiContent.FAQ_HTML;
+					if (aiContent.faq) pageData.faq = aiContent.faq;
+				} else {
+					console.log('⚠️ AI content generation failed, using empty placeholders');
+				}
+			} catch (error) {
+				console.log('⚠️ AI content generation error:', error.message, '- using empty placeholders');
+			}
+		}
+		
 		// Use template engine to generate full HTML
-		console.log('🎨 Rendering template:', pageType);
+		console.log('🎨 Rendering template:', pageType, 'with sections:', optionalSections);
 		const { renderTemplate } = await import('$lib/server/templateEngine.js');
-		const htmlContent = await renderTemplate(pageType, pageData);
+		const htmlContent = await renderTemplate(pageType, pageData, optionalSections);
 
 		console.log(`🎯 Page type: ${pageType}`);
 
 		// Process HTML (clean, inject scripts, fix WhatsApp)
-		const processedHtml = processPage(htmlContent, pageType);
+		let processedHtml = processPage(htmlContent, pageType);
+		
+		// Additional security: sanitize HTML to remove dangerous content
+		processedHtml = sanitizeHtml(processedHtml);
 
 		// Extract metadata
 		const contactInfo = extractContactInfoFromHTML(processedHtml);
@@ -82,15 +179,51 @@ export async function POST({ request }) {
 		console.log('📝 Creating page for userId:', finalUserId);
 
 		// Build metadata object with all additional info
+		// Parse gallery - can be array of objects {url, caption} or array of strings
+		let galleryImages = [];
+		if (pageData.gallery) {
+			if (Array.isArray(pageData.gallery)) {
+				// Convert to array of URLs (extract url from objects if needed)
+				galleryImages = pageData.gallery.map(item => {
+					if (typeof item === 'string') return item;
+					if (item && item.url) return item.url;
+					return null;
+				}).filter(url => url && url.startsWith('http'));
+			} else if (typeof pageData.gallery === 'string') {
+				// Split by newlines and filter empty lines (legacy support)
+				galleryImages = pageData.gallery
+					.split('\n')
+					.map(url => url.trim())
+					.filter(url => url.length > 0 && url.startsWith('http'));
+			}
+		} else if (pageData.images) {
+			galleryImages = Array.isArray(pageData.images) ? pageData.images : [];
+		}
+		
+		// Add default gallery images if includeGallery is enabled but no images provided
+		if (pageData.includeGallery && galleryImages.length === 0) {
+			galleryImages = [
+				'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop',
+				'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2099&auto=format&fit=crop',
+				'https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2080&auto=format&fit=crop',
+				'https://images.unsplash.com/photo-1560343090-f0409e92791a?q=80&w=2064&auto=format&fit=crop',
+				'https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=2080&auto=format&fit=crop',
+				'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop'
+			];
+			console.log('🖼️ Added default gallery images');
+		}
+		
 		const metadata = {
 			videoUrl: pageData.videoUrl || pageData.video || '',
-			gallery: pageData.gallery || pageData.images || [],
+			gallery: galleryImages,
 			socialLinks: {
-				facebook: pageData.facebook || pageData.facebookUrl || '',
-				instagram: pageData.instagram || pageData.instagramUrl || '',
-				whatsapp: pageData.whatsapp || pageData.whatsappNumber || contactInfo.phone || '',
-				youtube: pageData.youtube || pageData.youtubeUrl || '',
-				tiktok: pageData.tiktok || pageData.tiktokUrl || ''
+				facebook: pageData.facebookLink || pageData.facebook || pageData.facebookUrl || '',
+				instagram: pageData.instagramLink || pageData.instagram || pageData.instagramUrl || '',
+				whatsapp: pageData.whatsappLink || pageData.whatsapp || pageData.whatsappNumber || contactInfo.phone || '',
+				youtube: pageData.youtubeLink || pageData.youtube || pageData.youtubeUrl || '',
+				tiktok: pageData.tiktokLink || pageData.tiktok || pageData.tiktokUrl || '',
+				linkedin: pageData.linkedinLink || pageData.linkedin || pageData.linkedinUrl || '',
+				twitter: pageData.twitterLink || pageData.twitter || pageData.twitterUrl || ''
 			},
 			// Additional fields based on page type
 			...(pageType === 'event' && {
@@ -106,6 +239,27 @@ export async function POST({ request }) {
 
 		// Create page in Strapi
 		// Note: Don't link to user if it's a temp user
+		// CRITICAL: Use products from pageData if available (from ProductGallery), otherwise extract from HTML
+		let finalProducts = (pageData.products && Array.isArray(pageData.products) && pageData.products.length > 0) 
+			? pageData.products 
+			: products;
+		
+		// Add default products from template if none exist
+		if (finalProducts.length === 0) {
+			try {
+				const { getTemplateById } = await import('$lib/templates/index.js');
+				const template = getTemplateById(pageType);
+				if (template && template.defaultProducts) {
+					finalProducts = template.defaultProducts;
+					console.log('🛍️ Adding default products from template:', finalProducts.length);
+				}
+			} catch (error) {
+				console.log('⚠️ Could not load default products:', error.message);
+			}
+		}
+		
+		console.log('💾 Saving products to Strapi:', finalProducts.length, 'products');
+		
 		const pageDataToCreate = {
 			title,
 			slug,
@@ -115,21 +269,93 @@ export async function POST({ request }) {
 			email: contactInfo.email,
 			city: contactInfo.city,
 			address: contactInfo.address,
-			products: products,
+			products: finalProducts,
 			description: description,
 			metadata: metadata,
-			isActive: true
+			isActive: true,
+			// Optional sections
+			includeGallery: pageData.includeGallery || false,
+			includeFAQ: pageData.includeFAQ || false,
+			includeTestimonials: pageData.includeTestimonials || false,
+			includeAbout: pageData.includeAbout || false
 		};
 		
-		// Only add user if it's not a temp user
-		if (finalUserId && !finalUserId.startsWith('user_')) {
-			pageDataToCreate.userId = finalUserId;
-		}
+		// ALWAYS add userId - required by Strapi schema
+		pageDataToCreate.userId = finalUserId;
+		console.log('✅ Setting userId for page:', finalUserId);
 		
+		console.log('🚀 About to create page with data:', {
+			includeGallery: pageDataToCreate.includeGallery,
+			includeFAQ: pageDataToCreate.includeFAQ,
+			includeTestimonials: pageDataToCreate.includeTestimonials,
+			includeAbout: pageDataToCreate.includeAbout
+		});
+
 		const pageResult = await createPage(pageDataToCreate);
 
 		if (!pageResult) {
 			throw new Error('Failed to create page in database');
+		}
+
+		console.log('✅ Page created with ID:', pageResult.id, 'documentId:', pageResult.documentId);
+		console.log('🔍 Checking if should create sections. includeFAQ:', pageData.includeFAQ, 'pageType:', pageType);
+
+		// CRITICAL: Create products gallery section for store pages
+		if ((pageType === 'store' || pageType === 'onlineStore') && finalProducts.length > 0) {
+			console.log('🛍️ Creating products gallery section with', finalProducts.length, 'products');
+			try {
+				const { createSection } = await import('$lib/server/strapi.js');
+				
+				const productsSection = await createSection({
+					type: 'products',
+					enabled: true,
+					order: 0,
+					data: {
+						title: 'המוצרים שלנו',
+						subtitle: 'בחר מוצר והוסף לעגלה',
+						products: finalProducts
+					},
+					page: pageResult.documentId || pageResult.id
+				});
+				console.log('✅ Products gallery section created:', productsSection.id);
+			} catch (error) {
+				console.error('❌ Failed to create products section:', error.message, error);
+			}
+		}
+		
+		// Create default sections if includeFAQ is enabled
+		if (pageData.includeFAQ) {
+			console.log('✅ includeFAQ is TRUE, proceeding to create sections');
+			try {
+				const { getTemplateById } = await import('$lib/templates/index.js');
+				const template = getTemplateById(pageType);
+				if (template && template.defaultSections) {
+					console.log('📋 Creating default sections from template:', template.defaultSections.length);
+					
+					// Import createSection function
+					const { createSection } = await import('$lib/server/strapi.js');
+					
+					// Create each section
+					for (const sectionData of template.defaultSections) {
+						try {
+							console.log('📝 Creating section:', sectionData.title);
+							const sectionResult = await createSection({
+								...sectionData,
+								page: pageResult.documentId || pageResult.id
+							});
+							console.log('✅ Section created:', sectionResult.id);
+						} catch (error) {
+							console.error('❌ Failed to create section:', error.message, error);
+						}
+					}
+				} else {
+					console.log('⚠️ No default sections found in template');
+				}
+			} catch (error) {
+				console.error('❌ Could not create default sections:', error.message, error);
+			}
+		} else {
+			console.log('ℹ️ includeFAQ is false, skipping sections creation');
 		}
 
 		// Create analytics entry
@@ -158,6 +384,39 @@ export async function POST({ request }) {
 			{ status: 500 }
 		);
 	}
+}
+
+/**
+ * Generate sample products for store pages
+ */
+function generateSampleProducts(count = 6) {
+	const products = [];
+	const productNames = [
+		'מוצר מעולה 1',
+		'מוצר איכותי 2', 
+		'מוצר מומלץ 3',
+		'מוצר פופולרי 4',
+		'מוצר חדש 5',
+		'מוצר מיוחד 6',
+		'מוצר נבחר 7',
+		'מוצר מדהים 8',
+		'מוצר ייחודי 9',
+		'מוצר נהדר 10',
+		'מוצר משתלם 11',
+		'מוצר מושלם 12'
+	];
+	
+	for (let i = 0; i < count; i++) {
+		products.push({
+			id: i + 1,
+			name: productNames[i] || `מוצר ${i + 1}`,
+			description: 'תיאור המוצר - ערוך אותי בדף הניהול',
+			price: (i + 1) * 50 + 49,
+			image: `https://placehold.co/400x400/667eea/white?text=מוצר+${i + 1}`
+		});
+	}
+	
+	return products;
 }
 
 /**

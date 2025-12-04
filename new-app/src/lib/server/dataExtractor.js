@@ -383,3 +383,73 @@ export function detectPageType(html, selectedType) {
 	// Default to generic
 	return 'generic';
 }
+
+/**
+ * Extract page data from Strapi page object (supports both HTML and sections-based pages)
+ * Handles both Strapi v4 (nested attributes) and v5 (flat) formats
+ * @param {any} page - Strapi page object
+ * @returns {Object} - Extracted page data
+ */
+export function extractPageDataFromStrapi(page) {
+	if (!page) {
+		return {
+			hasHtmlContent: false,
+			hasSections: false,
+			title: '',
+			pageType: 'generic',
+			description: '',
+			sections: [],
+			products: []
+		};
+	}
+
+	// Strapi v5 uses flat format (data directly on page object)
+	// Strapi v4 uses nested format (data under page.attributes)
+	const attrs = page.attributes || page;
+	
+	// Check if this is a sections-based page
+	// v5: attrs.sections is array directly
+	// v4: attrs.sections.data is array
+	const sectionsArray = Array.isArray(attrs.sections) ? attrs.sections : (attrs.sections?.data || []);
+	const productsArray = Array.isArray(attrs.storeProducts) ? attrs.storeProducts : (attrs.storeProducts?.data || []);
+	
+	const hasSections = sectionsArray.length > 0;
+	const hasProducts = productsArray.length > 0;
+	const hasHtmlContent = attrs.htmlContent && attrs.htmlContent.trim().length > 0;
+
+	return {
+		hasHtmlContent,
+		hasSections,
+		hasProducts,
+		title: attrs.title || '',
+		pageType: attrs.pageType || 'generic',
+		description: attrs.description || '',
+		sections: sectionsArray.map(s => {
+			// v5: data directly on s, v4: data under s.attributes
+			const sAttrs = s.attributes || s;
+			return {
+				id: s.id,
+				documentId: s.documentId,
+				type: sAttrs.type,
+				enabled: sAttrs.enabled,
+				order: sAttrs.order ?? 99,
+				data: sAttrs.data || {}
+			};
+		}).sort((a, b) => a.order - b.order), // Sort by order field
+		products: productsArray.map(p => {
+			// v5: data directly on p, v4: data under p.attributes
+			const pAttrs = p.attributes || p;
+			return {
+				id: p.id,
+				documentId: p.documentId,
+				name: pAttrs.name,
+				description: pAttrs.description,
+				price: pAttrs.price,
+				image: pAttrs.image,
+				enabled: pAttrs.enabled,
+				order: pAttrs.order
+			};
+		}),
+		productsCount: productsArray.length
+	};
+}

@@ -1,6 +1,6 @@
 // @ts-check
 import { json } from '@sveltejs/kit';
-import { getUserById, updateUser } from '$lib/server/strapi.js';
+import { getUserById, updateUser, createUser } from '$lib/server/strapi.js';
 
 /**
  * GET /api/user/[userId]
@@ -60,7 +60,7 @@ export async function GET({ params }) {
 
 /**
  * POST /api/user/[userId]
- * Update user data
+ * Create or update user data
  * @type {import('./$types').RequestHandler}
  */
 export async function POST({ params, request }) {
@@ -68,27 +68,42 @@ export async function POST({ params, request }) {
 		const { userId } = params;
 		const body = await request.json();
 
-		console.log('👤 UPDATE USER:', { userId, updates: Object.keys(body) });
+		console.log('👤 CREATE/UPDATE USER:', { userId, updates: Object.keys(body) });
 
 		// Validate required fields
 		if (!userId) {
 			return json({ error: 'Missing userId' }, { status: 400 });
 		}
 
-		// Update user in Strapi
-		await updateUser(userId, body);
-
-		console.log(`✅ User ${userId} updated successfully`);
+		// Try to get existing user
+		let user;
+		try {
+			user = await getUserById(userId);
+			console.log('✅ User exists, updating...');
+			// Update existing user
+			await updateUser(userId, body);
+		} catch (error) {
+			// User doesn't exist, create new one
+			console.log('👤 User does not exist, creating new user...');
+			user = await createUser({
+				userId,
+				email: body.email,
+				name: body.name || body.email?.split('@')[0] || 'משתמש חדש',
+				avatar: body.avatar || null
+			});
+			console.log('✅ User created successfully');
+		}
 
 		return json({
 			success: true,
-			message: 'User updated successfully'
+			message: 'User saved successfully',
+			user
 		});
 	} catch (error) {
-		console.error('❌ Error updating user:', error);
+		console.error('❌ Error saving user:', error);
 		return json(
 			{
-				error: 'Failed to update user',
+				error: 'Failed to save user',
 				details: error.message
 			},
 			{ status: 500 }

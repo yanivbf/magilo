@@ -1,6 +1,57 @@
 // @ts-check
 import { STRAPI_URL, STRAPI_API_TOKEN } from '$env/static/private';
 
+// Guest Management Functions
+export async function createOrUpdateGuest(guestData) {
+	try {
+		const client = new StrapiClient();
+		
+		// Check if guest already exists (by name + page)
+		const existing = await client.get('/guests', {
+			filters: {
+				name: guestData.name,
+				page: guestData.page
+			}
+		});
+		
+		if (existing.data && existing.data.length > 0) {
+			// Update existing guest
+			const guestId = existing.data[0].id;
+			const updated = await client.put(`/guests/${guestId}`, {
+				data: guestData
+			});
+			return { success: true, data: updated.data };
+		} else {
+			// Create new guest
+			const created = await client.post('/guests', {
+				data: guestData
+			});
+			return { success: true, data: created.data };
+		}
+	} catch (error) {
+		console.error('Error creating/updating guest:', error);
+		return { success: false, error: error.message };
+	}
+}
+
+export async function getPageGuests(pageId) {
+	try {
+		const client = new StrapiClient();
+		const response = await client.get('/guests', {
+			filters: {
+				page: pageId
+			},
+			populate: '*',
+			sort: ['name:asc']
+		});
+		
+		return { success: true, data: response.data || [] };
+	} catch (error) {
+		console.error('Error getting page guests:', error);
+		return { success: false, error: error.message, data: [] };
+	}
+}
+
 /**
  * @typedef {Object} StrapiResponse
  * @property {any} data
@@ -167,10 +218,29 @@ export async function getAllUsers() {
  */
 export async function createPage(pageData) {
 	const { userId, ...data} = pageData;
-	const response = await strapi.post('/pages', {
-		...data,
-		user: userId
-	});
+	
+	// Build the data object for Strapi
+	const strapiData = {
+		...data
+	};
+	
+	// Only add user relation if userId is provided and not a temp user
+	// AND if it looks like a valid Strapi document ID (numeric)
+	if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_')) {
+		// Check if userId is numeric (Strapi document ID) or try to verify it exists
+		if (/^\d+$/.test(userId)) {
+			// It's a numeric ID, safe to use
+			strapiData.user = userId;
+			console.log('✅ Adding user relation with numeric ID:', userId);
+		} else {
+			// It's a UUID or other format - skip it
+			console.log('⏭️ Skipping user relation - userId is not a Strapi document ID:', userId);
+		}
+	} else {
+		console.log('⏭️ Skipping user relation - temp or generated userId:', userId);
+	}
+	
+	const response = await strapi.post('/pages', strapiData);
 	// Strapi returns { data: { id, attributes } }
 	return response.data || response;
 }
@@ -181,23 +251,52 @@ export async function createPage(pageData) {
  * @returns {Promise<any>}
  */
 export async function getPageBySlug(slug) {
+	// Strapi v5 requires explicit populate with array syntax
 	const response = await strapi.get('/pages', {
 		'filters[slug][$eq]': slug,
-		populate: '*'
+		'populate[0]': 'sections',
+		'populate[1]': 'storeProducts'
 	});
-	return response.data?.[0] || null;
+	
+	console.log('🔍 Full Strapi response:', JSON.stringify(response, null, 2));
+	
+	const page = response.data?.[0] || null;
+	if (page) {
+		console.log('📄 Page found:', page.id);
+		console.log('📄 Page object keys:', Object.keys(page));
+		console.log('📄 Page attributes:', page.attributes ? 'exists' : 'missing');
+		if (page.attributes) {
+			console.log('📄 Page attributes keys:', Object.keys(page.attributes));
+			console.log('📄 Sections:', page.attributes.sections);
+			console.log('📄 Products:', page.attributes.storeProducts);
+		}
+	} else {
+		console.log('❌ No page found for slug:', slug);
+	}
+	return page;
 }
 
 /**
- * Get page by ID
+ * Get page by ID (supports both numeric ID and documentId)
  * @param {string} id
  * @returns {Promise<any>}
  */
 export async function getPageById(id) {
-	const response = await strapi.get(`/pages/${id}`, {
-		populate: ['user', 'purchases', 'leads', 'analytics']
-	});
-	return response.data;
+	try {
+		// Try direct ID first
+		const response = await strapi.get(`/pages/${id}`, {
+			populate: '*'
+		});
+		return response.data;
+	} catch (error) {
+		// If failed, try searching by documentId
+		console.log('🔍 Direct ID failed, trying documentId search:', id);
+		const response = await strapi.get('/pages', {
+			'filters[documentId][$eq]': id,
+			populate: '*'
+		});
+		return response.data?.[0] || null;
+	}
 }
 
 /**
@@ -225,7 +324,7 @@ export async function getPagesByUser(userId) {
 export async function getActivePages(filters = {}) {
 	const params = {
 		'filters[isActive][$eq]': true,
-		populate: ['user'],
+		populate: [],
 		'pagination[page]': filters.page || 1,
 		'pagination[pageSize]': filters.pageSize || 25
 	};
@@ -250,13 +349,27 @@ export async function getActivePages(filters = {}) {
 }
 
 /**
- * Update page
+ * Update page (supports both numeric ID and documentId)
  * @param {string} id
  * @param {Object} data
  * @returns {Promise<any>}
  */
 export async function updatePage(id, data) {
-	return strapi.put(`/pages/${id}`, data);
+	try {
+		// Try direct ID first
+		return await strapi.put(`/pages/${id}`, data);
+	} catch (error) {
+		// If failed, get the page by documentId first to get numeric ID
+		console.log('🔍 Direct update failed, trying documentId lookup:', id);
+		const page = await getPageById(id);
+		if (!page) {
+			throw new Error('Page not found');
+		}
+		// Use the numeric ID
+		const numericId = page.id;
+		console.log('✅ Found numeric ID:', numericId);
+		return await strapi.put(`/pages/${numericId}`, data);
+	}
 }
 
 /**
@@ -305,7 +418,7 @@ export async function createPurchase(purchaseData) {
 export async function getPurchasesByPage(pageId) {
 	const response = await strapi.get('/purchases', {
 		'filters[page][id][$eq]': pageId,
-		populate: ['user', 'page'],
+		populate: ['page'],
 		sort: 'createdAt:desc'
 	});
 	return response.data;
@@ -383,7 +496,7 @@ export async function createLead(leadData) {
 export async function getLeadsByPage(pageId) {
 	const response = await strapi.get('/leads', {
 		'filters[page][id][$eq]': pageId,
-		populate: ['user', 'page'],
+		populate: ['page'],
 		sort: 'createdAt:desc'
 	});
 	return response.data;
@@ -414,6 +527,39 @@ export async function getAnalytics(pageId) {
 		populate: ['page']
 	});
 	return response.data?.[0] || null;
+}
+
+/**
+ * Create a section for a page
+ * @param {Object} sectionData
+ * @returns {Promise<any>}
+ */
+export async function createSection(sectionData) {
+	const { page, ...data } = sectionData;
+	return strapi.post('/sections', {
+		...data,
+		page: page
+	});
+}
+
+/**
+ * Create a product for a page
+ * @param {Object} productData
+ * @param {string} productData.name
+ * @param {string} productData.description
+ * @param {number} productData.price
+ * @param {string} productData.image
+ * @param {boolean} productData.enabled
+ * @param {number} productData.order
+ * @param {string} productData.page - Page ID
+ * @returns {Promise<any>}
+ */
+export async function createProduct(productData) {
+	const { page, ...data } = productData;
+	return strapi.post('/products', {
+		...data,
+		page: page
+	});
 }
 
 /**

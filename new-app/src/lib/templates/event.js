@@ -15,14 +15,6 @@ export const eventTemplate = {
 	
 	fields: [
 		{
-			name: 'title',
-			label: 'כותרת הדף (URL)',
-			type: 'text',
-			required: true,
-			placeholder: 'לדוגמה: sarah-david-wedding',
-			help: 'זה יהיה חלק מכתובת הדף שלך (באנגלית בלבד, ללא רווחים)'
-		},
-		{
 			name: 'eventName',
 			label: 'שם האירוע',
 			type: 'text',

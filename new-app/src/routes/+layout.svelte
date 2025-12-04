@@ -1,19 +1,14 @@
 <script>
 	import '../app.css';
 	import { page } from '$app/stores';
-	import StavBotFullScreen from '$lib/components/StavBotFullScreen.svelte';
 	
 	let { children } = $props();
 	
 	// Determine if this is the home page for background styling (Svelte 5 Runes syntax)
 	let isHomePage = $derived($page.url.pathname === '/');
-	
-	// Stav Bot state
-	let stavBotOpen = $state(false);
 </script>
 
 <svelte:head>
-	<script src="https://cdn.tailwindcss.com"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
 	<link rel="icon" type="image/x-icon" href="/favicon.ico">
 </svelte:head>
@@ -42,18 +37,6 @@
 	<main>
 		{@render children()}
 	</main>
-	
-	<!-- EXACT Legacy: Floating Stav Bot Button (Right Side) -->
-	<button 
-		onclick={() => stavBotOpen = true}
-		class="stav-bot-fab"
-		title="פתח את סתיו - העוזרת הדיגיטלית"
-	>
-		<img src="https://i.ibb.co/9ZQZ8ZQ/stav-avatar.png" alt="Stav" class="stav-avatar" />
-	</button>
-	
-	<!-- Stav Bot Full Screen Modal -->
-	<StavBotFullScreen bind:isOpen={stavBotOpen} />
 </div>
 
 <style>

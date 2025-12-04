@@ -470,7 +470,7 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
 export interface ApiAnalyticAnalytic extends Struct.CollectionTypeSchema {
   collectionName: 'analytics';
   info: {
-    description: 'Analytics data for pages';
+    description: 'Analytics data and events for pages';
     displayName: 'Analytics';
     pluralName: 'analytics';
     singularName: 'analytic';
@@ -479,10 +479,13 @@ export interface ApiAnalyticAnalytic extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    amount: Schema.Attribute.Decimal;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     dailySales: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    eventData: Schema.Attribute.JSON;
+    eventType: Schema.Attribute.Enumeration<['view', 'lead', 'sale']>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -490,14 +493,55 @@ export interface ApiAnalyticAnalytic extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     monthlySales: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
-    page: Schema.Attribute.Relation<'oneToOne', 'api::page.page'>;
+    page: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
     publishedAt: Schema.Attribute.DateTime;
     recentPurchases: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    source: Schema.Attribute.String;
+    timestamp: Schema.Attribute.DateTime;
     topProducts: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     totalCustomers: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     totalLeads: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     totalOrders: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     totalSales: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiAppointmentAppointment extends Struct.CollectionTypeSchema {
+  collectionName: 'appointments';
+  info: {
+    description: 'Client appointment bookings for service providers';
+    displayName: 'Appointment';
+    pluralName: 'appointments';
+    singularName: 'appointment';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    appointmentDate: Schema.Attribute.Date & Schema.Attribute.Required;
+    appointmentTime: Schema.Attribute.Time & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    customerName: Schema.Attribute.String & Schema.Attribute.Required;
+    customerPhone: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::appointment.appointment'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    page: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
+    publishedAt: Schema.Attribute.DateTime;
+    service: Schema.Attribute.String & Schema.Attribute.Required;
+    status: Schema.Attribute.Enumeration<
+      ['pending', 'confirmed', 'cancelled', 'completed']
+    > &
+      Schema.Attribute.DefaultTo<'pending'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -553,6 +597,57 @@ export interface ApiDaySettingDaySetting extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiGuestGuest extends Struct.CollectionTypeSchema {
+  collectionName: 'guests';
+  info: {
+    description: 'Event guest/RSVP management';
+    displayName: 'Guest';
+    pluralName: 'guests';
+    singularName: 'guest';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email;
+    gift: Schema.Attribute.String;
+    giftAmount: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::guest.guest'> &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    notes: Schema.Attribute.Text;
+    page: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
+    phone: Schema.Attribute.String;
+    plus: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<['pending', 'confirmed', 'declined']> &
+      Schema.Attribute.DefaultTo<'pending'>;
+    submittedAt: Schema.Attribute.DateTime;
+    table: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiLeadLead extends Struct.CollectionTypeSchema {
   collectionName: 'leads';
   info: {
@@ -601,6 +696,7 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    aboutText: Schema.Attribute.Text;
     address: Schema.Attribute.Text;
     analytics: Schema.Attribute.Relation<'oneToOne', 'api::analytic.analytic'>;
     city: Schema.Attribute.String;
@@ -609,12 +705,34 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
     email: Schema.Attribute.Email;
+    eventDate: Schema.Attribute.Date;
+    eventLocation: Schema.Attribute.String;
+    eventTime: Schema.Attribute.String;
+    expectedGuests: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    faq: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    gallery: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    guests: Schema.Attribute.Relation<'oneToMany', 'api::guest.guest'>;
+    headerImage: Schema.Attribute.String;
     htmlContent: Schema.Attribute.RichText & Schema.Attribute.Required;
+    includeAbout: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    includeFAQ: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    includeGallery: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    includeTestimonials: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     leads: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::page.page'> &
       Schema.Attribute.Private;
+    logo: Schema.Attribute.String;
     metadata: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
     pageType: Schema.Attribute.Enumeration<
       [
@@ -634,12 +752,62 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     products: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     publishedAt: Schema.Attribute.DateTime;
     purchases: Schema.Attribute.Relation<'oneToMany', 'api::purchase.purchase'>;
+    sections: Schema.Attribute.Relation<'oneToMany', 'api::section.section'>;
+    services: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
+    socialMedia: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    storeProducts: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::product.product'
+    >;
+    testimonials: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     user: Schema.Attribute.Relation<'manyToOne', 'api::user.user'>;
+    workingHours: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+  };
+}
+
+export interface ApiProductProduct extends Struct.CollectionTypeSchema {
+  collectionName: 'products';
+  info: {
+    description: 'Store products';
+    displayName: 'Product';
+    pluralName: 'products';
+    singularName: 'product';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    image: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::product.product'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    order: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>;
+    page: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
+    price: Schema.Attribute.Decimal &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -691,6 +859,103 @@ export interface ApiPurchasePurchase extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiSectionSection extends Struct.CollectionTypeSchema {
+  collectionName: 'sections';
+  info: {
+    description: 'Page sections with customizable content';
+    displayName: 'Section';
+    pluralName: 'sections';
+    singularName: 'section';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    data: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    images: Schema.Attribute.Media<'images', true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::section.section'
+    > &
+      Schema.Attribute.Private;
+    order: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>;
+    page: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
+    publishedAt: Schema.Attribute.DateTime;
+    type: Schema.Attribute.Enumeration<
+      [
+        'hero',
+        'about',
+        'services',
+        'products',
+        'testimonials',
+        'gallery',
+        'contact',
+        'faq',
+        'team',
+        'pricing',
+        'features',
+        'cta',
+        'video',
+      ]
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSubscriptionSubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'subscriptions';
+  info: {
+    description: 'Page subscription management';
+    displayName: 'Subscription';
+    pluralName: 'subscriptions';
+    singularName: 'subscription';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    autoRenew: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    endDate: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::subscription.subscription'
+    > &
+      Schema.Attribute.Private;
+    page: Schema.Attribute.Relation<'manyToOne', 'api::page.page'>;
+    plan: Schema.Attribute.Enumeration<['basic', 'premium', 'enterprise']> &
+      Schema.Attribute.DefaultTo<'basic'>;
+    price: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    startDate: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<
+      ['active', 'inactive', 'expired', 'cancelled']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'inactive'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<'manyToOne', 'api::user.user'>;
+  };
+}
+
 export interface ApiUserUser extends Struct.CollectionTypeSchema {
   collectionName: 'users';
   info: {
@@ -718,6 +983,11 @@ export interface ApiUserUser extends Struct.CollectionTypeSchema {
     phone: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     purchases: Schema.Attribute.Relation<'oneToMany', 'api::purchase.purchase'>;
+    subscriptionExpiry: Schema.Attribute.DateTime;
+    subscriptionStatus: Schema.Attribute.Enumeration<
+      ['active', 'inactive', 'expired']
+    > &
+      Schema.Attribute.DefaultTo<'inactive'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1237,10 +1507,15 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::analytic.analytic': ApiAnalyticAnalytic;
+      'api::appointment.appointment': ApiAppointmentAppointment;
       'api::day-setting.day-setting': ApiDaySettingDaySetting;
+      'api::guest.guest': ApiGuestGuest;
       'api::lead.lead': ApiLeadLead;
       'api::page.page': ApiPagePage;
+      'api::product.product': ApiProductProduct;
       'api::purchase.purchase': ApiPurchasePurchase;
+      'api::section.section': ApiSectionSection;
+      'api::subscription.subscription': ApiSubscriptionSubscription;
       'api::user.user': ApiUserUser;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

@@ -15,14 +15,6 @@ export const serviceTemplate = {
 	
 	fields: [
 		{
-			name: 'title',
-			label: 'כותרת הדף (URL)',
-			type: 'text',
-			required: true,
-			placeholder: 'לדוגמה: david-garage',
-			help: 'זה יהיה חלק מכתובת הדף שלך (באנגלית בלבד, ללא רווחים)'
-		},
-		{
 			name: 'businessName',
 			label: 'שם העסק',
 			type: 'text',

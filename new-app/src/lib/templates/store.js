@@ -3,18 +3,18 @@ export const storeTemplate = {
 	id: 'onlineStore',
 	name: 'חנות מקוונת',
 	icon: '🛍️',
-	description: 'חנות אונליין עם עגלת קניות ותשלום',
+	description: 'צור חנות מקוונת מלאה עם גלריית מוצרים ועגלת קניות',
 	image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=2070&auto=format&fit=crop',
 	
 	// EXACT Legacy Info Box from page-creator.html
 	infoBox: {
-		title: '💳 חנות מקוונת מלאה',
-		description: '<strong>מה זה חנות מקוונת?</strong><br>גלריית מוצרים עם כפתורי "הוסף לעגלה", עגלת קניות צפה, וטופס תשלום מלא.<br><strong>כולל:</strong> כרטיס אשראי, PayPal, ביט, משלוח/איסוף עצמי.',
+		title: '💳 מה כלול בחנות?',
+		description: 'גלריית מוצרים עם כפתורי "הוסף לעגלה", עגלת קניות צפה, וטופס תשלום מלא.<br><strong>כולל:</strong> כרטיס אשראי, PayPal, ביט, משלוח/איסוף עצמי.',
 		boxColor: 'blue',
 		features: [
-			'💬 בוט WhatsApp (פינה שמאלית)',
-			'🤖 בוט AI (פינה ימנית)',
-			'♿ כפתור נגישות (פינה עליונה)',
+			'💬 בועת WhatsApp',
+			'🤖 בוט AI',
+			'♿ כפתור נגישות',
 			'🛒 עגלת קניות צפה',
 			'💳 טופס תשלום מלא (אשראי, PayPal, ביט)',
 			'📊 ניהול קניות (נתונים, סטטיסטיקות)'
@@ -22,14 +22,6 @@ export const storeTemplate = {
 	},
 	
 	fields: [
-		{
-			name: 'title',
-			label: 'כותרת הדף (URL)',
-			type: 'text',
-			required: true,
-			placeholder: 'לדוגמה: my-fashion-store',
-			help: 'זה יהיה חלק מכתובת הדף שלך (באנגלית בלבד, ללא רווחים)'
-		},
 		{
 			name: 'mainName',
 			label: 'שם החנות',
@@ -73,19 +65,11 @@ export const storeTemplate = {
 			placeholder: 'כתובת החנות (אופציונלי)'
 		},
 		{
-			name: 'productCount',
-			label: '📦 כמה מוצרים להציג בחנות?',
-			type: 'select',
-			required: true,
-			options: [
-				{ value: '3', label: '3 מוצרים' },
-				{ value: '4', label: '4 מוצרים' },
-				{ value: '6', label: '6 מוצרים (מומלץ)' },
-				{ value: '8', label: '8 מוצרים' },
-				{ value: '12', label: '12 מוצרים' }
-			],
-			defaultValue: '6',
-			help: 'בחר כמה מוצרים תרצה להציג בקטלוג שלך'
+			name: 'city',
+			label: 'עיר',
+			type: 'text',
+			required: false,
+			placeholder: 'תל אביב, ירושלים, חיפה...'
 		}
 	],
 	
@@ -115,6 +99,37 @@ export const storeTemplate = {
 				primary: '#EC4899',
 				secondary: '#8B5CF6',
 				accent: '#F59E0B'
+			}
+		}
+	],
+	
+	// Default sections for FAQ
+	defaultSections: [
+		{
+			type: 'faq',
+			enabled: true,
+			order: 0,
+			data: {
+				title: 'איך אני מזמין?',
+				content: 'פשוט לחץ על המוצר הרצוי והוסף אותו לעגלה. לאחר מכן עבור לתשלום.'
+			}
+		},
+		{
+			type: 'faq',
+			enabled: true,
+			order: 1,
+			data: {
+				title: 'כמה זמן לוקח המשלוח?',
+				content: 'המשלוח לוקח בין 2-5 ימי עסקים, תלוי במיקום.'
+			}
+		},
+		{
+			type: 'faq',
+			enabled: true,
+			order: 2,
+			data: {
+				title: 'האם יש אחריות על המוצרים?',
+				content: 'כן, יש אחריות של שנה על כל המוצרים.'
 			}
 		}
 	]

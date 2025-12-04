@@ -33,26 +33,28 @@ export async function GET({ url }) {
 
 		console.log(`✅ Found ${result.data.length} marketplace pages`);
 
-		// Transform response
-		const transformedPages = result.data.map((page) => ({
-			id: page.id,
-			title: page.attributes.title,
-			slug: page.attributes.slug,
-			pageType: page.attributes.pageType,
-			description: page.attributes.description,
-			phone: page.attributes.phone,
-			email: page.attributes.email,
-			city: page.attributes.city,
-			products: page.attributes.products || [],
-			createdAt: page.attributes.createdAt,
-			// Include user info if populated
-			user: page.attributes.user?.data
-				? {
-						id: page.attributes.user.data.id,
-						name: page.attributes.user.data.attributes.name
-					}
-				: null
-		}));
+		// Transform response with safety checks
+		const transformedPages = result.data
+			.filter((page) => page && page.attributes) // Filter out invalid pages
+			.map((page) => ({
+				id: page.id,
+				title: page.attributes.title || 'ללא כותרת',
+				slug: page.attributes.slug || `page-${page.id}`,
+				pageType: page.attributes.pageType || 'unknown',
+				description: page.attributes.description || '',
+				phone: page.attributes.phone || '',
+				email: page.attributes.email || '',
+				city: page.attributes.city || '',
+				products: page.attributes.products || [],
+				createdAt: page.attributes.createdAt,
+				// Include user info if populated
+				user: page.attributes.user?.data
+					? {
+							id: page.attributes.user.data.id,
+							name: page.attributes.user.data.attributes?.name || 'משתמש'
+						}
+					: null
+			}));
 
 		return json({
 			success: true,

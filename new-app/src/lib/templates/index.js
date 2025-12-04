@@ -5,6 +5,10 @@ import { serviceTemplate } from './service';
 import { courseTemplate } from './course';
 import { messageTemplate } from './message';
 import { artistTemplate } from './artist';
+import { restaurantTemplate } from './restaurant';
+import { workshopTemplate } from './workshop';
+import { quickTemplate } from './quick';
+import { faqTemplate } from './faq';
 
 export const templates = {
 	onlineStore: storeTemplate,
@@ -12,7 +16,11 @@ export const templates = {
 	serviceProvider: serviceTemplate,
 	course: courseTemplate,
 	artist: artistTemplate,
-	messageInBottle: messageTemplate
+	messageInBottle: messageTemplate,
+	restaurant: restaurantTemplate,
+	workshop: workshopTemplate,
+	quick: quickTemplate,
+	faq: faqTemplate
 };
 
 export const templatesList = [
@@ -21,7 +29,11 @@ export const templatesList = [
 	serviceTemplate,
 	courseTemplate,
 	artistTemplate,
-	messageTemplate
+	messageTemplate,
+	restaurantTemplate,
+	workshopTemplate,
+	quickTemplate,
+	faqTemplate
 ];
 
 // Helper function to get template by ID

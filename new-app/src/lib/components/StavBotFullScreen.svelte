@@ -52,6 +52,55 @@
 		stopSpeaking();
 	}
 	
+	// Handle actions from N8N
+	function handleAction(action) {
+		console.log('🎬 Handling action:', action);
+		
+		if (!action || !action.type) return;
+		
+		switch (action.type) {
+			case 'book_appointment':
+				// Open appointment booking for specific page
+				if (action.pageId || action.pageSlug) {
+					const url = action.pageSlug ? `/pages/${action.pageSlug}` : `/view/${action.pageId}`;
+					window.open(url, '_blank');
+				}
+				break;
+				
+			case 'show_page':
+				// Navigate to specific page
+				if (action.pageSlug) {
+					window.open(`/pages/${action.pageSlug}`, '_blank');
+				}
+				break;
+				
+			case 'add_to_cart':
+				// Add product to cart (would need cart implementation)
+				console.log('🛒 Add to cart:', action.product);
+				break;
+				
+			case 'send_message':
+				// Open contact form or WhatsApp
+				if (action.phone) {
+					window.open(`https://wa.me/${action.phone}`, '_blank');
+				}
+				break;
+				
+			case 'filter_pages':
+				// Filter marketplace by category/city
+				if (action.category || action.city) {
+					const params = new URLSearchParams();
+					if (action.category) params.set('pageType', action.category);
+					if (action.city) params.set('city', action.city);
+					window.location.href = `/marketplace?${params.toString()}`;
+				}
+				break;
+				
+			default:
+				console.log('Unknown action type:', action.type);
+		}
+	}
+	
 	// Send message
 	async function sendMessage() {
 		if (!inputValue.trim()) return;
@@ -97,10 +146,20 @@
 				id: Date.now() + 1,
 				type: 'bot',
 				content: data.message || 'מצטערת, לא הצלחתי להבין את השאלה',
-				timestamp: new Date()
+				timestamp: new Date(),
+				pages: data.pages || [], // Add found pages
+				detectedCity: data.detectedCity,
+				detectedGift: data.detectedGift,
+				maxPrice: data.maxPrice,
+				action: data.action // Add action support
 			};
 			
 			messages = [...messages, botMessage];
+			
+			// Handle actions from N8N
+			if (data.action) {
+				handleAction(data.action);
+			}
 			
 			// Speak the response (with fallback)
 			await speakText(botMessage.content.replace(/<[^>]*>/g, ''));
@@ -255,7 +314,7 @@
 			<div class="stav-header">
 				<div class="header-content">
 					<div class="avatar-container">
-						<img src="https://i.ibb.co/9ZQZ8ZQ/stav-avatar.png" alt="Stav" class="header-avatar" />
+						<img src="/stav-avatar.png" alt="Stav" class="header-avatar" />
 						{#if isSpeaking}
 							<div class="speaking-indicator"></div>
 						{/if}
@@ -288,6 +347,74 @@
 						<div class="message-content">
 							{@html message.content}
 						</div>
+						
+						<!-- Action buttons -->
+						{#if message.action}
+							<div class="action-buttons">
+								{#if message.action.type === 'book_appointment'}
+									<button 
+										onclick={() => handleAction(message.action)}
+										class="action-btn primary"
+									>
+										📅 קבע תור עכשיו
+									</button>
+								{:else if message.action.type === 'show_page'}
+									<button 
+										onclick={() => handleAction(message.action)}
+										class="action-btn primary"
+									>
+										👀 צפה בדף
+									</button>
+								{:else if message.action.type === 'send_message'}
+									<button 
+										onclick={() => handleAction(message.action)}
+										class="action-btn success"
+									>
+										💬 שלח הודעה
+									</button>
+								{/if}
+							</div>
+						{/if}
+						
+						<!-- Display found pages -->
+						{#if message.pages && message.pages.length > 0}
+							<div class="search-results">
+								{#each message.pages.slice(0, 5) as page}
+									<a href="/pages/{page.slug}" target="_blank" class="result-card">
+										<div class="result-icon">
+											{#if page.pageType === 'store'}
+												🛍️
+											{:else if page.pageType === 'event'}
+												🎉
+											{:else if page.pageType === 'course'}
+												🎓
+											{:else if page.pageType === 'serviceProvider'}
+												🔧
+											{:else if page.pageType === 'restaurantMenu'}
+												🍽️
+											{:else}
+												📄
+											{/if}
+										</div>
+										<div class="result-info">
+											<h4>{page.title}</h4>
+											{#if page.city}
+												<p class="result-city">📍 {page.city}</p>
+											{/if}
+											{#if page.priceFiltered && page.products && page.products.length > 0}
+												<p class="result-products">
+													💰 {page.products.length} מוצרים עד ₪{message.maxPrice}
+												</p>
+											{/if}
+										</div>
+									</a>
+								{/each}
+								{#if message.pages.length > 5}
+									<p class="more-results">ועוד {message.pages.length - 5} תוצאות...</p>
+								{/if}
+							</div>
+						{/if}
+						
 						<div class="message-time">{formatTime(message.timestamp)}</div>
 					</div>
 				{/each}
@@ -376,12 +503,12 @@
 	
 	:global(.stav-fullscreen-container) {
 		width: 100% !important;
-		max-width: 800px !important;
-		height: 90vh !important;
-		max-height: 700px !important;
+		max-width: 100% !important;
+		height: 100vh !important;
+		max-height: 100vh !important;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-		border-radius: 20px !important;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
 		display: flex !important;
 		flex-direction: column !important;
 		overflow: hidden !important;
@@ -632,6 +759,104 @@
 		transform: none !important;
 	}
 	
+	/* Action Buttons */
+	:global(.action-buttons) {
+		margin-top: 12px !important;
+		display: flex !important;
+		gap: 8px !important;
+		flex-wrap: wrap !important;
+	}
+	
+	:global(.action-btn) {
+		padding: 10px 20px !important;
+		border: none !important;
+		border-radius: 8px !important;
+		font-size: 14px !important;
+		font-weight: 600 !important;
+		cursor: pointer !important;
+		transition: all 0.3s ease !important;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+	}
+	
+	:global(.action-btn.primary) {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+		color: white !important;
+	}
+	
+	:global(.action-btn.primary:hover) {
+		transform: translateY(-2px) !important;
+		box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+	}
+	
+	:global(.action-btn.success) {
+		background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+		color: white !important;
+	}
+	
+	:global(.action-btn.success:hover) {
+		transform: translateY(-2px) !important;
+		box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4) !important;
+	}
+
+	/* Search Results Cards */
+	:global(.search-results) {
+		margin-top: 12px !important;
+		display: flex !important;
+		flex-direction: column !important;
+		gap: 8px !important;
+	}
+	
+	:global(.result-card) {
+		display: flex !important;
+		align-items: center !important;
+		gap: 12px !important;
+		padding: 12px !important;
+		background: rgba(255, 255, 255, 0.95) !important;
+		border: 1px solid rgba(102, 126, 234, 0.2) !important;
+		border-radius: 12px !important;
+		text-decoration: none !important;
+		color: inherit !important;
+		transition: all 0.3s ease !important;
+	}
+	
+	:global(.result-card:hover) {
+		background: white !important;
+		border-color: #667eea !important;
+		transform: translateX(-4px) !important;
+		box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+	}
+	
+	:global(.result-icon) {
+		font-size: 32px !important;
+		flex-shrink: 0 !important;
+	}
+	
+	:global(.result-info) {
+		flex: 1 !important;
+	}
+	
+	:global(.result-info h4) {
+		margin: 0 0 4px 0 !important;
+		font-size: 16px !important;
+		font-weight: 600 !important;
+		color: #2d3748 !important;
+	}
+	
+	:global(.result-city),
+	:global(.result-products) {
+		margin: 2px 0 !important;
+		font-size: 13px !important;
+		color: #718096 !important;
+	}
+	
+	:global(.more-results) {
+		text-align: center !important;
+		font-size: 13px !important;
+		color: #667eea !important;
+		margin: 4px 0 0 0 !important;
+		font-weight: 500 !important;
+	}
+
 	/* Animations */
 	@keyframes fadeIn {
 		from { opacity: 0; }

@@ -1,92 +1,131 @@
 <svelte:head>
-	<title>מדיניות פרטיות | Page Builder Pro</title>
+	<title>מדיניות פרטיות – סתיו הבינה המלכותית / Autopage</title>
 </svelte:head>
 
 <div class="legal-page">
 	<div class="container">
-		<h1>מדיניות פרטיות</h1>
-		<p class="last-updated">עדכון אחרון: {new Date().toLocaleDateString('he-IL')}</p>
+		<h1>מדיניות פרטיות – סתיו הבינה המלכותית / Autopage</h1>
+		<p class="last-updated">עודכן: 2025 – כולל התאמה מלאה לתיקון 13 לחוק הגנת הפרטיות</p>
 		
 		<section>
-			<h2>1. מבוא</h2>
-			<p>אנו ב-Page Builder Pro מכבדים את פרטיותך ומחויבים להגן על המידע האישי שלך. מדיניות פרטיות זו מסבירה כיצד אנו אוספים, משתמשים ומגנים על המידע שלך.</p>
+			<h2>1. כללי</h2>
+			<p>מסמך זה מפרט כיצד נאסף, נשמר ומעובד מידע אישי.</p>
+			<p><strong>השימוש באתר מהווה הסכמה למדיניות הפרטיות.</strong></p>
 		</section>
 		
 		<section>
-			<h2>2. מידע שאנו אוספים</h2>
-			<p>אנו אוספים מידע בדרכים הבאות:</p>
+			<h2>2. פרטי העסק</h2>
 			<ul>
-				<li><strong>מידע שאתה מספק:</strong> שם, אימייל, טלפון, כתובת</li>
-				<li><strong>מידע שימוש:</strong> דפים שביקרת, פעולות שביצעת, זמן שימוש</li>
-				<li><strong>מידע טכני:</strong> כתובת IP, סוג דפדפן, מערכת הפעלה</li>
-				<li><strong>עוגיות:</strong> נתונים המאוחסנים במכשיר שלך לשיפור החוויה</li>
+				<li><strong>שם השירות:</strong> סתיו – הבינה המלכותית</li>
+				<li><strong>שלוחה:</strong> Autopage / אוטופייג'</li>
+				<li><strong>טלפון:</strong> 058-5378109</li>
+				<li><strong>אימייל:</strong> britolam1@gmail.com</li>
 			</ul>
 		</section>
 		
 		<section>
-			<h2>3. שימוש במידע</h2>
-			<p>אנו משתמשים במידע שלך למטרות הבאות:</p>
+			<h2>3. אילו נתונים נאספים</h2>
+			
+			<h3>3.1 מידע הנמסר על-ידי משתמש</h3>
 			<ul>
-				<li>מתן ושיפור השירות</li>
-				<li>תקשורת עם משתמשים</li>
-				<li>ניתוח ושיפור ביצועים</li>
-				<li>אבטחת המערכת ומניעת הונאות</li>
-				<li>שיווק ופרסום (בהסכמתך)</li>
+				<li>שם</li>
+				<li>טלפון</li>
+				<li>אימייל</li>
+				<li>פרטי הודעות ופניות</li>
+				<li>נתונים המוקלדים בטפסים</li>
+				<li>נתוני רכישה והזמנות</li>
+				<li>נתוני שימוש במערכות AI</li>
+			</ul>
+			
+			<h3>3.2 מידע הנאסף אוטומטית</h3>
+			<ul>
+				<li>כתובת IP</li>
+				<li>סוג מכשיר ודפדפן</li>
+				<li>נתוני תנועה באתר</li>
+				<li>עוגיות (Cookies)</li>
+				<li>זיהוי מיקום כללי</li>
+				<li>מדדי אבטחה</li>
+			</ul>
+			
+			<h3>3.3 מידע רגיש</h3>
+			<p>לא נאסף מידע רגיש ללא הסכמה מפורשת.</p>
+		</section>
+		
+		<section>
+			<h2>4. מטרות השימוש</h2>
+			<p>המידע משמש ל:</p>
+			<ul>
+				<li>מתן שירות אישי</li>
+				<li>ניהול מערכות AI</li>
+				<li>שיפור ביצועים וחוויית משתמש</li>
+				<li>ניתוח נתונים סטטיסטיים</li>
+				<li>תפעול עסקי</li>
+				<li>שליחת עדכונים (באישור בלבד)</li>
+				<li>עמידה בדרישות חוק</li>
 			</ul>
 		</section>
 		
 		<section>
-			<h2>4. שיתוף מידע</h2>
-			<p>אנו לא מוכרים את המידע האישי שלך לצדדים שלישיים. אנו עשויים לשתף מידע במקרים הבאים:</p>
-			<ul>
-				<li>עם ספקי שירות המסייעים לנו בהפעלת השירות</li>
-				<li>כאשר נדרש על פי חוק</li>
-				<li>להגנה על זכויותינו או זכויות אחרים</li>
-				<li>במקרה של מיזוג או רכישה</li>
-			</ul>
+			<h2>5. עוגיות</h2>
+			<p>האתר משתמש בעוגיות חיוניות ולא חיוניות. עוגיות שאינן חיוניות ייטענו רק לאחר הסכמה ב-Cookie Banner.</p>
 		</section>
 		
 		<section>
-			<h2>5. אבטחת מידע</h2>
-			<p>אנו נוקטים באמצעי אבטחה מתקדמים להגנה על המידע שלך, כולל:</p>
+			<h2>6. שיתוף מידע</h2>
+			<p>מידע עשוי להיות מועבר ל:</p>
 			<ul>
-				<li>הצפנת נתונים (SSL/TLS)</li>
-				<li>גישה מוגבלת למידע רגיש</li>
-				<li>ניטור ובדיקות אבטחה שוטפות</li>
-				<li>גיבויים קבועים</li>
+				<li>ספקי אחסון</li>
+				<li>שירותי אבטחה</li>
+				<li>מערכות תשלומים</li>
+				<li>מערכות AI</li>
+				<li>בהתאם לצו בית משפט</li>
+				<li>שיתופי פעולה – רק בהסכמה</li>
 			</ul>
+			<p><strong>אין מכירת מידע לצדדים שלישיים.</strong></p>
 		</section>
 		
 		<section>
-			<h2>6. זכויותיך</h2>
-			<p>יש לך את הזכויות הבאות לגבי המידע האישי שלך:</p>
+			<h2>7. זכויות המשתמש</h2>
+			<p>בהתאם לתיקון 13:</p>
 			<ul>
-				<li>זכות עיון במידע</li>
-				<li>זכות לתיקון מידע שגוי</li>
-				<li>זכות למחיקת מידע</li>
+				<li>זכות לעיון</li>
+				<li>זכות לתיקון</li>
+				<li>זכות למחיקה (Right to Erasure)</li>
 				<li>זכות להגבלת עיבוד</li>
-				<li>זכות להתנגד לעיבוד</li>
 				<li>זכות לניידות מידע</li>
+				<li>זכות להתנגד לעיבוד פרופילינג</li>
 			</ul>
+			<p>בקשות יתקבלו במייל: <strong>britolam1@gmail.com</strong></p>
 		</section>
 		
 		<section>
-			<h2>7. עוגיות (Cookies)</h2>
-			<p>אנו משתמשים בעוגיות לשיפור חוויית המשתמש. אתה יכול לנהל את העדפות העוגיות בהגדרות הדפדפן שלך.</p>
+			<h2>8. שמירת מידע</h2>
+			<p>המועדים בהתאם לצורך השירות או לפי חוק. מידע שאינו נחוץ – יימחק.</p>
 		</section>
 		
 		<section>
-			<h2>8. שינויים במדיניות</h2>
-			<p>אנו עשויים לעדכן מדיניות פרטיות זו מעת לעת. שינויים מהותיים יפורסמו באתר ויישלחו אליך בדוא"ל.</p>
-		</section>
-		
-		<section>
-			<h2>9. יצירת קשר</h2>
-			<p>לשאלות בנוגע למדיניות הפרטיות או לממש את זכויותיך:</p>
+			<h2>9. אבטחת מידע</h2>
+			<p>אמצעי הגנה מתקדמים:</p>
 			<ul>
-				<li>אימייל: privacy@pagebuilder.pro</li>
-				<li>טלפון: 03-1234567</li>
-				<li>כתובת: רחוב הדוגמה 123, תל אביב</li>
+				<li>הצפנת SSL</li>
+				<li>מנגנוני הגנה שרתיים</li>
+				<li>בקרת גישה</li>
+				<li>ניטור איומים</li>
+				<li>גיבויים</li>
+			</ul>
+			<p>אין אבטחה מוחלטת, אך נעשה כל מאמץ סביר.</p>
+		</section>
+		
+		<section>
+			<h2>10. העברת מידע מחוץ לישראל</h2>
+			<p>עשויה להתבצע בהתאם לתקנות והסכמים בינלאומיים (GDPR Compatible).</p>
+		</section>
+		
+		<section>
+			<h2>11. פניות ויצירת קשר</h2>
+			<ul>
+				<li><strong>טלפון:</strong> 058-5378109</li>
+				<li><strong>אימייל:</strong> britolam1@gmail.com</li>
 			</ul>
 		</section>
 	</div>
@@ -98,13 +137,14 @@
 		background: #f5f7fa;
 		padding: 40px 20px;
 		font-family: 'Assistant', 'Heebo', sans-serif;
+		direction: rtl;
 	}
 	
 	.container {
-		max-width: 800px;
+		max-width: 900px;
 		margin: 0 auto;
 		background: white;
-		padding: 40px;
+		padding: 50px;
 		border-radius: 12px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
@@ -119,27 +159,34 @@
 	.last-updated {
 		text-align: center;
 		color: #6b7280;
-		font-size: 0.875rem;
+		font-size: 0.95rem;
 		margin-bottom: 30px;
 		padding-bottom: 20px;
 		border-bottom: 2px solid #e5e7eb;
 	}
 	
 	section {
-		margin-bottom: 30px;
+		margin-bottom: 35px;
 	}
 	
 	h2 {
 		color: #1f2937;
-		font-size: 1.5rem;
+		font-size: 1.6rem;
 		margin-bottom: 15px;
 		padding-top: 10px;
 	}
 	
+	h3 {
+		color: #374151;
+		font-size: 1.3rem;
+		margin: 20px 0 10px 0;
+	}
+	
 	p {
 		color: #4b5563;
-		line-height: 1.8;
+		line-height: 1.9;
 		margin-bottom: 15px;
+		font-size: 1.05rem;
 	}
 	
 	ul {
@@ -149,8 +196,9 @@
 	
 	li {
 		color: #4b5563;
-		line-height: 1.8;
-		margin-bottom: 8px;
+		line-height: 1.9;
+		margin-bottom: 10px;
+		font-size: 1.05rem;
 	}
 	
 	strong {
@@ -160,15 +208,19 @@
 	
 	@media (max-width: 768px) {
 		.container {
-			padding: 20px;
+			padding: 25px;
 		}
 		
 		h1 {
-			font-size: 2rem;
+			font-size: 1.8rem;
 		}
 		
 		h2 {
-			font-size: 1.25rem;
+			font-size: 1.3rem;
+		}
+		
+		h3 {
+			font-size: 1.1rem;
 		}
 	}
 </style>

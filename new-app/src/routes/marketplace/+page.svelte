@@ -1,9 +1,13 @@
 <script>
 	// @ts-check
 	import { goto } from '$app/navigation';
+	import StavBotFullScreen from '$lib/components/StavBotFullScreen.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
+	
+	// Stav Bot state
+	let stavBotOpen = $state(false);
 
 	// Reactive state using Svelte 5 Runes
 	let searchQuery = $state(data.filters.search);
@@ -227,3 +231,47 @@
 </div>
 
 
+
+<!-- Floating Stav Bot Button (Marketplace Only) -->
+<button 
+	onclick={() => stavBotOpen = true}
+	class="stav-bot-fab"
+	title="פתח את סתיו - העוזרת הדיגיטלית"
+>
+	<img src="/stav-avatar.png" alt="Stav" class="stav-avatar" />
+</button>
+
+<!-- Stav Bot Full Screen Modal -->
+<StavBotFullScreen bind:isOpen={stavBotOpen} />
+
+<style>
+	/* Stav Bot FAB Button */
+	.stav-bot-fab {
+		position: fixed;
+		bottom: 30px;
+		right: 30px;
+		width: 70px;
+		height: 70px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		border: none;
+		cursor: pointer;
+		box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+		transition: all 0.3s ease;
+		z-index: 1000;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.stav-bot-fab:hover {
+		transform: scale(1.1);
+		box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+	}
+
+	.stav-avatar {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	}
+</style>

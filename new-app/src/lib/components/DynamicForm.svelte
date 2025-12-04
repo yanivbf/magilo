@@ -1,5 +1,6 @@
 <script>
 	import ProductGallery from './ProductGallery.svelte';
+	import ImageGallery from './ImageGallery.svelte';
 	import BookingCalendar from './BookingCalendar.svelte';
 	import DaySettingsManager from './DaySettingsManager.svelte';
 	
@@ -9,9 +10,21 @@
 	function initializeFormData() {
 		const initialData = {};
 		
+		// Get all fields - support both flat fields and sections structure
+		const allFields = template.fields || [];
+		if (template.sections) {
+			template.sections.forEach(section => {
+				if (section.fields) {
+					allFields.push(...section.fields);
+				}
+			});
+		}
+		
 		// Initialize all fields with appropriate defaults
-		template.fields.forEach(field => {
+		allFields.forEach(field => {
 			if (field.type === 'product-gallery') {
+				initialData[field.name] = [];
+			} else if (field.type === 'image-gallery') {
 				initialData[field.name] = [];
 			} else if (field.type === 'booking-calendar') {
 				initialData[field.name] = [];
@@ -19,6 +32,8 @@
 				initialData[field.name] = false;
 			} else if (field.type === 'select') {
 				initialData[field.name] = field.defaultValue || (field.options && field.options[0]?.value) || '';
+			} else if (field.type === 'repeater') {
+				initialData[field.name] = [];
 			} else {
 				initialData[field.name] = '';
 			}
@@ -26,6 +41,7 @@
 		
 		// Initialize social media links (always available)
 		initialData.youtubeLink = '';
+		initialData.embedYoutubeVideo = false;
 		initialData.facebookLink = '';
 		initialData.instagramLink = '';
 		initialData.tiktokLink = '';
@@ -46,7 +62,19 @@
 		template.designStyles?.[0]?.id || 
 		'modern'
 	);
+	let optionalSections = $state([]);
 	let isSubmitting = $state(false);
+	
+	// Available optional sections
+	const availableSections = {
+		faq: { title: '❓ שאלות ותשובות', description: 'הוסף מקטע שאלות נפוצות' },
+		gallery: { title: '🖼️ גלריית תמונות', description: 'הוסף גלריית תמונות' },
+		testimonials: { title: '⭐ המלצות', description: 'הוסף המלצות לקוחות' },
+		about: { title: '📖 אודות', description: 'הוסף מקטע אודות' },
+		team: { title: '👥 הצוות', description: 'הוסף מקטע צוות' },
+		services: { title: '🛠️ שירותים', description: 'הוסף רשימת שירותים' },
+		pricing: { title: '💰 מחירון', description: 'הוסף טבלת מחירים' }
+	};
 	
 	function handleSubmit(e) {
 		e.preventDefault();
@@ -58,20 +86,21 @@
 			designStyle: selectedStyle
 		};
 		
-		onSubmit(data);
+		// Call onSubmit with data and optionalSections
+		if (typeof onSubmit === 'function') {
+			onSubmit({
+				data,
+				optionalSections
+			});
+		} else {
+			console.error('❌ onSubmit is not a function!', onSubmit);
+		}
 	}
 </script>
 
 <div class="dynamic-form">
 	<div class="bg-white rounded-lg shadow-lg p-6">
 		<form onsubmit={handleSubmit} class="space-y-6">
-			<!-- Page Type Info -->
-			<div class="text-center border-b pb-4">
-				<div class="text-6xl mb-4">{template.icon}</div>
-				<h2 class="text-2xl font-bold text-gray-900 mb-2">{template.name}</h2>
-				<p class="text-gray-600">{template.description}</p>
-			</div>
-			
 			<!-- EXACT Legacy Info Box from page-creator.html -->
 			{#if template.infoBox}
 				{@const boxColor = template.infoBox.boxColor || 'blue'}
@@ -84,7 +113,7 @@
 				{@const colors = colorClasses[boxColor] || colorClasses.blue}
 				
 				<div class="{colors.bg} p-4 rounded-lg border-2 {colors.border}">
-					<h4 class="font-semibold {colors.title} mb-2">{template.infoBox.title}</h4>
+	
 					<p class="text-sm {colors.text} mb-3">
 						{@html template.infoBox.description}
 					</p>
@@ -105,26 +134,49 @@
 			{/if}
 			
 			<!-- Dynamic Fields -->
-			{#each template.fields as field}
-				<div>
-					{#if field.type !== 'checkbox'}
-						<label for={field.name} class="block text-sm font-medium text-gray-700 mb-2">
-							{field.label}
-							{#if field.required}
-								<span class="text-red-500">*</span>
-							{/if}
-						</label>
-					{/if}
-					
-					{#if field.type === 'product-gallery'}
-						<!-- Product Gallery Manager -->
-						<ProductGallery 
-							bind:products={formData[field.name]} 
-							onUpdate={(products) => formData[field.name] = products}
-						/>
-					{:else if field.type === 'booking-calendar'}
-						<!-- Booking Calendar Manager -->
-						<BookingCalendar 
+			{#if template.sections}
+				<!-- Sections-based template (restaurant, course) -->
+				{#each template.sections as section}
+					<fieldset class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+						<legend class="text-lg font-semibold text-gray-900 px-2">{section.title}</legend>
+						{#each section.fields as field}
+							{@render fieldInput(field)}
+						{/each}
+					</fieldset>
+				{/each}
+			{:else}
+				<!-- Flat fields template (store, event, etc) -->
+				{#each template.fields as field}
+					{@render fieldInput(field)}
+				{/each}
+			{/if}
+
+{#snippet fieldInput(field)}
+	<div>
+		{#if field.type !== 'checkbox'}
+			<label for={field.name} class="block text-sm font-medium text-gray-700 mb-2">
+				{field.label}
+				{#if field.required}
+					<span class="text-red-500">*</span>
+				{/if}
+			</label>
+		{/if}
+		
+		{#if field.type === 'product-gallery'}
+			<!-- Product Gallery Manager -->
+			<ProductGallery 
+				bind:products={formData[field.name]} 
+				onUpdate={(products) => formData[field.name] = products}
+			/>
+		{:else if field.type === 'image-gallery'}
+			<!-- Image Gallery Manager -->
+			<ImageGallery 
+				bind:images={formData[field.name]} 
+				onUpdate={(images) => formData[field.name] = images}
+			/>
+		{:else if field.type === 'booking-calendar'}
+			<!-- Booking Calendar Manager -->
+			<BookingCalendar 
 							bind:availableSlots={formData[field.name]} 
 							onUpdate={(slots) => formData[field.name] = slots}
 						/>
@@ -397,22 +449,33 @@
 					{#if field.help}
 						<p class="text-sm text-gray-500 mt-1">{field.help}</p>
 					{/if}
-				</div>
-			{/each}
-			
+			</div>
+{/snippet}
+
 			<!-- Social Media Links - EXACT Legacy from page-creator.html -->
 			<fieldset class="form-fieldset">
 				<legend class="form-legend">רשתות חברתיות</legend>
 				<div class="space-y-4">
 					<!-- YouTube -->
 					<div>
-						<label for="youtubeLink" class="sr-only">YouTube</label>
-						<div class="flex rounded-md shadow-sm">
+						<label for="youtubeLink" class="block text-sm font-medium text-gray-700 mb-2">YouTube</label>
+						<div class="flex rounded-md shadow-sm mb-2">
 							<span class="inline-flex items-center px-3 rounded-s-md border border-e-0 border-slate-300 bg-slate-50 text-slate-500 sm:text-sm">
 								<svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816V8l6 4-6 4z" clip-rule="evenodd" /></svg>
 							</span>
 							<input type="url" bind:value={formData.youtubeLink} id="youtubeLink" class="block w-full min-w-0 flex-1 rounded-none rounded-e-md border-slate-300 px-3 py-2 focus:border-purple-500 focus:ring-purple-500 sm:text-sm" placeholder="https://youtube.com/watch?v=...">
 						</div>
+						{#if formData.youtubeLink}
+							<label class="flex items-center gap-2 cursor-pointer bg-red-50 border border-red-200 rounded-lg p-3">
+								<input
+									type="checkbox"
+									bind:checked={formData.embedYoutubeVideo}
+									class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+								/>
+								<span class="text-sm font-medium text-red-900">🎬 הוסף מקטע וידאו לדף (הסרטון יוצג במקטע ייעודי)</span>
+							</label>
+							<p class="text-xs text-gray-600 mt-1 mr-6">הסרטון יוצג במקטע נפרד עם עיצוב מיוחד, לא בראש הדף</p>
+						{/if}
 					</div>
 					
 					<!-- Facebook -->
@@ -472,6 +535,44 @@
 				</div>
 			</fieldset>
 			
+			<!-- Optional Sections Selection -->
+			<fieldset class="border-2 border-yellow-300 rounded-lg p-6 bg-yellow-50">
+				<legend class="text-lg font-semibold text-yellow-900 px-2">📋 מקטעים אופציונליים</legend>
+				<p class="text-sm text-yellow-700 mb-4">בחר מקטעים נוספים להוסיף לדף שלך (אופציונלי)</p>
+				
+				<div class="grid grid-cols-2 gap-3">
+					{#each Object.entries(availableSections) as [key, section]}
+						<label class="flex items-start gap-3 p-3 bg-white rounded-lg border-2 border-gray-200 cursor-pointer hover:border-yellow-400 transition-all {optionalSections.includes(key) ? 'border-yellow-500 bg-yellow-50' : ''}">
+							<input
+								type="checkbox"
+								value={key}
+								checked={optionalSections.includes(key)}
+								onchange={(e) => {
+									if (e.target.checked) {
+										optionalSections = [...optionalSections, key];
+									} else {
+										optionalSections = optionalSections.filter(s => s !== key);
+									}
+								}}
+								class="mt-1 w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+							/>
+							<div class="flex-1">
+								<div class="font-medium text-gray-900">{section.title}</div>
+								<div class="text-xs text-gray-600">{section.description}</div>
+							</div>
+						</label>
+					{/each}
+				</div>
+				
+				{#if optionalSections.length > 0}
+					<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+						<p class="text-sm text-green-800 font-medium">
+							✅ נבחרו {optionalSections.length} מקטעים: {optionalSections.map(s => availableSections[s].title).join(', ')}
+						</p>
+					</div>
+				{/if}
+			</fieldset>
+
 			<!-- Design Style Selection -->
 			{#if template.designStyles}
 				<fieldset class="border border-gray-300 rounded-lg p-4">

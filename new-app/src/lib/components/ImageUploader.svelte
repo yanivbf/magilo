@@ -1,9 +1,21 @@
 <script>
-	let { onUpload, label = 'העלה תמונה', multiple = false } = $props();
+	import { invalidate } from '$app/navigation';
+	
+	let { 
+		onUpload, 
+		label = 'העלה תמונה', 
+		multiple = false,
+		sectionId = null,
+		existingImages = []
+	} = $props();
 	
 	let uploading = $state(false);
-	let uploadedImages = $state([]);
+	let uploadedImages = $state(existingImages);
 	let error = $state('');
+	
+	$effect(() => {
+		uploadedImages = existingImages;
+	});
 	
 	async function handleFileChange(event) {
 		const files = event.target.files;
@@ -23,7 +35,13 @@
 				formData.append('image', files[0]);
 			}
 			
-			const response = await fetch('/api/upload-image', {
+			if (sectionId) {
+				formData.append('sectionId', sectionId);
+			}
+			
+			const endpoint = sectionId ? '/api/upload-section-image' : '/api/upload-image';
+			
+			const response = await fetch(endpoint, {
 				method: 'POST',
 				body: formData
 			});
@@ -36,11 +54,16 @@
 			
 			if (result.success) {
 				if (multiple) {
-					uploadedImages = [...uploadedImages, ...result.urls];
-					onUpload(result.urls);
+					const newUrls = Array.isArray(result.urls) ? result.urls : [result.url];
+					uploadedImages = [...uploadedImages, ...newUrls];
+					onUpload?.(uploadedImages);
 				} else {
 					uploadedImages = [result.url];
-					onUpload(result.url);
+					onUpload?.(result.url);
+				}
+				
+				if (sectionId) {
+					await invalidate('app:sections');
 				}
 			} else {
 				throw new Error(result.error || 'Upload failed');
@@ -53,12 +76,38 @@
 		}
 	}
 	
-	function removeImage(index) {
+	async function removeImage(index) {
+		const imageUrl = uploadedImages[index];
+		
+		if (sectionId && imageUrl) {
+			try {
+				const response = await fetch('/api/delete-section-image', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						sectionId,
+						imageUrl
+					})
+				});
+				
+				if (!response.ok) {
+					throw new Error('Failed to delete image');
+				}
+				
+				await invalidate('app:sections');
+			} catch (err) {
+				console.error('Delete error:', err);
+				error = 'שגיאה במחיקת התמונה';
+				return;
+			}
+		}
+		
 		uploadedImages = uploadedImages.filter((_, i) => i !== index);
+		
 		if (multiple) {
-			onUpload(uploadedImages);
+			onUpload?.(uploadedImages);
 		} else {
-			onUpload(null);
+			onUpload?.(null);
 		}
 	}
 </script>

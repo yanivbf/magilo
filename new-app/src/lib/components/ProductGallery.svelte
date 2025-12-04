@@ -4,6 +4,7 @@
 	
 	let showAddForm = $state(false);
 	let editingIndex = $state(null);
+	let showImageUploader = $state(false);
 	let currentProduct = $state({
 		name: '',
 		description: '',
@@ -49,7 +50,33 @@
 	function cancelEdit() {
 		showAddForm = false;
 		editingIndex = null;
+		showImageUploader = false;
 		currentProduct = { name: '', description: '', price: '', image: '' };
+	}
+	
+	async function handleImageUpload(event) {
+		const file = event.target.files?.[0];
+		if (!file) return;
+		
+		const formData = new FormData();
+		formData.append('image', file);
+		
+		try {
+			const response = await fetch('/api/upload-image', {
+				method: 'POST',
+				body: formData
+			});
+			
+			if (response.ok) {
+				const data = await response.json();
+				currentProduct.image = data.url;
+			} else {
+				alert('שגיאה בהעלאת התמונה');
+			}
+		} catch (error) {
+			console.error('Error uploading image:', error);
+			alert('שגיאה בהעלאת התמונה');
+		}
 	}
 </script>
 
@@ -114,7 +141,7 @@
 							type="text"
 							bind:value={currentProduct.name}
 							placeholder="לדוגמה: חולצה כחולה"
-							class="w-full border border-gray-300 rounded-lg px-3 py-2"
+							class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 						/>
 					</div>
 					
@@ -124,7 +151,7 @@
 							bind:value={currentProduct.description}
 							placeholder="תיאור קצר של המוצר"
 							rows="3"
-							class="w-full border border-gray-300 rounded-lg px-3 py-2"
+							class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 						></textarea>
 					</div>
 					
@@ -134,18 +161,55 @@
 							type="number"
 							bind:value={currentProduct.price}
 							placeholder="99"
-							class="w-full border border-gray-300 rounded-lg px-3 py-2"
+							min="0"
+							step="0.01"
+							class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 						/>
 					</div>
 					
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">תמונה (URL)</label>
-						<input
-							type="url"
-							bind:value={currentProduct.image}
-							placeholder="https://example.com/image.jpg"
-							class="w-full border border-gray-300 rounded-lg px-3 py-2"
-						/>
+						<label class="block text-sm font-medium text-gray-700 mb-1">תמונת המוצר</label>
+						
+						{#if currentProduct.image}
+							<div class="mb-3">
+								<img src={currentProduct.image} alt="תצוגה מקדימה" class="w-full h-48 object-cover rounded-lg border-2 border-gray-200" />
+								<button
+									type="button"
+									onclick={() => currentProduct.image = ''}
+									class="mt-2 text-sm text-red-600 hover:text-red-800"
+								>
+									הסר תמונה
+								</button>
+							</div>
+						{/if}
+						
+						<div class="flex gap-2">
+							<label class="flex-1 bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition cursor-pointer text-center font-medium">
+								<input
+									type="file"
+									accept="image/*"
+									onchange={handleImageUpload}
+									class="hidden"
+								/>
+								📤 העלה תמונה
+							</label>
+							<button
+								type="button"
+								onclick={() => showImageUploader = !showImageUploader}
+								class="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-medium"
+							>
+								🔗 הדבק קישור
+							</button>
+						</div>
+						
+						{#if showImageUploader}
+							<input
+								type="url"
+								bind:value={currentProduct.image}
+								placeholder="https://example.com/image.jpg"
+								class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+							/>
+						{/if}
 					</div>
 				</div>
 				

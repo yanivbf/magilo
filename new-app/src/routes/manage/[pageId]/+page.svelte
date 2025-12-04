@@ -11,8 +11,24 @@
 	import MessagesManager from '$lib/components/manage/MessagesManager.svelte';
 	import LeadsManager from '$lib/components/manage/LeadsManager.svelte';
 	import CourierManager from '$lib/components/manage/CourierManager.svelte';
+	import TabbedManagementInterface from '$lib/components/manage/TabbedManagementInterface.svelte';
 
 	let { data } = $props();
+	
+	// Debug: Log received data
+	console.log('📊 Manage page received data:', data);
+	console.log('📄 Page data:', data.page);
+	
+	// Check if page should use tabbed interface (for pages with services/products/sections)
+	const usesTabbedInterface = $derived(() => {
+		const template = data.page?.template;
+		const pageType = data.page?.pageType;
+		return template === 'service' || 
+		       template === 'workshop' || 
+		       template === 'restaurant' ||
+		       template === 'store' ||
+		       pageType === 'serviceProvider';
+	});
 
 	// Polymorphic component selection based on pageType
 	const managementComponent = $derived(() => {
@@ -73,8 +89,20 @@
 
 <!-- Polymorphic Management Interface Router -->
 <div class="min-h-screen bg-gray-50">
-	<!-- Loading state while component is being determined -->
-	{#if !managementComponent}
+	{#if usesTabbedInterface()}
+		<!-- Use tabbed interface for service/product pages -->
+		<div class="container mx-auto px-4 py-8">
+			<div class="mb-6">
+				<h1 class="text-3xl font-bold text-gray-900">{data.page?.title || 'ניהול דף'}</h1>
+				<p class="text-gray-600 mt-2">נהל את התוכן והשירותים של הדף שלך</p>
+			</div>
+			<TabbedManagementInterface 
+				pageId={data.page?.id} 
+				pageData={data.page} 
+			/>
+		</div>
+	{:else if !managementComponent}
+		<!-- Loading state while component is being determined -->
 		<div class="flex items-center justify-center min-h-screen">
 			<div class="text-center">
 				<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>

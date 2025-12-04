@@ -201,6 +201,14 @@ export async function signOut() {
 // Save user to server and set cookie
 async function saveUserToServer(user) {
 	const userData = extractUserData(user);
+	
+	// Set cookie IMMEDIATELY (don't wait for server)
+	if (browser) {
+		document.cookie = `userId=${user.id}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+		console.log('✅ Cookie set:', user.id);
+	}
+	
+	// Then save to server (async, don't block)
 	try {
 		const response = await fetch(`/api/user/${user.id}`, {
 			method: 'POST',
@@ -213,8 +221,6 @@ async function saveUserToServer(user) {
 		});
 		if (response.ok) {
 			console.log('✅ User data saved to server');
-			// Set cookie for server-side access
-			document.cookie = `userId=${user.id}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
 		}
 	} catch (error) {
 		console.error('Error saving user to server:', error);

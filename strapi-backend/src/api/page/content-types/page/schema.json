@@ -67,6 +67,22 @@
       "type": "json",
       "default": {}
     },
+    "includeGallery": {
+      "type": "boolean",
+      "default": false
+    },
+    "includeFAQ": {
+      "type": "boolean",
+      "default": false
+    },
+    "includeTestimonials": {
+      "type": "boolean",
+      "default": false
+    },
+    "includeAbout": {
+      "type": "boolean",
+      "default": false
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",
@@ -90,6 +106,71 @@
       "relation": "oneToOne",
       "target": "api::analytic.analytic",
       "mappedBy": "page"
+    },
+    "sections": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::section.section",
+      "mappedBy": "page"
+    },
+    "storeProducts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::product.product",
+      "mappedBy": "page"
+    },
+    "guests": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::guest.guest",
+      "mappedBy": "page"
+    },
+    "expectedGuests": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "faq": {
+      "type": "json",
+      "default": []
+    },
+    "gallery": {
+      "type": "json",
+      "default": []
+    },
+    "testimonials": {
+      "type": "json",
+      "default": []
+    },
+    "aboutText": {
+      "type": "text"
+    },
+    "services": {
+      "type": "json",
+      "default": []
+    },
+    "headerImage": {
+      "type": "string"
+    },
+    "logo": {
+      "type": "string"
+    },
+    "socialMedia": {
+      "type": "json",
+      "default": {}
+    },
+    "eventDate": {
+      "type": "date"
+    },
+    "eventTime": {
+      "type": "string"
+    },
+    "eventLocation": {
+      "type": "string"
+    },
+    "workingHours": {
+      "type": "json",
+      "default": {}
     }
   }
 }

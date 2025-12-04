@@ -116,6 +116,28 @@
 			day: 'numeric' 
 		});
 	}
+	
+	function manageStore(page) {
+		const pageId = page.documentId || page.id;
+		const slug = page.slug || page.fileName || pageId;
+		goto(`/manage/${slug}`);
+	}
+	
+	function manageEvent(page) {
+		const pageId = page.documentId || page.id;
+		const slug = page.slug || page.fileName || pageId;
+		goto(`/manage/${slug}`);
+	}
+	
+	function manageAppointments(page) {
+		const pageId = page.documentId || page.id;
+		const slug = page.slug || page.fileName || pageId;
+		goto(`/manage/${slug}`);
+	}
+	
+	function purchaseSubscription(page) {
+		alert('תכונת רכישת מנוי תהיה זמינה בקרוב!\n\nמנוי פרימיום יכלול:\n✓ הסרת מיתוג AutoPage\n✓ דומיין מותאם אישית\n✓ אנליטיקס מתקדם\n✓ תמיכה עדיפות');
+	}
 </script>
 
 <svelte:head>
@@ -230,25 +252,55 @@
 									נוצר: {formatDate(page.createdAt)}
 								</div>
 								
-								<!-- Action Buttons -->
-								<div class="flex gap-2">
+								<!-- Action Buttons - LEGACY STYLE -->
+								<div class="flex flex-col gap-2">
 									<button 
 										onclick={() => viewPage(page)}
-										class="flex-1 bg-indigo-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+										class="w-full bg-indigo-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
 									>
-										צפה
+										👁️ צפה בדף
 									</button>
 									<button 
 										onclick={() => editPage(page)}
-										class="flex-1 bg-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+										class="w-full bg-blue-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 transition"
 									>
-										ערוך
+										✏️ עריכה
+									</button>
+									{#if page.pageType === 'store' || page.pageType === 'onlineStore'}
+										<button 
+											onclick={() => manageStore(page)}
+											class="w-full bg-purple-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-purple-700 transition"
+										>
+											🛒 ממשק ניהול חנות
+										</button>
+									{/if}
+									{#if page.pageType === 'event'}
+										<button 
+											onclick={() => manageEvent(page)}
+											class="w-full bg-pink-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-pink-700 transition"
+										>
+											🎉 ניהול אירוע
+										</button>
+									{/if}
+									{#if page.pageType === 'service' || page.pageType === 'serviceProvider'}
+										<button 
+											onclick={() => manageAppointments(page)}
+											class="w-full bg-green-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-700 transition"
+										>
+											📅 ניהול תורים
+										</button>
+									{/if}
+									<button 
+										onclick={() => purchaseSubscription(page)}
+										class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 px-3 rounded-lg text-sm font-bold hover:from-yellow-600 hover:to-orange-600 transition"
+									>
+										⭐ רכוש מנוי
 									</button>
 									<button 
 										onclick={() => deletePage(page.documentId || page.id)}
-										class="bg-red-100 text-red-600 py-2 px-3 rounded-lg text-sm font-medium hover:bg-red-200 transition"
+										class="w-full bg-red-100 text-red-600 py-2 px-3 rounded-lg text-sm font-medium hover:bg-red-200 transition"
 									>
-										🗑️
+										🗑️ מחק
 									</button>
 								</div>
 							</div>

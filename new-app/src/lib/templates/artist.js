@@ -23,14 +23,6 @@ export const artistTemplate = {
 	
 	fields: [
 		{
-			name: 'title',
-			label: 'כותרת הדף (URL)',
-			type: 'text',
-			required: true,
-			placeholder: 'לדוגמה: rock-band',
-			help: 'זה יהיה חלק מכתובת הדף שלך (באנגלית בלבד, ללא רווחים)'
-		},
-		{
 			name: 'artistName',
 			label: 'שם האמן / הלהקה',
 			type: 'text',

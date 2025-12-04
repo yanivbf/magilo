@@ -13,15 +13,11 @@ export const courseTemplate = {
 		boxColor: 'indigo'
 	},
 	
-	fields: [
+	sections: [
 		{
-			name: 'title',
-			label: 'כותרת הדף (URL)',
-			type: 'text',
-			required: true,
-			placeholder: 'לדוגמה: web-development-course',
-			help: 'זה יהיה חלק מכתובת הדף שלך (באנגלית בלבד, ללא רווחים)'
-		},
+			id: 'basic',
+			title: 'פרטים בסיסיים',
+			fields: [
 		{
 			name: 'courseName',
 			label: 'שם הקורס/סדנה',
@@ -78,19 +74,40 @@ export const courseTemplate = {
 			required: false,
 			placeholder: '20'
 		},
-		{
-			name: 'phone',
-			label: 'טלפון',
-			type: 'tel',
-			required: true,
-			placeholder: '050-1234567'
+				{
+					name: 'phone',
+					label: 'טלפון',
+					type: 'tel',
+					required: true,
+					placeholder: '050-1234567'
+				},
+				{
+					name: 'email',
+					label: 'אימייל',
+					type: 'email',
+					required: false,
+					placeholder: 'course@example.com'
+				}
+			]
 		},
 		{
-			name: 'email',
-			label: 'אימייל',
-			type: 'email',
-			required: false,
-			placeholder: 'course@example.com'
+			id: 'registration',
+			title: 'הרשמה',
+			fields: [
+				{
+					name: 'enableRegistration',
+					label: 'אפשר הרשמה לקורס',
+					type: 'checkbox',
+					help: 'הוסף טופס הרשמה לדף'
+				},
+				{
+					name: 'registrationEmail',
+					label: 'אימייל לקבלת הרשמות',
+					type: 'email',
+					placeholder: 'register@course.com',
+					help: 'הרשמות ישלחו לכתובת זו'
+				}
+			]
 		}
 	],
 	

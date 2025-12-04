@@ -5,13 +5,39 @@
     "singularName": "analytic",
     "pluralName": "analytics",
     "displayName": "Analytics",
-    "description": "Analytics data for pages"
+    "description": "Analytics data and events for pages"
   },
   "options": {
     "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
+    "page": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::page.page",
+      "inversedBy": "analytics"
+    },
+    "eventType": {
+      "type": "enumeration",
+      "enum": [
+        "view",
+        "lead",
+        "sale"
+      ]
+    },
+    "eventData": {
+      "type": "json"
+    },
+    "timestamp": {
+      "type": "datetime"
+    },
+    "source": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "decimal"
+    },
     "totalSales": {
       "type": "decimal",
       "default": 0
@@ -43,12 +69,6 @@
     "recentPurchases": {
       "type": "json",
       "default": []
-    },
-    "page": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::page.page",
-      "inversedBy": "analytics"
     }
   }
 }

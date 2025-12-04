@@ -32,6 +32,14 @@
     "lastActive": {
       "type": "datetime"
     },
+    "subscriptionStatus": {
+      "type": "enumeration",
+      "enum": ["active", "inactive", "expired"],
+      "default": "inactive"
+    },
+    "subscriptionExpiry": {
+      "type": "datetime"
+    },
     "pages": {
       "type": "relation",
       "relation": "oneToMany",

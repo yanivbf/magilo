@@ -423,7 +423,7 @@
 							{#each order.items as item}
 								<div class="product-mini">
 									{#if item.image}
-										<img src={item.image} alt={item.name} onerror="this.style.display='none'" />
+										<img src={item.image} alt={item.name} onerror={(e) => e.target.style.display='none'} />
 									{/if}
 									<div class="flex-1">
 										<div class="font-semibold text-gray-800">{item.name}</div>
