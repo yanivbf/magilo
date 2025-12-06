@@ -11,7 +11,7 @@ import { processPage } from '$lib/server/pageProcessor.js';
  * Create a new page
  * @type {import('./$types').RequestHandler}
  */
-export async function POST({ request }) {
+export async function POST({ request, cookies }) {
 	try {
 		const body = await request.json();
 		const { userId, title, htmlContent, pageData, selectedPageType } = body;
@@ -22,6 +22,17 @@ export async function POST({ request }) {
 			selectedPageType,
 			hasHtmlContent: !!htmlContent
 		});
+
+		// CRITICAL: Set userId cookie to maintain session
+		if (userId) {
+			cookies.set('userId', userId, {
+				path: '/',
+				maxAge: 60 * 60 * 24 * 30, // 30 days
+				httpOnly: false,
+				sameSite: 'lax'
+			});
+			console.log('✅ Set userId cookie:', userId);
+		}
 
 		// Validate required fields
 		if (!userId) {
@@ -70,23 +81,75 @@ export async function POST({ request }) {
 		const slug = generateSlug(title, userId);
 		console.log(`📝 Generated slug: ${slug}`);
 
-		// Ensure user exists in Strapi (create if not exists)
+		// Ensure user exists in Strapi and get their numeric ID
+		let strapiUserId = null;
 		try {
-			const { getUser, createUser } = await import('$lib/server/strapi.js');
-			let user = await getUser(userId);
-			if (!user) {
-				console.log('👤 User not found, creating...');
-				user = await createUser({
-					id: userId,
-					username: `user_${userId.substring(0, 8)}`,
-					email: `${userId}@autopage.local`
-				});
+			const { STRAPI_URL, STRAPI_API_TOKEN } = await import('$env/static/private');
+			
+			// Try to find user by userId field (UUID)
+			const searchResponse = await fetch(
+				`${STRAPI_URL}/api/users?filters[userId][$eq]=${userId}`,
+				{
+					headers: {
+						'Authorization': `Bearer ${STRAPI_API_TOKEN}`
+					}
+				}
+			);
+			
+			if (searchResponse.ok) {
+				const searchResult = await searchResponse.json();
+				if (searchResult.data && searchResult.data.length > 0) {
+					strapiUserId = searchResult.data[0].id;
+					console.log('✅ Found existing Strapi user with ID:', strapiUserId);
+				}
+			}
+			
+			// If not found, create new user
+			if (!strapiUserId) {
+				console.log('👤 User not found in Strapi, creating...');
+				
+				const createResponse = await fetch(
+					`${STRAPI_URL}/api/users`,
+					{
+						method: 'POST',
+						headers: {
+							'Authorization': `Bearer ${STRAPI_API_TOKEN}`,
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							data: {
+								userId: userId,
+								name: `משתמש ${userId.substring(0, 8)}`,
+								email: `${userId}@autopage.local`,
+								wallet: 0,
+								subscriptionStatus: 'inactive'
+							}
+						})
+					}
+				);
+				
+				if (createResponse.ok) {
+					const createResult = await createResponse.json();
+					strapiUserId = createResult.data?.id || createResult.id;
+					console.log('✅ Created new Strapi user with ID:', strapiUserId);
+				} else {
+					const errorText = await createResponse.text();
+					console.error('❌ Failed to create user:', errorText);
+				}
 			}
 		} catch (error) {
-			console.log('⚠️ User check/create failed:', error.message);
+			console.error('⚠️ User check/create failed:', error.message);
 		}
 
-		// Create page in Strapi
+		// Create page in Strapi with user relation
+		console.log('📝 Creating page with:', {
+			title,
+			slug,
+			userId,
+			strapiUserId,
+			hasUserRelation: !!strapiUserId
+		});
+		
 		const pageResponse = await createPage({
 			title,
 			slug,
@@ -103,7 +166,8 @@ export async function POST({ request }) {
 				createdAt: new Date().toISOString(),
 				...body.metadata
 			},
-			userId
+			userId: userId, // Save the UUID for easy querying
+			user: strapiUserId // Set the relation with numeric Strapi user ID (CRITICAL!)
 		});
 
 		const pageId = pageResponse.data.id;

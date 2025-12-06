@@ -36,8 +36,8 @@ export const faqTemplate = {
 			placeholder: 'example@email.com'
 		},
 		{
-			name: 'city',
-			label: 'עיר',
+			name: 'address',
+			label: 'כתובת',
 			type: 'text',
 			required: false,
 			placeholder: 'תל אביב'

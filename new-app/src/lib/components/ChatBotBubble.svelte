@@ -72,9 +72,11 @@
 			<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
 		</svg>
 	{:else}
-		<svg viewBox="0 0 24 24" fill="currentColor">
-			<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-		</svg>
+		<img 
+			src="/stav-avatar.png"
+			alt="סתיו" 
+			class="bot-image"
+		/>
 	{/if}
 </button>
 
@@ -125,8 +127,8 @@
 <style>
 	.chatbot-btn {
 		position: fixed;
-		bottom: 100px;
-		right: 30px;
+		bottom: 95px;
+		left: 30px;
 		width: 60px;
 		height: 60px;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -139,6 +141,15 @@
 		cursor: pointer;
 		z-index: 9996;
 		transition: all 0.3s ease;
+		overflow: hidden;
+		padding: 0;
+	}
+	
+	.bot-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
 	}
 	
 	.chatbot-btn:hover {
@@ -154,8 +165,8 @@
 	
 	.chat-window {
 		position: fixed;
-		bottom: 170px;
-		right: 30px;
+		bottom: 165px;
+		left: 30px;
 		width: 380px;
 		height: 500px;
 		background: white;
@@ -350,14 +361,14 @@
 	@media (max-width: 768px) {
 		.chat-window {
 			width: calc(100vw - 40px);
-			right: 20px;
-			bottom: 170px;
+			left: 20px;
+			bottom: 165px;
 			height: 450px;
 		}
 		
 		.chatbot-btn {
-			right: 20px;
-			bottom: 100px;
+			left: 20px;
+			bottom: 95px;
 		}
 	}
 </style>

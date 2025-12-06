@@ -83,72 +83,99 @@ export async function load({ params, locals, cookies }) {
 			...(pageItem.attributes || pageItem)
 		};
 		
+		// Ensure template field exists (fallback to pageType if missing)
+		if (!page.template && page.pageType) {
+			page.template = page.pageType;
+			console.log('⚠️ Template field missing, using pageType:', page.pageType);
+		}
+		
 		console.log('📄 Page loaded:', page.title || page.slug);
+		console.log('👤 Page userId:', page.userId);
+		console.log('👤 Current userId:', userId);
 
-		// Verify ownership (skip in development)
+		// Verify ownership (skip in development or if page has no userId yet)
 		const isDev = process.env.NODE_ENV === 'development';
-		if (!isDev && page.userId !== userId) {
+		if (!isDev && page.userId && page.userId !== userId) {
+			console.error('❌ Ownership mismatch!');
 			throw error(403, 'Forbidden');
 		}
 
 		// Use the actual page ID for related data
 		const actualPageId = page.id;
 
-		// Fetch leads for this page
-		const leadsResponse = await fetch(
-			`${STRAPI_URL}/api/leads?filters[pageId][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${STRAPI_API_TOKEN}`
+		// Fetch leads for this page (with error handling)
+		let leads = [];
+		try {
+			const leadsResponse = await fetch(
+				`${STRAPI_URL}/api/leads?filters[pageId][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
+				{
+					headers: {
+						Authorization: `Bearer ${STRAPI_API_TOKEN}`
+					}
 				}
+			);
+			if (leadsResponse.ok) {
+				const leadsData = await leadsResponse.json();
+				leads = leadsData.data
+					? leadsData.data.map((lead) => ({
+							id: lead.id,
+							documentId: lead.documentId,
+							...lead.attributes
+					  }))
+					: [];
 			}
-		);
+		} catch (err) {
+			console.warn('Could not fetch leads:', err);
+		}
 
-		const leadsData = await leadsResponse.json();
-		const leads = leadsData.data
-			? leadsData.data.map((lead) => ({
-					id: lead.id,
-					documentId: lead.documentId,
-					...lead.attributes
-			  }))
-			: [];
-
-		// Fetch purchases for this page
-		const purchasesResponse = await fetch(
-			`${STRAPI_URL}/api/purchases?filters[pageId][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${STRAPI_API_TOKEN}`
+		// Fetch purchases for this page (with error handling)
+		let purchases = [];
+		try {
+			const purchasesResponse = await fetch(
+				`${STRAPI_URL}/api/purchases?filters[pageId][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
+				{
+					headers: {
+						Authorization: `Bearer ${STRAPI_API_TOKEN}`
+					}
 				}
+			);
+			if (purchasesResponse.ok) {
+				const purchasesData = await purchasesResponse.json();
+				purchases = purchasesData.data
+					? purchasesData.data.map((purchase) => ({
+							id: purchase.id,
+							documentId: purchase.documentId,
+							...purchase.attributes
+					  }))
+					: [];
 			}
-		);
+		} catch (err) {
+			console.warn('Could not fetch purchases:', err);
+		}
 
-		const purchasesData = await purchasesResponse.json();
-		const purchases = purchasesData.data
-			? purchasesData.data.map((purchase) => ({
-					id: purchase.id,
-					documentId: purchase.documentId,
-					...purchase.attributes
-			  }))
-			: [];
-
-		// Fetch analytics for this page
-		const analyticsResponse = await fetch(
-			`${STRAPI_URL}/api/analytics?filters[pageId][$eq]=${actualPageId}&populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${STRAPI_API_TOKEN}`
-				}
-			}
-		);
-
-		const analyticsData = await analyticsResponse.json();
-		const analytics = analyticsData.data?.[0]?.attributes || {
+		// Fetch analytics for this page (with error handling)
+		let analytics = {
 			views: 0,
 			clicks: 0,
 			conversions: 0,
 			revenue: 0
 		};
+		try {
+			const analyticsResponse = await fetch(
+				`${STRAPI_URL}/api/analytics?filters[pageId][$eq]=${actualPageId}&populate=*`,
+				{
+					headers: {
+						Authorization: `Bearer ${STRAPI_API_TOKEN}`
+					}
+				}
+			);
+			if (analyticsResponse.ok) {
+				const analyticsData = await analyticsResponse.json();
+				analytics = analyticsData.data?.[0]?.attributes || analytics;
+			}
+		} catch (err) {
+			console.warn('Could not fetch analytics:', err);
+		}
 
 		// Fetch products for this page (if applicable)
 		let products = [];

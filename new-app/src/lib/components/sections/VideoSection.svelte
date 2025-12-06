@@ -27,7 +27,7 @@
 <section class="video-section">
 	<div class="container">
 		<EditableText
-			value={data.title || '🎥 סרטון'}
+			value={data.title || 'סרטון'}
 			onsave={(value) => saveField(`sections.${sectionIndex}.data.title`, value)}
 			class="section-title"
 			tag="h2"
@@ -71,7 +71,7 @@
 
 <style>
 	.video-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		direction: rtl;
 	}

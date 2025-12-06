@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת userId</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .label {
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🔍 בדיקת userId</h1>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        const userId = getCookie('userId');
+        const resultDiv = document.getElementById('result');
+
+        if (userId) {
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <div class="label">✅ userId נמצא:</div>
+                    <div>${userId}</div>
+                </div>
+                <div class="info">
+                    <div class="label">📋 כל ה-cookies:</div>
+                    <div>${document.cookie || 'אין cookies'}</div>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="info" style="background: #ffe0e0;">
+                    <div class="label">❌ userId לא נמצא!</div>
+                    <div>אתה צריך להתחבר מחדש</div>
+                </div>
+                <div class="info">
+                    <div class="label">📋 כל ה-cookies:</div>
+                    <div>${document.cookie || 'אין cookies'}</div>
+                </div>
+            `;
+        }
+
+        console.log('🔍 userId from cookie:', userId);
+        console.log('📋 All cookies:', document.cookie);
+    </script>
+</body>
+</html>

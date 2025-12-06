@@ -165,7 +165,7 @@
 
 <style>
 	.testimonials-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		position: relative;
 		overflow: hidden;
@@ -173,9 +173,9 @@
 	}
 	
 	.container {
-		max-width: 1400px;
+		max-width: 1200px;
 		margin: 0 auto;
-		padding: 0 2rem;
+		padding: 0 1.5rem;
 		position: relative;
 		z-index: 1;
 	}
@@ -185,29 +185,29 @@
 		font-size: 3rem;
 		font-weight: 800;
 		color: white;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
 		text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	}
 	
 	.section-subtitle {
 		text-align: center;
-		font-size: 1.3rem;
+		font-size: 1.1rem;
 		color: rgba(255, 255, 255, 0.9);
-		margin-bottom: 4rem;
+		margin-bottom: 2.5rem;
 	}
 	
 	.testimonials-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-		gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1.25rem;
 	}
 	
 	.testimonial-card {
 		background: rgba(255, 255, 255, 0.95);
 		backdrop-filter: blur(10px);
-		padding: 2.5rem;
-		border-radius: 24px;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+		padding: 1.5rem;
+		border-radius: 16px;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 		border: 2px solid rgba(255, 255, 255, 0.3);
 		transition: all 0.5s ease;
 		animation: fadeInUp 0.6s ease-out backwards;
@@ -246,43 +246,43 @@
 	}
 	
 	.quote-icon {
-		width: 50px;
-		height: 50px;
+		width: 35px;
+		height: 35px;
 		color: #667eea;
 		opacity: 0.2;
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
 	}
 	
 	.rating {
 		display: flex;
-		gap: 0.25rem;
-		margin-bottom: 1.5rem;
+		gap: 0.2rem;
+		margin-bottom: 1rem;
 	}
 	
 	.star {
-		font-size: 1.5rem;
+		font-size: 1.1rem;
 		color: #fbbf24;
 	}
 	
 	.testimonial-text {
-		font-size: 1.1rem;
-		line-height: 1.8;
+		font-size: 0.95rem;
+		line-height: 1.6;
 		color: #374151;
-		margin-bottom: 2rem;
+		margin-bottom: 1.25rem;
 		font-style: italic;
 	}
 	
 	.testimonial-author {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		padding-top: 1.5rem;
+		gap: 0.75rem;
+		padding-top: 1rem;
 		border-top: 2px solid rgba(102, 126, 234, 0.1);
 	}
 	
 	.avatar {
-		width: 60px;
-		height: 60px;
+		width: 45px;
+		height: 45px;
 		flex-shrink: 0;
 		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 	}
@@ -317,17 +317,17 @@
 	}
 	
 	.author-name {
-		font-size: 1.1rem;
+		font-size: 0.95rem;
 		font-weight: 700;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
-		margin-bottom: 0.25rem;
+		margin-bottom: 0.2rem;
 	}
 	
 	.author-role {
-		font-size: 0.95rem;
+		font-size: 0.85rem;
 		color: #6b7280;
 	}
 	
@@ -335,16 +335,16 @@
 		background: rgba(255, 255, 255, 0.95);
 		backdrop-filter: blur(10px);
 		border: 3px dashed white;
-		border-radius: 24px;
-		padding: 3rem;
+		border-radius: 16px;
+		padding: 2rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		min-height: 300px;
+		min-height: 200px;
 	}
 	
 	.add-testimonial-btn:hover {
@@ -354,7 +354,7 @@
 	}
 	
 	.add-icon {
-		font-size: 4rem;
+		font-size: 2.5rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
@@ -362,7 +362,7 @@
 	}
 	
 	.add-text {
-		font-size: 1.5rem;
+		font-size: 1.1rem;
 		font-weight: 700;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;

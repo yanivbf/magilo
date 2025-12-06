@@ -1,327 +1,343 @@
 <script>
+	import { setContext } from 'svelte';
 	import { goto } from '$app/navigation';
-	import PageRenderer from '$lib/components/PageRenderer.svelte';
+	import NavigationBar from '$lib/components/NavigationBar.svelte';
+	import GallerySection from '$lib/components/sections/GallerySection.svelte';
+	import ProductsGallerySection from '$lib/components/sections/ProductsGallerySection.svelte';
+	import TestimonialsSection from '$lib/components/sections/TestimonialsSection.svelte';
+	import FAQSection from '$lib/components/sections/FAQSection.svelte';
+	import AboutSection from '$lib/components/sections/AboutSection-editable.svelte';
+	import ContactSection from '$lib/components/sections/ContactSection.svelte';
+	import ServicesSection from '$lib/components/sections/ServicesSection.svelte';
+	import PricingSection from '$lib/components/sections/PricingSection.svelte';
+	import TeamSection from '$lib/components/sections/TeamSection.svelte';
+	import VideoSection from '$lib/components/sections/VideoSection.svelte';
+	import AccessibilityMenu from '$lib/components/AccessibilityMenu.svelte';
+	import ChatBotBubble from '$lib/components/ChatBotBubble.svelte';
+	import EditableText from '$lib/components/editing/EditableText.svelte';
 	
+	/** @type {import('./$types').PageData} */
 	let { data } = $props();
 	
-	let editMode = $state(true);
-	let selectedElement = $state(null);
-	let imageInput;
+	console.log('🎨 Edit page - Page ID:', data.page.id);
+	console.log('📄 Edit page - Document ID:', data.page.documentId);
 	
-	// Editable page data
-	let pageData = $state({ ...data.page });
+	// INLINE EDIT MODE - always enabled on edit page
+	const editMode = $derived(true);
 	
-	// Handle image upload
-	async function handleImageUpload(event, field) {
-		const file = event.target.files?.[0];
-		if (!file) return;
-		
-		const formData = new FormData();
-		formData.append('image', file);
-		
+	console.log('✏️ Edit mode enabled:', editMode);
+	
+	setContext('editMode', () => editMode);
+	setContext('pageId', data.page.documentId || data.page.id);
+	
+	// Save field function
+	async function saveField(field, value) {
 		try {
-			const response = await fetch('/api/upload-image', {
-				method: 'POST',
-				body: formData
-			});
+			console.log(`💾 Saving ${field}:`, value);
+			console.log(`📄 Page ID:`, data.page.documentId || data.page.id);
 			
-			if (response.ok) {
-				const result = await response.json();
-				pageData[field] = result.url;
-			}
-		} catch (error) {
-			console.error('Error uploading image:', error);
-		}
-	}
-	
-	// Save changes
-	async function saveChanges() {
-		try {
-			const response = await fetch('/api/update-page', {
+			const response = await fetch(`/api/update-page`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json'
+				},
 				body: JSON.stringify({
-					pageId: pageData.documentId || pageData.id,
-					updates: pageData
+					pageId: data.page.documentId || data.page.id,
+					[field]: value
 				})
 			});
 			
+			console.log(`📡 Response status:`, response.status);
+			
 			if (response.ok) {
-				alert('✅ הדף נשמר בהצלחה!');
-				goto(`/view/${pageData.slug}`);
+				const result = await response.json();
+				console.log('✅ Saved successfully:', result);
+				showNotification('✅ נשמר בהצלחה');
+			} else {
+				const errorText = await response.text();
+				console.error('❌ Failed to save:', response.status, errorText);
+				showNotification('❌ שגיאה בשמירה');
 			}
 		} catch (error) {
-			console.error('Error saving:', error);
-			alert('❌ שגיאה בשמירה');
+			console.error('❌ Error saving:', error);
+			showNotification('❌ שגיאה בשמירה');
 		}
 	}
+	
+	// Show notification
+	function showNotification(message) {
+		const notification = document.createElement('div');
+		notification.className = 'save-notification';
+		notification.textContent = message;
+		document.body.appendChild(notification);
+		
+		setTimeout(() => {
+			notification.classList.add('show');
+		}, 10);
+		
+		setTimeout(() => {
+			notification.classList.remove('show');
+			setTimeout(() => {
+				notification.remove();
+			}, 300);
+		}, 2000);
+	}
+	
+	// Extract YouTube video ID from URL
+	function getYouTubeId(url) {
+		if (!url) return null;
+		const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+		const match = url.match(regExp);
+		return (match && match[2].length === 11) ? match[2] : null;
+	}
+	
+	// Get video URL from metadata or sections
+	let videoUrl = data.page.metadata?.videoUrl || '';
+	let embedVideo = data.page.metadata?.embedYoutubeVideo || false;
+	
+	// Also check if there's a hero section with video
+	const heroSection = data.page.sections?.find(s => s.type === 'hero');
+	if (heroSection?.data?.videoUrl) {
+		videoUrl = heroSection.data.videoUrl;
+		embedVideo = true;
+	}
+	
+	// Get header image
+	const headerImage = data.page.metadata?.headerImage || data.page.headerImage || '';
+	
+	// Get social links
+	const socialLinks = data.page.metadata?.socialLinks || {};
+	
+	// Sort sections by order
+	const sortedSections = data.page.sections?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
+	
+	// Filter enabled sections
+	const enabledSections = sortedSections.filter(s => s.enabled !== false);
+	
+	console.log('📋 Sections:', enabledSections.length);
 </script>
 
-<div class="edit-page" dir="rtl">
-	<!-- Edit Panel -->
-	<div class="edit-panel">
-		<div class="panel-header">
-			<h2>🎨 עריכת דף</h2>
-			<button onclick={() => goto('/dashboard')} class="close-btn">✕</button>
-		</div>
-		
-		<div class="panel-content">
-			<!-- Images Section -->
-			<div class="edit-section">
-				<h3>📷 תמונות</h3>
-				
-				<div class="edit-item">
-					<label>תמונת רקע ראשית</label>
-					<input type="file" accept="image/*" onchange={(e) => handleImageUpload(e, 'headerImage')} />
-					{#if pageData.headerImage}
-						<img src={pageData.headerImage} alt="Preview" class="preview-img" />
-					{/if}
-				</div>
-				
-				<div class="edit-item">
-					<label>לוגו</label>
-					<input type="file" accept="image/*" onchange={(e) => handleImageUpload(e, 'logo')} />
-					{#if pageData.logo}
-						<img src={pageData.logo} alt="Logo" class="preview-img" />
-					{/if}
-				</div>
-			</div>
-			
-			<!-- Text Section -->
-			<div class="edit-section">
-				<h3>📝 טקסט</h3>
-				
-				<div class="edit-item">
-					<label>כותרת</label>
-					<input type="text" bind:value={pageData.title} class="text-input" />
-				</div>
-				
-				<div class="edit-item">
-					<label>תיאור</label>
-					<textarea bind:value={pageData.description} class="text-input" rows="3"></textarea>
-				</div>
-				
-				<div class="edit-item">
-					<label>טלפון</label>
-					<input type="tel" bind:value={pageData.phone} class="text-input" />
-				</div>
-				
-				<div class="edit-item">
-					<label>אימייל</label>
-					<input type="email" bind:value={pageData.email} class="text-input" />
-				</div>
-			</div>
-			
-			<!-- Design Section -->
-			<div class="edit-section">
-				<h3>🎨 עיצוב</h3>
-				
-				<div class="edit-item">
-					<label>צבע רקע</label>
-					<input type="color" bind:value={pageData.backgroundColor} />
-				</div>
-				
-				<div class="edit-item">
-					<label>צבע טקסט</label>
-					<input type="color" bind:value={pageData.textColor} />
-				</div>
-				
-				<div class="edit-item">
-					<label>גודל טקסט</label>
-					<select bind:value={pageData.fontSize} class="text-input">
-						<option value="small">קטן</option>
-						<option value="medium">בינוני</option>
-						<option value="large">גדול</option>
-					</select>
-				</div>
-			</div>
-			
-			<!-- Save Button -->
-			<button onclick={saveChanges} class="save-btn">
-				💾 שמור שינויים
-			</button>
-		</div>
-	</div>
+<svelte:head>
+	<title>עריכת {data.page?.title || 'דף'}</title>
+</svelte:head>
+
+<!-- INLINE EDITING MODE - Click on any element to edit it -->
+<div class="page-container" dir="rtl">
+	<!-- Save Button (Floating) -->
+	<button 
+		onclick={() => goto('/dashboard')}
+		class="floating-save-btn"
+		title="חזור לדשבורד"
+	>
+		💾 שמור וחזור לדשבורד
+	</button>
 	
-	<!-- Preview -->
-	<div class="preview-area">
-		<div class="preview-header">
-			<h3>👁️ תצוגה מקדימה</h3>
+	<!-- Hero Section with Editable Title -->
+	<section class="hero-section" style="background-image: url('{headerImage}');">
+		<div class="hero-overlay"></div>
+		<div class="hero-content">
+			<EditableText 
+				value={data.page.title} 
+				field="title" 
+				onSave={saveField}
+				class="hero-title"
+			/>
+			<EditableText 
+				value={data.page.description || 'תיאור העסק'} 
+				field="description" 
+				onSave={saveField}
+				class="hero-description"
+			/>
 		</div>
-		<div class="preview-content">
-			<PageRenderer pageData={pageData} isOwner={false} />
-		</div>
-	</div>
+	</section>
+	
+	<!-- Navigation Bar -->
+	<NavigationBar 
+		phone={data.page.phone}
+		email={data.page.email}
+		address={data.page.address}
+		socialLinks={socialLinks}
+	/>
+	
+	<!-- Video Section (if enabled) -->
+	{#if embedVideo && videoUrl}
+		{@const youtubeId = getYouTubeId(videoUrl)}
+		{#if youtubeId}
+			<section class="video-section">
+				<div class="container">
+					<div class="video-wrapper">
+						<iframe
+							src="https://www.youtube.com/embed/{youtubeId}"
+							title="YouTube video"
+							frameborder="0"
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+							allowfullscreen
+						></iframe>
+					</div>
+				</div>
+			</section>
+		{/if}
+	{/if}
+	
+	<!-- Dynamic Sections -->
+	{#each enabledSections as section (section.id)}
+		{#if section.type === 'about'}
+			<AboutSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'services'}
+			<ServicesSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'pricing'}
+			<PricingSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'team'}
+			<TeamSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'video'}
+			<VideoSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'gallery'}
+			<GallerySection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'products'}
+			<ProductsGallerySection 
+				pageId={data.page.id} 
+				products={data.page.products || data.page.storeProducts || []} 
+			/>
+		{:else if section.type === 'testimonials'}
+			<TestimonialsSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'faq'}
+			<FAQSection data={section.data} sectionId={section.id} />
+		{:else if section.type === 'contact'}
+			<ContactSection 
+				phone={data.page.phone}
+				email={data.page.email}
+				address={data.page.address}
+				socialLinks={socialLinks}
+			/>
+		{/if}
+	{/each}
+	
+	<!-- Accessibility Menu -->
+	<AccessibilityMenu />
+	
+	<!-- Chat Bot Bubble -->
+	<ChatBotBubble pageId={data.page.id} />
 </div>
 
 <style>
-	.edit-page {
-		display: flex;
-		height: 100vh;
-		background: #f3f4f6;
-	}
-	
-	.edit-panel {
-		width: 400px;
-		background: white;
-		border-right: 1px solid #e5e7eb;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-	}
-	
-	.panel-header {
-		padding: 1.5rem;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	
-	.panel-header h2 {
-		margin: 0;
-		font-size: 1.5rem;
-	}
-	
-	.close-btn {
-		background: rgba(255, 255, 255, 0.2);
-		border: none;
-		color: white;
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		cursor: pointer;
-		font-size: 1.5rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	
-	.close-btn:hover {
-		background: rgba(255, 255, 255, 0.3);
-	}
-	
-	.panel-content {
-		flex: 1;
-		overflow-y: auto;
-		padding: 1.5rem;
-	}
-	
-	.edit-section {
-		margin-bottom: 2rem;
-		padding-bottom: 2rem;
-		border-bottom: 1px solid #e5e7eb;
-	}
-	
-	.edit-section:last-of-type {
-		border-bottom: none;
-	}
-	
-	.edit-section h3 {
-		margin: 0 0 1rem 0;
-		font-size: 1.25rem;
-		color: #374151;
-	}
-	
-	.edit-item {
-		margin-bottom: 1rem;
-	}
-	
-	.edit-item label {
-		display: block;
-		margin-bottom: 0.5rem;
-		font-weight: 600;
-		color: #4b5563;
-		font-size: 0.875rem;
-	}
-	
-	.text-input {
-		width: 100%;
-		padding: 0.75rem;
-		border: 1px solid #d1d5db;
-		border-radius: 0.5rem;
-		font-size: 1rem;
-		font-family: inherit;
-	}
-	
-	.text-input:focus {
-		outline: none;
-		border-color: #667eea;
-		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-	}
-	
-	input[type="file"] {
-		width: 100%;
-		padding: 0.5rem;
-		border: 2px dashed #d1d5db;
-		border-radius: 0.5rem;
-		cursor: pointer;
-	}
-	
-	input[type="file"]:hover {
-		border-color: #667eea;
+	.page-container {
+		min-height: 100vh;
 		background: #f9fafb;
 	}
 	
-	input[type="color"] {
-		width: 100%;
-		height: 50px;
-		border: 1px solid #d1d5db;
-		border-radius: 0.5rem;
-		cursor: pointer;
-	}
-	
-	.preview-img {
-		width: 100%;
-		height: 120px;
-		object-fit: cover;
-		border-radius: 0.5rem;
-		margin-top: 0.5rem;
-		border: 1px solid #e5e7eb;
-	}
-	
-	.save-btn {
-		width: 100%;
-		padding: 1rem;
+	/* Floating Save Button */
+	.floating-save-btn {
+		position: fixed;
+		top: 20px;
+		left: 20px;
+		z-index: 9999;
 		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 		color: white;
 		border: none;
-		border-radius: 0.75rem;
-		font-size: 1.125rem;
+		padding: 12px 24px;
+		border-radius: 12px;
+		font-size: 16px;
 		font-weight: bold;
 		cursor: pointer;
-		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 		transition: all 0.3s;
 	}
 	
-	.save-btn:hover {
+	.floating-save-btn:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+		box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
 	}
 	
-	.preview-area {
-		flex: 1;
+	/* Hero Section */
+	.hero-section {
+		position: relative;
+		min-height: 500px;
+		background-size: cover;
+		background-position: center;
 		display: flex;
-		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 4rem 2rem;
+	}
+	
+	.hero-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+	}
+	
+	.hero-content {
+		position: relative;
+		z-index: 1;
+		max-width: 800px;
+		color: white;
+	}
+	
+	:global(.hero-title) {
+		font-size: 3.5rem;
+		font-weight: bold;
+		margin-bottom: 1rem;
+		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	}
+	
+	:global(.hero-description) {
+		font-size: 1.5rem;
+		opacity: 0.95;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+	}
+	
+	/* Video Section */
+	.video-section {
+		padding: 4rem 0;
+		background: white;
+	}
+	
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 2rem;
+	}
+	
+	.video-wrapper {
+		position: relative;
+		padding-bottom: 56.25%; /* 16:9 aspect ratio */
+		height: 0;
 		overflow: hidden;
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 	}
 	
-	.preview-header {
-		padding: 1rem 1.5rem;
+	.video-wrapper iframe {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+	
+	/* Save Notification */
+	:global(.save-notification) {
+		position: fixed;
+		top: 80px;
+		left: 50%;
+		transform: translateX(-50%) translateY(-20px);
 		background: white;
-		border-bottom: 1px solid #e5e7eb;
+		padding: 16px 32px;
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+		font-size: 16px;
+		font-weight: 600;
+		z-index: 10000;
+		opacity: 0;
+		transition: all 0.3s;
 	}
 	
-	.preview-header h3 {
-		margin: 0;
-		font-size: 1.25rem;
-		color: #374151;
-	}
-	
-	.preview-content {
-		flex: 1;
-		overflow-y: auto;
-		background: white;
+	:global(.save-notification.show) {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
 	}
 </style>

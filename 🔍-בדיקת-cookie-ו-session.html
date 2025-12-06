@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת Cookie ו-Session</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4F46E5;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+        .error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+        }
+        .info {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #3B82F6;
+        }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        pre {
+            background: #1F2937;
+            color: #F9FAFB;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+        }
+        .cookie-item {
+            background: #F3F4F6;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-right: 3px solid #4F46E5;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #4F46E5;">🔍 בדיקת Cookie ו-Session</h1>
+
+    <div class="card">
+        <h2>1️⃣ בדיקת Cookies</h2>
+        <div id="cookieStatus"></div>
+        <button onclick="checkCookies()">בדוק Cookies</button>
+        <button onclick="clearCookies()">נקה Cookies</button>
+    </div>
+
+    <div class="card">
+        <h2>2️⃣ בדיקת Session API</h2>
+        <div id="sessionStatus"></div>
+        <button onclick="checkSession()">בדוק Session</button>
+    </div>
+
+    <div class="card">
+        <h2>3️⃣ בדיקת משתמש ב-Strapi</h2>
+        <input type="text" id="userIdInput" placeholder="הכנס userId (למשל: google_123456789)" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        <div id="strapiStatus"></div>
+        <button onclick="checkStrapi()">בדוק ב-Strapi</button>
+    </div>
+
+    <div class="card">
+        <h2>4️⃣ פעולות מהירות</h2>
+        <button onclick="window.location.href='http://localhost:5173/login'">לך לדף התחברות</button>
+        <button onclick="window.location.href='http://localhost:5173/dashboard'">לך לדשבורד</button>
+        <button onclick="window.location.href='http://localhost:1337/admin'">פתח Strapi Admin</button>
+    </div>
+
+    <script>
+        function checkCookies() {
+            const statusDiv = document.getElementById('cookieStatus');
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            
+            if (cookies.length === 0 || (cookies.length === 1 && cookies[0] === '')) {
+                statusDiv.innerHTML = '<div class="error">❌ אין cookies!</div>';
+                return;
+            }
+
+            let html = '<div class="success">✅ נמצאו ' + cookies.length + ' cookies:</div>';
+            
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.split('=');
+                html += `<div class="cookie-item"><strong>${name}:</strong> ${value}</div>`;
+            });
+
+            // Check for userId cookie specifically
+            const userId = getCookie('userId');
+            if (userId) {
+                html += `<div class="success" style="margin-top: 10px;">✅ userId cookie קיים: <strong>${userId}</strong></div>`;
+                document.getElementById('userIdInput').value = userId;
+            } else {
+                html += '<div class="error" style="margin-top: 10px;">❌ userId cookie לא נמצא!</div>';
+            }
+
+            statusDiv.innerHTML = html;
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function clearCookies() {
+            const cookies = document.cookie.split(';');
+            cookies.forEach(cookie => {
+                const name = cookie.split('=')[0].trim();
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            });
+            alert('✅ כל ה-Cookies נוקו!');
+            checkCookies();
+        }
+
+        async function checkSession() {
+            const statusDiv = document.getElementById('sessionStatus');
+            const userId = getCookie('userId');
+
+            if (!userId) {
+                statusDiv.innerHTML = '<div class="error">❌ אין userId cookie! התחבר קודם.</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="info">⏳ בודק session...</div>';
+
+            try {
+                const response = await fetch(`http://localhost:5173/api/user/${userId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="success">✅ Session תקין!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="error">❌ שגיאה: ${response.status}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+
+        async function checkStrapi() {
+            const statusDiv = document.getElementById('strapiStatus');
+            const userId = document.getElementById('userIdInput').value.trim();
+
+            if (!userId) {
+                statusDiv.innerHTML = '<div class="error">❌ הכנס userId!</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="info">⏳ בודק ב-Strapi...</div>';
+
+            try {
+                const response = await fetch(`http://localhost:5173/api/user/${userId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="success">✅ משתמש נמצא ב-Strapi!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="error">❌ משתמש לא נמצא: ${response.status}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-check on load
+        window.onload = () => {
+            checkCookies();
+        };
+    </script>
+</body>
+</html>

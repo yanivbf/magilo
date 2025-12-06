@@ -1,12 +1,46 @@
 <script>
+	import { onMount, onDestroy, getContext } from 'svelte';
 	import EditableImage from '$lib/components/editing/EditableImage.svelte';
+	import EditableText from '$lib/components/editing/EditableText.svelte';
 	
-	/** @type {{ data: { images: string[], title?: string, subtitle?: string }, pageId?: string, sectionId?: string, sectionIndex?: number, editable?: boolean }} */
+	/** @type {{ data: { images: string[], title?: string, subtitle?: string, titleSize?: string, titleColor?: string, titleFont?: string }, pageId?: string, sectionId?: string, sectionIndex?: number, editable?: boolean }} */
 	let { data, pageId, sectionId, sectionIndex, editable = true } = $props();
+	
+	// Get context
+	const editModeGetter = getContext('editMode');
+	const saveField = getContext('saveField');
+	
+	// Get the actual editMode value (it's a function that returns the value)
+	let editMode = $derived(typeof editModeGetter === 'function' ? editModeGetter() : editModeGetter);
 	
 	let lightboxOpen = $state(false);
 	let currentImage = $state(0);
 	let images = $state(data.images || []);
+	let galleryContainer;
+	let autoScrollInterval;
+	
+	onMount(() => {
+		if (!editable && galleryContainer && images.length > 1) {
+			// Auto-scroll every 3 seconds
+			autoScrollInterval = setInterval(() => {
+				const scrollAmount = galleryContainer.scrollLeft + 216; // width (200) + gap (16)
+				const maxScroll = galleryContainer.scrollWidth - galleryContainer.clientWidth;
+				
+				if (scrollAmount >= maxScroll) {
+					// Reset to start
+					galleryContainer.scrollTo({ left: 0, behavior: 'smooth' });
+				} else {
+					galleryContainer.scrollBy({ left: 216, behavior: 'smooth' });
+				}
+			}, 3000);
+		}
+	});
+	
+	onDestroy(() => {
+		if (autoScrollInterval) {
+			clearInterval(autoScrollInterval);
+		}
+	});
 	
 	function openLightbox(index) {
 		currentImage = index;
@@ -150,22 +184,46 @@
 			setTimeout(() => notification.remove(), 300);
 		}, 2000);
 	}
+	
+	/**
+	 * Save field to Strapi
+	 */
+	async function saveGalleryField(field, value) {
+		if (saveField) {
+			await saveField(`sections.${sectionIndex}.data.${field}`, value);
+		}
+	}
 </script>
 
 <section class="gallery-section">
 	<div class="container">
-		<h2 class="section-title">{data.title || '🖼️ גלריית תמונות'}</h2>
-		{#if data.subtitle}
-			<p class="section-subtitle">{data.subtitle}</p>
+		{#if editMode}
+			<EditableText
+				value={data.title || '🖼️ גלריית תמונות'}
+				onsave={(value) => saveGalleryField('title', value)}
+				class="section-title"
+				tag="h2"
+			/>
+			<EditableText
+				value={data.subtitle || 'תת כותרת'}
+				onsave={(value) => saveGalleryField('subtitle', value)}
+				class="section-subtitle"
+				tag="p"
+			/>
+		{:else}
+			<h2 class="section-title">{data.title || '🖼️ גלריית תמונות'}</h2>
+			{#if data.subtitle}
+				<p class="section-subtitle">{data.subtitle}</p>
+			{/if}
 		{/if}
 		
-		<div class="gallery-grid">
+		<div class="gallery-grid" bind:this={galleryContainer}>
 			{#each images as image, index}
 				<div 
 					class="gallery-item"
 					style="--delay: {index * 0.1}s"
 				>
-					{#if editable && pageId && (sectionIndex !== null && sectionIndex !== undefined)}
+					{#if editMode && pageId && (sectionIndex !== null && sectionIndex !== undefined)}
 						<EditableImage 
 							src={image} 
 							alt="תמונה {index + 1}"
@@ -211,7 +269,7 @@
 				</div>
 			{/each}
 			
-			{#if editable && pageId && (sectionIndex !== null && sectionIndex !== undefined)}
+			{#if editMode && pageId && (sectionIndex !== null && sectionIndex !== undefined)}
 				<button class="add-image-btn" onclick={addImage} type="button">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
 						<line x1="12" y1="5" x2="12" y2="19"></line>
@@ -240,7 +298,7 @@
 
 <style>
 	.gallery-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		position: relative;
 		overflow: hidden;
@@ -264,9 +322,9 @@
 	}
 	
 	.container {
-		max-width: 1400px;
+		max-width: 1200px;
 		margin: 0 auto;
-		padding: 0 2rem;
+		padding: 0 1.5rem;
 		position: relative;
 		z-index: 1;
 	}
@@ -276,32 +334,55 @@
 		font-size: 3rem;
 		font-weight: 800;
 		color: white;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
 		text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 		animation: fadeInUp 0.8s ease-out;
 	}
 	
 	.section-subtitle {
 		text-align: center;
-		font-size: 1.3rem;
+		font-size: 1.1rem;
 		color: rgba(255, 255, 255, 0.9);
-		margin-bottom: 4rem;
+		margin-bottom: 2.5rem;
 		animation: fadeInUp 0.8s ease-out 0.2s backwards;
 	}
 	
 	.gallery-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-		gap: 2rem;
-		padding: 1rem 0;
+		display: flex;
+		gap: 1rem;
+		padding: 0.5rem 0;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+	}
+	
+	.gallery-grid::-webkit-scrollbar {
+		height: 8px;
+	}
+	
+	.gallery-grid::-webkit-scrollbar-track {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 10px;
+	}
+	
+	.gallery-grid::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 10px;
+	}
+	
+	.gallery-grid::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.5);
 	}
 	
 	.gallery-item {
 		position: relative;
-		aspect-ratio: 4/3;
-		border-radius: 24px;
+		flex-shrink: 0;
+		width: 200px;
+		height: 200px;
+		border-radius: 16px;
 		overflow: hidden;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 		animation: fadeInUp 0.6s ease-out backwards;
 		animation-delay: var(--delay);
@@ -407,8 +488,10 @@
 	}
 	
 	.add-image-btn {
-		aspect-ratio: 4/3;
-		border-radius: 24px;
+		flex-shrink: 0;
+		width: 200px;
+		height: 200px;
+		border-radius: 16px;
 		border: 3px dashed rgba(255, 255, 255, 0.5);
 		background: rgba(255, 255, 255, 0.1);
 		backdrop-filter: blur(10px);
@@ -418,7 +501,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		transition: all 0.3s ease;
 		animation: fadeInUp 0.6s ease-out backwards;
 		animation-delay: calc(var(--delay) + 0.1s);
@@ -431,14 +514,14 @@
 	}
 	
 	.add-image-btn svg {
-		width: 48px;
-		height: 48px;
+		width: 36px;
+		height: 36px;
 		stroke-width: 2;
 	}
 	
 	.add-image-btn p {
 		margin: 0;
-		font-size: 1.2rem;
+		font-size: 1rem;
 		font-weight: 600;
 	}
 	
@@ -587,9 +670,10 @@
 	}
 	
 	@media (max-width: 768px) {
-		.gallery-grid {
-			grid-template-columns: 1fr;
-			gap: 1.5rem;
+		.gallery-item,
+		.add-image-btn {
+			width: 180px;
+			height: 180px;
 		}
 		
 		.section-title {

@@ -1,15 +1,41 @@
 <script>
-	import { getContext } from 'svelte';
+	import { onMount, onDestroy, getContext } from 'svelte';
 	import EditableText from '$lib/components/editing/EditableText.svelte';
 	import EditableImage from '$lib/components/editing/EditableImage.svelte';
 	
-	let { data, sectionIndex = 0 } = $props();
+	let { data, sectionIndex = 0, editable = true } = $props();
 	
 	const editMode = getContext('editMode');
 	const pageId = getContext('pageId');
 	const saveField = getContext('saveField');
 	
+	let servicesContainer;
+	let autoScrollInterval;
+	
 	let services = $state(data.services || []);
+	
+	onMount(() => {
+		if (!editable && servicesContainer && services.length > 1) {
+			// Auto-scroll every 3 seconds
+			autoScrollInterval = setInterval(() => {
+				const scrollAmount = servicesContainer.scrollLeft + 216; // width (200) + gap (16)
+				const maxScroll = servicesContainer.scrollWidth - servicesContainer.clientWidth;
+				
+				if (scrollAmount >= maxScroll) {
+					// Reset to start
+					servicesContainer.scrollTo({ left: 0, behavior: 'smooth' });
+				} else {
+					servicesContainer.scrollBy({ left: 216, behavior: 'smooth' });
+				}
+			}, 3000);
+		}
+	});
+	
+	onDestroy(() => {
+		if (autoScrollInterval) {
+			clearInterval(autoScrollInterval);
+		}
+	});
 	
 	async function saveServiceField(index, field, value) {
 		services = services.map((s, i) => 
@@ -47,7 +73,7 @@
 	
 	async function addService() {
 		services = [...services, {
-			icon: '🔧',
+			icon: '',
 			title: 'שירות חדש',
 			description: 'תיאור השירות',
 			price: 'לפי בקשה'
@@ -65,7 +91,7 @@
 <section class="services-section">
 	<div class="container">
 		<EditableText
-			value={data.title || '🛠️ השירותים שלנו'}
+			value={data.title || 'השירותים שלנו'}
 			onsave={(value) => saveField(`sections.${sectionIndex}.data.title`, value)}
 			class="section-title"
 			tag="h2"
@@ -79,7 +105,7 @@
 			/>
 		{/if}
 		
-		<div class="services-grid">
+		<div class="services-grid" bind:this={servicesContainer}>
 			{#each services as service, index}
 				<div class="service-card" style="--delay: {index * 0.1}s">
 					{#if editMode}
@@ -98,7 +124,7 @@
 							/>
 						{:else}
 							<EditableText
-								value={service.icon || '🔧'}
+								value={service.icon || ''}
 								onsave={(value) => saveServiceField(index, 'icon', value)}
 								class="icon-emoji"
 								tag="div"
@@ -143,7 +169,7 @@
 
 <style>
 	.services-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: white;
 		direction: rtl;
 	}
@@ -173,15 +199,40 @@
 	}
 	
 	.services-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-		gap: 2rem;
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		padding: 0.5rem 0;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+	}
+	
+	.services-grid::-webkit-scrollbar {
+		height: 8px;
+	}
+	
+	.services-grid::-webkit-scrollbar-track {
+		background: rgba(102, 126, 234, 0.1);
+		border-radius: 10px;
+	}
+	
+	.services-grid::-webkit-scrollbar-thumb {
+		background: rgba(102, 126, 234, 0.3);
+		border-radius: 10px;
+	}
+	
+	.services-grid::-webkit-scrollbar-thumb:hover {
+		background: rgba(102, 126, 234, 0.5);
 	}
 	
 	.service-card {
+		flex-shrink: 0;
+		width: 200px;
 		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-		padding: 2.5rem;
-		border-radius: 24px;
+		padding: 1.5rem;
+		border-radius: 16px;
 		text-align: center;
 		transition: all 0.4s ease;
 		position: relative;
@@ -221,11 +272,11 @@
 	}
 	
 	.service-icon {
-		width: 100px;
-		height: 100px;
-		margin: 0 auto 1.5rem;
+		width: 60px;
+		height: 60px;
+		margin: 0 auto 1rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		border-radius: 20px;
+		border-radius: 12px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -233,7 +284,7 @@
 	}
 	
 	.icon-emoji {
-		font-size: 3rem;
+		font-size: 2rem;
 		filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
 	}
 	
@@ -241,30 +292,30 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		border-radius: 20px;
+		border-radius: 12px;
 	}
 	
 	.service-title {
-		font-size: 1.5rem;
+		font-size: 1rem;
 		font-weight: 700;
 		color: #1f2937;
-		margin-bottom: 1rem;
+		margin-bottom: 0.5rem;
 	}
 	
 	.service-description {
-		font-size: 1rem;
+		font-size: 0.85rem;
 		color: #6b7280;
-		line-height: 1.6;
-		margin-bottom: 1.5rem;
+		line-height: 1.4;
+		margin-bottom: 0.75rem;
 	}
 	
 	.service-price {
-		padding-top: 1.5rem;
+		padding-top: 0.75rem;
 		border-top: 2px solid rgba(102, 126, 234, 0.2);
 	}
 	
 	.price-text {
-		font-size: 1.5rem;
+		font-size: 1rem;
 		font-weight: 800;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
@@ -273,18 +324,19 @@
 	}
 	
 	.add-service-btn {
+		flex-shrink: 0;
+		width: 200px;
 		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 		border: 3px dashed #667eea;
-		border-radius: 24px;
-		padding: 3rem;
+		border-radius: 16px;
+		padding: 1.5rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		min-height: 350px;
 	}
 	
 	.add-service-btn:hover {
@@ -294,7 +346,7 @@
 	}
 	
 	.add-icon {
-		font-size: 4rem;
+		font-size: 2.5rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
@@ -302,7 +354,7 @@
 	}
 	
 	.add-text {
-		font-size: 1.5rem;
+		font-size: 1rem;
 		font-weight: 700;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
@@ -326,8 +378,9 @@
 			font-size: 2rem;
 		}
 		
-		.services-grid {
-			grid-template-columns: 1fr;
+		.service-card,
+		.add-service-btn {
+			width: 180px;
 		}
 	}
 </style>

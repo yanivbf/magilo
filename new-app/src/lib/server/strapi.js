@@ -160,17 +160,46 @@ const strapi = new StrapiClient();
  * @returns {Promise<any>}
  */
 export async function createUser(userData) {
-	return strapi.post('/users', userData);
+	const response = await strapi.post('/users', userData);
+	// Strapi returns { data: { id, attributes } }
+	return response;
 }
 
 /**
- * Get user by ID
- * @param {string} id
+ * Get user by ID or userId
+ * @param {string} id - Can be numeric ID or userId (like "google_123456789")
  * @returns {Promise<any>}
  */
 export async function getUserById(id) {
+	// If id starts with "google_" or other prefix, search by userId field
+	if (id && (id.startsWith('google_') || id.includes('_'))) {
+		console.log('🔍 Searching user by userId field:', id);
+		
+		// Use Strapi v5 filter syntax
+		const response = await strapi.get('/users', {
+			'filters[userId][$eq]': id,
+			'populate[0]': 'pages',
+			'populate[1]': 'purchases',
+			'populate[2]': 'leads'
+		});
+		
+		console.log('📥 Strapi response for userId query:', JSON.stringify(response, null, 2));
+		
+		if (response.data && response.data.length > 0) {
+			console.log('✅ Found user by userId:', response.data[0].id);
+			return response.data[0];
+		}
+		
+		console.error(`❌ User not found with userId: ${id}`);
+		throw new Error(`User not found with userId: ${id}`);
+	}
+	
+	// Otherwise, search by numeric ID
+	console.log('🔍 Searching user by numeric ID:', id);
 	const response = await strapi.get(`/users/${id}`, {
-		populate: ['pages', 'purchases', 'leads']
+		'populate[0]': 'pages',
+		'populate[1]': 'purchases',
+		'populate[2]': 'leads'
 	});
 	return response.data;
 }
@@ -217,30 +246,55 @@ export async function getAllUsers() {
  * @returns {Promise<any>}
  */
 export async function createPage(pageData) {
-	const { userId, ...data} = pageData;
+	const { userId, user, ...data} = pageData;
 	
 	// Build the data object for Strapi
 	const strapiData = {
 		...data
 	};
 	
-	// Only add user relation if userId is provided and not a temp user
-	// AND if it looks like a valid Strapi document ID (numeric)
-	if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_')) {
-		// Check if userId is numeric (Strapi document ID) or try to verify it exists
-		if (/^\d+$/.test(userId)) {
-			// It's a numeric ID, safe to use
-			strapiData.user = userId;
-			console.log('✅ Adding user relation with numeric ID:', userId);
-		} else {
-			// It's a UUID or other format - skip it
-			console.log('⏭️ Skipping user relation - userId is not a Strapi document ID:', userId);
+	// CRITICAL: Save userId (string) as the main ownership field
+	if (userId) {
+		strapiData.userId = userId;
+		console.log('✅ Adding userId field:', userId);
+		
+		// ALSO: Link to Strapi user if exists (for professional user management)
+		try {
+			// Find the Strapi user by userId field
+			const userResponse = await strapi.get('/users', {
+				'filters[userId][$eq]': userId
+			});
+			
+			if (userResponse.data && userResponse.data.length > 0) {
+				const strapiUser = userResponse.data[0];
+				// Use documentId for Strapi v5, fallback to numeric id
+				const strapiUserId = strapiUser.documentId || strapiUser.id;
+				strapiData.user = strapiUserId;
+				console.log('✅ Linking page to Strapi user:', strapiUserId);
+			} else {
+				console.log('⚠️ Strapi user not found for userId:', userId);
+			}
+		} catch (error) {
+			console.log('⚠️ Could not link to Strapi user:', error.message);
 		}
 	} else {
-		console.log('⏭️ Skipping user relation - temp or generated userId:', userId);
+		console.log('⚠️ WARNING: No userId provided - page will not have an owner!');
 	}
 	
+	// CRITICAL DEBUG: Log the exact data being sent
+	console.log('🔍 CRITICAL DEBUG - Data being sent to Strapi:');
+	console.log('   - title:', strapiData.title);
+	console.log('   - slug:', strapiData.slug);
+	console.log('   - pageType:', strapiData.pageType);
+	console.log('   - userId:', strapiData.userId);
+	console.log('   - user (relation):', strapiData.user);
+	console.log('   - metadata.createdByUserId:', strapiData.metadata?.createdByUserId);
+	
 	const response = await strapi.post('/pages', strapiData);
+	
+	// DEBUG: Log what Strapi returned
+	console.log('📥 Strapi response - page created with ID:', response.data?.id);
+	
 	// Strapi returns { data: { id, attributes } }
 	return response.data || response;
 }
@@ -374,11 +428,19 @@ export async function updatePage(id, data) {
 
 /**
  * Delete page (cascade deletes purchases, leads, analytics)
- * @param {string} id
+ * @param {string} id - Can be numeric ID or documentId
  * @returns {Promise<any>}
  */
 export async function deletePage(id) {
-	return strapi.delete(`/pages/${id}`);
+	try {
+		console.log('🗑️ Deleting page:', id);
+		const result = await strapi.delete(`/pages/${id}`);
+		console.log('✅ Page deleted successfully');
+		return result;
+	} catch (error) {
+		console.error('❌ Error deleting page:', error.message);
+		throw error;
+	}
 }
 
 // ============================================================================

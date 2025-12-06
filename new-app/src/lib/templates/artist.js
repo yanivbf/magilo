@@ -73,8 +73,8 @@ export const artistTemplate = {
 			placeholder: '972501234567'
 		},
 		{
-			name: 'city',
-			label: 'עיר',
+			name: 'address',
+			label: 'כתובת',
 			type: 'text',
 			required: false,
 			placeholder: 'תל אביב'

@@ -67,11 +67,18 @@ export function validatePageData(data) {
 	const errors = [];
 	const sanitized = {};
 	
-	// Required fields
-	if (!data.mainName || typeof data.mainName !== 'string') {
-		errors.push('mainName is required and must be a string');
+	// Required fields - accept mainName, businessName, or eventName
+	const nameField = data.mainName || data.businessName || data.eventName;
+	if (!nameField || typeof nameField !== 'string') {
+		errors.push('mainName, businessName, or eventName is required and must be a string');
 	} else {
-		sanitized.mainName = escapeHtml(data.mainName.trim());
+		sanitized.mainName = escapeHtml(nameField.trim());
+		if (data.businessName) {
+			sanitized.businessName = escapeHtml(data.businessName.trim());
+		}
+		if (data.eventName) {
+			sanitized.eventName = escapeHtml(data.eventName.trim());
+		}
 	}
 	
 	// Optional text fields

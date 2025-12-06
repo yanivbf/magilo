@@ -1,48 +1,154 @@
 <script>
 	import { goto } from '$app/navigation';
 	
-	let userId = $state('temp_user');
+	let userId = $state('');
+	let email = $state('');
+	let name = $state('');
 	let message = $state('');
+	let loading = $state(false);
 	
-	function setUser() {
-		// Set cookie
-		document.cookie = `userId=${userId}; path=/; max-age=31536000`;
-		message = `✅ User ID הוגדר ל: ${userId}`;
+	async function setUser() {
+		if (!userId) {
+			message = '❌ נא להזין User ID';
+			return;
+		}
 		
-		setTimeout(() => {
-			goto('/dashboard');
-		}, 1500);
+		loading = true;
+		message = '⏳ יוצר משתמש...';
+		
+		try {
+			// Create or find user in Strapi
+			const response = await fetch('/api/user/create-or-find', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					userId,
+					email: email || `${userId}@autopage.local`,
+					name: name || `משתמש ${userId.substring(0, 8)}`
+				})
+			});
+			
+			if (response.ok) {
+				const result = await response.json();
+				
+				// Set cookie with the UUID
+				document.cookie = `userId=${userId}; path=/; max-age=31536000`;
+				
+				message = `✅ משתמש נוצר בהצלחה! (Strapi ID: ${result.strapiUserId})`;
+				
+				setTimeout(() => {
+					goto('/dashboard?userId=' + userId);
+				}, 1500);
+			} else {
+				const error = await response.json();
+				message = `❌ שגיאה: ${error.error}`;
+				loading = false;
+			}
+		} catch (error) {
+			message = `❌ שגיאה: ${error.message}`;
+			loading = false;
+		}
+	}
+	
+	// Generate random UUID
+	function generateUUID() {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			const r = Math.random() * 16 | 0;
+			const v = c === 'x' ? r : (r & 0x3 | 0x8);
+			return v.toString(16);
+		});
+	}
+	
+	function generateRandomUser() {
+		userId = generateUUID();
+		name = `משתמש ${Math.floor(Math.random() * 1000)}`;
+		email = `user${Math.floor(Math.random() * 10000)}@autopage.local`;
+	}
+	
+	function useExistingUser() {
+		userId = 'ef0bfa04-0d2a-48b0-8c0e-67c8b4ed0241';
+		name = 'משתמש קיים';
+		email = 'existing@autopage.local';
 	}
 </script>
 
 <div class="container">
 	<div class="card">
-		<h1>🔧 הגדרת משתמש זמני</h1>
-		<p>הגדר User ID כדי לראות את סרגל העריכה</p>
+		<h1>🔧 יצירת משתמש חדש</h1>
+		<p>צור משתמש חדש במערכת (עד שההתחברות עם Google תתוקן)</p>
 		
 		<div class="form">
-			<label for="userId">User ID:</label>
+			<label for="name">שם:</label>
 			<input 
-				id="userId"
+				id="name"
 				type="text" 
-				bind:value={userId}
-				placeholder="temp_user"
+				bind:value={name}
+				placeholder="השם שלך"
 			/>
 			
-			<button onclick={setUser}>
-				הגדר User ID
+			<label for="email">אימייל:</label>
+			<input 
+				id="email"
+				type="email" 
+				bind:value={email}
+				placeholder="email@example.com"
+			/>
+			
+			<label for="userId">User ID (UUID):</label>
+			<div style="display: flex; gap: 0.5rem;">
+				<input 
+					id="userId"
+					type="text" 
+					bind:value={userId}
+					placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+					style="flex: 1;"
+				/>
+				<button 
+					type="button"
+					onclick={generateRandomUser}
+					style="padding: 0.75rem 1rem; background: #48bb78;"
+				>
+					🎲 אקראי
+				</button>
+			</div>
+			
+			<button onclick={setUser} disabled={loading}>
+				{loading ? '⏳ יוצר...' : '✅ צור משתמש והתחבר'}
 			</button>
 			
 			{#if message}
-				<div class="message">{message}</div>
+				<div class="message" class:error={message.includes('❌')}>
+					{message}
+				</div>
 			{/if}
 		</div>
 		
-		<div class="info">
-			<h3>💡 טיפ</h3>
-			<p>השתמש ב-<code>temp_user</code> אם יצרת דפים עם המערכת הישנה</p>
-			<p>או הזן כל User ID אחר שתרצה</p>
+		<div class="quick-login">
+			<h3>⚡ התחברות מהירה</h3>
+			<p>יש לך כבר משתמש? התחבר עם ה-ID הקיים שלך:</p>
+			<button 
+				type="button"
+				onclick={useExistingUser}
+				style="background: #48bb78; margin-bottom: 1rem;"
+			>
+				👤 השתמש במשתמש הקיים
+			</button>
 		</div>
+		
+		<div class="info">
+			<h3>💡 הסבר</h3>
+			<p>המערכת תיצור משתמש חדש ב-Strapi ותקשר אותו ל-UUID שלך</p>
+			<p>לחץ על "🎲 אקראי" כדי ליצור פרטים אוטומטית</p>
+			<p>אחרי יצירת המשתמש תועבר לדשבורד</p>
+		</div>
+		
+		<div class="divider">או</div>
+		
+		<a href="/login" class="secondary-button">
+			🔐 התחבר עם Google
+		</a>
 	</div>
 </div>
 
@@ -150,5 +256,55 @@
 		padding: 0.2rem 0.4rem;
 		border-radius: 4px;
 		font-family: monospace;
+	}
+	
+	.message.error {
+		background: #fed7d7;
+		color: #742a2a;
+	}
+	
+	.divider {
+		text-align: center;
+		margin: 2rem 0;
+		color: #a0aec0;
+		position: relative;
+	}
+	
+	.divider::before,
+	.divider::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		width: 40%;
+		height: 1px;
+		background: #e2e8f0;
+	}
+	
+	.divider::before {
+		right: 0;
+	}
+	
+	.divider::after {
+		left: 0;
+	}
+	
+	.secondary-button {
+		display: block;
+		padding: 1rem;
+		background: white;
+		color: #667eea;
+		border: 2px solid #667eea;
+		border-radius: 8px;
+		font-size: 1rem;
+		font-weight: 600;
+		text-align: center;
+		text-decoration: none;
+		transition: all 0.2s;
+	}
+	
+	.secondary-button:hover {
+		background: #667eea;
+		color: white;
+		transform: translateY(-2px);
 	}
 </style>

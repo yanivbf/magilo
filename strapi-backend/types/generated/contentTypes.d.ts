@@ -766,6 +766,7 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     user: Schema.Attribute.Relation<'manyToOne', 'api::user.user'>;
+    userId: Schema.Attribute.String;
     workingHours: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
   };
 }
@@ -991,6 +992,7 @@ export interface ApiUserUser extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    userId: Schema.Attribute.String & Schema.Attribute.Unique;
     wallet: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
   };
 }

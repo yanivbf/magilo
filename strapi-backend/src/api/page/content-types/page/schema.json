@@ -83,6 +83,9 @@
       "type": "boolean",
       "default": false
     },
+    "userId": {
+      "type": "string"
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",

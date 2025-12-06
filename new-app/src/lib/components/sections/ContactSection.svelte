@@ -53,7 +53,7 @@
 <section class="contact-section">
 	<div class="container">
 		<EditableText
-			value={data.title || '📞 צור קשר'}
+			value={data.title || 'צור קשר'}
 			onsave={(value) => saveField(`sections.${sectionIndex}.data.title`, value)}
 			class="section-title"
 			tag="h2"
@@ -99,7 +99,7 @@
 
 <style>
 	.contact-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 		direction: rtl;
 	}

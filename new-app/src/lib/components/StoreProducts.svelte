@@ -52,8 +52,8 @@
 			`${item.name} x${item.quantity} - ₪${item.price * item.quantity}`
 		).join('%0A');
 		
-		const whatsappNumber = pageData.phone?.replace(/[^0-9]/g, '') || '';
-		const whatsappUrl = `https://wa.me/${whatsappNumber}?text=היי! אני רוצה להזמין:%0A${message}%0A%0Aסה"כ: ₪${cartTotal}`;
+		const whatsappNumber = pageData.phone?.replace(/^0/, '').replace(/[^0-9]/g, '') || '';
+		const whatsappUrl = `https://wa.me/972${whatsappNumber}?text=היי! אני רוצה להזמין:%0A${message}%0A%0Aסה"כ: ₪${cartTotal}`;
 		
 		window.open(whatsappUrl, '_blank');
 	}

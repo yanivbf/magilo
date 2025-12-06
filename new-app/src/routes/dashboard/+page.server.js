@@ -33,35 +33,83 @@ export async function load({ locals, cookies, url }) {
 	console.log('✅ User ID found:', userId);
 	
 	try {
-		// CRITICAL FIX: Use correct Strapi filter format for user relation
-		// filters[user][id][$eq] instead of filters[userId][$eq]
-		const response = await fetch(`${STRAPI_URL}/api/pages?filters[user][id][$eq]=${userId}&populate=*`, {
-			headers: {
-				'Authorization': `Bearer ${STRAPI_API_TOKEN}`
-			}
-		});
+		// Get subscription status from cookies (workaround for Strapi users plugin limitation)
+		let subscriptionStatus = cookies.get('subscriptionStatus') || 'inactive';
+		let subscriptionExpiry = cookies.get('subscriptionExpiry') || null;
 		
-		if (!response.ok) {
-			const errorText = await response.text();
-			console.error('❌ Strapi API Error:', response.status, errorText);
-			throw new Error(`Failed to fetch pages: ${response.status} ${response.statusText}`);
+		console.log('✅ User subscription status from cookies:', subscriptionStatus);
+		
+		// Fetch pages by user relation
+		const response1 = await fetch(
+			`${STRAPI_URL}/api/pages?filters[user][id][$eq]=${userId}&populate=*`,
+			{
+				headers: {
+					'Authorization': `Bearer ${STRAPI_API_TOKEN}`
+				}
+			}
+		);
+		
+		// Fetch pages by userId field
+		const response2 = await fetch(
+			`${STRAPI_URL}/api/pages?filters[userId][$eq]=${userId}&populate=*`,
+			{
+				headers: {
+					'Authorization': `Bearer ${STRAPI_API_TOKEN}`
+				}
+			}
+		);
+		
+		let pages = [];
+		
+		if (response1.ok) {
+			const result1 = await response1.json();
+			pages = [...(result1.data || [])];
 		}
 		
-		const result = await response.json();
-		const pages = result.data || [];
+		if (response2.ok) {
+			const result2 = await response2.json();
+			// Add pages from second query, avoiding duplicates
+			const existingIds = new Set(pages.map(p => p.id));
+			const newPages = (result2.data || []).filter(p => !existingIds.has(p.id));
+			pages = [...pages, ...newPages];
+		}
+		
+		if (!response1.ok && !response2.ok) {
+			const errorText = await response1.text();
+			console.error('❌ Strapi API Error:', response1.status, errorText);
+			throw new Error(`Failed to fetch pages: ${response1.status} ${response1.statusText}`);
+		}
 		
 		console.log(`✅ Successfully fetched ${pages.length} pages for user ${userId}`);
 		
 		// Transform Strapi data to match our format
-		const transformedPages = pages.map(page => ({
-			id: page.id,
-			...page.attributes,
-			documentId: page.documentId
-		}));
+		// Strapi v5 returns data directly, not in attributes
+		const transformedPages = pages.map(page => {
+			// Check if data is in attributes (Strapi v4 format) or directly (Strapi v5 format)
+			const pageData = page.attributes || page;
+			
+			return {
+				id: page.id,
+				documentId: page.documentId,
+				title: pageData.title,
+				slug: pageData.slug,
+				pageType: pageData.pageType,
+				description: pageData.description,
+				isActive: pageData.isActive,
+				phone: pageData.phone,
+				email: pageData.email,
+				address: pageData.address,
+				metadata: pageData.metadata,
+				createdAt: pageData.createdAt || page.createdAt,
+				updatedAt: pageData.updatedAt || page.updatedAt
+			};
+		});
 		
 		return {
 			pages: transformedPages,
 			userId,
+			subscriptionStatus,
+			subscriptionExpiry,
 			error: null
 		};
 	} catch (error) {
@@ -69,6 +117,8 @@ export async function load({ locals, cookies, url }) {
 		return {
 			pages: [],
 			userId,
+			subscriptionStatus: 'inactive',
+			subscriptionExpiry: null,
 			error: error.message
 		};
 	}

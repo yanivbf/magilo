@@ -12,6 +12,10 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "userId": {
+      "type": "string",
+      "unique": true
+    },
     "name": {
       "type": "string",
       "required": true

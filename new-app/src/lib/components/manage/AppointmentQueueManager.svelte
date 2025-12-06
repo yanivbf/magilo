@@ -496,7 +496,7 @@
 								<button onclick={() => updateAppointmentStatus(appointment.id, 'cancelled')} class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
 									❌ בטל
 								</button>
-								<a href="https://wa.me/{appointment.phone.replace(/\D/g, '')}" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+								<a href="https://wa.me/972{appointment.phone.replace(/^0/, '').replace(/\D/g, '')}" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
 									💬 WhatsApp
 								</a>
 							</div>

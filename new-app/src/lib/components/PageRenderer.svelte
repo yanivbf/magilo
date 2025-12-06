@@ -375,7 +375,7 @@
 <!-- Floating WhatsApp Button -->
 {#if whatsappNumber}
 	<a 
-		href="https://wa.me/{whatsappNumber.replace(/[^0-9]/g, '')}" 
+		href="https://wa.me/972{whatsappNumber.replace(/^0/, '').replace(/[^0-9]/g, '')}" 
 		target="_blank" 
 		rel="noopener"
 		class="whatsapp-float"

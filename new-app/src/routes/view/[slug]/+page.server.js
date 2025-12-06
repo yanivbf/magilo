@@ -8,7 +8,7 @@ import { extractPageDataFromStrapi } from '$lib/server/dataExtractor.js';
  * Load page data by slug (clean view without editor tools)
  * @type {import('./$types').PageServerLoad}
  */
-export async function load({ params, locals }) {
+export async function load({ params, locals, cookies }) {
 	const { slug } = params;
 
 	try {
@@ -35,13 +35,60 @@ export async function load({ params, locals }) {
 		const attrs = page.attributes || page;
 		
 		// Check if current user is the owner
-		// @ts-ignore - locals.user is set in hooks.server.js
-		const currentUserId = locals.user?.id || locals.userId;
-		// v5: attrs.user?.data?.id or attrs.user?.id, v4: attrs.user?.data?.id
-		const pageOwnerId = attrs.user?.data?.id || attrs.user?.id || attrs.userId;
-		const isOwner = currentUserId && pageOwnerId && String(currentUserId) === String(pageOwnerId);
+		// CRITICAL: Must use userId string from cookie, NOT numeric ID from locals.user
+		// The page.userId field is a string like "google_111351120503275674259"
+		// @ts-ignore - locals.userId is set in hooks.server.js
+		const currentUserId = cookies.get('userId') || locals.userId;
 		
-		console.log('👤 Ownership check:', { currentUserId, pageOwnerId, isOwner });
+		// Get page owner ID - check userId field first (string), then user relation (numeric)
+		// CRITICAL: In Strapi v5, data is directly on page object, NOT in page.attributes
+		const pageUserId = page.userId || attrs.userId; // String like "google_111351120503275674259"
+		const pageOwnerId = attrs.user?.data?.id || attrs.user?.id; // Numeric ID from Strapi user relation
+		const createdByUserId = attrs.metadata?.createdByUserId; // Backup in metadata
+		
+		console.log('🔍 OWNERSHIP DEBUG:');
+		console.log('   - currentUserId (from cookie):', currentUserId);
+		console.log('   - page.userId (direct):', page.userId);
+		console.log('   - attrs.userId:', attrs.userId);
+		console.log('   - pageUserId (final):', pageUserId);
+		console.log('   - pageOwnerId (numeric relation):', pageOwnerId);
+		console.log('   - createdByUserId (metadata):', createdByUserId);
+		
+		// Check ownership: compare string userId fields
+		let isOwner = false;
+		if (currentUserId) {
+			// PRIORITY 1: Check if page.userId matches currentUserId (both strings)
+			if (pageUserId && String(currentUserId) === String(pageUserId)) {
+				isOwner = true;
+				console.log('✅ Owner by userId match (string comparison)');
+			}
+			// PRIORITY 2: Check if this user created the page (by userId string in metadata)
+			else if (createdByUserId && String(currentUserId) === String(createdByUserId)) {
+				isOwner = true;
+				console.log('✅ Owner by createdByUserId match (metadata)');
+			}
+			// PRIORITY 3: Check if page is linked to this user (by Strapi user relation - numeric)
+			// This is a fallback for old pages that might use numeric IDs
+			else if (pageOwnerId && String(currentUserId) === String(pageOwnerId)) {
+				isOwner = true;
+				console.log('✅ Owner by pageOwnerId match (numeric relation)');
+			}
+		}
+		
+		if (!isOwner) {
+			console.log('❌ Not owner - no match found');
+			console.log('   Comparison failed:');
+			console.log(`   "${currentUserId}" !== "${pageUserId}"`);
+		}
+		
+		// Get user subscription status (subscription is per user, not per page)
+		let userSubscriptionStatus = 'inactive';
+		if (isOwner && attrs.user) {
+			const userData = attrs.user.data || attrs.user;
+			userSubscriptionStatus = userData.subscriptionStatus || 'inactive';
+		}
+		
+		console.log('👤 Ownership check:', { currentUserId, pageOwnerId, isOwner, userSubscriptionStatus });
 		
 		// If page has sections, use sections-based rendering
 		if (pageData.hasSections || pageData.hasProducts) {
@@ -63,7 +110,9 @@ export async function load({ params, locals }) {
 					// Sections-based data
 					hasSections: true,
 					sections: pageData.sections,
-					products: pageData.products
+					products: pageData.products,
+					// User subscription status (not page-specific)
+					subscriptionStatus: userSubscriptionStatus
 				},
 				isOwner
 			};
@@ -95,7 +144,9 @@ export async function load({ params, locals }) {
 				city: attrs.city,
 				address: attrs.address,
 				metadata: attrs.metadata || {},
-				hasSections: false
+				hasSections: false,
+				// User subscription status (not page-specific)
+				subscriptionStatus: userSubscriptionStatus
 			},
 			isOwner
 		};

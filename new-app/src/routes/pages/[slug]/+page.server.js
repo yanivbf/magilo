@@ -1,13 +1,16 @@
 // @ts-check
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { getPageBySlug } from '$lib/server/strapi.js';
 
 /**
- * Load page data by slug
+ * Load page data by slug - REDIRECT TO /view/[slug] for public viewing
  * @type {import('./$types').PageServerLoad}
  */
 export async function load({ params, locals }) {
 	const { slug } = params;
+	
+	// Redirect to /view/[slug] for public viewing
+	throw redirect(302, `/view/${slug}`);
 
 	try {
 		// Get page from Strapi

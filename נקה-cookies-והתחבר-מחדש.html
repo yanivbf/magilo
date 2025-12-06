@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>נקה Cookies והתחבר מחדש</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .status {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .icon {
+            font-size: 24px;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .value {
+            color: #6b7280;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .steps {
+            background: #fef3c7;
+            border-right: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .steps h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .steps ol {
+            margin-right: 20px;
+        }
+        
+        .steps li {
+            color: #78350f;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון Cookies ו-Google OAuth</h1>
+        
+        <div id="message"></div>
+        
+        <div class="status">
+            <h3 style="margin-bottom: 15px; color: #374151;">📊 סטטוס נוכחי:</h3>
+            <div class="status-item">
+                <span class="icon">🍪</span>
+                <div style="flex: 1;">
+                    <div class="label">userId Cookie:</div>
+                    <div class="value" id="userIdCookie">בודק...</div>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="icon">🌐</span>
+                <div style="flex: 1;">
+                    <div class="label">פורט נוכחי:</div>
+                    <div class="value" id="currentPort">בודק...</div>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="icon">📍</span>
+                <div style="flex: 1;">
+                    <div class="label">URL מלא:</div>
+                    <div class="value" id="fullUrl">בודק...</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-danger" onclick="clearAllCookies()">
+            🗑️ נקה את כל ה-Cookies
+        </button>
+        
+        <button class="btn btn-secondary" onclick="goToLogin()">
+            🔐 עבור לדף התחברות
+        </button>
+        
+        <button class="btn btn-primary" onclick="goToDashboard()">
+            📊 עבור לדשבורד
+        </button>
+        
+        <div class="steps">
+            <h3>📋 סדר פעולות מומלץ:</h3>
+            <ol>
+                <li><strong>לחץ על "נקה את כל ה-Cookies"</strong> למעלה</li>
+                <li><strong>הוסף פורט 5174 ל-Google Console:</strong>
+                    <br>→ https://console.cloud.google.com/apis/credentials
+                    <br>→ הוסף: <code>http://localhost:5174</code>
+                </li>
+                <li><strong>חכה 2 דקות</strong> שהשינויים ייכנסו לתוקף</li>
+                <li><strong>לחץ על "עבור לדף התחברות"</strong> למעלה</li>
+                <li><strong>התחבר עם Google</strong></li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // Check current status
+        function checkStatus() {
+            // Check userId cookie
+            const userIdCookie = getCookie('userId');
+            const userIdEl = document.getElementById('userIdCookie');
+            
+            if (userIdCookie) {
+                if (userIdCookie.startsWith('google_')) {
+                    userIdEl.innerHTML = `<span style="color: #10b981;">✅ ${userIdCookie}</span>`;
+                } else {
+                    userIdEl.innerHTML = `<span style="color: #ef4444;">❌ ${userIdCookie} (שגוי - צריך להתחיל ב-google_)</span>`;
+                }
+            } else {
+                userIdEl.innerHTML = '<span style="color: #6b7280;">❌ לא נמצא cookie</span>';
+            }
+            
+            // Check current port
+            const port = window.location.port || '80';
+            document.getElementById('currentPort').textContent = port;
+            
+            // Show full URL
+            document.getElementById('fullUrl').textContent = window.location.origin;
+        }
+        
+        // Get cookie value
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // Clear all cookies
+        function clearAllCookies() {
+            const cookies = document.cookie.split(";");
+            
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            
+            showMessage('success', '✅ כל ה-Cookies נוקו בהצלחה!');
+            
+            setTimeout(() => {
+                checkStatus();
+            }, 500);
+        }
+        
+        // Show message
+        function showMessage(type, text) {
+            const messageEl = document.getElementById('message');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            
+            setTimeout(() => {
+                messageEl.className = '';
+                messageEl.textContent = '';
+            }, 5000);
+        }
+        
+        // Go to login
+        function goToLogin() {
+            const port = window.location.port || '5174';
+            window.location.href = `http://localhost:${port}/login`;
+        }
+        
+        // Go to dashboard
+        function goToDashboard() {
+            const port = window.location.port || '5174';
+            window.location.href = `http://localhost:${port}/dashboard`;
+        }
+        
+        // Check status on load
+        checkStatus();
+        
+        // Show info message
+        showMessage('info', '📌 בדוק את הסטטוס למעלה ולחץ על "נקה Cookies" אם יש בעיה');
+    </script>
+</body>
+</html>

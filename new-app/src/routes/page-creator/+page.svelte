@@ -28,13 +28,21 @@
 		error = '';
 
 		try {
+			// Get userId from cookie (same as server uses)
+			const userId = document.cookie
+				.split('; ')
+				.find(row => row.startsWith('userId='))
+				?.split('=')[1] || $currentUser?.id || 'temp_user';
+			
+			console.log('👤 Creating page with userId:', userId);
+			
 			const response = await fetch('/api/create-structured-page', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					userId: $currentUser?.id || 'temp_user',
+					userId: userId,
 					pageType: selectedTemplate.id,
 					formData: formData,
 					optionalSections: optionalSections
@@ -48,8 +56,12 @@
 			const result = await response.json();
 			
 			if (result.success) {
-				// Redirect to page view with edit toolbar
-				goto(result.pageUrl || `/pages/${result.slug}`);
+				console.log('✅ Page created successfully');
+				console.log('📄 Slug:', result.slug);
+				console.log('🔗 Redirecting to view page with edit mode:', `/view/${result.slug}`);
+				
+				// Redirect to view page - owner will see edit mode automatically
+				goto(`/view/${result.slug}`);
 			} else {
 				throw new Error(result.error || 'Failed to create page');
 			}

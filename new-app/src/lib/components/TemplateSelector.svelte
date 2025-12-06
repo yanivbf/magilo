@@ -27,10 +27,8 @@
 				onclick={() => selectTemplate(template)}
 				class="template-card bg-white rounded-xl overflow-hidden border-2 border-gray-200 hover:border-indigo-500 hover:shadow-xl transition-all text-right"
 			>
-				<div class="h-48 bg-cover bg-center" style="background-image: url('{template.image}')">
-					<div class="h-full bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-						<span class="text-5xl">{template.icon}</span>
-					</div>
+				<div class="h-48 bg-cover bg-center relative" style="background-image: url('{template.image}')">
+					<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 				</div>
 				<div class="p-6">
 					<h3 class="text-xl font-bold text-gray-900 mb-2">{template.name}</h3>

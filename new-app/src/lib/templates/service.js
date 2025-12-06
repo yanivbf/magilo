@@ -65,11 +65,11 @@ export const serviceTemplate = {
 			placeholder: '972501234567'
 		},
 		{
-			name: 'city',
-			label: 'עיר',
+			name: 'address',
+			label: 'כתובת',
 			type: 'text',
 			required: false,
-			placeholder: 'תל אביב'
+			placeholder: 'רחוב 123, תל אביב'
 		},
 		{
 			name: 'yearsExperience',

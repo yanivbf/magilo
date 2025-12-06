@@ -18,40 +18,54 @@ export async function GET({ params }) {
 		console.log(`👤 Getting user: ${userId}`);
 
 		// Get user from Strapi
-		const user = await getUserById(userId);
+		let user;
+		try {
+			user = await getUserById(userId);
+		} catch (getUserError) {
+			console.error(`❌ getUserById failed for ${userId}:`, getUserError.message);
+			return json({ error: 'User not found', details: getUserError.message }, { status: 404 });
+		}
 
 		if (!user) {
+			console.warn(`⚠️ User not found: ${userId}`);
 			return json({ error: 'User not found' }, { status: 404 });
 		}
 
-		console.log(`✅ Found user: ${user.attributes.name}`);
+		console.log(`✅ Found user: ${user.name || 'Unknown'}`);
 
-		// Transform response
+		// Strapi v5 returns data directly (no nested attributes)
 		const transformedUser = {
-			id: user.id,
-			name: user.attributes.name,
-			email: user.attributes.email,
-			phone: user.attributes.phone,
-			wallet: user.attributes.wallet,
-			avatar: user.attributes.avatar,
-			createdAt: user.attributes.createdAt,
-			lastActive: user.attributes.lastActive,
+			id: user.id || userId,
+			userId: user.userId || userId,
+			name: user.name || 'משתמש',
+			email: user.email || '',
+			phone: user.phone || null,
+			wallet: user.wallet || 0,
+			avatar: user.avatar || null,
+			subscriptionStatus: user.subscriptionStatus || 'inactive',
+			createdAt: user.createdAt || new Date().toISOString(),
+			lastActive: user.lastActive || new Date().toISOString(),
 			// Include counts if relations are populated
-			pagesCount: user.attributes.pages?.data?.length || 0,
-			purchasesCount: user.attributes.purchases?.data?.length || 0,
-			leadsCount: user.attributes.leads?.data?.length || 0
+			pagesCount: user.pages?.length || 0,
+			purchasesCount: user.purchases?.length || 0,
+			leadsCount: user.leads?.length || 0
 		};
 
 		return json({
 			success: true,
 			user: transformedUser
+		}, {
+			headers: {
+				'Content-Type': 'application/json; charset=utf-8'
+			}
 		});
 	} catch (error) {
 		console.error('❌ Error getting user:', error);
 		return json(
 			{
 				error: 'Failed to get user',
-				details: error.message
+				details: error.message,
+				stack: error.stack
 			},
 			{ status: 500 }
 		);

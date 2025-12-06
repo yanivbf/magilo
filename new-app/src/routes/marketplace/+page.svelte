@@ -58,22 +58,19 @@
 	<meta name="description" content="מצא את הדף המושלם שלך" />
 </svelte:head>
 
-<!-- Hero Header with Purple Background -->
-<div class="hero-gradient text-white">
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+<!-- Simple Header (No Purple Background) -->
+<div class="bg-white">
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 		<div class="text-center">
-			<h1 class="text-4xl md:text-6xl font-bold mb-4">AutoPage Marketplace</h1>
-			<p class="text-xl md:text-2xl mb-8 opacity-90">מצא את הדף המושלם שלך</p>
-			
 			<!-- Search Bar -->
-			<div class="max-w-2xl mx-auto mb-8">
+			<div class="max-w-2xl mx-auto mb-6">
 				<div class="relative">
 					<input 
 						type="text" 
 						bind:value={searchQuery}
 						placeholder="חפש דפים, עסקים, שירותים..." 
 						onkeydown={(e) => e.key === 'Enter' && handleSearch()}
-						class="w-full px-6 py-4 text-gray-900 text-lg rounded-full focus:ring-4 focus:ring-white focus:ring-opacity-50 focus:outline-none"
+						class="w-full px-6 py-4 text-gray-900 text-lg rounded-full border-2 border-gray-300 focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 focus:outline-none"
 					/>
 					<button 
 						onclick={handleSearch}

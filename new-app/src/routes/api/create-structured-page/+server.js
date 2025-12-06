@@ -9,7 +9,7 @@ import { validatePageData, isRateLimited, sanitizeHtml } from '$lib/server/secur
  * Create a new page with structured data (NO HTML)
  * @type {import('./$types').RequestHandler}
  */
-export async function POST({ request, getClientAddress }) {
+export async function POST({ request, getClientAddress, cookies }) {
 	try {
 		// Rate limiting
 		const clientIp = getClientAddress();
@@ -21,10 +21,17 @@ export async function POST({ request, getClientAddress }) {
 		console.log('🔍 CREATE STRUCTURED PAGE REQUEST:', JSON.stringify(body).substring(0, 300));
 
 		// Extract data
-		const userId = body.userId || body.user_id;
+		const userIdFromBody = body.userId || body.user_id;
+		const userIdFromCookie = cookies.get('userId');
+		const userId = userIdFromBody || userIdFromCookie; // CRITICAL: Get from body first, then cookies
 		const pageData = body.formData || body.pageData || body.data || body;
 		const pageType = body.pageType || pageData.pageType;
 		const optionalSections = body.optionalSections || [];
+		
+		console.log('🔍 USER ID DEBUG:');
+		console.log('   - From body:', userIdFromBody);
+		console.log('   - From cookie:', userIdFromCookie);
+		console.log('   - Final userId:', userId);
 		
 		// Validate
 		const validation = validatePageData(pageData);
@@ -54,7 +61,15 @@ export async function POST({ request, getClientAddress }) {
 		// Normalize pageType - convert 'onlineStore' to 'store' (MUST BE BEFORE metadata)
 		const normalizedPageType = pageType === 'onlineStore' ? 'store' : pageType;
 		
+		console.log('🔍 CRITICAL DEBUG - Before createPage():');
+		console.log('   - title:', title);
+		console.log('   - slug:', slug);
+		console.log('   - pageType:', normalizedPageType);
+		console.log('   - userId:', finalUserId);
 		console.log('📝 Creating structured page:', { title, slug, pageType: normalizedPageType, userId: finalUserId });
+
+		// NO NEED for Strapi user relation - we use userId string field instead
+		console.log('📝 Will create page with userId:', finalUserId);
 
 		// Build metadata with default header image based on page type
 		const defaultHeaderImages = {
@@ -71,6 +86,7 @@ export async function POST({ request, getClientAddress }) {
 			videoUrl: pageData.youtubeLink || pageData.videoUrl || pageData.video || '',
 			embedYoutubeVideo: pageData.embedYoutubeVideo || false,
 			headerImage: pageData.headerImage || defaultHeaderImages[normalizedPageType] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074',
+			createdByUserId: finalUserId, // CRITICAL: Store creator ID for ownership check
 			socialLinks: {
 				facebook: pageData.facebookLink || pageData.facebook || '',
 				instagram: pageData.instagramLink || pageData.instagram || '',
@@ -83,6 +99,8 @@ export async function POST({ request, getClientAddress }) {
 		};
 		
 		// Create page in Strapi (minimal HTML content for schema requirement)
+		// IMPORTANT: Do NOT save userId here - page should not appear in dashboard until user clicks "שמור לאזור שלי"
+		// Instead, save createdByUserId in metadata for temporary ownership (allows editing before saving)
 		const pageResult = await createPage({
 			title,
 			slug,
@@ -90,12 +108,12 @@ export async function POST({ request, getClientAddress }) {
 			pageType: normalizedPageType,
 			phone: pageData.phone || '',
 			email: pageData.email || '',
-			city: pageData.city || '',
 			address: pageData.address || '',
 			description: pageData.description || '',
 			metadata: metadata,
-			isActive: true,
-			userId: finalUserId
+			isActive: true
+			// NOTE: userId is NOT set here - will be set when user clicks "שמור לאזור שלי"
+			// Temporary ownership is tracked via metadata.createdByUserId
 		});
 
 		if (!pageResult) {
@@ -121,7 +139,9 @@ export async function POST({ request, getClientAddress }) {
 		// Helper function to get order for section type
 		const getSectionOrder = (type) => sectionOrderMap[type] ?? 99;
 
-		// Create sections based on optionalSections
+		// Create sections based on optionalSections - ALL WITH AWAIT to ensure page is fully ready
+		console.log('📝 Creating sections for page...');
+		
 		// 1. Video Section - Create if embedYoutubeVideo is checked OR if 'video' is in optionalSections
 		if (pageData.embedYoutubeVideo || optionalSections.includes('video')) {
 			const videoUrl = pageData.youtubeLink || metadata.videoUrl || '';
@@ -132,7 +152,7 @@ export async function POST({ request, getClientAddress }) {
 					enabled: true,
 					order: getSectionOrder('video'),
 					data: {
-						title: '🎥 סרטון',
+						title: 'סרטון',
 						subtitle: 'צפו בסרטון שלנו',
 						videoUrl: videoUrl,
 						description: 'סרטון המציג את העסק שלנו'
@@ -152,12 +172,7 @@ export async function POST({ request, getClientAddress }) {
 				data: {
 					title: 'אודותינו',
 					content: pageData.aboutText || pageData.description || 'תיאור העסק שלנו',
-					image: pageData.headerImage || '',
-					features: [
-						{ icon: '🎯', title: 'מקצועיות', text: 'צוות מקצועי ומנוסה' },
-						{ icon: '⚡', title: 'מהירות', text: 'שירות מהיר ויעיל' },
-						{ icon: '💎', title: 'איכות', text: 'איכות ללא פשרות' }
-					]
+					image: pageData.headerImage || ''
 				},
 				page: pageId
 			});
@@ -171,12 +186,12 @@ export async function POST({ request, getClientAddress }) {
 				enabled: true,
 				order: getSectionOrder('services'),
 				data: {
-					title: '🛠️ השירותים שלנו',
+					title: 'השירותים שלנו',
 					subtitle: 'מגוון שירותים איכותיים',
 					services: [
-						{ icon: '🔧', title: 'שירות 1', description: 'תיאור השירות', price: '₪150' },
-						{ icon: '⚙️', title: 'שירות 2', description: 'תיאור השירות', price: '₪200' },
-						{ icon: '🛠️', title: 'שירות 3', description: 'תיאור השירות', price: '₪250' }
+						{ icon: '', title: 'שירות 1', description: 'תיאור השירות', price: '₪150' },
+						{ icon: '', title: 'שירות 2', description: 'תיאור השירות', price: '₪200' },
+						{ icon: '', title: 'שירות 3', description: 'תיאור השירות', price: '₪250' }
 					]
 				},
 				page: pageId
@@ -191,7 +206,7 @@ export async function POST({ request, getClientAddress }) {
 				enabled: true,
 				order: getSectionOrder('pricing'),
 				data: {
-					title: '💰 מחירון',
+					title: 'מחירון',
 					subtitle: 'בחר את החבילה המתאימה לך',
 					plans: [
 						{
@@ -257,7 +272,7 @@ export async function POST({ request, getClientAddress }) {
 				products = generateSampleProducts(productCount);
 			}
 			
-			// Create each product in Strapi
+			// Create each product in Strapi - AWAIT ALL
 			for (let i = 0; i < products.length; i++) {
 				const product = products[i];
 				await createProduct({
@@ -292,7 +307,7 @@ export async function POST({ request, getClientAddress }) {
 				enabled: true,
 				order: getSectionOrder('team'),
 				data: {
-					title: '👥 הצוות שלנו',
+					title: 'הצוות שלנו',
 					subtitle: 'הכירו את האנשים שלנו',
 					members: [
 						{ name: 'יוסי כהן', role: 'מנכ"ל', bio: 'מנהיג הצוות עם ניסיון של 10 שנים', image: '' },
@@ -380,7 +395,7 @@ export async function POST({ request, getClientAddress }) {
 				enabled: true,
 				order: 99, // Contact always last
 				data: {
-					title: '📞 צור קשר',
+					title: 'צור קשר',
 					phone: pageData.phone || '',
 					email: pageData.email || '',
 					address: pageData.address || '',
@@ -390,14 +405,16 @@ export async function POST({ request, getClientAddress }) {
 			});
 		}
 
-		console.log('✅ Page created successfully');
+		console.log('✅ All sections created successfully');
+		console.log('✅ Page fully ready - redirecting to view page');
+		console.log('📋 Page details:', { id: pageResult.id, documentId: pageId, slug });
 
 		return json({
 			success: true,
 			pageId: pageResult.id,
 			documentId: pageId,
 			slug: slug,
-			pageUrl: `/view/${slug}` // Redirect directly to view page (full page with all sections)
+			pageUrl: `/view/${slug}` // Redirect to view page - owner sees edit mode
 		});
 
 	} catch (error) {

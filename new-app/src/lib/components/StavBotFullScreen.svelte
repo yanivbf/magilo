@@ -82,7 +82,8 @@
 			case 'send_message':
 				// Open contact form or WhatsApp
 				if (action.phone) {
-					window.open(`https://wa.me/${action.phone}`, '_blank');
+					const cleanPhone = action.phone.replace(/^0/, '').replace(/[^0-9]/g, '');
+					window.open(`https://wa.me/972${cleanPhone}`, '_blank');
 				}
 				break;
 				

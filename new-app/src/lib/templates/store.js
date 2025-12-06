@@ -62,14 +62,7 @@ export const storeTemplate = {
 			label: 'כתובת',
 			type: 'text',
 			required: false,
-			placeholder: 'כתובת החנות (אופציונלי)'
-		},
-		{
-			name: 'city',
-			label: 'עיר',
-			type: 'text',
-			required: false,
-			placeholder: 'תל אביב, ירושלים, חיפה...'
+			placeholder: 'רחוב 123, תל אביב (אופציונלי)'
 		}
 	],
 	

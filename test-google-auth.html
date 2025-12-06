@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת התחברות Google</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #6366f1;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔍 בדיקת התחברות Google</h1>
+        <p>בדיקה אם ה-API עובד כראוי</p>
+        
+        <button onclick="checkAuth()">בדוק סטטוס התחברות</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>⏳ בודק...</p>';
+            
+            try {
+                // Get userId from cookie
+                const userId = getCookie('userId');
+                
+                if (!userId) {
+                    resultDiv.innerHTML = '<p class="error">❌ לא נמצא cookie של userId</p>';
+                    return;
+                }
+                
+                resultDiv.innerHTML = `<p>✅ נמצא cookie: <code>${userId}</code></p><p>⏳ שולח בקשה ל-API...</p>`;
+                
+                // Fetch user data from API
+                const response = await fetch(`/api/user/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const user = data.user;
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ API עובד מצוין!</p>
+                        <div class="user-info">
+                            ${user.avatar ? `<img src="${user.avatar}" alt="Avatar" class="avatar">` : ''}
+                            <div>
+                                <h2>${user.name}</h2>
+                                <p>${user.email}</p>
+                                <p>מנוי: ${user.subscriptionStatus}</p>
+                                <p>דפים: ${user.pagesCount}</p>
+                            </div>
+                        </div>
+                        <h3>נתונים מלאים:</h3>
+                        <pre>${JSON.stringify(user, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ שגיאה: ${data.error || 'Unknown error'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ שגיאת רשת: ${error.message}</p>`;
+            }
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // Auto-check on load
+        window.onload = checkAuth;
+    </script>
+</body>
+</html>

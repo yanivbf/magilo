@@ -65,7 +65,7 @@
 <section class="team-section">
 	<div class="container">
 		<EditableText
-			value={data.title || '👥 הצוות שלנו'}
+			value={data.title || 'הצוות שלנו'}
 			onsave={(value) => saveField(`sections.${sectionIndex}.data.title`, value)}
 			class="section-title"
 			tag="h2"
@@ -132,7 +132,7 @@
 
 <style>
 	.team-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: white;
 		direction: rtl;
 	}
@@ -163,14 +163,17 @@
 	
 	.team-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 2rem;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1.5rem;
+		justify-content: center;
+		max-width: 900px;
+		margin: 0 auto;
 	}
 	
 	.team-card {
 		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-		padding: 2rem;
-		border-radius: 24px;
+		padding: 1.5rem;
+		border-radius: 16px;
 		text-align: center;
 		transition: all 0.4s ease;
 		position: relative;
@@ -208,9 +211,9 @@
 	}
 	
 	.member-image {
-		width: 150px;
-		height: 150px;
-		margin: 0 auto 1.5rem;
+		width: 100px;
+		height: 100px;
+		margin: 0 auto 1rem;
 		border-radius: 50%;
 		overflow: hidden;
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -228,41 +231,41 @@
 	}
 	
 	.member-name {
-		font-size: 1.5rem;
+		font-size: 1.1rem;
 		font-weight: 700;
 		color: #1f2937;
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.25rem;
 	}
 	
 	.member-role {
-		font-size: 1.1rem;
+		font-size: 0.9rem;
 		font-weight: 600;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
 	}
 	
 	.member-bio {
-		font-size: 0.95rem;
+		font-size: 0.85rem;
 		color: #6b7280;
-		line-height: 1.6;
+		line-height: 1.4;
 	}
 	
 	.add-member-btn {
 		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 		border: 3px dashed #667eea;
-		border-radius: 24px;
-		padding: 3rem;
+		border-radius: 16px;
+		padding: 2rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		min-height: 350px;
+		min-height: 250px;
 	}
 	
 	.add-member-btn:hover {
@@ -272,7 +275,7 @@
 	}
 	
 	.add-icon {
-		font-size: 4rem;
+		font-size: 2.5rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
@@ -280,7 +283,7 @@
 	}
 	
 	.add-text {
-		font-size: 1.5rem;
+		font-size: 1rem;
 		font-weight: 700;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;

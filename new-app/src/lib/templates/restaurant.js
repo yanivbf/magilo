@@ -52,8 +52,8 @@ export const restaurantTemplate = {
 					placeholder: 'רחוב הרצל 123'
 				},
 				{
-					name: 'city',
-					label: 'עיר',
+					name: 'address',
+					label: 'כתובת',
 					type: 'text',
 					required: true,
 					placeholder: 'תל אביב'

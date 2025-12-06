@@ -86,7 +86,9 @@
 	title="נגישות"
 >
 	<svg viewBox="0 0 24 24" fill="currentColor">
-		<path d="M12 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM21 9h-6V7h-2v2H7V7H5v2H3v2h2v2H3v2h2v2H3v2h2v-2h6v2h2v-2h6v2h2v-2h-2v-2h2v-2h-2v-2h2V9zm-8 6h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+		<path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/>
+		<circle cx="12" cy="4" r="2"/>
+		<path d="M19 13v-2c-1.54.02-3.09-.75-4.07-1.83l-1.29-1.43c-.17-.19-.38-.34-.61-.45-.01 0-.01-.01-.02-.01H13c-.35-.2-.75-.3-1.19-.26C10.76 7.11 10 8.04 10 9.09V15c0 1.1.9 2 2 2h5v5h2v-5.5c0-1.1-.9-2-2-2h-3v-3.45c1.29 1.07 3.25 1.94 5 1.95zm-9.5 3.5c-1.25 0-2.45.2-3.57.57.1.01.2.02.3.03 1.16.13 2.29.35 3.27.65v-1.25z"/>
 	</svg>
 </button>
 
@@ -156,8 +158,8 @@
 <style>
 	.accessibility-btn {
 		position: fixed;
-		bottom: 240px;
-		right: 30px;
+		bottom: 160px;
+		left: 30px;
 		width: 60px;
 		height: 60px;
 		background: #4A90E2;
@@ -185,8 +187,8 @@
 	
 	.accessibility-menu {
 		position: fixed;
-		bottom: 310px;
-		right: 30px;
+		bottom: 230px;
+		left: 30px;
 		width: 320px;
 		background: white;
 		border-radius: 16px;
@@ -333,14 +335,14 @@
 	@media (max-width: 768px) {
 		.accessibility-menu {
 			width: calc(100vw - 40px);
-			right: 20px;
+			left: 20px;
 			bottom: 310px;
 			max-height: 350px;
 		}
 		
 		.accessibility-btn {
-			right: 20px;
-			bottom: 240px;
+			left: 20px;
+			bottom: 160px;
 		}
 		
 		.menu-content {

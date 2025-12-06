@@ -77,7 +77,7 @@
 <section class="pricing-section">
 	<div class="container">
 		<EditableText
-			value={data.title || '💰 מחירון'}
+			value={data.title || 'מחירון'}
 			onsave={(value) => saveField(`sections.${sectionIndex}.data.title`, value)}
 			class="section-title"
 			tag="h2"
@@ -173,7 +173,7 @@
 
 <style>
 	.pricing-section {
-		padding: 5rem 0;
+		padding: 3rem 0;
 		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 		direction: rtl;
 	}
@@ -204,15 +204,18 @@
 	
 	.pricing-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-		gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1.5rem;
 		align-items: start;
+		justify-content: center;
+		max-width: 900px;
+		margin: 0 auto;
 	}
 	
 	.pricing-card {
 		background: white;
-		padding: 2.5rem;
-		border-radius: 24px;
+		padding: 1.5rem;
+		border-radius: 16px;
 		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 		transition: all 0.4s ease;
 		position: relative;
@@ -291,51 +294,51 @@
 	
 	.plan-name {
 		text-align: center;
-		font-size: 1.8rem;
+		font-size: 1.3rem;
 		font-weight: 700;
 		color: #1f2937;
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
 	}
 	
 	.price-wrapper {
 		text-align: center;
-		margin-bottom: 2rem;
-		padding-bottom: 2rem;
+		margin-bottom: 1.5rem;
+		padding-bottom: 1.5rem;
 		border-bottom: 2px solid #e5e7eb;
 	}
 	
 	.plan-price {
-		font-size: 3rem;
+		font-size: 2rem;
 		font-weight: 800;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.25rem;
 	}
 	
 	.plan-period {
-		font-size: 1rem;
+		font-size: 0.9rem;
 		color: #6b7280;
 	}
 	
 	.features-list {
 		list-style: none;
 		padding: 0;
-		margin: 0 0 2rem 0;
+		margin: 0 0 1.5rem 0;
 	}
 	
 	.feature-item {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 0;
+		gap: 0.5rem;
+		padding: 0.5rem 0;
 		position: relative;
 	}
 	
 	.check-icon {
-		width: 24px;
-		height: 24px;
+		width: 20px;
+		height: 20px;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		color: white;
 		border-radius: 50%;
@@ -344,11 +347,12 @@
 		justify-content: center;
 		font-weight: 700;
 		flex-shrink: 0;
+		font-size: 0.75rem;
 	}
 	
 	.feature-text {
 		flex: 1;
-		font-size: 1rem;
+		font-size: 0.9rem;
 		color: #374151;
 	}
 	
@@ -392,12 +396,12 @@
 	
 	.cta-btn {
 		width: 100%;
-		padding: 1rem 2rem;
+		padding: 0.75rem 1.5rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		color: white;
 		border: none;
 		border-radius: 12px;
-		font-size: 1.1rem;
+		font-size: 1rem;
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.3s ease;
@@ -412,16 +416,16 @@
 	.add-plan-btn {
 		background: white;
 		border: 3px dashed #667eea;
-		border-radius: 24px;
-		padding: 3rem;
+		border-radius: 16px;
+		padding: 2rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		min-height: 500px;
+		min-height: 300px;
 	}
 	
 	.add-plan-btn:hover {
@@ -431,7 +435,7 @@
 	}
 	
 	.add-icon {
-		font-size: 4rem;
+		font-size: 2.5rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
@@ -439,7 +443,7 @@
 	}
 	
 	.add-text {
-		font-size: 1.5rem;
+		font-size: 1rem;
 		font-weight: 700;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		-webkit-background-clip: text;
