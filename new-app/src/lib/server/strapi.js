@@ -83,7 +83,9 @@ class StrapiClient {
 
 		const response = await fetch(url, {
 			...options,
-			headers
+			headers,
+			// Disable caching to always get fresh data
+			cache: 'no-store'
 		});
 
 		if (!response.ok) {
@@ -332,25 +334,54 @@ export async function getPageBySlug(slug) {
 
 /**
  * Get page by ID (supports both numeric ID and documentId)
- * @param {string} id
+ * @param {string|number} id
  * @returns {Promise<any>}
  */
 export async function getPageById(id) {
+	// CRITICAL: In Strapi v5, documentId is the primary identifier
+	// Try documentId first (works for both documentId strings and numeric IDs)
 	try {
-		// Try direct ID first
+		console.log('🔍 Getting page by ID:', id);
 		const response = await strapi.get(`/pages/${id}`, {
-			populate: '*'
+			'populate[0]': 'sections',
+			'populate[1]': 'storeProducts',
+			'populate[2]': 'user'
 		});
-		return response.data;
+		
+		if (response.data) {
+			console.log('✅ Found page:', response.data.id, response.data.documentId);
+			return response.data;
+		}
 	} catch (error) {
-		// If failed, try searching by documentId
-		console.log('🔍 Direct ID failed, trying documentId search:', id);
-		const response = await strapi.get('/pages', {
-			'filters[documentId][$eq]': id,
-			populate: '*'
-		});
-		return response.data?.[0] || null;
+		console.log('⚠️ Direct lookup failed:', error.message);
 	}
+	
+	// If direct lookup failed and it looks like a documentId, try searching
+	if (typeof id === 'string' && !/^\d+$/.test(id)) {
+		try {
+			console.log('🔍 Searching all pages for documentId:', id);
+			const response = await strapi.get('/pages', {
+				'populate[0]': 'sections',
+				'populate[1]': 'storeProducts',
+				'populate[2]': 'user',
+				'pagination[pageSize]': 100
+			});
+			
+			if (response.data && response.data.length > 0) {
+				// Find the page with matching documentId
+				const page = response.data.find(p => p.documentId === id);
+				if (page) {
+					console.log('✅ Found page by documentId search:', page.id);
+					return page;
+				}
+			}
+		} catch (error) {
+			console.error(`❌ Failed to search pages:`, error.message);
+		}
+	}
+	
+	console.error(`❌ Page not found with ID: ${id}`);
+	return null;
 }
 
 /**
@@ -404,25 +435,32 @@ export async function getActivePages(filters = {}) {
 
 /**
  * Update page (supports both numeric ID and documentId)
- * @param {string} id
+ * @param {string|number} id
  * @param {Object} data
  * @returns {Promise<any>}
  */
 export async function updatePage(id, data) {
+	// CRITICAL: In Strapi v5, documentId works directly in PUT requests
+	console.log('💾 Updating page:', id);
+	console.log('💾 Data keys:', Object.keys(data));
+	
+	// CRITICAL FIX: Remove documentId and id from data payload
+	// Strapi v5 doesn't accept these fields in the update body
+	const { documentId, id: numericId, ...cleanData } = data;
+	
+	if (documentId || numericId) {
+		console.log('⚠️ Removed documentId/id from payload (not allowed in Strapi v5 updates)');
+	}
+	
+	console.log('💾 Clean data keys:', Object.keys(cleanData));
+	
 	try {
-		// Try direct ID first
-		return await strapi.put(`/pages/${id}`, data);
+		const result = await strapi.put(`/pages/${id}`, cleanData);
+		console.log('✅ Page updated successfully');
+		return result;
 	} catch (error) {
-		// If failed, get the page by documentId first to get numeric ID
-		console.log('🔍 Direct update failed, trying documentId lookup:', id);
-		const page = await getPageById(id);
-		if (!page) {
-			throw new Error('Page not found');
-		}
-		// Use the numeric ID
-		const numericId = page.id;
-		console.log('✅ Found numeric ID:', numericId);
-		return await strapi.put(`/pages/${numericId}`, data);
+		console.error('❌ Update failed:', error.message);
+		throw error;
 	}
 }
 

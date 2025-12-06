@@ -8,8 +8,21 @@ import { extractPageDataFromStrapi } from '$lib/server/dataExtractor.js';
  * Load page data by slug (clean view without editor tools)
  * @type {import('./$types').PageServerLoad}
  */
-export async function load({ params, locals, cookies }) {
+export async function load({ params, locals, cookies, setHeaders, url }) {
 	const { slug } = params;
+	
+	// Disable caching to always get fresh data from Strapi
+	setHeaders({
+		'cache-control': 'no-cache, no-store, must-revalidate, max-age=0',
+		'pragma': 'no-cache',
+		'expires': '0'
+	});
+	
+	// Log the timestamp parameter to verify fresh loads
+	const timestamp = url.searchParams.get('t');
+	if (timestamp) {
+		console.log('🔄 Fresh load requested with timestamp:', timestamp);
+	}
 
 	try {
 		// Get page from Strapi
@@ -94,6 +107,43 @@ export async function load({ params, locals, cookies }) {
 		if (pageData.hasSections || pageData.hasProducts) {
 			console.log('✅ Returning sections-based page');
 			console.log('📋 Page IDs:', { id: page.id, documentId: page.documentId });
+			
+			// Apply section overrides from metadata
+			const sections = pageData.sections;
+			const metadata = attrs.metadata || {};
+			const sectionOverrides = metadata.sectionOverrides || {};
+			
+			console.log('🔄 Applying section overrides:', Object.keys(sectionOverrides).length, 'sections have overrides');
+			
+			// Merge overrides into sections
+			sections.forEach((section, index) => {
+				if (sectionOverrides[index]) {
+					console.log(`🔄 Applying overrides to section ${index}:`, Object.keys(sectionOverrides[index]));
+					
+					// Apply each override
+					for (const [fieldPath, value] of Object.entries(sectionOverrides[index])) {
+						// Navigate to the target field and set the value
+						// e.g., "data.title" -> section.data.title = value
+						const parts = fieldPath.split('.');
+						let target = section;
+						
+						// Navigate to the parent of the final field
+						for (let i = 0; i < parts.length - 1; i++) {
+							if (!target[parts[i]]) {
+								target[parts[i]] = {};
+							}
+							target = target[parts[i]];
+						}
+						
+						// Set the final field
+						const finalKey = parts[parts.length - 1];
+						target[finalKey] = value;
+						
+						console.log(`   ✅ Applied: ${fieldPath} = ${JSON.stringify(value).substring(0, 50)}`);
+					}
+				}
+			});
+			
 			return {
 				page: {
 					id: page.id,
@@ -106,10 +156,10 @@ export async function load({ params, locals, cookies }) {
 					email: attrs.email,
 					city: attrs.city,
 					address: attrs.address,
-					metadata: attrs.metadata || {},
-					// Sections-based data
+					metadata: metadata,
+					// Sections-based data (with overrides applied)
 					hasSections: true,
-					sections: pageData.sections,
+					sections: sections,
 					products: pageData.products,
 					// User subscription status (not page-specific)
 					subscriptionStatus: userSubscriptionStatus

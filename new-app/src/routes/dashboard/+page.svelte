@@ -86,10 +86,18 @@
 	}
 	
 	function editPage(page) {
-		// Navigate to manage page for editing
-		const pageId = page.documentId || page.id;
-		const slug = page.slug || page.fileName || pageId;
-		goto(`/manage/${slug}`);
+		// Navigate to view page with edit mode (inline editing)
+		const slug = page.slug || page.fileName || page.documentId || page.id;
+		console.log('✏️ Opening edit mode:', { slug, page });
+		if (!slug) {
+			alert('שגיאה: לא נמצא slug לדף זה');
+			return;
+		}
+		// Use /view/ route for inline editing
+		// Add timestamp to force fresh data load and bypass ALL caches
+		// Use window.location.href for full page reload (not SvelteKit navigation)
+		const timestamp = Date.now();
+		window.location.href = `/view/${slug}?t=${timestamp}`;
 	}
 	
 	function viewPage(page) {

@@ -407,6 +407,10 @@ export function extractPageDataFromStrapi(page) {
 	// Strapi v4 uses nested format (data under page.attributes)
 	const attrs = page.attributes || page;
 	
+	// Get metadata with sectionOverrides
+	const metadata = attrs.metadata || {};
+	const sectionOverrides = metadata.sectionOverrides || {};
+	
 	// Check if this is a sections-based page
 	// v5: attrs.sections is array directly
 	// v4: attrs.sections.data is array
@@ -424,16 +428,24 @@ export function extractPageDataFromStrapi(page) {
 		title: attrs.title || '',
 		pageType: attrs.pageType || 'generic',
 		description: attrs.description || '',
-		sections: sectionsArray.map(s => {
+		sections: sectionsArray.map((s, index) => {
 			// v5: data directly on s, v4: data under s.attributes
 			const sAttrs = s.attributes || s;
+			let sectionData = sAttrs.data || {};
+			
+			// Apply section overrides from metadata
+			if (sectionOverrides[index]) {
+				console.log(`🔄 Applying overrides for section ${index}:`, sectionOverrides[index]);
+				sectionData = applyOverrides(sectionData, sectionOverrides[index]);
+			}
+			
 			return {
 				id: s.id,
 				documentId: s.documentId,
 				type: sAttrs.type,
 				enabled: sAttrs.enabled,
 				order: sAttrs.order ?? 99,
-				data: sAttrs.data || {}
+				data: sectionData
 			};
 		}).sort((a, b) => a.order - b.order), // Sort by order field
 		products: productsArray.map(p => {
@@ -452,4 +464,36 @@ export function extractPageDataFromStrapi(page) {
 		}),
 		productsCount: productsArray.length
 	};
+}
+
+/**
+ * Apply overrides to section data
+ * @param {Object} baseData - Original section data
+ * @param {Object} overrides - Overrides from metadata
+ * @returns {Object} - Merged data
+ */
+function applyOverrides(baseData, overrides) {
+	const result = JSON.parse(JSON.stringify(baseData)); // Deep clone
+	
+	for (const [path, value] of Object.entries(overrides)) {
+		// Handle nested paths like "data.products" or "data.title"
+		const parts = path.split('.');
+		let target = result;
+		
+		// Navigate to the parent of the final key
+		for (let i = 0; i < parts.length - 1; i++) {
+			const key = parts[i];
+			if (!target[key]) {
+				target[key] = {};
+			}
+			target = target[key];
+		}
+		
+		// Set the final value
+		const finalKey = parts[parts.length - 1];
+		target[finalKey] = value;
+		console.log(`  ✅ Applied override: ${path} =`, JSON.stringify(value).substring(0, 100));
+	}
+	
+	return result;
 }

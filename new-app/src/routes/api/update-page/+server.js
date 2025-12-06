@@ -3,6 +3,7 @@ import { json } from '@sveltejs/kit';
 import { updatePage, getPageById } from '$lib/server/strapi.js';
 import { extractContactInfo, extractProducts, extractDescription } from '$lib/server/dataExtractor.js';
 import { processPage } from '$lib/server/pageProcessor.js';
+import { STRAPI_URL, STRAPI_API_TOKEN } from '$env/static/private';
 
 /**
  * Update page handler (shared logic)
@@ -30,61 +31,121 @@ async function handleUpdatePage(request) {
 			return json({ error: 'Missing pageId' }, { status: 400 });
 		}
 		
-		// Handle simple field update
+		// Handle field update with nested path support
 		if (field && value !== undefined) {
-			console.log(`📝 Simple field update: ${field}`);
-			const updateData = {};
+			console.log(`📝 Field update: ${field}`);
+			console.log(`📄 Page ID received:`, pageId);
 			
-			// Support nested field paths like "sections.0.data.images"
+			// Get the current page (supports both numeric ID and documentId)
+			const page = await getPageById(pageId);
+			if (!page) {
+				console.error('❌ Page not found:', pageId);
+				return json({ error: 'Page not found' }, { status: 404 });
+			}
+			
+			console.log(`✅ Page found:`, page.id, page.documentId);
+			
+			// Handle nested fields (e.g., "sections.0.data.image")
 			if (field.includes('.')) {
-				// Get the page first
-				const page = await getPageById(pageId);
-				if (!page) {
-					return json({ error: 'Page not found' }, { status: 404 });
-				}
-				
-				// Parse the field path
 				const parts = field.split('.');
 				const rootField = parts[0];
 				
-				// Get the root object
-				let obj = page[rootField] || page.attributes?.[rootField];
-				if (!obj) {
-					console.error(`❌ Root field not found: ${rootField}`);
-					return json({ error: `Field ${rootField} not found` }, { status: 400 });
-				}
-				
-				// Navigate to the parent of the target field
-				for (let i = 1; i < parts.length - 1; i++) {
-					const part = parts[i];
-					if (obj[part] === undefined) {
-						console.error(`❌ Field path not found at: ${parts.slice(0, i + 1).join('.')}`);
-						return json({ error: `Field path not found` }, { status: 400 });
+				// SIMPLE FIX: Store section edits in metadata instead of trying to update Strapi components
+				// This works exactly like title/description editing!
+				if (rootField === 'sections') {
+					console.log(`📦 Section field update detected: ${field}`);
+					
+					// Extract section index and field path
+					// e.g., "sections.0.data.title" -> sectionIndex=0, fieldPath="data.title"
+					const sectionIndex = parseInt(parts[1]);
+					if (isNaN(sectionIndex)) {
+						console.error(`❌ Invalid section index: ${parts[1]}`);
+						return json({ error: 'Invalid section index' }, { status: 400 });
 					}
-					obj = obj[part];
+					
+					// Build the field path within the section (everything after "sections.X.")
+					const fieldPath = parts.slice(2).join('.');
+					console.log(`📦 Section index: ${sectionIndex}`);
+					console.log(`📦 Field path: ${fieldPath}`);
+					console.log(`📦 New value:`, JSON.stringify(value).substring(0, 100));
+					
+					// Get current metadata
+					const currentMetadata = page.metadata || page.attributes?.metadata || {};
+					
+					// Initialize sectionOverrides if it doesn't exist
+					if (!currentMetadata.sectionOverrides) {
+						currentMetadata.sectionOverrides = {};
+					}
+					
+					// Initialize this section's overrides if it doesn't exist
+					if (!currentMetadata.sectionOverrides[sectionIndex]) {
+						currentMetadata.sectionOverrides[sectionIndex] = {};
+					}
+					
+					// Store the override using the field path
+					currentMetadata.sectionOverrides[sectionIndex][fieldPath] = value;
+					
+					console.log(`💾 Storing section override in metadata:`, {
+						sectionIndex,
+						fieldPath,
+						value: JSON.stringify(value).substring(0, 100)
+					});
+					
+					// Update the page metadata
+					const updateId = page.documentId || page.id;
+					const result = await updatePage(updateId, { metadata: currentMetadata });
+					
+					console.log(`✅ Section override saved to metadata successfully`);
+					return json({ success: true, pageId: updateId, updated: field });
 				}
 				
-				// Set the final value
-				const lastPart = parts[parts.length - 1];
-				obj[lastPart] = value;
+				// For other nested fields (not sections), use the old logic
+				let data = page[rootField] || page.attributes?.[rootField];
 				
-				// Update the root field
-				updateData[rootField] = page[rootField] || page.attributes?.[rootField];
-				console.log(`✅ Updated nested field: ${field}`);
+				if (!data) {
+					console.error(`❌ ${rootField} not found in page`);
+					return json({ error: `${rootField} not found` }, { status: 400 });
+				}
+				
+				// Make a deep copy
+				data = JSON.parse(JSON.stringify(data));
+				
+				// Navigate to the target and update
+				let target = data;
+				for (let i = 1; i < parts.length - 1; i++) {
+					const key = parts[i];
+					if (target[key] === undefined) {
+						console.error(`❌ Path not found: ${parts.slice(0, i + 1).join('.')}`);
+						return json({ error: `Invalid field path: ${field}` }, { status: 400 });
+					}
+					target = target[key];
+				}
+				
+				const finalKey = parts[parts.length - 1];
+				target[finalKey] = value;
+				
+				console.log(`✅ Updated ${field} to:`, JSON.stringify(value).substring(0, 100));
+				
+				// Update the page
+				const updateId = page.documentId || page.id;
+				const updateData = { [rootField]: data };
+				
+				const result = await updatePage(updateId, updateData);
+				
+				console.log(`✅ Page updated successfully`);
+				return json({ success: true, pageId: updateId, updated: field });
 			} else {
 				// Simple field update
-				updateData[field] = value;
-				console.log(`✅ Updated field: ${field}`);
+				console.log(`✅ Simple field update: ${field} = ${value}`);
+				
+				// CRITICAL: Must use documentId for Strapi v5 updates
+				const updateId = page.documentId || page.id;
+				console.log(`📄 Using ID for update:`, updateId);
+				
+				const result = await updatePage(updateId, { [field]: value });
+				console.log(`✅ Page updated successfully`);
+				return json({ success: true, pageId: updateId, updated: field });
 			}
-			
-			const response = await updatePage(pageId, updateData);
-			console.log(`✅ Page ${pageId} updated successfully`);
-			
-			return json({
-				success: true,
-				pageId,
-				message: 'Field updated successfully'
-			});
 		}
 
 		// Get existing page to determine pageType

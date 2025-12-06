@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת מבנה sections</title>
+</head>
+<body dir="rtl">
+    <h1>בדיקת מבנה sections</h1>
+    <p>פתח את הקונסול (F12) ותראה מה יש ב-sections</p>
+    
+    <script>
+        // Simulate what the page has
+        const pageData = {
+            sections: [
+                {
+                    id: 976,
+                    documentId: "ejk4xj7wpwzgcr9bwv0anipq",
+                    type: "video",
+                    data: {
+                        title: "סרטון",
+                        subtitle: "צפו בסרטון שלנו"
+                    }
+                },
+                {
+                    id: 977,
+                    documentId: "nmmeq1vj30p1kdn32w79y6p7",
+                    type: "gallery",
+                    data: {
+                        title: "גלריית תמונות"
+                    }
+                }
+            ]
+        };
+        
+        console.log('📦 Original sections:', pageData.sections);
+        console.log('📦 First section:', pageData.sections[0]);
+        console.log('✅ Has id?', pageData.sections[0].id);
+        console.log('✅ Has documentId?', pageData.sections[0].documentId);
+        
+        // Now simulate the cleaning
+        const sections = JSON.parse(JSON.stringify(pageData.sections));
+        const cleanedSections = sections.map(section => {
+            const { documentId: sectionDocId, ...cleanSection } = section;
+            
+            if (cleanSection.data && typeof cleanSection.data === 'object') {
+                const { documentId: dataDocId, ...cleanData } = cleanSection.data;
+                cleanSection.data = cleanData;
+            }
+            
+            return cleanSection;
+        });
+        
+        console.log('\n🧹 Cleaned sections:', cleanedSections);
+        console.log('🧹 First cleaned section:', cleanedSections[0]);
+        console.log('✅ Still has id?', cleanedSections[0].id);
+        console.log('❌ Still has documentId?', cleanedSections[0].documentId);
+    </script>
+</body>
+</html>

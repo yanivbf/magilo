@@ -29,39 +29,55 @@
 	
 	setContext('editMode', () => editMode);
 	setContext('pageId', data.page.documentId || data.page.id);
+	setContext('pageData', data.page); // Add full page data to context
 	setContext('saveField', saveField);
 	
 	// Save field function
 	async function saveField(field, value) {
 		try {
-			console.log(`💾 Saving ${field}:`, value);
-			console.log(`📄 Page ID:`, data.page.documentId || data.page.id);
+			console.log(`💾 Saving field: "${field}"`);
+			console.log(`💾 Value:`, typeof value === 'string' ? value.substring(0, 100) : value);
+			
+			// CRITICAL: Use documentId for Strapi v5 (more stable than numeric ID)
+			const pageId = data.page.documentId || data.page.id;
+			console.log(`📄 Page ID (documentId):`, pageId);
+			
+			showNotification('⏳ שומר...');
+			
+			// Build the request body
+			const requestBody = {
+				pageId: pageId,
+				field: field,
+				value: value
+			};
+			
+			console.log('📦 Request body:', JSON.stringify(requestBody).substring(0, 300));
 			
 			const response = await fetch(`/api/update-page`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					pageId: data.page.documentId || data.page.id,
-					[field]: value
-				})
+				body: JSON.stringify(requestBody)
 			});
 			
 			console.log(`📡 Response status:`, response.status);
 			
-			if (response.ok) {
-				const result = await response.json();
-				console.log('✅ Saved successfully:', result);
-				showNotification('✅ נשמר בהצלחה');
-			} else {
-				const errorText = await response.text();
-				console.error('❌ Failed to save:', response.status, errorText);
-				showNotification('❌ שגיאה בשמירה');
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+				console.error('❌ Failed to save:', response.status, errorData);
+				showNotification(`❌ שגיאה: ${errorData.error || 'שגיאה בשמירה'}`);
+				throw new Error(errorData.error || 'Save failed');
 			}
+			
+			const result = await response.json();
+			console.log('✅ Saved successfully:', result);
+			showNotification('✅ נשמר בהצלחה!');
+			
 		} catch (error) {
 			console.error('❌ Error saving:', error);
 			showNotification('❌ שגיאה בשמירה');
+			throw error; // Re-throw so calling code knows it failed
 		}
 	}
 	
@@ -128,6 +144,8 @@
 	
 	const ctaButton = getCtaButton(data.page.pageType);
 	
+	let uploadingHeroImage = $state(false);
+	
 	// Upload header image
 	async function changeHeroImage(event) {
 		event.stopPropagation();
@@ -140,6 +158,7 @@
 			const file = e.target.files[0];
 			if (!file) return;
 			
+			uploadingHeroImage = true;
 			showNotification('⏳ מעלה תמונה...');
 			
 			const formData = new FormData();
@@ -186,15 +205,18 @@
 						const error = await updateResponse.text();
 						console.error('❌ Update failed:', error);
 						showNotification('❌ שגיאה בעדכון');
+						uploadingHeroImage = false;
 					}
 				} else {
 					const error = await uploadResponse.text();
 					console.error('❌ Upload failed:', uploadResponse.status, error);
 					showNotification('❌ שגיאה בהעלאת התמונה');
+					uploadingHeroImage = false;
 				}
 			} catch (error) {
 				console.error('❌ Error uploading image:', error);
 				showNotification('❌ שגיאה בהעלאת התמונה');
+				uploadingHeroImage = false;
 			}
 		};
 		
@@ -271,8 +293,9 @@
 				}
 				
 				// Redirect to dashboard after 1 second (like old system)
+				// Use replace to prevent back button issues
 				setTimeout(() => {
-					window.location.href = `/dashboard?userId=${userId}`;
+					window.location.replace(`/dashboard?userId=${userId}`);
 				}, 1000);
 			} else {
 				const error = await response.json();
@@ -331,11 +354,16 @@
 		<!-- Simple Action Buttons (only for owners) -->
 		{#if data.isOwner}
 			<div class="owner-action-buttons">
-				<button onclick={changeHeroImage} class="action-btn upload-btn">
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-					</svg>
-					<span>העלה תמונה</span>
+				<button onclick={changeHeroImage} class="action-btn upload-btn" class:uploading={uploadingHeroImage} disabled={uploadingHeroImage}>
+					{#if uploadingHeroImage}
+						<div class="btn-spinner"></div>
+						<span>מעלה...</span>
+					{:else}
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+						</svg>
+						<span>העלה תמונה</span>
+					{/if}
 				</button>
 				
 				<button onclick={savePageToMyArea} class="action-btn save-btn">
@@ -417,9 +445,9 @@
 				{:else if section.type === 'products'}
 					<div id="products">
 						<ProductsGallerySection 
-							data={{ ...section.data, products: data.page.products, phone: data.page.phone }} 
+							data={{ ...section.data, products: section.data.products || data.page.products || [], phone: data.page.phone }} 
 							sectionIndex={sectionIndex}
-							editable={data.isOwner}
+							editable={false}
 						/>
 					</div>
 				{:else if section.type === 'testimonials'}
@@ -1240,6 +1268,28 @@
 	
 	.save-btn.saved {
 		background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+	}
+	
+	.action-btn:disabled {
+		opacity: 0.7;
+		cursor: not-allowed;
+	}
+	
+	.action-btn.uploading {
+		pointer-events: none;
+	}
+	
+	.btn-spinner {
+		width: 20px;
+		height: 20px;
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-top-color: white;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+	
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 	
 	/* Mobile responsive for action buttons */

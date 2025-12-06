@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת עדכון ישיר</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            direction: rtl;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>בדיקת עדכון מקטעים</h1>
+    
+    <div>
+        <label>Page ID (documentId או numeric):</label>
+        <input type="text" id="pageId" value="icqxvujoujrxd0a484ropuid" style="width: 300px;">
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="testUpdate()">בדוק עדכון מקטע</button>
+        <button onclick="clearLog()">נקה לוג</button>
+    </div>
+    
+    <div class="log" id="log"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function testUpdate() {
+            const pageId = document.getElementById('pageId').value;
+            
+            log('🔍 מתחיל בדיקה...');
+            log(`📄 Page ID: ${pageId}`);
+            
+            try {
+                // Step 1: Get current page
+                log('\n📥 שלב 1: קורא דף נוכחי...');
+                const getResponse = await fetch(`http://localhost:5173/api/pages/${pageId}`);
+                if (!getResponse.ok) {
+                    throw new Error(`Failed to get page: ${getResponse.status}`);
+                }
+                const pageData = await getResponse.json();
+                log(`✅ דף נמצא: ${pageData.title}`, 'success');
+                log(`   - ID: ${pageData.id}`);
+                log(`   - DocumentID: ${pageData.documentId}`);
+                log(`   - מספר מקטעים: ${pageData.sections?.length || 0}`);
+                
+                if (pageData.sections && pageData.sections.length > 0) {
+                    const section0 = pageData.sections[0];
+                    log(`   - מקטע 0 סוג: ${section0.type}`);
+                    log(`   - תמונה נוכחית: ${section0.data?.image || 'אין'}`);
+                    
+                    // Step 2: Update the image
+                    const newImageUrl = `http://localhost:1337/uploads/test_${Date.now()}.png`;
+                    log(`\n💾 שלב 2: מעדכן תמונה ל: ${newImageUrl}`);
+                    
+                    const updateResponse = await fetch('http://localhost:5173/api/update-page', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            pageId: pageId,
+                            field: 'sections.0.data.image',
+                            value: newImageUrl
+                        })
+                    });
+                    
+                    log(`📡 תגובת שרת: ${updateResponse.status}`);
+                    
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        log(`❌ שגיאה: ${errorText}`, 'error');
+                        throw new Error(`Update failed: ${updateResponse.status}`);
+                    }
+                    
+                    const updateResult = await updateResponse.json();
+                    log(`✅ עדכון הצליח: ${JSON.stringify(updateResult)}`, 'success');
+                    
+                    // Step 3: Verify
+                    log('\n🔍 שלב 3: מאמת עדכון...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    const verifyResponse = await fetch(`http://localhost:5173/api/pages/${pageId}`, {
+                        headers: {
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    const verifyData = await verifyResponse.json();
+                    const updatedImage = verifyData.sections[0].data.image;
+                    
+                    log(`📍 תמונה לאחר עדכון: ${updatedImage}`);
+                    
+                    if (updatedImage === newImageUrl) {
+                        log('\n✅ הצלחה! העדכון נשמר בהצלחה!', 'success');
+                    } else {
+                        log('\n❌ כישלון! העדכון לא נשמר!', 'error');
+                        log(`   צפוי: ${newImageUrl}`, 'error');
+                        log(`   התקבל: ${updatedImage}`, 'error');
+                    }
+                } else {
+                    log('❌ אין מקטעים בדף', 'error');
+                }
+                
+            } catch (error) {
+                log(`\n❌ שגיאה: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

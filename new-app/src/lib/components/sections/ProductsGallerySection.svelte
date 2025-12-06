@@ -209,10 +209,29 @@
 	 * Save product field
 	 */
 	async function saveProductField(productId, field, value) {
+		// Update local state
 		products = products.map(p => 
 			p.id === productId ? { ...p, [field]: value } : p
 		);
-		await saveField(`sections.${sectionIndex}.data.products`, JSON.stringify(products));
+		
+		// Save to sections.X.data.products (like GallerySection does!)
+		const response = await fetch('/api/update-page', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				pageId: pageId,
+				field: `sections.${sectionIndex}.data.products`,
+				value: products
+			})
+		});
+		
+		if (response.ok) {
+			console.log('✅ Product field saved successfully');
+			showNotification('✅ נשמר בהצלחה!');
+		} else {
+			console.error('❌ Failed to save product field');
+			showNotification('❌ שגיאה בשמירה');
+		}
 	}
 	
 	/**
@@ -242,8 +261,22 @@
 			p.id === productId ? { ...p, image: imageUrl } : p
 		);
 		
-		// Step 3: Save to Strapi
-		await saveField(`sections.${sectionIndex}.data.products`, JSON.stringify(products));
+		// Step 3: Save to sections.X.data.products (like GallerySection does!)
+		const response = await fetch('/api/update-page', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				pageId: pageId,
+				field: `sections.${sectionIndex}.data.products`,
+				value: products
+			})
+		});
+		
+		if (response.ok) {
+			showNotification('✅ התמונה הוחלפה בהצלחה');
+		} else {
+			throw new Error('Failed to update page');
+		}
 		
 		return imageUrl;
 	}
@@ -261,7 +294,21 @@
 		};
 		
 		products = [...products, newProduct];
-		await saveField(`sections.${sectionIndex}.data.products`, JSON.stringify(products));
+		
+		// Save to sections.X.data.products (like GallerySection does!)
+		const response = await fetch('/api/update-page', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				pageId: pageId,
+				field: `sections.${sectionIndex}.data.products`,
+				value: products
+			})
+		});
+		
+		if (response.ok) {
+			showNotification('✅ המוצר נוסף בהצלחה');
+		}
 	}
 	
 	/**
@@ -271,7 +318,21 @@
 		if (!confirm('האם למחוק את המוצר?')) return;
 		
 		products = products.filter(p => p.id !== productId);
-		await saveField(`sections.${sectionIndex}.data.products`, JSON.stringify(products));
+		
+		// Save to sections.X.data.products (like GallerySection does!)
+		const response = await fetch('/api/update-page', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				pageId: pageId,
+				field: `sections.${sectionIndex}.data.products`,
+				value: products
+			})
+		});
+		
+		if (response.ok) {
+			showNotification('✅ המוצר נמחק בהצלחה');
+		}
 	}
 </script>
 

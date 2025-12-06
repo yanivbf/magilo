@@ -417,3 +417,44 @@ html[dir="ltr"] .chat-bubble {
 	color: #fff;
 	padding: 20px;
 }
+
+/* Section Titles - Centered and Properly Sized */
+:global(.section-title) {
+	text-align: center !important;
+	font-size: 2.5rem !important;
+	font-weight: 800 !important;
+	margin-bottom: 1rem !important;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	-webkit-background-clip: text !important;
+	-webkit-text-fill-color: transparent !important;
+	background-clip: text !important;
+}
+
+:global(.section-subtitle) {
+	text-align: center !important;
+	font-size: 1.1rem !important;
+	color: #6b7280 !important;
+	margin-bottom: 3rem !important;
+}
+
+/* Responsive Section Titles */
+@media (max-width: 768px) {
+	:global(.section-title) {
+		font-size: 2rem !important;
+	}
+	
+	:global(.section-subtitle) {
+		font-size: 1rem !important;
+		margin-bottom: 2rem !important;
+	}
+}
+
+@media (max-width: 480px) {
+	:global(.section-title) {
+		font-size: 1.75rem !important;
+	}
+	
+	:global(.section-subtitle) {
+		font-size: 0.95rem !important;
+	}
+}

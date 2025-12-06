@@ -2,12 +2,25 @@
 	/** @type {{ value: string, onsave: (newValue: string) => Promise<void>, tag?: string, className?: string, placeholder?: string }} */
 	let { value = '', onsave, tag = 'div', className = '', placeholder = 'לחץ לעריכה...' } = $props();
 	
-	let element;
+	let element = $state(null);
 	let saving = $state(false);
 	let originalValue = value;
 	
-	async function handleBlur() {
-		const newValue = element.textContent?.trim() || '';
+	async function handleBlur(event) {
+		// Get the text content from the event target
+		const target = event.currentTarget;
+		if (!target) return;
+		
+		// Get innerHTML to preserve line breaks
+		const innerHTML = target.innerHTML || '';
+		// Convert <br> and <div> tags to \n
+		const newValue = innerHTML
+			.replace(/<br\s*\/?>/gi, '\n')
+			.replace(/<\/div><div>/gi, '\n')
+			.replace(/<div>/gi, '\n')
+			.replace(/<\/div>/gi, '')
+			.replace(/<[^>]*>/g, '') // Remove any other HTML tags
+			.trim();
 		
 		// Only save if changed
 		if (newValue !== originalValue && newValue !== '') {
@@ -20,8 +33,8 @@
 				console.error('Save failed:', error);
 				showNotification('❌ שגיאה בשמירה');
 				// Revert to original value
-				if (element) {
-					element.textContent = originalValue;
+				if (target) {
+					target.innerHTML = originalValue.replace(/\n/g, '<br>');
 				}
 			} finally {
 				saving = false;
@@ -41,6 +54,9 @@
 			setTimeout(() => notification.remove(), 300);
 		}, 2000);
 	}
+	
+	// Convert \n to <br> when displaying
+	let displayValue = $derived(value ? value.replace(/\n/g, '<br>') : '');
 </script>
 
 <svelte:element 

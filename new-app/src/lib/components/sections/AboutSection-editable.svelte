@@ -12,7 +12,15 @@
 	// Get the actual editMode value (it's a function that returns the value)
 	let editMode = $derived(typeof editModeGetter === 'function' ? editModeGetter() : editModeGetter);
 	
+	// Track the current image - start with data.image but allow updates
 	let currentImage = $state(data.image || '');
+	
+	// Sync with data.image when it changes (e.g., on page reload)
+	$effect(() => {
+		if (data.image && data.image !== currentImage) {
+			currentImage = data.image;
+		}
+	});
 	
 	function showNotification(message) {
 		const notification = document.createElement('div');
@@ -55,16 +63,26 @@
 			
 			const result = await response.json();
 			console.log('✅ Image uploaded:', result.url);
+			console.log('📍 Section index:', sectionIndex);
+			console.log('📍 Field path:', `sections.${sectionIndex}.data.image`);
 			
-			// Update local state immediately
-			currentImage = result.url;
-			
-			// Save the image URL to the section data
+			// Save the image URL to the section data in Strapi
 			console.log('💾 Saving image URL to section...');
 			await saveField(`sections.${sectionIndex}.data.image`, result.url);
-			console.log('✅ Image URL saved successfully');
 			
-			showNotification('✅ התמונה עודכנה');
+			// If we get here, save was successful (saveField throws on error)
+			console.log('✅ Image URL saved successfully to Strapi');
+			
+			// Update both the data object and local state
+			data.image = result.url;
+			currentImage = result.url;
+			
+			// Note: showNotification and reload will be handled by saveField
+			
+			// Log the current state
+			console.log('📊 Current state after save:');
+			console.log('  - data.image:', data.image);
+			console.log('  - currentImage:', currentImage);
 			
 			return result.url;
 		} catch (error) {
