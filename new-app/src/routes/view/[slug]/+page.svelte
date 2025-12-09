@@ -1,5 +1,6 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, onMount } from 'svelte';
+	import DynamicDesignWrapper from '$lib/components/DynamicDesignWrapper.svelte';
 	import NavigationBar from '$lib/components/NavigationBar.svelte';
 	import GallerySection from '$lib/components/sections/GallerySection.svelte';
 	import ProductsGallerySection from '$lib/components/sections/ProductsGallerySection.svelte';
@@ -18,12 +19,96 @@
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
 	
+	// Create a reactive state for hero image to ensure UI updates
+	let heroImage = $state(data.page.metadata?.headerImage || null);
+	
+	// Loading state
+	let isLoading = $state(true);
+	
+	onMount(() => {
+		// Hide loading after a short delay
+		setTimeout(() => {
+			isLoading = false;
+		}, 800);
+		
+		// CRITICAL: Apply hero image if it exists (for existing pages)
+		// Use requestAnimationFrame to ensure DOM is fully rendered
+		console.log('🔍 onMount - checking for hero image...');
+		console.log('🔍 heroImage state:', heroImage);
+		console.log('🔍 data.page.metadata:', data.page.metadata);
+		console.log('🔍 data.page.metadata?.headerImage:', data.page.metadata?.headerImage);
+		
+		if (heroImage) {
+			console.log('🖼️ Hero image found in metadata:', heroImage);
+			
+			// Wait for DOM to be ready - use multiple frames to ensure everything is loaded
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const heroSection = document.querySelector('.hero-section');
+					console.log('🔍 Hero section element:', heroSection);
+					console.log('🔍 Hero section classes:', heroSection?.className);
+					
+					if (heroSection) {
+						// Set CSS variable
+						heroSection.style.setProperty('--hero-bg-image', `url('${heroImage}')`);
+						// Add class
+						heroSection.classList.add('has-custom-image');
+						// Also set direct background-image as fallback
+						heroSection.style.backgroundImage = `url('${heroImage}')`;
+						
+						console.log('✅ Hero image applied on mount:', heroImage);
+						console.log('✅ CSS variable set:', heroSection.style.getPropertyValue('--hero-bg-image'));
+						console.log('✅ Direct background-image:', heroSection.style.backgroundImage);
+						console.log('✅ Class added:', heroSection.classList.contains('has-custom-image'));
+						console.log('✅ Computed background:', window.getComputedStyle(heroSection).backgroundImage);
+					} else {
+						console.error('❌ Hero section not found in DOM!');
+					}
+				});
+			});
+		} else {
+			console.log('ℹ️ No hero image in metadata');
+			console.log('ℹ️ Checking if image exists in data.page.metadata...');
+			if (data.page.metadata?.headerImage) {
+				console.log('⚠️ Image exists in data but not in heroImage state!');
+				console.log('⚠️ Setting heroImage state now...');
+				heroImage = data.page.metadata.headerImage;
+			}
+		}
+	});
+	
+	// Get design style from page data (default to 'modern')
+	// CRITICAL: Ensure designStyle is always defined and not string 'undefined'
+	let rawDesignStyle = data.page.designStyle || data.page.metadata?.designStyle || 'modern';
+	
+	// Fix string 'undefined' or 'null' values
+	if (rawDesignStyle === 'undefined' || rawDesignStyle === 'null' || !rawDesignStyle) {
+		rawDesignStyle = 'modern';
+	}
+	
+	const designStyle = rawDesignStyle;
+	
+	console.log('🎨 DESIGN STYLE DEBUG:');
+	console.log('   - data.page.designStyle:', data.page.designStyle);
+	console.log('   - data.page.metadata?.designStyle:', data.page.metadata?.designStyle);
+	console.log('   - FINAL designStyle:', designStyle);
+	
 	console.log('👤 Is owner:', data.isOwner);
 	console.log('🆔 Page ID:', data.page.id);
 	console.log('📄 Document ID:', data.page.documentId);
 	
-	// Edit mode - enabled for owners (inline editing like the old system)
-	const editMode = $derived(data.isOwner);
+	// Check if viewOnly mode is enabled (from URL parameter)
+	let viewOnlyMode = $state(false);
+	$effect(() => {
+		if (typeof window !== 'undefined') {
+			const urlParams = new URLSearchParams(window.location.search);
+			viewOnlyMode = urlParams.get('viewOnly') === 'true';
+			console.log('👁️ View Only Mode:', viewOnlyMode);
+		}
+	});
+	
+	// Edit mode - enabled for owners ONLY when NOT in viewOnly mode
+	const editMode = $derived(data.isOwner && !viewOnlyMode);
 	
 	console.log('🎨 Edit mode (view page):', editMode);
 	
@@ -146,6 +231,64 @@
 	
 	let uploadingHeroImage = $state(false);
 	
+	// Remove header image
+	async function removeHeroImage(event) {
+		event.stopPropagation();
+		
+		if (!confirm('האם אתה בטוח שברצונך למחוק את תמונת הרקע?')) {
+			return;
+		}
+		
+		showNotification('⏳ מוחק תמונה...');
+		
+		try {
+			// Update page metadata - remove headerImage
+			const updateResponse = await fetch('/api/update-page', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					pageId: data.page.documentId || data.page.id,
+					field: 'metadata',
+					value: {
+						...(data.page.metadata || {}),
+						headerImage: null
+					}
+				})
+			});
+			
+			if (updateResponse.ok) {
+				// Update the page data immediately
+				data.page.metadata = {
+					...(data.page.metadata || {}),
+					headerImage: null
+				};
+				
+				// CRITICAL: Update reactive state to trigger UI update
+				heroImage = null;
+				
+				// Remove the hero section background
+				requestAnimationFrame(() => {
+					const heroSection = document.querySelector('.hero-section');
+					if (heroSection) {
+						heroSection.style.removeProperty('--hero-bg-image');
+						heroSection.classList.remove('has-custom-image');
+					}
+				});
+				
+				showNotification('✅ תמונת הרקע נמחקה');
+			} else {
+				const error = await updateResponse.text();
+				console.error('❌ Delete failed:', error);
+				showNotification('❌ שגיאה במחיקה');
+			}
+		} catch (error) {
+			console.error('❌ Error deleting image:', error);
+			showNotification('❌ שגיאה במחיקת התמונה');
+		}
+	}
+	
 	// Upload header image
 	async function changeHeroImage(event) {
 		event.stopPropagation();
@@ -177,7 +320,7 @@
 					
 					console.log('📸 Uploaded image URL:', url);
 					
-					// Update page metadata
+					// Update page metadata - FIXED: use 'field' and 'value' format
 					const updateResponse = await fetch('/api/update-page', {
 						method: 'POST',
 						headers: {
@@ -185,7 +328,8 @@
 						},
 						body: JSON.stringify({
 							pageId: data.page.documentId || data.page.id,
-							metadata: {
+							field: 'metadata',
+							value: {
 								...(data.page.metadata || {}),
 								headerImage: url
 							}
@@ -197,10 +341,39 @@
 					if (updateResponse.ok) {
 						const result = await updateResponse.json();
 						console.log('✅ Update result:', result);
+						
+						// Update the page data immediately without reload
+						data.page.metadata = {
+							...(data.page.metadata || {}),
+							headerImage: url
+						};
+						
+						// CRITICAL: Update reactive state to trigger UI update
+						heroImage = url;
+						
+						console.log('📦 Updated page metadata:', data.page.metadata);
+						console.log('📦 Updated heroImage state:', heroImage);
+						
+						// Update the hero section background using CSS variable
+						// Use requestAnimationFrame to ensure Svelte has updated the DOM
+						requestAnimationFrame(() => {
+							const heroSection = document.querySelector('.hero-section');
+							console.log('🔍 Hero section found:', heroSection);
+							
+							if (heroSection) {
+								heroSection.style.setProperty('--hero-bg-image', `url('${url}')`);
+								heroSection.classList.add('has-custom-image');
+								
+								console.log('✅ CSS variable set to:', heroSection.style.getPropertyValue('--hero-bg-image'));
+								console.log('✅ Classes:', heroSection.className);
+								console.log('✅ Computed background:', window.getComputedStyle(heroSection).background);
+							} else {
+								console.error('❌ Hero section not found!');
+							}
+						});
+						
 						showNotification('✅ תמונת הרקע עודכנה');
-						setTimeout(() => {
-							window.location.reload();
-						}, 500);
+						uploadingHeroImage = false;
 					} else {
 						const error = await updateResponse.text();
 						console.error('❌ Update failed:', error);
@@ -343,16 +516,29 @@
 	{/if}
 </svelte:head>
 
-<!-- Edit Mode Indicator removed - editing is always enabled silently -->
+<!-- AutoPage Loading Animation -->
+{#if isLoading}
+	<div class="autopage-loading">
+		<div class="loading-logo">
+			<div class="logo-box">
+				<div class="loading-text">AP</div>
+				<div class="loading-subtext">AutoPage</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- ✅ CRITICAL FIX: Wrap EVERYTHING in DynamicDesignWrapper so all pages get colors! -->
+<DynamicDesignWrapper {designStyle}>
 
 <!-- Render sections-based page with modern design -->
 {#if data.page.hasSections}
-	<div class="modern-page">
-		<!-- Navigation Bar with Section Links -->
-		<NavigationBar pageData={data.page} />
+		<div class="modern-page" class:edit-mode-active={editMode}>
+			<!-- Navigation Bar with Section Links (always visible - part of the page) -->
+			<NavigationBar pageData={data.page} />
 		
-		<!-- Simple Action Buttons (only for owners) -->
-		{#if data.isOwner}
+		<!-- Simple Action Buttons (only for owners AND not in viewOnly mode) -->
+		{#if data.isOwner && !viewOnlyMode}
 			<div class="owner-action-buttons">
 				<button onclick={changeHeroImage} class="action-btn upload-btn" class:uploading={uploadingHeroImage} disabled={uploadingHeroImage}>
 					{#if uploadingHeroImage}
@@ -362,7 +548,7 @@
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
 						</svg>
-						<span>העלה תמונה</span>
+						<span>{heroImage ? 'החלף תמונה' : 'העלה תמונה'}</span>
 					{/if}
 				</button>
 				
@@ -375,11 +561,12 @@
 			</div>
 		{/if}
 		
-		<!-- Hero Section -->
+		<!-- Hero Section - NO ANIMATION -->
 		<section 
-			class="hero-section" 
+			class="hero-section hero section-hero" 
+			class:has-custom-image={heroImage}
 			id="hero"
-			style={data.page.metadata?.headerImage ? `background-image: url('${data.page.metadata.headerImage}');` : ''}
+			style={heroImage ? `--hero-bg-image: url('${heroImage}'); background-image: url('${heroImage}');` : ''}
 		>
 			
 			<div class="hero-content">
@@ -429,7 +616,7 @@
 		
 
 		
-		<!-- Dynamic Sections -->
+		<!-- Dynamic Sections - NO ANIMATIONS -->
 		{#each data.page.sections as section, sectionIndex}
 			{#if section.enabled}
 				{#if section.type === 'gallery'}
@@ -511,7 +698,7 @@
 		{/each}
 		
 		<!-- Footer -->
-		<footer class="site-footer">
+		<footer class="site-footer card">
 			<!-- Row 1: Social Media + Contact Info -->
 			<div class="footer-row footer-contact-row">
 				<!-- Social Media Icons - Always Show -->
@@ -578,7 +765,7 @@
 				<p>© {new Date().getFullYear()} כל הזכויות שמורות</p>
 			</div>
 		</footer>
-	</div>
+		</div>
 	
 	<!-- WhatsApp Bot Bubble (always show for now - TODO: add proper auth) -->
 	{#if data.page.phone}
@@ -603,13 +790,18 @@
 
 <!-- Render HTML-based page (legacy) -->
 {:else if data.page.htmlContent}
-	{@html data.page.htmlContent}
+	<div class="legacy-html-wrapper">
+		{@html data.page.htmlContent}
+	</div>
 {:else}
-	<div style="padding: 2rem; text-align: center;">
+	<div class="empty-page-wrapper" style="padding: 2rem; text-align: center;">
 		<h1>הדף עדיין לא מוכן</h1>
 		<p>הדף נמצא בתהליך יצירה</p>
 	</div>
 {/if}
+
+</DynamicDesignWrapper>
+<!-- ✅ END DynamicDesignWrapper - Now ALL pages get colors! -->
 
 <style>
 	:global(body) {
@@ -620,10 +812,10 @@
 	
 	.modern-page {
 		min-height: 100vh;
-		background: #ffffff;
+		/* NO background - inherit from DynamicDesignWrapper! */
 	}
 	
-	/* Edit Toolbar */
+	/* Edit Toolbar - NO ANIMATION */
 	.edit-toolbar-top {
 		position: fixed;
 		top: 80px;
@@ -636,19 +828,8 @@
 		display: flex;
 		gap: 0.75rem;
 		z-index: 9999;
-		animation: slideDown 0.3s ease-out;
 		direction: rtl;
-	}
-	
-	@keyframes slideDown {
-		from {
-			opacity: 0;
-			transform: translateX(-50%) translateY(-20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateX(-50%) translateY(0);
-		}
+		/* NO ANIMATION - removed slideDown */
 	}
 	
 	.toolbar-btn {
@@ -718,23 +899,27 @@
 		}
 	}
 	
-	/* Editable Elements */
+	/* Editable Elements - ONLY in edit mode */
 	:global(.editable) {
 		position: relative;
-		cursor: text;
 		transition: all 0.2s;
 		border-radius: 8px;
+	}
+	
+	/* Only show edit indicators when actually in edit mode */
+	:global(.edit-mode-active .editable) {
+		cursor: text;
 		padding: 0.25rem;
 		margin: -0.25rem;
 	}
 	
-	:global(.editable:hover) {
+	:global(.edit-mode-active .editable:hover) {
 		background: rgba(255, 255, 255, 0.1);
 		outline: 2px dashed rgba(255, 255, 255, 0.3);
 		outline-offset: 4px;
 	}
 	
-	:global(.editable:focus) {
+	:global(.edit-mode-active .editable:focus) {
 		background: rgba(255, 255, 255, 0.15);
 		outline: 2px solid rgba(255, 255, 255, 0.5);
 		outline-offset: 4px;
@@ -763,11 +948,10 @@
 	}
 	
 
-	/* Hero Section */
+	/* Hero Section - NO HARDCODED BACKGROUND - Let DynamicDesignWrapper control it */
 	.hero-section {
 		position: relative;
 		min-height: 500px;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		background-size: cover;
 		background-position: center;
 		background-repeat: no-repeat;
@@ -778,15 +962,18 @@
 		padding: 3rem 2rem;
 	}
 	
-	.hero-section::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%);
-		z-index: 0;
+	/* CRITICAL: When custom image exists, override ALL design system gradients */
+	/* Use :global() to ensure this overrides DynamicDesignWrapper styles */
+	:global(.design-wrapper) .hero-section.has-custom-image {
+		background: var(--hero-bg-image) !important;
+		background-size: cover !important;
+		background-position: center !important;
+		background-repeat: no-repeat !important;
+	}
+	
+	:global(.design-wrapper) .hero-section.has-custom-image::before,
+	:global(.design-wrapper) .hero-section.has-custom-image::after {
+		display: none !important;
 	}
 	
 
@@ -799,9 +986,11 @@
 		right: -20%;
 		width: 1000px;
 		height: 1000px;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
 		border-radius: 50%;
-		animation: float 20s ease-in-out infinite;
+		animation: float 20s ease-in-out infinite, glow 4s ease-in-out infinite;
+		box-shadow: 0 0 100px rgba(255, 255, 255, 0.15);
+		pointer-events: none;
 	}
 	
 	@keyframes float {
@@ -809,12 +998,23 @@
 		50% { transform: translateY(-50px) rotate(10deg); }
 	}
 	
+	@keyframes glow {
+		0%, 100% { 
+			opacity: 0.6;
+			box-shadow: 0 0 100px rgba(255, 255, 255, 0.15);
+		}
+		50% { 
+			opacity: 1;
+			box-shadow: 0 0 150px rgba(255, 255, 255, 0.25);
+		}
+	}
+	
 	.hero-content {
 		position: relative;
 		z-index: 10;
 		text-align: center;
 		max-width: 800px;
-		animation: fadeInUp 1s ease-out;
+		/* NO ANIMATION */
 	}
 	
 	.hero-title {
@@ -930,7 +1130,7 @@
 		overflow: hidden;
 		border-radius: 24px;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-		animation: fadeInUp 1s ease-out 0.3s backwards;
+		/* NO ANIMATION */
 	}
 	
 	.video-container iframe {
@@ -965,12 +1165,18 @@
 		background: white;
 	}
 	
-	/* Footer */
+	/* Footer - ALWAYS dark background with white text */
 	.site-footer {
-		background: #1a1a1a;
-		color: white;
+		background: #1a1a1a !important;
+		color: white !important;
 		padding: 1.5rem 0;
 		direction: rtl;
+	}
+	
+	/* Force footer to stay dark in ALL design styles */
+	:global(.design-wrapper) .site-footer {
+		background: #1a1a1a !important;
+		color: white !important;
 	}
 	
 	.footer-row {
@@ -1066,18 +1272,32 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		color: rgba(255, 255, 255, 0.9);
+		color: rgba(255, 255, 255, 0.9) !important;
 		text-decoration: none;
 		transition: color 0.3s ease;
 		white-space: nowrap;
 	}
 	
 	.footer-contact-item:hover {
-		color: white;
+		color: white !important;
 	}
 	
 	.contact-icon {
 		font-size: 1.1rem;
+		color: rgba(255, 255, 255, 0.9) !important;
+	}
+	
+	/* Force all footer text to be white */
+	:global(.design-wrapper) .footer-contact-item {
+		color: rgba(255, 255, 255, 0.9) !important;
+	}
+	
+	:global(.design-wrapper) .footer-contact-item:hover {
+		color: white !important;
+	}
+	
+	:global(.design-wrapper) .contact-icon {
+		color: rgba(255, 255, 255, 0.9) !important;
 	}
 	
 	/* Row 2: Legal Links */
@@ -1086,28 +1306,51 @@
 	}
 	
 	.footer-legal-row a {
-		color: rgba(255, 255, 255, 0.8);
+		color: rgba(255, 255, 255, 0.8) !important;
 		text-decoration: none;
 		transition: color 0.3s ease;
 	}
 	
 	.footer-legal-row a:hover {
-		color: white;
+		color: white !important;
 	}
 	
 	.footer-legal-row .separator {
-		color: rgba(255, 255, 255, 0.3);
+		color: rgba(255, 255, 255, 0.3) !important;
+	}
+	
+	/* Force legal links to be white in all designs */
+	:global(.design-wrapper) .footer-legal-row a {
+		color: rgba(255, 255, 255, 0.8) !important;
+	}
+	
+	:global(.design-wrapper) .footer-legal-row a:hover {
+		color: white !important;
+	}
+	
+	:global(.design-wrapper) .footer-legal-row .separator {
+		color: rgba(255, 255, 255, 0.3) !important;
 	}
 	
 	/* Row 3: Copyright */
 	.footer-copyright-row {
 		font-size: 0.8rem;
-		color: rgba(255, 255, 255, 0.6);
+		color: rgba(255, 255, 255, 0.6) !important;
 		padding-bottom: 0.5rem;
 	}
 	
 	.footer-copyright-row p {
 		margin: 0;
+		color: rgba(255, 255, 255, 0.6) !important;
+	}
+	
+	/* Force copyright to be white in all designs */
+	:global(.design-wrapper) .footer-copyright-row {
+		color: rgba(255, 255, 255, 0.6) !important;
+	}
+	
+	:global(.design-wrapper) .footer-copyright-row p {
+		color: rgba(255, 255, 255, 0.6) !important;
 	}
 	
 	/* Responsive Design */
@@ -1183,17 +1426,6 @@
 		}
 	}
 	
-	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(30px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-	
 	@media (max-width: 768px) {
 		.hero-title {
 			font-size: 1.75rem;
@@ -1215,7 +1447,7 @@
 
 	}
 	
-	/* Owner Action Buttons - Simple and Clean */
+	/* Owner Action Buttons - Simple and Clean - NO ANIMATION */
 	.owner-action-buttons {
 		position: fixed;
 		top: 150px;
@@ -1224,6 +1456,7 @@
 		display: flex;
 		gap: 10px;
 		flex-direction: column;
+		/* NO ANIMATION on load */
 	}
 	
 	.action-btn {
@@ -1290,6 +1523,106 @@
 	
 	@keyframes spin {
 		to { transform: rotate(360deg); }
+	}
+	
+	/* AutoPage Loading Animation */
+	.autopage-loading {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 99999;
+		animation: fadeOut 0.5s ease-out 0.8s forwards;
+	}
+	
+	@keyframes fadeOut {
+		to {
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+	
+	.loading-logo {
+		text-align: center;
+		position: relative;
+	}
+	
+	.logo-box {
+		width: 120px;
+		height: 120px;
+		margin: 0 auto;
+		border-radius: 50%;
+		background: white;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+		animation: 
+			bounce 0.6s ease-in-out infinite,
+			rotate 2s linear infinite;
+		position: relative;
+	}
+	
+	.logo-box::before {
+		content: '';
+		position: absolute;
+		inset: -4px;
+		border-radius: 50%;
+		border: 4px solid transparent;
+		border-top-color: #667eea;
+		animation: spin 1s linear infinite;
+	}
+	
+	/* כדור קופץ */
+	@keyframes bounce {
+		0%, 100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-30px);
+		}
+	}
+	
+	/* סיבוב */
+	@keyframes rotate {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	
+	.loading-text {
+		font-size: 3rem;
+		font-weight: black;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		font-family: 'Arial Black', sans-serif;
+		letter-spacing: -2px;
+		line-height: 1;
+		margin-bottom: 0.25rem;
+	}
+	
+	.loading-subtext {
+		font-size: 0.75rem;
+		font-weight: bold;
+		color: #667eea;
+		margin-top: -0.5rem;
 	}
 	
 	/* Mobile responsive for action buttons */

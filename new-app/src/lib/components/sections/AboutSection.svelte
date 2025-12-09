@@ -43,26 +43,9 @@
 <style>
 	.about-section {
 		padding: 5rem 0;
-		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+		background-color: transparent !important;
 		position: relative;
 		overflow: hidden;
-	}
-	
-	.about-section::before {
-		content: '';
-		position: absolute;
-		top: -40%;
-		right: -15%;
-		width: 700px;
-		height: 700px;
-		background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
-		border-radius: 50%;
-		animation: float 25s ease-in-out infinite;
-	}
-	
-	@keyframes float {
-		0%, 100% { transform: translateY(0) rotate(0deg); }
-		50% { transform: translateY(-50px) rotate(10deg); }
 	}
 	
 	.container {
@@ -93,7 +76,7 @@
 	
 	.section-subtitle {
 		font-size: 1.3rem;
-		color: #6b7280;
+		color: var(--color-text-light, #6b7280);
 		margin-bottom: 2rem;
 		animation: fadeInUp 0.8s ease-out 0.2s backwards;
 	}
@@ -101,7 +84,7 @@
 	.content-text {
 		font-size: 1.15rem;
 		line-height: 1.9;
-		color: #374151;
+		color: var(--color-text, #374151);
 		margin-bottom: 3rem;
 		animation: fadeInUp 0.8s ease-out 0.4s backwards;
 	}
@@ -119,10 +102,10 @@
 		display: flex;
 		gap: 1.5rem;
 		padding: 1.5rem;
-		background: rgba(255, 255, 255, 0.8);
+		background: var(--color-bg-alt);
 		backdrop-filter: blur(10px);
 		border-radius: 16px;
-		border: 1px solid rgba(255, 255, 255, 0.5);
+		border: 1px solid rgba(102, 126, 234, 0.2);
 		transition: all 0.3s ease;
 		animation: fadeInUp 0.6s ease-out backwards;
 		animation-delay: var(--delay);

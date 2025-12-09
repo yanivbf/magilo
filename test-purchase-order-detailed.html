@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת הזמנה מפורטת</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+        .log-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 5px;
+            border: 1px solid #e5e7eb;
+        }
+        .log-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 בדיקת הזמנה מפורטת</h1>
+        
+        <div class="form-group">
+            <label>User ID (מהעוגייה):</label>
+            <input type="text" id="userId" placeholder="google_123456 או guest">
+        </div>
+        
+        <div class="form-group">
+            <label>Page ID (documentId או מספר):</label>
+            <input type="text" id="pageId" placeholder="abc123def456">
+        </div>
+        
+        <div class="form-group">
+            <label>שם מלא:</label>
+            <input type="text" id="customerName" value="ישראל ישראלי">
+        </div>
+        
+        <div class="form-group">
+            <label>טלפון:</label>
+            <input type="text" id="customerPhone" value="050-1234567">
+        </div>
+        
+        <div class="form-group">
+            <label>אימייל:</label>
+            <input type="email" id="customerEmail" value="test@example.com">
+        </div>
+        
+        <div class="form-group">
+            <label>כתובת:</label>
+            <input type="text" id="customerAddress" value="רחוב הרצל 1, תל אביב">
+        </div>
+        
+        <div class="form-group">
+            <label>אמצעי תשלום:</label>
+            <select id="paymentMethod">
+                <option value="credit">כרטיס אשראי</option>
+                <option value="bit">Bit</option>
+                <option value="paypal">PayPal</option>
+                <option value="cash">מזומן</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>מוצרים (JSON):</label>
+            <textarea id="products" rows="5">[
+  {"name": "מוצר 1", "quantity": 2, "price": 50, "image": "", "total": 100},
+  {"name": "מוצר 2", "quantity": 1, "price": 75, "image": "", "total": 75}
+]</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>סכום כולל:</label>
+            <input type="number" id="total" value="175">
+        </div>
+        
+        <button onclick="testPurchase()">🚀 שלח הזמנה לבדיקה</button>
+        
+        <div class="log-section">
+            <div class="log-title">📋 לוגים:</div>
+            <div id="logs"></div>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Get userId from cookie
+        const userIdFromCookie = document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1];
+        if (userIdFromCookie) {
+            document.getElementById('userId').value = userIdFromCookie;
+            addLog('✅ מצאתי userId בעוגייה: ' + userIdFromCookie);
+        } else {
+            addLog('⚠️ לא מצאתי userId בעוגייה, השתמש ב-guest');
+            document.getElementById('userId').value = 'guest';
+        }
+
+        function addLog(message) {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            logsDiv.innerHTML += `[${timestamp}] ${message}\n`;
+        }
+
+        async function testPurchase() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            resultDiv.className = '';
+            
+            addLog('🛒 מתחיל בדיקת הזמנה...');
+            
+            try {
+                // Get form values
+                const userId = document.getElementById('userId').value;
+                const pageId = document.getElementById('pageId').value;
+                const customerName = document.getElementById('customerName').value;
+                const customerPhone = document.getElementById('customerPhone').value;
+                const customerEmail = document.getElementById('customerEmail').value;
+                const customerAddress = document.getElementById('customerAddress').value;
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                const productsText = document.getElementById('products').value;
+                const total = parseFloat(document.getElementById('total').value);
+                
+                addLog('📋 אוסף נתונים מהטופס...');
+                
+                // Validate
+                if (!userId) {
+                    throw new Error('חסר User ID');
+                }
+                if (!pageId) {
+                    throw new Error('חסר Page ID');
+                }
+                if (!customerName) {
+                    throw new Error('חסר שם לקוח');
+                }
+                if (!customerPhone) {
+                    throw new Error('חסר טלפון');
+                }
+                
+                addLog('✅ ולידציה עברה בהצלחה');
+                
+                // Parse products
+                let products;
+                try {
+                    products = JSON.parse(productsText);
+                    addLog(`✅ פרסתי ${products.length} מוצרים`);
+                } catch (e) {
+                    throw new Error('JSON של מוצרים לא תקין: ' + e.message);
+                }
+                
+                // Prepare request
+                const requestBody = {
+                    userId,
+                    pageId,
+                    customerName,
+                    customerPhone,
+                    customerEmail,
+                    customerAddress,
+                    shipping: true,
+                    paymentMethod,
+                    products,
+                    total,
+                    status: 'pending'
+                };
+                
+                addLog('📤 שולח בקשה ל-API...');
+                addLog('📦 גוף הבקשה: ' + JSON.stringify(requestBody, null, 2));
+                
+                // Send request
+                const response = await fetch('/api/purchase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                addLog(`📥 קיבלתי תשובה: ${response.status} ${response.statusText}`);
+                
+                // Get response
+                const data = await response.json();
+                addLog('📥 תוכן התשובה: ' + JSON.stringify(data, null, 2));
+                
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = '✅ ההזמנה נשלחה בהצלחה!\n\n' + JSON.stringify(data, null, 2);
+                    addLog('✅ הזמנה נוצרה בהצלחה! ID: ' + data.purchaseId);
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = '❌ שגיאה בשליחת ההזמנה:\n\n' + JSON.stringify(data, null, 2);
+                    addLog('❌ שגיאה: ' + (data.error || data.details || 'לא ידוע'));
+                }
+                
+            } catch (error) {
+                addLog('❌ שגיאה קריטית: ' + error.message);
+                resultDiv.className = 'error';
+                resultDiv.textContent = '❌ שגיאה:\n\n' + error.message + '\n\n' + error.stack;
+            }
+        }
+        
+        addLog('📄 הדף נטען בהצלחה');
+    </script>
+</body>
+</html>

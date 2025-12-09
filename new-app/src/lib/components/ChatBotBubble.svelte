@@ -12,7 +12,7 @@
 		isOpen = !isOpen;
 	}
 	
-	function sendMessage() {
+	async function sendMessage() {
 		if (!message.trim()) return;
 		
 		// Add user message
@@ -24,16 +24,60 @@
 		const userMessage = message;
 		message = '';
 		
-		// Simulate bot response
-		setTimeout(() => {
+		// Add loading indicator
+		messages = [...messages, {
+			type: 'bot',
+			text: '...',
+			loading: true
+		}];
+		
+		try {
+			// Send to N8N webhook
+			const response = await fetch('/api/n8n-webhook', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					message: userMessage,
+					action: 'chat'
+				})
+			});
+			
+			if (!response.ok) {
+				throw new Error('Failed to get response');
+			}
+			
+			const data = await response.json();
+			
+			// Remove loading message
+			messages = messages.filter(m => !m.loading);
+			
+			// Add bot response
+			if (data.success && data.response) {
+				messages = [...messages, {
+					type: 'bot',
+					text: data.response
+				}];
+			} else {
+				throw new Error('No response from bot');
+			}
+			
+		} catch (error) {
+			console.error('Bot error:', error);
+			
+			// Remove loading message
+			messages = messages.filter(m => !m.loading);
+			
+			// Fallback to local response
 			messages = [...messages, {
 				type: 'bot',
-				text: getResponse(userMessage)
+				text: getLocalResponse(userMessage)
 			}];
-		}, 500);
+		}
 	}
 	
-	function getResponse(msg) {
+	function getLocalResponse(msg) {
 		const lower = msg.toLowerCase();
 		
 		if (lower.includes('שעות') || lower.includes('פתיחה')) {
@@ -100,8 +144,16 @@
 					{#if msg.type === 'bot'}
 						<div class="message-avatar">🤖</div>
 					{/if}
-					<div class="message-bubble">
-						{msg.text}
+					<div class="message-bubble {msg.loading ? 'loading' : ''}">
+						{#if msg.loading}
+							<span class="typing-indicator">
+								<span></span>
+								<span></span>
+								<span></span>
+							</span>
+						{:else}
+							{msg.text}
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -356,6 +408,43 @@
 		width: 20px;
 		height: 20px;
 		color: white;
+	}
+	
+	.message-bubble.loading {
+		padding: 0.75rem 1.25rem;
+	}
+	
+	.typing-indicator {
+		display: flex;
+		gap: 4px;
+		align-items: center;
+	}
+	
+	.typing-indicator span {
+		width: 8px;
+		height: 8px;
+		background: #667eea;
+		border-radius: 50%;
+		animation: typing 1.4s infinite;
+	}
+	
+	.typing-indicator span:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+	
+	.typing-indicator span:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+	
+	@keyframes typing {
+		0%, 60%, 100% {
+			transform: translateY(0);
+			opacity: 0.7;
+		}
+		30% {
+			transform: translateY(-10px);
+			opacity: 1;
+		}
 	}
 	
 	@media (max-width: 768px) {

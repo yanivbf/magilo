@@ -69,28 +69,33 @@
 			// Calculate months based on plan
 			const months = selectedPlan === 'yearly' ? 12 : 1;
 			
+			console.log('📄 Activating subscription for page:', pageId);
+			
 			// Call API to activate subscription FOR THIS PAGE
+			// pageId can be either numeric ID or documentId string
 			const response = await fetch('/api/subscription/activate-page', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ pageId, months })
+				body: JSON.stringify({ 
+					documentId: pageId, // Send as documentId (works for both formats)
+					months 
+				})
 			});
 			
 			if (!response.ok) {
-				throw new Error('Failed to activate subscription');
+				const errorData = await response.json();
+				console.error('❌ API Error:', errorData);
+				throw new Error(errorData.error || 'Failed to activate subscription');
 			}
 			
 			const result = await response.json();
 			console.log('✅ Subscription activated for page:', result);
 			
-			// Show success message
-			alert(`תודה על הרכישה!\n\nתוכנית: ${plans[selectedPlan].name}\nמחיר: ₪${plans[selectedPlan].price}\n\nהמנוי לדף הופעל בהצלחה! 🎉`);
-			
-			// Redirect to dashboard
-			goto('/dashboard?userId=' + userId);
+			// Redirect immediately to dashboard (alert was blocking)
+			window.location.href = '/dashboard';
 		} catch (error) {
 			console.error('❌ Error activating subscription:', error);
-			alert('שגיאה בהפעלת המנוי. נסה שוב.');
+			alert('שגיאה בהפעלת המנוי: ' + error.message + '\nנסה שוב.');
 		} finally {
 			loading = false;
 		}
@@ -104,7 +109,7 @@
 <div class="subscribe-page">
 	<!-- Header -->
 	<div class="header">
-		<button onclick={() => goto('/dashboard')} class="back-button">
+		<button onclick={() => window.location.href = '/dashboard'} class="back-button">
 			← חזרה
 		</button>
 		<h1 class="main-title">

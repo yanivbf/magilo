@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת שליחת הזמנה</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 בדיקת שליחת הזמנה</h1>
+        
+        <button onclick="testPurchase()">שלח הזמנה לבדיקה</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testPurchase() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'info';
+            resultDiv.textContent = '⏳ שולח הזמנה...';
+
+            try {
+                // Get userId from cookie
+                const userId = document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1] || 'google_111351120503275674259';
+                
+                const orderData = {
+                    userId: userId,
+                    pageId: 'puof92dbw5fpbivo8u6dnhlg',
+                    customerName: 'בדיקה טסט',
+                    customerPhone: '0501234567',
+                    customerEmail: 'test@example.com',
+                    customerAddress: 'רחוב הבדיקה 1, תל אביב',
+                    shipping: true,
+                    paymentMethod: 'credit',
+                    products: [
+                        {
+                            name: 'מוצר בדיקה',
+                            quantity: 1,
+                            price: 100,
+                            image: '',
+                            total: 100
+                        }
+                    ],
+                    total: 100,
+                    notes: 'הזמנת בדיקה',
+                    status: 'pending'
+                };
+
+                console.log('📤 Sending order:', orderData);
+
+                const response = await fetch('/api/purchase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                console.log('📥 Response status:', response.status);
+
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.error('❌ Response is not JSON:', text);
+                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
+                }
+
+                console.log('📥 Response data:', responseData);
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = '✅ ההזמנה נשלחה בהצלחה!\n\n' + 
+                        JSON.stringify(responseData, null, 2);
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = '❌ שגיאה בשליחת ההזמנה:\n\n' +
+                        'Status: ' + response.status + '\n' +
+                        'Error: ' + (responseData.error || 'Unknown error') + '\n' +
+                        'Details: ' + (responseData.details || 'No details') + '\n\n' +
+                        JSON.stringify(responseData, null, 2);
+                }
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.className = 'error';
+                resultDiv.textContent = '❌ שגיאה:\n\n' + 
+                    error.message + '\n\n' +
+                    error.stack;
+            }
+        }
+
+        // Show current userId
+        window.addEventListener('load', () => {
+            const userId = document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1];
+            console.log('👤 Current userId:', userId);
+        });
+    </script>
+</body>
+</html>

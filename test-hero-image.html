@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת תמונת Hero</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+    <h1>🔍 בדיקת תמונת Hero</h1>
+    
+    <button onclick="checkHeroImage()">בדוק תמונת Hero</button>
+    <button onclick="uploadTestImage()">העלה תמונת בדיקה</button>
+    
+    <div id="result" style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px;"></div>
+    
+    <script>
+        const STRAPI_TOKEN = '8ba3301bbe92b271829befae8c0c268dbe65efa2bd66517f9309d2e3127c36eca41e91db5a53deb48e8d8aaf095d700bbc4dd1ab32ad509705723f052241d1f0a352eb020cb675aa2e4d733d4bb48855d206eafed5d1196975ad06365767082044a7b5d955e5e3b43398e13aabee36a89e70392a390ef5b96bb4deff6ca43c6a';
+        
+        async function checkHeroImage() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>⏳ בודק...</p>';
+            
+            try {
+                // Get latest page
+                const response = await fetch('http://localhost:1337/api/pages?sort=createdAt:desc&pagination[limit]=1', {
+                    headers: {
+                        'Authorization': `Bearer ${STRAPI_TOKEN}`
+                    }
+                });
+                
+                const data = await response.json();
+                const page = data.data[0];
+                
+                result.innerHTML = `
+                    <h3>📄 הדף האחרון:</h3>
+                    <p><strong>ID:</strong> ${page.id}</p>
+                    <p><strong>documentId:</strong> ${page.documentId}</p>
+                    <p><strong>כותרת:</strong> ${page.title}</p>
+                    <p><strong>slug:</strong> ${page.slug}</p>
+                    
+                    <h3>🖼️ תמונת Hero:</h3>
+                    <p><strong>metadata.headerImage:</strong></p>
+                    <pre style="background: white; padding: 10px; border-radius: 4px;">${JSON.stringify(page.metadata?.headerImage, null, 2) || 'אין תמונה'}</pre>
+                    
+                    ${page.metadata?.headerImage ? `
+                        <h3>✅ התמונה קיימת!</h3>
+                        <img src="${page.metadata.headerImage}" style="max-width: 300px; border: 2px solid green; border-radius: 8px;" />
+                        <p><a href="${page.metadata.headerImage}" target="_blank">פתח תמונה בטאב חדש</a></p>
+                    ` : `
+                        <h3>❌ אין תמונה!</h3>
+                        <p>metadata.headerImage ריק או null</p>
+                    `}
+                    
+                    <h3>🔗 קישור לדף:</h3>
+                    <p><a href="http://localhost:5173/view/${page.slug}" target="_blank">פתח דף</a></p>
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">❌ שגיאה: ${error.message}</p>`;
+            }
+        }
+        
+        async function uploadTestImage() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>⏳ מעלה תמונת בדיקה...</p>';
+            
+            // Create a simple test image (1x1 red pixel)
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'red';
+            ctx.fillRect(0, 0, 100, 100);
+            
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'test-hero.png');
+                formData.append('userId', 'test');
+                formData.append('pageName', 'test-hero');
+                
+                try {
+                    const uploadResponse = await fetch('http://localhost:5173/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (uploadResponse.ok) {
+                        const { url } = await uploadResponse.json();
+                        result.innerHTML = `
+                            <h3>✅ תמונה הועלתה!</h3>
+                            <p><strong>URL:</strong> ${url}</p>
+                            <img src="${url}" style="max-width: 200px; border: 2px solid green;" />
+                            <p>עכשיו תוכל לשמור את זה ב-metadata.headerImage</p>
+                        `;
+                    } else {
+                        const error = await uploadResponse.text();
+                        result.innerHTML = `<p style="color: red;">❌ שגיאה בהעלאה: ${error}</p>`;
+                    }
+                } catch (error) {
+                    result.innerHTML = `<p style="color: red;">❌ שגיאה: ${error.message}</p>`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

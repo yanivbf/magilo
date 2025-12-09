@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת designStyle</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test-box { padding: 20px; margin: 10px 0; border: 2px solid #ccc; border-radius: 8px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+        .modern { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .dark { background: #0f172a; color: white; }
+        .colorful { background: linear-gradient(135deg, #ec4899 0%, #f59e0b 50%, #8b5cf6 100%); color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 בדיקת designStyle</h1>
+    
+    <div class="test-box">
+        <h2>1. בחר סגנון:</h2>
+        <button onclick="testCreate('modern')">Modern (כחול-סגול)</button>
+        <button onclick="testCreate('dark')">Dark (שחור)</button>
+        <button onclick="testCreate('colorful')">Colorful (צבעוני)</button>
+    </div>
+    
+    <div class="test-box">
+        <h2>2. תוצאות:</h2>
+        <div id="results"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>3. דוגמאות:</h2>
+        <div class="modern" style="padding: 20px; margin: 10px 0;">Modern - כחול-סגול</div>
+        <div class="dark" style="padding: 20px; margin: 10px 0;">Dark - שחור מלא</div>
+        <div class="colorful" style="padding: 20px; margin: 10px 0;">Colorful - צבעוני</div>
+    </div>
+
+    <script>
+        async function testCreate(designStyle) {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>⏳ יוצר דף עם designStyle: ' + designStyle + '</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5174/api/create-structured-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: 'test_' + Date.now(),
+                        pageType: 'store',
+                        designStyle: designStyle, // ✅ שולח designStyle ישירות!
+                        formData: {
+                            mainName: 'בדיקה ' + designStyle,
+                            phone: '050-1234567',
+                            description: 'בדיקת ' + designStyle,
+                            designStyle: designStyle // ✅ גם בתוך formData!
+                        },
+                        optionalSections: ['about']
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    results.innerHTML = `
+                        <p style="color: green;">✅ הצלחה!</p>
+                        <p><strong>Slug:</strong> ${result.slug}</p>
+                        <p><strong>URL:</strong> <a href="http://localhost:5174/view/${result.slug}" target="_blank">פתח דף</a></p>
+                        <p><strong>designStyle שנשלח:</strong> ${designStyle}</p>
+                        <p style="color: orange;">⚠️ עכשיו פתח את הדף ובדוק אם הוא ${designStyle}!</p>
+                    `;
+                } else {
+                    results.innerHTML = '<p style="color: red;">❌ שגיאה: ' + result.error + '</p>';
+                }
+            } catch (error) {
+                results.innerHTML = '<p style="color: red;">❌ שגיאה: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

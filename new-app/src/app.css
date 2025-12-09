@@ -7,6 +7,364 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   FORM STYLING - GLOBAL OVERRIDE
+   Apply beautiful design styles to all forms
+   ======================================== */
+
+/* Input Fields - Beautiful Styling */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="url"],
+input[type="password"],
+textarea,
+select {
+	display: block !important;
+	width: 100% !important;
+	padding: 0.75rem 1rem !important;
+	background-color: white !important;
+	border: 2px solid #e2e8f0 !important;
+	border-radius: 0.5rem !important;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+	font-size: 0.875rem !important;
+	line-height: 1.5rem !important;
+	transition: all 0.2s ease-in-out !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+	outline: none !important;
+	border-color: #8b5cf6 !important;
+	box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+	background-color: #faf5ff !important;
+}
+
+/* Labels */
+label {
+	display: block !important;
+	font-size: 0.875rem !important;
+	font-weight: 600 !important;
+	color: #334155 !important;
+	margin-bottom: 0.5rem !important;
+}
+
+/* Fieldsets */
+fieldset {
+	border: 2px solid #e5e7eb !important;
+	border-radius: 0.75rem !important;
+	padding: 1.5rem !important;
+	background-color: rgba(255, 255, 255, 0.6) !important;
+	backdrop-filter: blur(10px) !important;
+	margin-bottom: 1.5rem !important;
+}
+
+legend {
+	padding: 0 0.75rem !important;
+	font-weight: 700 !important;
+	font-size: 1.125rem !important;
+	color: #581c87 !important;
+}
+
+/* Select Dropdown */
+select {
+	appearance: none !important;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+	background-position: left 0.75rem center !important;
+	background-repeat: no-repeat !important;
+	background-size: 1.5em 1.5em !important;
+	padding-left: 2.5rem !important;
+	cursor: pointer !important;
+}
+
+/* Textarea */
+textarea {
+	min-height: 100px !important;
+	resize: vertical !important;
+}
+
+/* Checkbox & Radio */
+input[type="checkbox"],
+input[type="radio"] {
+	width: 1.25rem !important;
+	height: 1.25rem !important;
+	color: #8b5cf6 !important;
+	border-radius: 0.25rem !important;
+	border: 2px solid #d1d5db !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease-in-out !important;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+	background-color: #8b5cf6 !important;
+	border-color: #8b5cf6 !important;
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+	outline: none !important;
+	box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+}
+
+/* Buttons */
+button[type="submit"] {
+	background: linear-gradient(to right, #9333ea, #ec4899) !important;
+	color: white !important;
+	font-weight: 700 !important;
+	padding: 0.875rem 2rem !important;
+	border-radius: 0.75rem !important;
+	box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.3), 0 4px 6px -2px rgba(236, 72, 153, 0.2) !important;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	border: none !important;
+	cursor: pointer !important;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+	opacity: 0.9 !important;
+	transform: translateY(-2px) scale(1.02) !important;
+	box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.4), 0 10px 10px -5px rgba(236, 72, 153, 0.3) !important;
+}
+
+button[type="submit"]:active:not(:disabled) {
+	transform: translateY(0) scale(0.98) !important;
+}
+
+button[type="submit"]:disabled {
+	opacity: 0.5 !important;
+	cursor: not-allowed !important;
+	transform: none !important;
+}
+
+button[type="button"] {
+	background-color: #f1f5f9 !important;
+	color: #475569 !important;
+	font-weight: 600 !important;
+	padding: 0.75rem 1.5rem !important;
+	border-radius: 0.5rem !important;
+	transition: all 0.2s ease-in-out !important;
+	border: 2px solid #e2e8f0 !important;
+	cursor: pointer !important;
+}
+
+button[type="button"]:hover {
+	background-color: #e2e8f0 !important;
+	border-color: #cbd5e1 !important;
+}
+
+/* Color Input */
+input[type="color"] {
+	height: 3rem !important;
+	width: 5rem !important;
+	border: 2px solid #e2e8f0 !important;
+	border-radius: 0.5rem !important;
+	cursor: pointer !important;
+	padding: 0.25rem !important;
+}
+
+/* Help Text */
+.text-sm.text-gray-500,
+.text-xs.text-gray-500,
+.text-xs.text-gray-600 {
+	font-size: 0.75rem !important;
+	color: #6b7280 !important;
+	margin-top: 0.375rem !important;
+	line-height: 1.25rem !important;
+}
+
+/* Required Asterisk */
+.text-red-500 {
+	color: #ef4444 !important;
+	margin-right: 0.25rem !important;
+}
+
+/* Option Cards for Design Styles - ENHANCED */
+.option-card,
+div[class*="option-card"],
+label:has(.option-card),
+label > div[class*="border-2"] {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	cursor: pointer !important;
+	border: 2px solid #e5e7eb !important;
+	border-radius: 0.75rem !important;
+	padding: 1rem !important;
+	background-color: white !important;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+.option-card:hover,
+div[class*="option-card"]:hover,
+label:hover > div[class*="border-2"] {
+	border-color: #a78bfa !important;
+	transform: translateY(-3px) !important;
+	box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.3) !important;
+}
+
+.option-card.selected,
+.option-card:has(input:checked),
+div[class*="option-card"]:has(input:checked),
+label:has(input:checked) > div[class*="border-2"] {
+	transform: scale(1.05) !important;
+	box-shadow: 0 0 0 4px #8b5cf6, 0 10px 25px -5px rgba(139, 92, 246, 0.4) !important;
+	border-color: #8b5cf6 !important;
+	background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%) !important;
+}
+
+/* Design Style Cards - Grid Layout */
+div[data-selection="style"],
+.grid:has(.option-card) {
+	display: grid !important;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+	gap: 1rem !important;
+	padding: 1rem !important;
+}
+
+/* Design Style Preview Boxes */
+.option-card .h-20,
+.option-card > div[class*="h-20"] {
+	height: 5rem !important;
+	width: 100% !important;
+	border-radius: 0.5rem !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin-bottom: 0.5rem !important;
+	transition: transform 0.3s ease !important;
+}
+
+.option-card:hover .h-20,
+.option-card:hover > div[class*="h-20"] {
+	transform: scale(1.05) !important;
+}
+
+/* Design Style Text */
+.option-card p,
+.option-card .font-semibold {
+	text-align: center !important;
+	font-size: 0.875rem !important;
+	font-weight: 600 !important;
+	color: #1f2937 !important;
+	margin-top: 0.5rem !important;
+}
+
+/* Hide Radio Buttons in Design Cards */
+.option-card input[type="radio"],
+label:has(.option-card) input[type="radio"] {
+	position: absolute !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+/* Color Circles in Design Cards */
+.option-card .flex.gap-2,
+.option-card > div > .flex.gap-2 {
+	display: flex !important;
+	gap: 0.5rem !important;
+	justify-content: center !important;
+	margin-bottom: 0.75rem !important;
+}
+
+.option-card .rounded-full,
+.option-card div[class*="rounded-full"] {
+	width: 2rem !important;
+	height: 2rem !important;
+	border-radius: 9999px !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+	transition: transform 0.2s ease !important;
+}
+
+.option-card:hover .rounded-full,
+.option-card:hover div[class*="rounded-full"] {
+	transform: scale(1.1) !important;
+}
+
+/* Selected Card Animation */
+@keyframes cardPulse {
+	0%, 100% {
+		box-shadow: 0 0 0 4px #8b5cf6, 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+	}
+	50% {
+		box-shadow: 0 0 0 6px #a78bfa, 0 15px 30px -5px rgba(139, 92, 246, 0.5);
+	}
+}
+
+.option-card:has(input:checked),
+label:has(input:checked) > div[class*="border-2"] {
+	animation: cardPulse 2s ease-in-out infinite !important;
+}
+
+/* Social Media Input Groups */
+.flex.rounded-md.shadow-sm {
+	display: flex !important;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.flex.rounded-md.shadow-sm span {
+	display: inline-flex !important;
+	align-items: center !important;
+	padding: 0 0.75rem !important;
+	border: 2px solid #e2e8f0 !important;
+	border-left: none !important;
+	background-color: #f8fafc !important;
+	color: #64748b !important;
+	border-radius: 0.5rem 0 0 0.5rem !important;
+}
+
+.flex.rounded-md.shadow-sm input {
+	border-radius: 0 0.5rem 0.5rem 0 !important;
+	border-right: 2px solid #e2e8f0 !important;
+}
+
+/* Info Boxes */
+.bg-blue-50 {
+	background-color: #eff6ff !important;
+	border-color: #bfdbfe !important;
+}
+
+.bg-purple-50 {
+	background-color: #faf5ff !important;
+	border-color: #e9d5ff !important;
+}
+
+.bg-pink-50 {
+	background-color: #fdf2f8 !important;
+	border-color: #fbcfe8 !important;
+}
+
+.bg-green-50 {
+	background-color: #f0fdf4 !important;
+	border-color: #bbf7d0 !important;
+}
+
+.bg-yellow-50 {
+	background-color: #fefce8 !important;
+	border-color: #fde047 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+	input[type="text"],
+	input[type="email"],
+	input[type="tel"],
+	input[type="number"],
+	input[type="date"],
+	input[type="time"],
+	input[type="url"],
+	textarea,
+	select {
+		font-size: 16px !important; /* Prevent zoom on iOS */
+	}
+	
+	button[type="submit"],
+	button[type="button"] {
+		width: 100% !important;
+	}
+}
+
 * {
     margin: 0;
     padding: 0;

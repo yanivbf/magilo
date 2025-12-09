@@ -4,34 +4,43 @@
 
 	let { data } = $props();
 	
+	// Debug: Log what we receive
+	console.log('🔍 InventoryOrderManager received data:', data);
+	console.log('🔍 data.purchases:', data.purchases);
+	console.log('🔍 data.purchases length:', data.purchases?.length);
+	
 	// State
 	let currentFilter = $state('all');
 	let searchTerm = $state('');
 	let filterDate = $state('');
 	
 	// Get orders from purchases data
-	const allOrders = $derived(() => {
-		return (data.purchases || []).map(purchase => ({
-			id: purchase.documentId || purchase.id,
-			date: purchase.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-			time: purchase.createdAt ? new Date(purchase.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '',
-			customer: {
-				name: purchase.customerName || 'לקוח',
-				phone: purchase.customerPhone || '',
-				email: purchase.customerEmail || '',
-				address: purchase.shippingAddress || 'איסוף עצמי'
-			},
-			items: purchase.items || [],
-			total: purchase.totalAmount || 0,
-			status: purchase.status || 'pending',
-			shipping: purchase.shippingMethod || 'delivery',
-			trackingNumber: purchase.trackingNumber || '',
-			notes: purchase.notes || ''
-		}));
+	const allOrders = $derived.by(() => {
+		console.log('📦 Processing purchases data:', data.purchases?.length || 0, 'purchases');
+		return (data.purchases || []).map(purchase => {
+			console.log('📦 Purchase:', purchase);
+			return {
+				id: purchase.documentId || purchase.id,
+				date: purchase.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+				time: purchase.createdAt ? new Date(purchase.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '',
+				customer: {
+					name: purchase.customerName || 'לקוח',
+					phone: purchase.customerPhone || '',
+					email: purchase.customerEmail || '',
+					address: purchase.customerAddress || purchase.shippingAddress || 'איסוף עצמי'
+				},
+				items: purchase.products || purchase.items || [],
+				total: purchase.total || purchase.totalAmount || 0,
+				status: purchase.status || 'pending',
+				shipping: purchase.shipping || purchase.shippingMethod || 'delivery',
+				trackingNumber: purchase.trackingNumber || '',
+				notes: purchase.notes || ''
+			};
+		});
 	});
 	
 	// Statistics
-	const stats = $derived(() => {
+	const stats = $derived.by(() => {
 		const orders = allOrders;
 		const total = orders.length;
 		const pending = orders.filter(o => o.status === 'pending' || !o.status).length;
@@ -42,6 +51,8 @@
 		const revenue = orders
 			.filter(o => o.status !== 'cancelled')
 			.reduce((sum, o) => sum + (o.total || 0), 0);
+		
+		console.log('📊 Stats:', { total, pending, processing, shipped, delivered, revenue });
 		
 		return {
 			total,
@@ -54,7 +65,7 @@
 	});
 	
 	// Filtered orders
-	const filteredOrders = $derived(() => {
+	const filteredOrders = $derived.by(() => {
 		let orders = allOrders;
 		
 		// Apply status/date filter

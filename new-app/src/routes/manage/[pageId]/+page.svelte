@@ -20,21 +20,28 @@
 	console.log('📄 Page data:', data.page);
 	
 	// Check if page should use tabbed interface (for pages with services/products/sections)
+	// NOTE: Store pages use InventoryOrderManager directly, not tabbed interface
 	const usesTabbedInterface = $derived(() => {
 		const template = data.page?.template;
 		const pageType = data.page?.pageType;
 		return template === 'service' || 
 		       template === 'workshop' || 
 		       template === 'restaurant' ||
-		       template === 'store' ||
 		       pageType === 'serviceProvider';
 	});
 
-	// Polymorphic component selection based on pageType
+	// Polymorphic component selection based on pageType or template
 	const managementComponent = $derived(() => {
 		const pageType = data.page?.pageType || 'general';
+		const template = data.page?.template || '';
 		
-		console.log('🔄 Selecting management component for pageType:', pageType);
+		console.log('🔄 Selecting management component for pageType:', pageType, 'template:', template);
+		
+		// Check template first, then pageType
+		if (template === 'store' || pageType === 'store' || pageType === 'restaurantMenu') {
+			console.log('📦 Loading Inventory & Order Manager (Store)');
+			return InventoryOrderManager;
+		}
 		
 		switch(pageType) {
 			case 'store':
@@ -131,16 +138,8 @@
 				pageData={data.page} 
 			/>
 		</div>
-	{:else if !managementComponent}
-		<!-- Loading state while component is being determined -->
-		<div class="flex items-center justify-center min-h-screen">
-			<div class="text-center">
-				<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-				<p class="text-gray-600">טוען ממשק ניהול...</p>
-			</div>
-		</div>
 	{:else}
 		<!-- Render the appropriate management component -->
-		<svelte:component this={managementComponent} {data} />
+		<svelte:component this={managementComponent()} {data} />
 	{/if}
 </div>

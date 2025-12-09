@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת FAQ</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .section { border: 2px solid #ccc; padding: 10px; margin: 10px 0; }
+        .faq { background: #e8f5e9; border-color: #4caf50; }
+        .missing { background: #ffebee; border-color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>בדיקת מקטע FAQ</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Get current page URL
+        const currentUrl = window.location.href;
+        document.getElementById('results').innerHTML = `<p>URL: ${currentUrl}</p>`;
+        
+        // Check if FAQ section exists in DOM
+        const faqSection = document.getElementById('faq');
+        const faqInNav = document.querySelector('a[href="#faq"]');
+        
+        let html = '<h2>תוצאות בדיקה:</h2>';
+        
+        if (faqInNav) {
+            html += '<div class="section">✅ FAQ מופיע בסרגל ניווט</div>';
+        } else {
+            html += '<div class="section missing">❌ FAQ לא מופיע בסרגל ניווט</div>';
+        }
+        
+        if (faqSection) {
+            html += '<div class="section faq">✅ מקטע FAQ קיים ב-DOM</div>';
+            html += `<div class="section">תוכן המקטע:<br><pre>${faqSection.innerHTML.substring(0, 500)}</pre></div>`;
+        } else {
+            html += '<div class="section missing">❌ מקטע FAQ לא קיים ב-DOM</div>';
+        }
+        
+        // Check all sections
+        const allSections = document.querySelectorAll('[id]');
+        html += '<h3>כל המקטעים בדף:</h3>';
+        allSections.forEach(section => {
+            if (section.id && section.id !== 'results') {
+                html += `<div class="section">📋 ${section.id}</div>`;
+            }
+        });
+        
+        document.getElementById('results').innerHTML += html;
+    </script>
+</body>
+</html>

@@ -5,16 +5,25 @@ const N8N_CONTENT_WEBHOOK = 'https://n8n-service-how4.onrender.com/webhook/jhfuh
 // 2. Bot bubble (for user interactions on pages)
 const N8N_BOT_WEBHOOK = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbkfhkfggyt';
 
-// Default to bot webhook
-const N8N_WEBHOOK_URL = N8N_BOT_WEBHOOK;
+// Choose webhook based on action
+function getWebhookUrl(action) {
+	if (action === 'generate_content') {
+		return N8N_CONTENT_WEBHOOK;
+	}
+	return N8N_BOT_WEBHOOK;
+}
 
 export async function POST({ request }) {
 	try {
 		const body = await request.json();
 		
-		console.log('📤 Proxying request to N8N:', body);
+		// Choose the right webhook based on action
+		const webhookUrl = getWebhookUrl(body.action);
 		
-		const response = await fetch(N8N_WEBHOOK_URL, {
+		console.log('📤 Proxying request to N8N:', body);
+		console.log('🎯 Using webhook:', webhookUrl);
+		
+		const response = await fetch(webhookUrl, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

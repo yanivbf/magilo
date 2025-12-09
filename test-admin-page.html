@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת דף אדמין</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            direction: rtl;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 בדיקת דף אדמין</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        async function testAdminPage() {
+            results.innerHTML = '<div class="info">בודק את דף האדמין...</div>';
+            
+            try {
+                // Test 1: Check if admin page loads
+                results.innerHTML += '<h2>בדיקה 1: טעינת דף אדמין</h2>';
+                const pageResponse = await fetch('http://localhost:5173/admin');
+                results.innerHTML += `<div class="status ${pageResponse.ok ? 'success' : 'error'}">
+                    סטטוס: ${pageResponse.status} ${pageResponse.statusText}
+                </div>`;
+                
+                // Test 2: Check API endpoint
+                results.innerHTML += '<h2>בדיקה 2: API של סטטיסטיקות</h2>';
+                const apiResponse = await fetch('http://localhost:5173/api/admin/stats', {
+                    credentials: 'include'
+                });
+                
+                results.innerHTML += `<div class="status ${apiResponse.ok ? 'success' : 'error'}">
+                    סטטוס API: ${apiResponse.status} ${apiResponse.statusText}
+                </div>`;
+                
+                if (apiResponse.ok) {
+                    const data = await apiResponse.json();
+                    results.innerHTML += '<h3>נתונים שהתקבלו:</h3>';
+                    results.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    const errorText = await apiResponse.text();
+                    results.innerHTML += `<div class="error">שגיאה: ${errorText}</div>`;
+                }
+                
+                // Test 3: Check if user is logged in
+                results.innerHTML += '<h2>בדיקה 3: סטטוס משתמש</h2>';
+                const userResponse = await fetch('http://localhost:5173/api/user/me', {
+                    credentials: 'include'
+                });
+                
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    results.innerHTML += `<div class="success">משתמש מחובר: ${userData.email || 'לא ידוע'}</div>`;
+                } else {
+                    results.innerHTML += '<div class="error">משתמש לא מחובר</div>';
+                }
+                
+            } catch (error) {
+                results.innerHTML += `<div class="error">שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        testAdminPage();
+    </script>
+</body>
+</html>

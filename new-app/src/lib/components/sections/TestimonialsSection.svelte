@@ -3,8 +3,11 @@
 	import EditableText from '$lib/components/editing/EditableText.svelte';
 	import EditableImage from '$lib/components/editing/EditableImage.svelte';
 	
-	/** @type {{ data: { items: Array<{name: string, role: string, text: string, rating: number, avatar?: string}>, title?: string, subtitle?: string }, sectionIndex?: number }} */
+	/** @type {{ data: { items: Array<{name: string, role: string, text: string, rating: number, avatar?: string}>, title?: string, subtitle?: string, style?: string }, sectionIndex?: number }} */
 	let { data, sectionIndex = 0 } = $props();
+	
+	// Get style from data or default
+	const style = $derived(data.style || 'default');
 	
 	const editMode = getContext('editMode');
 	const pageId = getContext('pageId');
@@ -100,8 +103,8 @@
 		
 		<div class="testimonials-grid">
 			{#each items as item, index}
-				<div class="testimonial-card" style="--delay: {index * 0.15}s">
-					{#if editMode}
+				<div class="testimonial-card {style}" style="--delay: {index * 0.15}s">
+					{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 						<button class="delete-btn" onclick={() => deleteTestimonial(index)} title="מחק המלצה">
 							🗑️
 						</button>
@@ -153,7 +156,7 @@
 				</div>
 			{/each}
 			
-			{#if editMode}
+			{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 				<button class="add-testimonial-btn" onclick={addTestimonial}>
 					<div class="add-icon">➕</div>
 					<div class="add-text">הוסף המלצה</div>
@@ -166,7 +169,7 @@
 <style>
 	.testimonials-section {
 		padding: 3rem 0;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background-color: transparent !important;
 		position: relative;
 		overflow: hidden;
 		direction: rtl;
@@ -379,6 +382,127 @@
 			opacity: 1;
 			transform: translateY(0);
 		}
+	}
+	
+	/* COMIC BOOK STYLE */
+	.testimonial-card.Comic,
+	.testimonial-card[class*="Comic"] {
+		border: 4px solid black !important;
+		box-shadow: 8px 8px 0px black !important;
+		background: linear-gradient(135deg, #fef08a 0%, #fca5a5 50%, #93c5fd 100%) !important;
+		transform: rotate(-1deg);
+	}
+	
+	.testimonial-card.Comic:hover,
+	.testimonial-card[class*="Comic"]:hover {
+		transform: rotate(0deg) translateY(-10px) scale(1.02) !important;
+		box-shadow: 12px 12px 0px black !important;
+	}
+	
+	.testimonial-card.Comic .testimonial-text,
+	.testimonial-card[class*="Comic"] .testimonial-text {
+		font-weight: 700 !important;
+		text-transform: uppercase !important;
+		color: #000 !important;
+		font-size: 0.85rem !important;
+	}
+	
+	.testimonial-card.Comic .author-name,
+	.testimonial-card[class*="Comic"] .author-name {
+		color: #000 !important;
+		-webkit-text-fill-color: #000 !important;
+		font-weight: 900 !important;
+		text-transform: uppercase !important;
+	}
+	
+	/* RETRO VINTAGE STYLE */
+	.testimonial-card.Retro,
+	.testimonial-card[class*="Retro"] {
+		background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%) !important;
+		border: 3px double #92400e !important;
+		box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 0 20px rgba(146,64,14,0.05) !important;
+		position: relative;
+	}
+	
+	.testimonial-card.Retro::before,
+	.testimonial-card[class*="Retro"]::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background-image: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence baseFrequency="0.9" /%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.08" /%3E%3C/svg%3E');
+		pointer-events: none;
+		border-radius: 14px;
+	}
+	
+	.testimonial-card.Retro .testimonial-text,
+	.testimonial-card[class*="Retro"] .testimonial-text {
+		font-family: 'Georgia', 'Times New Roman', serif !important;
+		color: #78350f !important;
+		font-style: normal !important;
+	}
+	
+	.testimonial-card.Retro .author-name,
+	.testimonial-card[class*="Retro"] .author-name {
+		font-family: 'Georgia', 'Times New Roman', serif !important;
+		color: #92400e !important;
+		-webkit-text-fill-color: #92400e !important;
+	}
+	
+	.testimonial-card.Retro .star,
+	.testimonial-card[class*="Retro"] .star {
+		color: #d97706 !important;
+		filter: sepia(0.3);
+	}
+	
+	/* HOLOGRAPHIC 3D STYLE */
+	.testimonial-card.Holographic,
+	.testimonial-card[class*="Holographic"],
+	.testimonial-card[class*="3D"] {
+		background: linear-gradient(135deg, rgba(102,126,234,0.15) 0%, rgba(118,75,162,0.15) 50%, rgba(240,147,251,0.15) 100%) !important;
+		backdrop-filter: blur(20px) !important;
+		-webkit-backdrop-filter: blur(20px) !important;
+		border: 2px solid rgba(255,255,255,0.3) !important;
+		box-shadow: 0 8px 32px rgba(102,126,234,0.3), 0 0 0 1px rgba(255,255,255,0.1) inset, 0 20px 60px rgba(118,75,162,0.2) !important;
+		transform-style: preserve-3d;
+		perspective: 1000px;
+		animation: float 6s ease-in-out infinite;
+	}
+	
+	@keyframes float {
+		0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+		50% { transform: translateY(-10px) rotateX(2deg) rotateY(2deg); }
+	}
+	
+	.testimonial-card.Holographic:hover,
+	.testimonial-card[class*="Holographic"]:hover,
+	.testimonial-card[class*="3D"]:hover {
+		transform: translateY(-15px) rotateX(5deg) rotateY(5deg) scale(1.02) !important;
+		box-shadow: 0 0 40px rgba(102,126,234,0.6), 0 0 80px rgba(118,75,162,0.4), 0 30px 90px rgba(0,0,0,0.3) !important;
+		border-color: rgba(255,255,255,0.6) !important;
+	}
+	
+	.testimonial-card.Holographic .testimonial-text,
+	.testimonial-card[class*="Holographic"] .testimonial-text,
+	.testimonial-card[class*="3D"] .testimonial-text {
+		color: #1e293b !important;
+		text-shadow: 0 0 10px rgba(255,255,255,0.5) !important;
+	}
+	
+	.testimonial-card.Holographic .author-name,
+	.testimonial-card[class*="Holographic"] .author-name,
+	.testimonial-card[class*="3D"] .author-name {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+		-webkit-background-clip: text !important;
+		-webkit-text-fill-color: transparent !important;
+		background-clip: text !important;
+		filter: drop-shadow(0 0 8px rgba(102,126,234,0.5)) !important;
+	}
+	
+	.testimonial-card.Holographic .star,
+	.testimonial-card[class*="Holographic"] .star,
+	.testimonial-card[class*="3D"] .star {
+		color: #fbbf24 !important;
+		filter: drop-shadow(0 0 5px rgba(251,191,36,0.8)) !important;
 	}
 	
 	@media (max-width: 768px) {

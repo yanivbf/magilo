@@ -39,9 +39,9 @@ export async function load({ locals, cookies, url }) {
 		
 		console.log('✅ User subscription status from cookies:', subscriptionStatus);
 		
-		// Fetch pages by user relation
+		// Fetch pages by user relation (only essential fields for dashboard)
 		const response1 = await fetch(
-			`${STRAPI_URL}/api/pages?filters[user][id][$eq]=${userId}&populate=*`,
+			`${STRAPI_URL}/api/pages?filters[user][id][$eq]=${userId}&fields[0]=title&fields[1]=slug&fields[2]=pageType&fields[3]=description&fields[4]=isActive&fields[5]=phone&fields[6]=email&fields[7]=address&fields[8]=metadata&fields[9]=subscriptionStatus&fields[10]=subscriptionExpiry&fields[11]=createdAt&fields[12]=updatedAt`,
 			{
 				headers: {
 					'Authorization': `Bearer ${STRAPI_API_TOKEN}`
@@ -49,9 +49,9 @@ export async function load({ locals, cookies, url }) {
 			}
 		);
 		
-		// Fetch pages by userId field
+		// Fetch pages by userId field (only essential fields for dashboard)
 		const response2 = await fetch(
-			`${STRAPI_URL}/api/pages?filters[userId][$eq]=${userId}&populate=*`,
+			`${STRAPI_URL}/api/pages?filters[userId][$eq]=${userId}&fields[0]=title&fields[1]=slug&fields[2]=pageType&fields[3]=description&fields[4]=isActive&fields[5]=phone&fields[6]=email&fields[7]=address&fields[8]=metadata&fields[9]=subscriptionStatus&fields[10]=subscriptionExpiry&fields[11]=createdAt&fields[12]=updatedAt`,
 			{
 				headers: {
 					'Authorization': `Bearer ${STRAPI_API_TOKEN}`
@@ -100,6 +100,8 @@ export async function load({ locals, cookies, url }) {
 				email: pageData.email,
 				address: pageData.address,
 				metadata: pageData.metadata,
+				subscriptionStatus: pageData.subscriptionStatus || 'none', // PER PAGE
+				subscriptionExpiry: pageData.subscriptionExpiry || null, // PER PAGE
 				createdAt: pageData.createdAt || page.createdAt,
 				updatedAt: pageData.updatedAt || page.updatedAt
 			};

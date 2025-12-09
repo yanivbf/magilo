@@ -78,6 +78,7 @@
 	
 	function handleSubmit(e) {
 		e.preventDefault();
+		e.stopPropagation();
 		isSubmitting = true;
 		
 		const data = {
@@ -96,11 +97,18 @@
 			console.error('❌ onSubmit is not a function!', onSubmit);
 		}
 	}
+	
+	// Prevent form submission on Enter key in input fields
+	function handleKeyDown(e) {
+		if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+			e.preventDefault();
+		}
+	}
 </script>
 
 <div class="dynamic-form">
 	<div class="bg-white rounded-lg shadow-lg p-6">
-		<form onsubmit={handleSubmit} class="space-y-6">
+		<form onsubmit={handleSubmit} onkeydown={handleKeyDown} class="space-y-6">
 			<!-- EXACT Legacy Info Box from page-creator.html -->
 			{#if template.infoBox}
 				{@const boxColor = template.infoBox.boxColor || 'blue'}

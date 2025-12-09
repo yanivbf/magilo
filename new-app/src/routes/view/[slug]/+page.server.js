@@ -156,6 +156,7 @@ export async function load({ params, locals, cookies, setHeaders, url }) {
 					email: attrs.email,
 					city: attrs.city,
 					address: attrs.address,
+					designStyle: attrs.designStyle || page.designStyle || 'modern', // ✅ CRITICAL FIX: Pass designStyle!
 					metadata: metadata,
 					// Sections-based data (with overrides applied)
 					hasSections: true,
@@ -193,6 +194,7 @@ export async function load({ params, locals, cookies, setHeaders, url }) {
 				email: attrs.email,
 				city: attrs.city,
 				address: attrs.address,
+				designStyle: attrs.designStyle || page.designStyle || 'modern', // ✅ CRITICAL FIX: Pass designStyle!
 				metadata: attrs.metadata || {},
 				hasSections: false,
 				// User subscription status (not page-specific)

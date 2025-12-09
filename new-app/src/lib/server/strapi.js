@@ -244,6 +244,7 @@ export async function getAllUsers() {
  * @param {string} [pageData.address]
  * @param {any[]} [pageData.products]
  * @param {Object} [pageData.metadata]
+ * @param {string} [pageData.designStyle] - Design style (modern, dark, colorful, etc.)
  * @param {string} pageData.userId - User ID to associate with
  * @returns {Promise<any>}
  */
@@ -503,11 +504,49 @@ export async function deletePage(id) {
  */
 export async function createPurchase(purchaseData) {
 	const { userId, pageId, ...data } = purchaseData;
-	return strapi.post('/purchases', {
-		...data,
-		user: userId,
-		page: pageId
+	
+	console.log('📦 Creating purchase in Strapi:', {
+		userId,
+		pageId,
+		dataKeys: Object.keys(data),
+		fullData: data
 	});
+	
+	// Ensure userId and pageId are numeric
+	const numericUserId = typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : userId;
+	const numericPageId = typeof pageId === 'string' && !isNaN(Number(pageId)) ? Number(pageId) : pageId;
+	
+	console.log('🔢 Converted IDs:', {
+		originalUserId: userId,
+		numericUserId,
+		originalPageId: pageId,
+		numericPageId
+	});
+	
+	const requestPayload = {
+		...data,
+		user: numericUserId,
+		page: numericPageId
+	};
+	
+	console.log('📤 Strapi request payload:', requestPayload);
+	
+	try {
+		// Note: strapi.post already wraps in { data: ... }
+		const result = await strapi.post('/purchases', requestPayload);
+		console.log('✅ Purchase created successfully:', result);
+		return result;
+	} catch (error) {
+		console.error('❌ Strapi purchase creation error:');
+		console.error('  - Error message:', error.message);
+		console.error('  - Response status:', error.response?.status);
+		console.error('  - Response data:', JSON.stringify(error.response?.data, null, 2));
+		console.error('  - Request payload was:', JSON.stringify(requestPayload, null, 2));
+		
+		// Throw a more descriptive error
+		const errorDetails = error.response?.data?.error?.message || error.message;
+		throw new Error(`Failed to create purchase in Strapi: ${errorDetails}`);
+	}
 }
 
 /**

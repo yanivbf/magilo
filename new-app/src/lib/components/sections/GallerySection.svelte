@@ -299,26 +299,9 @@
 <style>
 	.gallery-section {
 		padding: 3rem 0;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background-color: transparent !important;
 		position: relative;
 		overflow: hidden;
-	}
-	
-	.gallery-section::before {
-		content: '';
-		position: absolute;
-		top: -50%;
-		right: -20%;
-		width: 800px;
-		height: 800px;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-		border-radius: 50%;
-		animation: float 20s ease-in-out infinite;
-	}
-	
-	@keyframes float {
-		0%, 100% { transform: translateY(0) rotate(0deg); }
-		50% { transform: translateY(-30px) rotate(5deg); }
 	}
 	
 	.container {
@@ -333,16 +316,13 @@
 		text-align: center;
 		font-size: 3rem;
 		font-weight: 800;
-		color: white;
 		margin-bottom: 0.75rem;
-		text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 		animation: fadeInUp 0.8s ease-out;
 	}
 	
 	.section-subtitle {
 		text-align: center;
 		font-size: 1.1rem;
-		color: rgba(255, 255, 255, 0.9);
 		margin-bottom: 2.5rem;
 		animation: fadeInUp 0.8s ease-out 0.2s backwards;
 	}
@@ -382,7 +362,6 @@
 		height: 200px;
 		border-radius: 16px;
 		overflow: hidden;
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 		animation: fadeInUp 0.6s ease-out backwards;
 		animation-delay: var(--delay);
@@ -406,6 +385,7 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		display: block; /* ✅ מוודא שהתמונה מוצגת */
 		transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	
@@ -492,10 +472,8 @@
 		width: 200px;
 		height: 200px;
 		border-radius: 16px;
-		border: 3px dashed rgba(255, 255, 255, 0.5);
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(10px);
-		color: white;
+		border: 3px dashed currentColor;
+		background: transparent;
 		cursor: pointer;
 		display: flex;
 		flex-direction: column;
@@ -508,8 +486,6 @@
 	}
 	
 	.add-image-btn:hover {
-		background: rgba(255, 255, 255, 0.2);
-		border-color: white;
 		transform: translateY(-5px);
 	}
 	

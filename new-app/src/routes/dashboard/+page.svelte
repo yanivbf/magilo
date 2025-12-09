@@ -101,15 +101,21 @@
 	}
 	
 	function viewPage(page) {
-		// Open page in new tab - use /view/ for public view
+		// Check subscription status
+		if (page.subscriptionStatus !== 'active') {
+			alert('נדרש מנוי פעיל לצפייה בדף 🔒\n\nלחץ על "הפעל מנוי לדף זה" למטה כדי להפעיל את המנוי.');
+			return;
+		}
+		
+		// Open page in new tab - use /view/ for public view with viewOnly parameter
 		const slug = page.slug || page.fileName || page.documentId || page.id;
-		console.log('🔍 Opening page:', { slug, page });
+		console.log('🔍 Opening page in view-only mode:', { slug, page });
 		if (!slug) {
 			alert('שגיאה: לא נמצא slug לדף זה');
 			return;
 		}
-		// Use /view/ route for public viewing (no edit toolbar)
-		window.open(`/view/${slug}`, '_blank');
+		// Use /view/ route for public viewing with viewOnly=true (no edit capabilities)
+		window.open(`/view/${slug}?viewOnly=true`, '_blank');
 	}
 	
 	function getPageTypeIcon(pageType) {
@@ -145,9 +151,12 @@
 	}
 	
 	function manageStore(page) {
-		const pageId = page.documentId || page.id;
-		const slug = page.slug || page.fileName || pageId;
-		goto(`/manage/${slug}`);
+		console.log('🛒 manageStore called with page:', page);
+		// Use documentId first (most reliable), then slug, then id
+		const identifier = page.documentId || page.slug || page.id;
+		console.log('🛒 Identifier:', identifier);
+		console.log('🛒 Navigating to:', `/manage/${identifier}`);
+		goto(`/manage/${identifier}`);
 	}
 	
 	function manageEvent(page) {
@@ -162,9 +171,37 @@
 		goto(`/manage/${slug}`);
 	}
 	
-	function purchaseSubscription() {
-		// Navigate to subscription page - subscription is per USER, not per page
-		goto('/subscribe');
+	function purchaseSubscription(pageId) {
+		// Navigate to subscription page with pageId
+		goto(`/subscribe?pageId=${pageId}`);
+	}
+	
+	// Calculate time remaining for subscription
+	function getTimeRemaining(expiryDate) {
+		if (!expiryDate) return null;
+		
+		const now = new Date();
+		const expiry = new Date(expiryDate);
+		const diff = expiry - now;
+		
+		if (diff <= 0) return { expired: true };
+		
+		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+		
+		return { days, hours, expired: false };
+	}
+	
+	function formatTimeRemaining(expiryDate) {
+		const time = getTimeRemaining(expiryDate);
+		if (!time) return '';
+		if (time.expired) return 'פג תוקף';
+		
+		if (time.days > 0) {
+			return `${time.days} ימים`;
+		} else {
+			return `${time.hours} שעות`;
+		}
 	}
 </script>
 
@@ -261,12 +298,18 @@
 						<div class="page-card bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-xl transition-all relative">
 							<!-- Status Badge - Top Right Corner - PER PAGE -->
 							{#if page.subscriptionStatus === 'active'}
-								<div class="absolute top-3 left-3 z-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-									פעיל
+								<div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
+									<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+									</svg>
+									<span>מנוי פעיל</span>
 								</div>
 							{:else}
-								<div class="absolute top-3 left-3 z-10 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-									ממתין
+								<div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
+									<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+									</svg>
+									<span>ללא מנוי</span>
 								</div>
 							{/if}
 							
@@ -331,7 +374,11 @@
 											</button>
 											{#if page.pageType === 'store' || page.pageType === 'onlineStore'}
 												<button 
-													onclick={(e) => { e.stopPropagation(); manageStore(page); }}
+													onclick={(e) => { 
+														console.log('🖱️ Dropdown store button clicked!', e);
+														e.stopPropagation(); 
+														manageStore(page); 
+													}}
 													class="w-full text-right px-4 py-2.5 hover:bg-purple-50 flex items-center gap-2 text-gray-700 hover:text-purple-600 transition"
 												>
 													<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,10 +447,16 @@
 											onclick={() => viewPage(page)}
 											class="bg-indigo-600 text-white py-2.5 px-3 rounded-lg text-sm font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-1"
 										>
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-											</svg>
+											{#if page.subscriptionStatus === 'active'}
+												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+												</svg>
+											{:else}
+												<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+													<path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+												</svg>
+											{/if}
 											צפה
 										</button>
 										<button 
@@ -420,7 +473,12 @@
 									<!-- Management Button (Type-Specific) -->
 									{#if page.pageType === 'store' || page.pageType === 'onlineStore'}
 										<button 
-											onclick={() => manageStore(page)}
+											onclick={(e) => {
+												console.log('🖱️ Store management button clicked!', e);
+												console.log('📦 Page data:', page);
+												e.stopPropagation();
+												manageStore(page);
+											}}
 											class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2.5 px-3 rounded-lg text-sm font-bold hover:from-purple-700 hover:to-purple-800 transition flex items-center justify-center gap-2"
 										>
 											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -464,7 +522,7 @@
 									<!-- Subscription Info or Upgrade Button - PER PAGE -->
 									{#if page.subscriptionStatus === 'active'}
 										<!-- Show subscription countdown -->
-										{@const daysLeft = page.subscriptionExpiry ? Math.ceil((new Date(page.subscriptionExpiry) - new Date()) / (1000 * 60 * 60 * 24)) : 0}
+										{@const timeLeft = getTimeRemaining(page.subscriptionExpiry)}
 										<div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
 											<div class="flex items-center justify-between">
 												<div class="flex items-center gap-2">
@@ -475,7 +533,13 @@
 												</div>
 												<div class="text-left">
 													<div class="text-xs text-green-600 font-medium">נותרו</div>
-													<div class="text-lg font-extrabold text-green-700">{daysLeft} ימים</div>
+													<div class="text-lg font-extrabold text-green-700">
+														{#if timeLeft && !timeLeft.expired}
+															{timeLeft.days} ימים
+														{:else}
+															פג תוקף
+														{/if}
+													</div>
 												</div>
 											</div>
 										</div>
