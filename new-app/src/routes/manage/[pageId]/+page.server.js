@@ -12,7 +12,9 @@ export async function load({ params, locals, cookies }) {
 	}
 
 	try {
-		console.log('🔍 Looking for page:', pageId);
+		console.log('🔍 Looking for page with pageId:', pageId);
+		console.log('🔍 pageId type:', typeof pageId);
+		console.log('🔍 pageId length:', pageId?.length);
 		
 		// Try multiple strategies to find the page
 		let pageResponse;
@@ -21,7 +23,7 @@ export async function load({ params, locals, cookies }) {
 		
 		// Strategy 1: Try by documentId
 		try {
-			pageResponse = await fetch(`${STRAPI_URL}/api/pages/${pageId}?populate=deep,3`, {
+			pageResponse = await fetch(`${STRAPI_URL}/api/pages/${pageId}?populate=*`, {
 				headers: {
 					Authorization: `Bearer ${STRAPI_API_TOKEN}`
 				}
@@ -32,13 +34,13 @@ export async function load({ params, locals, cookies }) {
 				console.log('✅ Found by documentId');
 			}
 		} catch (e) {
-			console.log('❌ Not found by documentId');
+			console.log('❌ Not found by documentId:', e.message);
 		}
 		
 		// Strategy 2: Try by slug
 		if (!pageItem) {
 			try {
-				pageResponse = await fetch(`${STRAPI_URL}/api/pages?filters[slug][$eq]=${pageId}&populate=deep,3`, {
+				pageResponse = await fetch(`${STRAPI_URL}/api/pages?filters[slug][$eq]=${pageId}&populate=*`, {
 					headers: {
 						Authorization: `Bearer ${STRAPI_API_TOKEN}`
 					}
@@ -49,14 +51,14 @@ export async function load({ params, locals, cookies }) {
 					console.log('✅ Found by slug');
 				}
 			} catch (e) {
-				console.log('❌ Not found by slug');
+				console.log('❌ Not found by slug:', e.message);
 			}
 		}
 		
 		// Strategy 3: Try by numeric ID
 		if (!pageItem && !isNaN(pageId)) {
 			try {
-				pageResponse = await fetch(`${STRAPI_URL}/api/pages?filters[id][$eq]=${pageId}&populate=deep,3`, {
+				pageResponse = await fetch(`${STRAPI_URL}/api/pages?filters[id][$eq]=${pageId}&populate=*`, {
 					headers: {
 						Authorization: `Bearer ${STRAPI_API_TOKEN}`
 					}
@@ -67,7 +69,7 @@ export async function load({ params, locals, cookies }) {
 					console.log('✅ Found by numeric ID');
 				}
 			} catch (e) {
-				console.log('❌ Not found by numeric ID');
+				console.log('❌ Not found by numeric ID:', e.message);
 			}
 		}
 
@@ -106,8 +108,9 @@ export async function load({ params, locals, cookies }) {
 		// Fetch leads for this page (with error handling)
 		let leads = [];
 		try {
+			// Use page.id relation filter (not pageId string!)
 			const leadsResponse = await fetch(
-				`${STRAPI_URL}/api/leads?filters[pageId][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
+				`${STRAPI_URL}/api/leads?filters[page][id][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
 				{
 					headers: {
 						Authorization: `Bearer ${STRAPI_API_TOKEN}`
@@ -116,6 +119,7 @@ export async function load({ params, locals, cookies }) {
 			);
 			if (leadsResponse.ok) {
 				const leadsData = await leadsResponse.json();
+				console.log(`✅ Found ${leadsData.data?.length || 0} leads for page ${actualPageId}`);
 				leads = leadsData.data
 					? leadsData.data.map((lead) => ({
 							id: lead.id,
@@ -131,26 +135,59 @@ export async function load({ params, locals, cookies }) {
 		// Fetch purchases for this page (with error handling)
 		let purchases = [];
 		try {
-			const purchasesResponse = await fetch(
-				`${STRAPI_URL}/api/purchases?filters[pageId][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`,
-				{
-					headers: {
-						Authorization: `Bearer ${STRAPI_API_TOKEN}`
-					}
+			// Use page.id relation filter (not pageId string!)
+			const purchasesURL = `${STRAPI_URL}/api/purchases?filters[page][id][$eq]=${actualPageId}&sort=createdAt:desc&populate=*`;
+			console.log(`🔍 Fetching purchases from: ${purchasesURL}`);
+			
+			const purchasesResponse = await fetch(purchasesURL, {
+				headers: {
+					Authorization: `Bearer ${STRAPI_API_TOKEN}`
 				}
-			);
+			});
+			
+			console.log(`📡 Purchases response status: ${purchasesResponse.status}`);
+			
 			if (purchasesResponse.ok) {
 				const purchasesData = await purchasesResponse.json();
+				console.log(`✅ Found ${purchasesData.data?.length || 0} purchases for page ${actualPageId}`);
+				console.log(`📦 Raw purchases data:`, JSON.stringify(purchasesData.data?.slice(0, 1), null, 2));
+				
 				purchases = purchasesData.data
-					? purchasesData.data.map((purchase) => ({
-							id: purchase.id,
-							documentId: purchase.documentId,
-							...purchase.attributes
-					  }))
+					? purchasesData.data.map((purchase) => {
+							const attrs = purchase.attributes || purchase;
+							return {
+								id: purchase.id,
+								documentId: purchase.documentId,
+								products: attrs.products || [],
+								total: attrs.total || 0,
+								paymentMethod: attrs.paymentMethod,
+								customerName: attrs.customerName,
+								customerPhone: attrs.customerPhone,
+								customerEmail: attrs.customerEmail,
+								customerAddress: attrs.customerAddress,
+								shipping: attrs.shipping,
+								status: attrs.status || 'pending',
+								statusText: attrs.statusText,
+								createdAt: attrs.createdAt,
+								updatedAt: attrs.updatedAt,
+								pickedAt: attrs.pickedAt,
+								deliveredAt: attrs.deliveredAt,
+								driverId: attrs.driverId,
+								driverName: attrs.driverName,
+								notes: attrs.notes || ''
+							};
+					  })
 					: [];
+				console.log('📦 Transformed purchases:', JSON.stringify(purchases.slice(0, 1), null, 2));
+				console.log(`📊 Total purchases to return: ${purchases.length}`);
+			} else {
+				console.error(`❌ Purchases fetch failed with status: ${purchasesResponse.status}`);
+				const errorText = await purchasesResponse.text();
+				console.error(`❌ Error response: ${errorText}`);
 			}
 		} catch (err) {
-			console.warn('Could not fetch purchases:', err);
+			console.error('❌ Could not fetch purchases:', err);
+			console.error('❌ Error stack:', err.stack);
 		}
 
 		// Fetch analytics for this page (with error handling)

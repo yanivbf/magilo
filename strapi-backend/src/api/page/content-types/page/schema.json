@@ -45,7 +45,7 @@
     },
     "isActive": {
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "phone": {
       "type": "string"
@@ -174,6 +174,21 @@
     "workingHours": {
       "type": "json",
       "default": {}
+    },
+    "designStyle": {
+      "type": "enumeration",
+      "enum": [
+        "modern",
+        "colorful",
+        "elegant",
+        "dark",
+        "minimalist",
+        "retro",
+        "neon",
+        "luxury",
+        "vintage"
+      ],
+      "default": "modern"
     },
     "subscriptionStatus": {
       "type": "enumeration",

@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { currentUser, signOut, extractUserData, isCheckingSession, checkSession } from '$lib/stores/auth';
+	import { currentUser, signOut, extractUserData, isCheckingSession } from '$lib/stores/auth';
 	import { onMount } from 'svelte';
 	
 	/** @type {import('./$types').PageData} */
@@ -9,141 +9,11 @@
 	let userData = $state({ name: 'משתמש רשום', avatar: null });
 	let showDeleteConfirm = $state(null);
 	
-	// Function to fetch complete user data from API
-	async function fetchUserDataFromAPI(userId) {
-		try {
-			console.log('🌐 Fetching user data from API for:', userId);
-			const response = await fetch(`/api/user/${userId}`);
-			
-			if (response.ok) {
-				const result = await response.json();
-				if (result.success && result.user) {
-					console.log('✅ Complete user data received:', result.user);
-					
-					// Update auth store with complete data
-					const completeUser = {
-						id: result.user.userId,
-						userId: result.user.userId,
-						email: result.user.email || '',
-						name: result.user.name || 'משתמש רשום',
-						avatar: result.user.avatar || null,
-						subscriptionStatus: result.user.subscriptionStatus || 'active'
-					};
-					
-					currentUser.set(completeUser);
-					userData = extractUserData(completeUser);
-					
-					console.log('✅ User data updated from API:', userData);
-					
-					// Also update localStorage
-					try {
-						localStorage.setItem('currentUser', JSON.stringify(completeUser));
-					} catch (e) {
-						console.warn('⚠️ localStorage not available:', e.message);
-					}
-				}
-			} else {
-				console.warn('⚠️ Failed to fetch user data from API:', response.status);
-			}
-		} catch (error) {
-			console.error('❌ Error fetching user data from API:', error);
-		}
-	}
-	
-	// Subscription success message - no longer needed, all pages are active
-	let showSubscriptionSuccess = $state(false);
-	
-	// Debug: Log data on mount AND sync cookie if needed
+	// Debug: Log data on mount
 	$effect(() => {
 		console.log('📊 Dashboard - Pages Count:', data?.pages?.length || 0);
 		console.log('📊 Dashboard - Subscription:', data?.subscriptionStatus || 'unknown');
 		console.log('📊 Dashboard - User ID:', data?.userId || 'missing');
-		
-		// Check if user just activated subscription
-		const urlParams = new URLSearchParams(window.location.search);
-		if (urlParams.get('subscriptionActivated') === 'true') {
-			showSubscriptionSuccess = true;
-			console.log('🎉 Subscription activation success detected!');
-			
-			// Clean URL after showing message
-			setTimeout(() => {
-				const cleanUrl = window.location.pathname + '?userId=' + (data?.userId || urlParams.get('userId') || '');
-				window.history.replaceState({}, '', cleanUrl);
-			}, 100);
-		}
-		
-		// CRITICAL FIX: If server has userId but client cookie doesn't, sync them
-		// OR if no server data but we know this is the main user, set the cookie
-		if (data?.userId) {
-			const cookieUserId = document.cookie
-				.split('; ')
-				.find(row => row.startsWith('userId='))
-				?.split('=')[1];
-			
-			if (!cookieUserId || cookieUserId !== data.userId) {
-				console.log('🔧 Syncing userId from server to client cookie...');
-				const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
-				document.cookie = `userId=${data.userId}; expires=${expires}; path=/; SameSite=Lax`;
-				document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; SameSite=Lax`;
-				console.log('✅ Cookie synced:', data.userId);
-				
-				// Also update auth store
-				const userData = {
-					id: data.userId,
-					userId: data.userId,
-					email: '',
-					name: 'משתמש רשום',
-					avatar: null,
-					subscriptionStatus: data.subscriptionStatus || 'active'
-				};
-				currentUser.set(userData);
-				console.log('✅ Auth store updated');
-				
-				// Try to save to localStorage too (with error handling)
-				try {
-					localStorage.setItem('currentUser', JSON.stringify(userData));
-					console.log('✅ localStorage updated');
-				} catch (e) {
-					console.warn('⚠️ localStorage not available:', e.message);
-				}
-			}
-		} else {
-			// FALLBACK: If no server data, check if we should set main user cookie
-			const cookieUserId = document.cookie
-				.split('; ')
-				.find(row => row.startsWith('userId='))
-				?.split('=')[1];
-			
-			if (!cookieUserId) {
-				console.log('🔧 No cookie found, setting main user cookie as fallback...');
-				const mainUserId = 'google_111351120503275674259';
-				const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
-				document.cookie = `userId=${mainUserId}; expires=${expires}; path=/; SameSite=Lax`;
-				document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; SameSite=Lax`;
-				
-				const userData = {
-					id: mainUserId,
-					userId: mainUserId,
-					email: '',
-					name: 'משתמש רשום',
-					avatar: null,
-					subscriptionStatus: 'active'
-				};
-				currentUser.set(userData);
-				console.log('✅ Main user cookie set as fallback');
-				
-				try {
-					localStorage.setItem('currentUser', JSON.stringify(userData));
-				} catch (e) {
-					console.warn('⚠️ localStorage not available:', e.message);
-				}
-				
-				// Reload page to get server data with the new cookie
-				setTimeout(() => {
-					window.location.reload();
-				}, 500);
-			}
-		}
 		
 		if (data?.pages?.length > 0) {
 			const firstPage = data.pages[0];
@@ -165,54 +35,10 @@
 			return;
 		}
 		
-		// CRITICAL FIX: If server provided data, we're logged in regardless of auth store state
-		if (data?.userId && data?.pages !== undefined) {
-			console.log('✅ Server provided user data, user is authenticated');
-			
-			// Update auth store if it's empty
-			if (!$currentUser) {
-				const userData = {
-					id: data.userId,
-					userId: data.userId,
-					email: '',
-					name: 'משתמש רשום',
-					avatar: null,
-					subscriptionStatus: data.subscriptionStatus || 'active'
-				};
-				currentUser.set(userData);
-				console.log('✅ Auth store updated from server data');
-			}
-			
-			// Extract user data for display
-			userData = extractUserData($currentUser || {
-				id: data.userId,
-				userId: data.userId,
-				name: 'משתמש רשום'
-			});
-			
-			// ENHANCEMENT: Fetch complete user data from API to get Google info
-			if (data.userId && (!$currentUser?.name || $currentUser?.name === 'משתמש רשום' || !$currentUser?.email)) {
-				console.log('🔍 Fetching complete user data from API...');
-				fetchUserDataFromAPI(data.userId);
-			}
-			
-			return; // Don't redirect - we have valid data
-		}
-		
-		// CRITICAL FIX: Check cookie directly as fallback before redirecting
-		const cookieUserId = document.cookie
-			.split('; ')
-			.find(row => row.startsWith('userId='))
-			?.split('=')[1];
-		
-		if (!$currentUser && !cookieUserId && !data?.userId) {
-			console.log('⚠️ No user found anywhere, redirecting to login');
+		if (!$currentUser) {
+			console.log('⚠️ No user found after session check, redirecting to login');
 			goto('/login');
-		} else if (!$currentUser && cookieUserId) {
-			console.log('🔄 No user in store but cookie exists, triggering auth check...');
-			// Force auth store to re-check session
-			checkSession();
-		} else if ($currentUser) {
+		} else {
 			console.log('✅ User found:', $currentUser.name || $currentUser.email);
 			userData = extractUserData($currentUser);
 			// Ensure userId is in URL for server-side data fetching
@@ -275,15 +101,15 @@
 	}
 	
 	function viewPage(page) {
-		// Open page in new tab - use /view/ for public view
+		// All pages are active - no subscription check needed
 		const slug = page.slug || page.fileName || page.documentId || page.id;
-		console.log('🔍 Opening page:', { slug, page });
+		console.log('🔍 Opening page in view-only mode:', { slug, page });
 		if (!slug) {
 			alert('שגיאה: לא נמצא slug לדף זה');
 			return;
 		}
-		// Use /view/ route for public viewing (no edit toolbar)
-		window.open(`/view/${slug}`, '_blank');
+		// Use /view/ route for public viewing with viewOnly=true (no edit capabilities)
+		window.open(`/view/${slug}?viewOnly=true`, '_blank');
 	}
 	
 	function getPageTypeIcon(pageType) {
@@ -319,9 +145,12 @@
 	}
 	
 	function manageStore(page) {
-		const pageId = page.documentId || page.id;
-		const slug = page.slug || page.fileName || pageId;
-		goto(`/manage/${slug}`);
+		console.log('🛒 manageStore called with page:', page);
+		// Use documentId first (most reliable), then slug, then id
+		const identifier = page.documentId || page.slug || page.id;
+		console.log('🛒 Identifier:', identifier);
+		console.log('🛒 Navigating to:', `/manage/${identifier}`);
+		goto(`/manage/${identifier}`);
 	}
 	
 	function manageEvent(page) {
@@ -334,6 +163,11 @@
 		const pageId = page.documentId || page.id;
 		const slug = page.slug || page.fileName || pageId;
 		goto(`/manage/${slug}`);
+	}
+	
+	function purchaseSubscription(pageId) {
+		// Navigate to subscription page with pageId
+		goto(`/subscribe?pageId=${pageId}`);
 	}
 	
 	// purchaseSubscription removed - all pages are active by default
@@ -354,8 +188,6 @@
 {:else}
 <div class="min-h-screen bg-gray-50">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		<!-- All pages are active - no subscription messages needed -->
-
 		<!-- Header Section -->
 		<div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
 			<!-- User Info -->
@@ -382,13 +214,6 @@
 						</div>
 						<div class="text-sm text-gray-500">
 							{$currentUser?.email || ''}
-						</div>
-						<!-- User Status - All users are active -->
-						<div class="flex items-center gap-1 mt-1">
-							<svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-							</svg>
-							<span class="text-sm font-bold text-green-600">חשבון פעיל</span>
 						</div>
 					</div>
 				</div>
@@ -508,7 +333,11 @@
 											</button>
 											{#if page.pageType === 'store' || page.pageType === 'onlineStore'}
 												<button 
-													onclick={(e) => { e.stopPropagation(); manageStore(page); }}
+													onclick={(e) => { 
+														console.log('🖱️ Dropdown store button clicked!', e);
+														e.stopPropagation(); 
+														manageStore(page); 
+													}}
 													class="w-full text-right px-4 py-2.5 hover:bg-purple-50 flex items-center gap-2 text-gray-700 hover:text-purple-600 transition"
 												>
 													<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,7 +426,12 @@
 									<!-- Management Button (Type-Specific) -->
 									{#if page.pageType === 'store' || page.pageType === 'onlineStore'}
 										<button 
-											onclick={() => manageStore(page)}
+											onclick={(e) => {
+												console.log('🖱️ Store management button clicked!', e);
+												console.log('📦 Page data:', page);
+												e.stopPropagation();
+												manageStore(page);
+											}}
 											class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2.5 px-3 rounded-lg text-sm font-bold hover:from-purple-700 hover:to-purple-800 transition flex items-center justify-center gap-2"
 										>
 											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

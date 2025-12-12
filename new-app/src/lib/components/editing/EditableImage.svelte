@@ -6,11 +6,13 @@
 	
 	// Get editMode from context - if false, disable editing
 	const editMode = getContext('editMode');
+	const isEditable = $derived(typeof editMode === 'function' ? editMode() : editMode);
 	
 	let fileInput;
 	let uploading = $state(false);
 	
 	function openFileDialog() {
+		if (!isEditable) return; // Don't allow editing if not in edit mode
 		fileInput.click();
 	}
 	
@@ -38,29 +40,35 @@
 	style="display: none;"
 />
 
-<div class="editable-image-wrapper {className}" class:uploading>
+<div class="editable-image-wrapper {className}" class:uploading class:edit-mode={isEditable}>
 	<img {src} {alt} />
 	
-	<button class="image-overlay" onclick={openFileDialog} type="button">
-		<div class="overlay-content">
-			{#if uploading}
-				<div class="spinner"></div>
-				<p>מעלה...</p>
-			{:else}
-				<svg class="camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-				</svg>
-				<p>לחץ להחלפת תמונה</p>
-			{/if}
-		</div>
-	</button>
+	{#if isEditable}
+		<button class="image-overlay" onclick={openFileDialog} type="button">
+			<div class="overlay-content">
+				{#if uploading}
+					<div class="spinner"></div>
+					<p>מעלה...</p>
+				{:else}
+					<svg class="camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+					</svg>
+					<p>לחץ להחלפת תמונה</p>
+				{/if}
+			</div>
+		</button>
+	{/if}
 </div>
 
 <style>
 	.editable-image-wrapper {
 		position: relative;
 		overflow: hidden;
+	}
+	
+	/* Only show cursor pointer in edit mode */
+	.editable-image-wrapper.edit-mode {
 		cursor: pointer;
 	}
 	
@@ -85,11 +93,12 @@
 		color: white;
 	}
 	
-	.editable-image-wrapper:hover .image-overlay {
+	/* Only show overlay on hover in edit mode */
+	.editable-image-wrapper.edit-mode:hover .image-overlay {
 		opacity: 1;
 	}
 	
-	.editable-image-wrapper:hover img {
+	.editable-image-wrapper.edit-mode:hover img {
 		transform: scale(1.05);
 	}
 	

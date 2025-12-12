@@ -22,10 +22,29 @@
 	let isCreating = $state(false);
 	let error = $state('');
 
+	// Loading messages
+	let loadingMessage = $state('מכין את הדף שלך...');
+	let loadingStep = $state(0);
+	
+	const loadingMessages = [
+		'מכין את הדף שלך...',
+		'יוצר תוכן מקצועי...',
+		'מעצב את הדף...',
+		'כמעט מוכן...'
+	];
+	
 	// Create page
 	async function createPage() {
 		isCreating = true;
 		error = '';
+		loadingStep = 0;
+		loadingMessage = loadingMessages[0];
+		
+		// Animate loading messages
+		const messageInterval = setInterval(() => {
+			loadingStep = (loadingStep + 1) % loadingMessages.length;
+			loadingMessage = loadingMessages[loadingStep];
+		}, 2000);
 
 		try {
 			// Get userId from cookie (same as server uses)
@@ -45,7 +64,8 @@
 					userId: userId,
 					pageType: selectedTemplate.id,
 					formData: formData,
-					optionalSections: optionalSections
+					optionalSections: optionalSections,
+					designStyle: formData.designStyle || 'modern' // ✅ CRITICAL FIX: Send designStyle!
 				})
 			});
 
@@ -55,17 +75,23 @@
 
 			const result = await response.json();
 			
+			clearInterval(messageInterval);
+			
 			if (result.success) {
+				loadingMessage = 'הדף מוכן! מעביר אותך...';
 				console.log('✅ Page created successfully');
 				console.log('📄 Slug:', result.slug);
 				console.log('🔗 Redirecting to view page with edit mode:', `/view/${result.slug}`);
 				
-				// Redirect to view page - owner will see edit mode automatically
-				goto(`/view/${result.slug}`);
+				// Small delay to show success message
+				setTimeout(() => {
+					goto(`/view/${result.slug}`);
+				}, 800);
 			} else {
 				throw new Error(result.error || 'Failed to create page');
 			}
 		} catch (err) {
+			clearInterval(messageInterval);
 			error = err.message;
 			isCreating = false;
 		}
@@ -83,6 +109,9 @@
 	async function handleFormSubmit(data) {
 		formData = data.data;
 		optionalSections = data.optionalSections || [];
+		
+		console.log('🎨 DESIGN STYLE FROM FORM:', data.data.designStyle);
+		console.log('📋 Form data received:', data);
 		
 		// Create page immediately without preview
 		await createPage();
@@ -146,6 +175,7 @@
 					<button
 						onclick={goBack}
 						class="mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors"
+						disabled={isCreating}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -171,6 +201,50 @@
 						disabled={isCreating}
 					/>
 
+				</div>
+			</div>
+		{/if}
+		
+		<!-- Beautiful Loading Overlay (Shopify Style) -->
+		{#if isCreating}
+			<div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" style="animation: fadeIn 0.3s ease-out;">
+				<div class="bg-white rounded-3xl shadow-2xl p-12 max-w-md mx-4 text-center" style="animation: slideUp 0.4s ease-out;">
+					<!-- AutoPage Logo with Animation -->
+					<div class="mb-8 relative">
+						<div class="w-32 h-32 mx-auto relative">
+							<!-- Spinning Circle -->
+							<div class="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
+							<div class="absolute inset-0 border-4 border-transparent border-t-purple-600 rounded-full animate-spin"></div>
+							
+							<!-- AutoPage Logo -->
+							<div class="absolute inset-0 flex items-center justify-center">
+								<div class="text-center" style="animation: pulse 2s ease-in-out infinite;">
+									<div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600" style="font-family: 'Arial Black', sans-serif; letter-spacing: -2px;">
+										AP
+									</div>
+									<div class="text-xs font-bold text-purple-600 -mt-1">AutoPage</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Loading Message -->
+					<h3 class="text-2xl font-bold text-slate-800 mb-2" style="animation: pulse 2s ease-in-out infinite;">
+						{loadingMessage}
+					</h3>
+					<p class="text-slate-600">
+						אנחנו יוצרים את הדף המושלם עבורך
+					</p>
+					
+					<!-- Progress Dots -->
+					<div class="flex justify-center gap-2 mt-6">
+						{#each [0, 1, 2, 3] as i}
+							<div 
+								class="w-2 h-2 rounded-full bg-purple-600"
+								style="animation: bounce 1.4s ease-in-out {i * 0.2}s infinite;"
+							></div>
+						{/each}
+					</div>
 				</div>
 			</div>
 		{/if}
@@ -232,5 +306,46 @@
 	
 	img[onclick]:hover::after {
 		opacity: 1;
+	}
+	
+	/* Loading Animations */
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	
+	@keyframes slideUp {
+		from {
+			transform: translateY(30px);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+	
+	@keyframes pulse {
+		0%, 100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
+		}
+	}
+	
+	@keyframes bounce {
+		0%, 80%, 100% {
+			transform: scale(0);
+			opacity: 0.5;
+		}
+		40% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 </style>

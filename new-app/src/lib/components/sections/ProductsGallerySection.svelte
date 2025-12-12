@@ -39,15 +39,19 @@
 	
 	// Cart Functions
 	function addToCart(product) {
+		console.log('🛒 addToCart called with product:', product);
 		const existingItem = cart.find(item => item.id === product.id);
 		
 		if (existingItem) {
+			console.log('✅ Product already in cart, increasing quantity');
 			existingItem.quantity++;
 			cart = [...cart];
 		} else {
+			console.log('✅ Adding new product to cart');
 			cart = [...cart, { ...product, quantity: 1 }];
 		}
 		
+		console.log('📦 Cart after adding:', cart);
 		showNotification(`${product.name} נוסף לעגלה!`);
 	}
 	
@@ -72,6 +76,7 @@
 	
 	// Checkout state
 	let showCheckout = $state(false);
+	let isSubmitting = $state(false);
 	let customerInfo = $state({
 		name: '',
 		phone: '',
@@ -93,44 +98,90 @@
 	}
 	
 	async function submitOrder() {
+		console.log('🛒 submitOrder called');
+		console.log('📋 Customer info:', customerInfo);
+		console.log('🛒 Cart:', cart);
+		console.log('💰 Cart total:', cartTotal);
+		console.log('📄 Page ID:', pageId);
+		
 		// Validate
-		if (!customerInfo.name || !customerInfo.phone || !customerInfo.address) {
-			alert('נא למלא את כל השדות החובה');
+		if (!customerInfo.name || !customerInfo.phone || !customerInfo.address || !customerInfo.city) {
+			alert('נא למלא את כל השדות החובה (שם, טלפון, כתובת, עיר)');
 			return;
 		}
 		
+		console.log('✅ Validation passed, preparing order...');
+		
+		// Set loading state
+		isSubmitting = true;
+		
 		try {
+			// Get userId from cookie
+			const userId = document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1] || 'guest';
+			console.log('👤 User ID from cookie:', userId);
+			
 			// Create order details
 			const orderItems = cart.map(item => ({
 				name: item.name,
 				quantity: item.quantity,
 				price: item.price,
+				image: item.image || '',
 				total: item.price * item.quantity
 			}));
+			console.log('📦 Order items prepared:', orderItems);
 			
-			// Save to Strapi as Purchase
+			// Prepare request body - send ONLY the essential data
+			const requestBody = {
+				userId: userId,
+				pageId: pageId,
+				customerName: customerInfo.name,
+				customerPhone: customerInfo.phone,
+				customerEmail: customerInfo.email || '',
+				customerAddress: `${customerInfo.address}, ${customerInfo.city}`,
+				shipping: true,
+				paymentMethod: customerInfo.paymentMethod,
+				products: orderItems,
+				total: cartTotal,
+				status: 'pending'
+			};
+			console.log('📤 Sending request body:', requestBody);
+			
+			// Save to Strapi as Purchase with timeout
+			console.log('🌐 Sending POST request to /api/purchase...');
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+			
 			const response = await fetch('/api/purchase', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					pageId: pageId,
-					customerName: customerInfo.name,
-					customerPhone: customerInfo.phone,
-					customerEmail: customerInfo.email || '',
-					shippingAddress: `${customerInfo.address}, ${customerInfo.city}`,
-					paymentMethod: customerInfo.paymentMethod,
-					items: orderItems,
-					totalAmount: cartTotal,
-					notes: customerInfo.notes || '',
-					status: 'pending'
-				})
+				body: JSON.stringify(requestBody),
+				signal: controller.signal
 			});
 			
-			if (!response.ok) {
-				throw new Error('Failed to save order');
+			clearTimeout(timeoutId);
+			
+			console.log('📥 Response status:', response.status, response.statusText);
+			
+			// Try to get response body regardless of status
+			let responseData;
+			try {
+				responseData = await response.json();
+				console.log('📥 Response data:', responseData);
+			} catch (jsonError) {
+				console.error('❌ Failed to parse response JSON:', jsonError);
+				const responseText = await response.text();
+				console.error('📥 Response text:', responseText);
 			}
+			
+			if (!response.ok) {
+				const errorMessage = responseData?.error || responseData?.details || 'Failed to save order';
+				console.error('❌ Server returned error:', errorMessage);
+				throw new Error(errorMessage);
+			}
+			
+			console.log('✅ Order submitted successfully!');
 			
 			// Clear cart and close
 			cart = [];
@@ -149,8 +200,21 @@
 			};
 			
 		} catch (error) {
-			console.error('Error submitting order:', error);
-			alert('שגיאה בשליחת ההזמנה. נסה שוב.');
+			console.error('❌ Error submitting order:', error);
+			console.error('❌ Error details:', {
+				message: error.message,
+				stack: error.stack,
+				name: error.name
+			});
+			
+			if (error.name === 'AbortError') {
+				alert('⏱️ הבקשה לקחה יותר מדי זמן.\n\nייתכן שאתה מחובר לפורט שגוי.\nנסה לרענן את הדף (Ctrl+Shift+R) או לפתוח את:\nhttp://localhost:5176/dashboard');
+			} else {
+				alert(`שגיאה בשליחת ההזמנה: ${error.message}\n\nנסה שוב או פנה לתמיכה.`);
+			}
+		} finally {
+			// Always reset loading state
+			isSubmitting = false;
 		}
 	}
 	
@@ -363,7 +427,7 @@
 		
 		<div class="products-grid" bind:this={productsContainer}>
 			{#each products as product, index}
-				<div class="product-card" style="--delay: {index * 0.1}s">
+				<div class="product-card card" style="--delay: {index * 0.1}s">
 					{#if editMode}
 						<button class="delete-btn" onclick={() => deleteProduct(product.id)} title="מחק מוצר">
 							🗑️
@@ -410,7 +474,11 @@
 							</div>
 							<button 
 								class="add-to-cart-btn"
-								onclick={() => addToCart(product)}
+								onclick={(e) => {
+								console.log('🖱️ Button clicked!', e);
+								e.stopPropagation();
+								addToCart(product);
+							}}
 							>
 								🛒 הוסף
 							</button>
@@ -564,7 +632,11 @@
 				</div>
 				
 				<!-- Customer Form -->
-				<form class="checkout-form" onsubmit={(e) => { e.preventDefault(); submitOrder(); }}>
+				<form class="checkout-form" onsubmit={(e) => { 
+					console.log('📝 Form submitted!', e);
+					e.preventDefault(); 
+					submitOrder(); 
+				}}>
 					<div class="form-group">
 						<label for="name">שם מלא *</label>
 						<input
@@ -641,8 +713,13 @@
 						></textarea>
 					</div>
 					
-					<button type="submit" class="submit-order-btn">
-						✅ שלח הזמנה
+					<button type="submit" class="submit-order-btn" disabled={isSubmitting}>
+						{#if isSubmitting}
+							<span class="loading-spinner"></span>
+							<span>מעבד הזמנה...</span>
+						{:else}
+							✅ שלח הזמנה
+						{/if}
 					</button>
 				</form>
 			</div>
@@ -653,7 +730,7 @@
 <style>
 	.products-section {
 		padding: 3rem 0;
-		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+		background-color: transparent !important;
 		position: relative;
 		overflow: hidden;
 		direction: rtl;
@@ -669,17 +746,12 @@
 		text-align: center;
 		font-size: 3rem;
 		font-weight: 800;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
 		margin-bottom: 1rem;
 	}
 	
 	.section-subtitle {
 		text-align: center;
 		font-size: 1.1rem;
-		color: #6b7280;
 		margin-bottom: 3rem;
 	}
 	
@@ -714,22 +786,22 @@
 	.product-card {
 		flex-shrink: 0;
 		width: 200px;
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(10px);
 		border-radius: 16px;
 		overflow: hidden;
-		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 		transition: all 0.4s ease;
 		position: relative;
 		animation: fadeInUp 0.6s ease-out backwards;
 		animation-delay: var(--delay);
 		display: flex;
 		flex-direction: column;
+		/* ✅ אפס padding ו-margin - בלי רווחים! */
+		padding: 0 !important;
+		margin: 0 !important;
+		/* Let DynamicDesignWrapper control background and colors */
 	}
 	
 	.product-card:hover {
 		transform: translateY(-10px);
-		box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
 	}
 	
 	.delete-btn {
@@ -761,13 +833,21 @@
 		width: 200px;
 		height: 200px;
 		overflow: hidden;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: var(--color-bg-alt);
+		flex-shrink: 0;
+		/* ✅ אפס margin ו-padding - בלי רווחים! */
+		margin: 0 !important;
+		padding: 0 !important;
+		/* ✅ בלי border-radius בפינות העליונות כדי להתאים לכרטיס */
+		border-radius: 16px 16px 0 0;
 	}
 	
 	.product-image {
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: cover; /* ✅ התמונה תכסה את כל השטח */
+		object-position: center; /* ✅ מרכז את התמונה */
+		display: block;
 		transition: transform 0.4s ease;
 	}
 	
@@ -785,8 +865,8 @@
 	.product-name {
 		font-size: 0.95rem;
 		font-weight: 700;
-		color: #1f2937;
 		margin: 0;
+		color: #1f2937; /* ✅ שחור רגיל, לא צבעוני */
 	}
 	
 	.product-footer {
@@ -802,12 +882,11 @@
 		gap: 0.25rem;
 		font-size: 1.3rem;
 		font-weight: 800;
-		color: #667eea;
+		color: #1f2937; /* ✅ מחיר בשחור רגיל */
 	}
 	
 	.product-price {
 		display: inline;
-		color: #667eea;
 	}
 	
 	.add-to-cart-btn {
@@ -833,9 +912,8 @@
 		flex-shrink: 0;
 		width: 200px;
 		height: 200px;
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(10px);
-		border: 3px dashed #667eea;
+		background: transparent;
+		border: 3px dashed currentColor;
 		border-radius: 16px;
 		padding: 1.5rem;
 		display: flex;
@@ -1327,11 +1405,35 @@
 		transition: all 0.3s ease;
 		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 		margin-top: 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
 	}
 	
-	.submit-order-btn:hover {
+	.submit-order-btn:hover:not(:disabled) {
 		transform: translateY(-2px);
 		box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+	}
+	
+	.submit-order-btn:disabled {
+		opacity: 0.7;
+		cursor: not-allowed;
+	}
+	
+	.loading-spinner {
+		width: 20px;
+		height: 20px;
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-top-color: white;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+	
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 	
 	@media (max-width: 768px) {
@@ -1341,8 +1443,8 @@
 		}
 		
 		.product-image-wrapper {
-			width: 180px;
-			height: 180px;
+			width: 180px; /* ✅ רוחב קבוע במובייל */
+			height: 180px; /* ✅ גובה קבוע במובייל */
 		}
 		
 		.section-title {

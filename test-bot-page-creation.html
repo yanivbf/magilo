@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת בוט יצירת דף</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            direction: rtl;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .result {
+            background: white;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #fee;
+            border-color: #fcc;
+            color: #c33;
+        }
+        .success {
+            background: #efe;
+            border-color: #cfc;
+            color: #3c3;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 בדיקת בוט יצירת דף</h1>
+    
+    <div class="test-section">
+        <h2>בדיקה 1: יצירת תוכן לדף</h2>
+        <input type="text" id="businessName" placeholder="שם העסק (לדוגמה: מספרת דני)" value="מספרת דני">
+        <button onclick="testContentGeneration()">צור תוכן לדף</button>
+        <div id="result1" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        async function testContentGeneration() {
+            const resultDiv = document.getElementById('result1');
+            const businessName = document.getElementById('businessName').value;
+            
+            if (!businessName) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = '❌ נא למלא שם עסק';
+                return;
+            }
+            
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ שולח בקשה לבוט...';
+            
+            try {
+                console.log('📤 Sending request to bot...');
+                
+                const response = await fetch('/api/n8n-webhook', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        businessName: businessName,
+                        sectionType: 'about',
+                        action: 'generate_content'
+                    })
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('📦 Response data:', data);
+                
+                if (response.ok && data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ הצלחה!\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ שגיאה:\n\n' + JSON.stringify(data, null, 2);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ שגיאה: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

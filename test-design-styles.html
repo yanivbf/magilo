@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת סגנונות עיצוב</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Copy from app.css - Option Cards Styles */
+        .option-card,
+        div[class*="option-card"],
+        label:has(.option-card),
+        label > div[class*="border-2"] {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 0.75rem !important;
+            padding: 1rem !important;
+            background-color: white !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .option-card:hover,
+        div[class*="option-card"]:hover,
+        label:hover > div[class*="border-2"] {
+            border-color: #a78bfa !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.3) !important;
+        }
+
+        .option-card.selected,
+        .option-card:has(input:checked),
+        div[class*="option-card"]:has(input:checked),
+        label:has(input:checked) > div[class*="border-2"] {
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 0 4px #8b5cf6, 0 10px 25px -5px rgba(139, 92, 246, 0.4) !important;
+            border-color: #8b5cf6 !important;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%) !important;
+        }
+
+        .option-card input[type="radio"] {
+            position: absolute !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .option-card .rounded-full {
+            width: 2rem !important;
+            height: 2rem !important;
+            border-radius: 9999px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+            transition: transform 0.2s ease !important;
+        }
+
+        .option-card:hover .rounded-full {
+            transform: scale(1.1) !important;
+        }
+
+        @keyframes cardPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 4px #8b5cf6, 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 6px #a78bfa, 0 15px 30px -5px rgba(139, 92, 246, 0.5);
+            }
+        }
+
+        label:has(input:checked) > div[class*="border-2"] {
+            animation: cardPulse 2s ease-in-out infinite !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold text-center text-slate-800 mb-8">בדיקת סגנונות עיצוב</h1>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">סגנון עיצוב</h2>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Modern Style -->
+                <label class="cursor-pointer">
+                    <input type="radio" name="designStyle" value="modern" class="sr-only" checked />
+                    <div class="option-card border-2 rounded-lg p-4 text-center transition-all">
+                        <div class="flex gap-2 justify-center mb-2">
+                            <div class="w-8 h-8 rounded-full bg-teal-500"></div>
+                            <div class="w-8 h-8 rounded-full bg-purple-600"></div>
+                            <div class="w-8 h-8 rounded-full bg-blue-500"></div>
+                        </div>
+                        <p class="font-medium text-gray-900">מודרני</p>
+                    </div>
+                </label>
+
+                <!-- Elegant Style -->
+                <label class="cursor-pointer">
+                    <input type="radio" name="designStyle" value="elegant" class="sr-only" />
+                    <div class="option-card border-2 rounded-lg p-4 text-center transition-all">
+                        <div class="flex gap-2 justify-center mb-2">
+                            <div class="w-8 h-8 rounded-full bg-orange-500"></div>
+                            <div class="w-8 h-8 rounded-full bg-gray-500"></div>
+                            <div class="w-8 h-8 rounded-full bg-slate-900"></div>
+                        </div>
+                        <p class="font-medium text-gray-900">אלגנטי</p>
+                    </div>
+                </label>
+
+                <!-- Colorful Style -->
+                <label class="cursor-pointer">
+                    <input type="radio" name="designStyle" value="colorful" class="sr-only" />
+                    <div class="option-card border-2 rounded-lg p-4 text-center transition-all">
+                        <div class="flex gap-2 justify-center mb-2">
+                            <div class="w-8 h-8 rounded-full bg-orange-400"></div>
+                            <div class="w-8 h-8 rounded-full bg-purple-500"></div>
+                            <div class="w-8 h-8 rounded-full bg-pink-400"></div>
+                        </div>
+                        <p class="font-medium text-gray-900">צבעוני</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="font-bold text-blue-900 mb-2">🎨 מה לבדוק:</h3>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>✅ העבר עכבר על קלף - צריך להתרומם ולקבל צל</li>
+                    <li>✅ לחץ על קלף - צריך לקבל מסגרת סגולה וזוהר</li>
+                    <li>✅ הקלף הנבחר צריך לדפוק (אנימציה)</li>
+                    <li>✅ העיגולים צריכים להגדיל ב-hover</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add click handlers for testing
+        document.querySelectorAll('label').forEach(label => {
+            label.addEventListener('click', () => {
+                console.log('Card clicked!');
+            });
+        });
+    </script>
+</body>
+</html>

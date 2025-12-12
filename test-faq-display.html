@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת FAQ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .faq-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 40px 20px;
+        }
+        .highlight {
+            background: yellow;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>בדיקת תצוגת מקטעים</h1>
+    
+    <div class="highlight">
+        ⬇️ גלול למטה לראות את כל המקטעים ⬇️
+    </div>
+    
+    <div class="section">
+        <h2>1. מקטע וידאו</h2>
+        <p>זה מקטע הוידאו</p>
+    </div>
+    
+    <div class="section">
+        <h2>2. מקטע אודות</h2>
+        <p>זה מקטע אודות</p>
+    </div>
+    
+    <div class="section">
+        <h2>3. מקטע גלריה</h2>
+        <p>זה מקטע גלריה</p>
+    </div>
+    
+    <div class="section">
+        <h2>4. מקטע מוצרים</h2>
+        <p>זה מקטע מוצרים</p>
+    </div>
+    
+    <div class="section">
+        <h2>5. מקטע המלצות</h2>
+        <p>זה מקטע המלצות</p>
+    </div>
+    
+    <div class="faq-section">
+        <h2 style="text-align: center; font-size: 3rem;">❓ 6. שאלות ותשובות</h2>
+        <p style="text-align: center; font-size: 1.5rem; color: #6b7280;">
+            ⬅️ זה מקטע FAQ - האם אתה רואה אותו? ➡️
+        </p>
+        <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 600px;">
+            <h3>שאלה 1: מהו לק ג'ל?</h3>
+            <p>תשובה: לק ג'ל הוא...</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>7. מקטע צור קשר</h2>
+        <p>זה מקטע צור קשר</p>
+    </div>
+    
+    <div class="highlight">
+        ⬆️ האם ראית את מקטע FAQ (6)? ⬆️
+    </div>
+    
+    <script>
+        // Scroll to FAQ section after 2 seconds
+        setTimeout(() => {
+            const faqSection = document.querySelector('.faq-section');
+            if (faqSection) {
+                faqSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                faqSection.style.border = '5px solid red';
+                faqSection.style.animation = 'pulse 1s infinite';
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

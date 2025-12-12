@@ -108,7 +108,7 @@
 		<div class="services-grid" bind:this={servicesContainer}>
 			{#each services as service, index}
 				<div class="service-card" style="--delay: {index * 0.1}s">
-					{#if editMode}
+					{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 						<button class="delete-btn" onclick={() => deleteService(index)} title="מחק שירות">
 							🗑️
 						</button>
@@ -157,7 +157,7 @@
 				</div>
 			{/each}
 			
-			{#if editMode}
+			{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 				<button class="add-service-btn" onclick={addService}>
 					<div class="add-icon">➕</div>
 					<div class="add-text">הוסף שירות</div>
@@ -170,7 +170,7 @@
 <style>
 	.services-section {
 		padding: 3rem 0;
-		background: white;
+		background-color: transparent !important;
 		direction: rtl;
 	}
 	

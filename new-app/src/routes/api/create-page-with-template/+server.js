@@ -29,6 +29,7 @@ export async function POST({ request, getClientAddress }) {
 		const pageData = body.formData || body.pageData || body.data || body;
 		let pageType = body.pageType || pageData.pageType;
 		const optionalSections = body.optionalSections || [];
+		const selectedStyle = body.style || pageData.style || 'Modern'; // Get selected style
 		
 		// Validate and sanitize page data
 		const validation = validatePageData(pageData);
@@ -338,11 +339,23 @@ export async function POST({ request, getClientAddress }) {
 					// Create each section
 					for (const sectionData of template.defaultSections) {
 						try {
-							console.log('📝 Creating section:', sectionData.title);
-							const sectionResult = await createSection({
+							console.log('📝 Creating section:', sectionData.title, 'with style:', selectedStyle);
+							
+							// Add style to section data if it's a visual section
+							const sectionWithStyle = {
 								...sectionData,
 								page: pageResult.documentId || pageResult.id
-							});
+							};
+							
+							// Add style to data object for visual sections
+							if (sectionData.type === 'testimonials' || sectionData.type === 'faq' || sectionData.type === 'team') {
+								sectionWithStyle.data = {
+									...sectionData.data,
+									style: selectedStyle
+								};
+							}
+							
+							const sectionResult = await createSection(sectionWithStyle);
 							console.log('✅ Section created:', sectionResult.id);
 						} catch (error) {
 							console.error('❌ Failed to create section:', error.message, error);

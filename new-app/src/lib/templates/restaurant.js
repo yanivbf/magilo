@@ -220,30 +220,93 @@ export const restaurantTemplate = {
 	
 	designStyles: [
 		{
-			id: 'classic',
-			name: 'קלאסי',
+			id: 'modern',
+			name: 'מודרני',
+			description: 'עיצוב נקי ומודרני עם צבעים רעננים',
 			colors: {
-				primary: '#8B4513',
-				secondary: '#D2691E',
-				accent: '#F4A460'
+				primary: '#14b8a6',
+				secondary: '#8b5cf6',
+				accent: '#3b82f6'
 			}
 		},
 		{
-			id: 'modern',
-			name: 'מודרני',
+			id: 'colorful',
+			name: 'צבעוני',
+			description: 'עיצוב תוסס ומלא חיים עם צבעים עזים',
 			colors: {
-				primary: '#2C3E50',
-				secondary: '#E74C3C',
-				accent: '#ECF0F1'
+				primary: '#f97316',
+				secondary: '#a855f7',
+				accent: '#ec4899'
 			}
 		},
 		{
 			id: 'elegant',
 			name: 'אלגנטי',
+			description: 'עיצוב מעודן ומקצועי',
 			colors: {
-				primary: '#1C1C1C',
-				secondary: '#D4AF37',
-				accent: '#FFFFFF'
+				primary: '#1e40af',
+				secondary: '#6b7280',
+				accent: '#1e293b'
+			}
+		},
+		{
+			id: 'dark',
+			name: 'כהה',
+			description: 'עיצוב כהה ומסתורי',
+			colors: {
+				primary: '#3b82f6',
+				secondary: '#8b5cf6',
+				accent: '#06b6d4'
+			}
+		},
+		{
+			id: 'minimalist',
+			name: 'מינימליסטי',
+			description: 'עיצוב פשוט ונקי',
+			colors: {
+				primary: '#000000',
+				secondary: '#ffffff',
+				accent: '#6b7280'
+			}
+		},
+		{
+			id: 'retro',
+			name: 'רטרו',
+			description: 'עיצוב וינטג\' עם צבעים חמים',
+			colors: {
+				primary: '#fbbf24',
+				secondary: '#f97316',
+				accent: '#dc2626'
+			}
+		},
+		{
+			id: 'neon',
+			name: 'נאון',
+			description: 'עיצוב נאון זוהר ומרהיב',
+			colors: {
+				primary: '#a855f7',
+				secondary: '#ec4899',
+				accent: '#06b6d4'
+			}
+		},
+		{
+			id: 'luxury',
+			name: 'לוקסוס',
+			description: 'עיצוב יוקרתי עם זהב',
+			colors: {
+				primary: '#fbbf24',
+				secondary: '#eab308',
+				accent: '#000000'
+			}
+		},
+		{
+			id: 'vintage',
+			name: 'וינטג\'',
+			description: 'עיצוב עתיק וחם',
+			colors: {
+				primary: '#d97706',
+				secondary: '#dc2626',
+				accent: '#92400e'
 			}
 		}
 	]

@@ -72,7 +72,7 @@
 <style>
 	.video-section {
 		padding: 3rem 0;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background-color: transparent !important;
 		direction: rtl;
 	}
 	

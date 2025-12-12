@@ -1,10 +1,10 @@
 // Service Provider Template Configuration
 export const serviceTemplate = {
 	id: 'serviceProvider',
-	name: 'בעל מקצוע',
+	name: 'נותני שירות',
 	icon: '💼',
-	description: 'דף שירות מקצועי עם טופס הזמנה',
-	image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2070&auto=format&fit=crop',
+	description: 'צור ממשק יומן קביעת תורים לעסק שלך',
+	image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop',
 	
 	// EXACT Legacy Info Box from page-creator.html
 	infoBox: {
@@ -89,30 +89,93 @@ export const serviceTemplate = {
 	
 	designStyles: [
 		{
-			id: 'professional',
-			name: 'מקצועי',
-			colors: {
-				primary: '#1F2937',
-				secondary: '#4B5563',
-				accent: '#3B82F6'
-			}
-		},
-		{
 			id: 'modern',
 			name: 'מודרני',
+			description: 'עיצוב נקי ומודרני עם צבעים רעננים',
 			colors: {
-				primary: '#667eea',
-				secondary: '#764ba2',
-				accent: '#10B981'
+				primary: '#14b8a6',
+				secondary: '#8b5cf6',
+				accent: '#3b82f6'
 			}
 		},
 		{
-			id: 'trustworthy',
-			name: 'אמין',
+			id: 'colorful',
+			name: 'צבעוני',
+			description: 'עיצוב תוסס ומלא חיים עם צבעים עזים',
 			colors: {
-				primary: '#0F766E',
-				secondary: '#115E59',
-				accent: '#F59E0B'
+				primary: '#f97316',
+				secondary: '#a855f7',
+				accent: '#ec4899'
+			}
+		},
+		{
+			id: 'elegant',
+			name: 'אלגנטי',
+			description: 'עיצוב מעודן ומקצועי',
+			colors: {
+				primary: '#1e40af',
+				secondary: '#6b7280',
+				accent: '#1e293b'
+			}
+		},
+		{
+			id: 'dark',
+			name: 'כהה',
+			description: 'עיצוב כהה ומסתורי',
+			colors: {
+				primary: '#3b82f6',
+				secondary: '#8b5cf6',
+				accent: '#06b6d4'
+			}
+		},
+		{
+			id: 'minimalist',
+			name: 'מינימליסטי',
+			description: 'עיצוב פשוט ונקי',
+			colors: {
+				primary: '#000000',
+				secondary: '#ffffff',
+				accent: '#6b7280'
+			}
+		},
+		{
+			id: 'retro',
+			name: 'רטרו',
+			description: 'עיצוב וינטג\' עם צבעים חמים',
+			colors: {
+				primary: '#fbbf24',
+				secondary: '#f97316',
+				accent: '#dc2626'
+			}
+		},
+		{
+			id: 'neon',
+			name: 'נאון',
+			description: 'עיצוב נאון זוהר ומרהיב',
+			colors: {
+				primary: '#a855f7',
+				secondary: '#ec4899',
+				accent: '#06b6d4'
+			}
+		},
+		{
+			id: 'luxury',
+			name: 'לוקסוס',
+			description: 'עיצוב יוקרתי עם זהב',
+			colors: {
+				primary: '#fbbf24',
+				secondary: '#eab308',
+				accent: '#000000'
+			}
+		},
+		{
+			id: 'vintage',
+			name: 'וינטג\'',
+			description: 'עיצוב עתיק וחם',
+			colors: {
+				primary: '#d97706',
+				secondary: '#dc2626',
+				accent: '#92400e'
 			}
 		}
 	]

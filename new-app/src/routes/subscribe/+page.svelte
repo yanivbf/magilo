@@ -113,6 +113,7 @@
 			// Calculate months based on plan
 			const months = selectedPlan === 'yearly' ? 12 : 1;
 			
+<<<<<<< HEAD
 			let response, result, successMessage;
 			
 			if (pageId) {
@@ -188,11 +189,31 @@
 				console.log('✅ User subscription activated:', result);
 				
 				successMessage = `🎉 מזל טוב! המנוי הופעל בהצלחה! 🎉\n\nתוכנית: ${plans[selectedPlan].name}\nמחיר: ₪${plans[selectedPlan].price}\n\nכל הדפים שלך כעת פרימיום עם כל התכונות המתקדמות!\n\n✅ הסרת מיתוג AutoPage\n✅ דומיין מותאם אישית\n✅ אנליטיקס מתקדם\n✅ תמיכה עדיפות 24/7\n✅ גיבוי אוטומטי יומי`;
+=======
+			console.log('📄 Activating subscription for page:', pageId);
+			
+			// Call API to activate subscription FOR THIS PAGE
+			// pageId can be either numeric ID or documentId string
+			const response = await fetch('/api/subscription/activate-page', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ 
+					documentId: pageId, // Send as documentId (works for both formats)
+					months 
+				})
+			});
+			
+			if (!response.ok) {
+				const errorData = await response.json();
+				console.error('❌ API Error:', errorData);
+				throw new Error(errorData.error || 'Failed to activate subscription');
+>>>>>>> f3bbd78504921f1ed7727690c2812240ce4b8bf8
 			}
 			
 			// Show success message with better UX
 			alert(successMessage);
 			
+<<<<<<< HEAD
 			// CRITICAL FIX: After page subscription, open the page directly!
 			// After user subscription, go to dashboard
 			console.log('✅ Subscription activated, redirecting...');
@@ -229,6 +250,13 @@
 			// Show more detailed error message
 			const errorMessage = error.message || 'שגיאה לא ידועה';
 			alert(`שגיאה בהפעלת המנוי:\n\n${errorMessage}\n\nנסה שוב או פנה לתמיכה.`);
+=======
+			// Redirect immediately to dashboard (alert was blocking)
+			window.location.href = '/dashboard';
+		} catch (error) {
+			console.error('❌ Error activating subscription:', error);
+			alert('שגיאה בהפעלת המנוי: ' + error.message + '\nנסה שוב.');
+>>>>>>> f3bbd78504921f1ed7727690c2812240ce4b8bf8
 		} finally {
 			loading = false;
 		}
@@ -242,7 +270,7 @@
 <div class="subscribe-page">
 	<!-- Header -->
 	<div class="header">
-		<button onclick={() => goto('/dashboard')} class="back-button">
+		<button onclick={() => window.location.href = '/dashboard'} class="back-button">
 			← חזרה
 		</button>
 		<h1 class="main-title">

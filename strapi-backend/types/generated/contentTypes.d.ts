@@ -704,6 +704,20 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
+    designStyle: Schema.Attribute.Enumeration<
+      [
+        'modern',
+        'colorful',
+        'elegant',
+        'dark',
+        'minimalist',
+        'retro',
+        'neon',
+        'luxury',
+        'vintage',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'modern'>;
     email: Schema.Attribute.Email;
     eventDate: Schema.Attribute.Date;
     eventLocation: Schema.Attribute.String;
@@ -727,7 +741,7 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<false>;
     includeTestimonials: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
-    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     leads: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::page.page'> &

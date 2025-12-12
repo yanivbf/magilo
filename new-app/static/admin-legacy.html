@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ממשק ניהול חנות - AutoPage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            text-align: right;
+            background: #f5f7fa;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .stat-card p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border-right: 5px solid #8b5cf6;
+        }
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .order-card.new { border-right-color: #3b82f6; }
+        .order-card.processing { border-right-color: #f59e0b; }
+        .order-card.shipped { border-right-color: #8b5cf6; }
+        .order-card.completed { border-right-color: #10b981; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-processing { background: #fef3c7; color: #92400e; }
+        .status-shipped { background: #ede9fe; color: #5b21b6; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        
+        .customer-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .customer-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        .tab-btn:hover {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+        .tab-btn.active {
+            background: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+        }
+        
+        .tab-content {
+            scroll-margin-top: 20px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin-left: 8px;
+        }
+        .filter-btn:hover {
+            border-color: #8b5cf6;
+        }
+        .filter-btn.active {
+            background: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+        }
+        
+        select, input[type="text"], input[type="date"] {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.9rem;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-primary { background: #8b5cf6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">🛒 ממשק ניהול חנות</h1>
+                        <p class="text-gray-600" id="store-name">AutoPage Store</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="window.location.href='/'" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                            🏠 דף הבית
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Tabs -->
+        <div class="bg-white shadow-sm border-b py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex">
+                    <button class="tab-btn active" onclick="switchTab('stats', event)">📊 סטטיסטיקות</button>
+                    <button class="tab-btn" onclick="switchTab('orders', event)">📦 הזמנות</button>
+                    <button class="tab-btn" onclick="switchTab('customers', event)">👥 מועדון לקוחות</button>
+                    <button class="tab-btn" onclick="switchTab('finance', event)">💰 כספים</button>
+                    <button class="tab-btn" onclick="switchTab('export', event)">📥 ייצוא נתונים</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Statistics (FIRST) -->
+        <div id="tab-stats">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Key Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <h3 id="totalSales">₪0</h3>
+                    <p>סה"כ מכירות</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalOrders">0</h3>
+                    <p>סה"כ הזמנות</p>
+                </div>
+                <div class="stat-card">
+                        <h3 id="totalCustomers">0</h3>
+                        <p>סה"כ לקוחות</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="avgOrderValue">₪0</h3>
+                    <p>ערך הזמנה ממוצע</p>
+                </div>
+            </div>
+
+                <!-- Charts & Graphs -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-xl font-bold mb-4">📈 מכירות לפי חודש</h3>
+                        <div id="sales-chart" class="h-64 flex items-center justify-center text-gray-500">
+                            תרשים בקרוב...
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-xl font-bold mb-4">🏆 מוצרים פופולריים</h3>
+                        <div id="popular-products" class="space-y-3"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Tab: Orders (SECOND) -->
+        <div id="tab-orders">
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4 border-r-4 border-blue-500">
+                        <div class="text-2xl font-bold text-blue-700" id="orders-new">0</div>
+                        <div class="text-sm text-blue-600">הזמנות חדשות</div>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 border-r-4 border-yellow-500">
+                        <div class="text-2xl font-bold text-yellow-700" id="orders-processing">0</div>
+                        <div class="text-sm text-yellow-600">בטיפול</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4 border-r-4 border-purple-500">
+                        <div class="text-2xl font-bold text-purple-700" id="orders-shipped">0</div>
+                        <div class="text-sm text-purple-600">נשלח</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 border-r-4 border-green-500">
+                        <div class="text-2xl font-bold text-green-700" id="orders-completed">0</div>
+                        <div class="text-sm text-green-600">הושלם</div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-3 items-center">
+                    <button class="filter-btn active" data-status="all" onclick="filterOrders('all')">הכל</button>
+                    <button class="filter-btn" data-status="new" onclick="filterOrders('new')">🆕 חדש</button>
+                    <button class="filter-btn" data-status="processing" onclick="filterOrders('processing')">⚙️ בטיפול</button>
+                    <button class="filter-btn" data-status="shipped" onclick="filterOrders('shipped')">🚚 נשלח</button>
+                    <button class="filter-btn" data-status="completed" onclick="filterOrders('completed')">✅ הושלם</button>
+                    <div class="mr-auto flex gap-2">
+                        <input type="text" id="search-order" placeholder="חפש הזמנה..." class="w-64">
+                        <input type="date" id="filter-date">
+                    </div>
+                </div>
+
+                <!-- Orders List -->
+                <div id="orders-list" class="space-y-4">
+                    <p class="text-center text-gray-500 py-12">טוען הזמנות...</p>
+                </div>
+            </main>
+        </div>
+
+        <!-- Tab: Customers -->
+        <div id="tab-customers">
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">📣 שלח הודעה ללקוחות</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block mb-2 font-semibold">סוג הודעה:</label>
+                            <select id="message-type" class="w-full">
+                                <option value="all">כל הלקוחות</option>
+                                <option value="top">לקוחות VIP (5+ קניות)</option>
+                                <option value="recent">קנו בחודש האחרון</option>
+                                <option value="inactive">לא קנו 3+ חודשים</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-2 font-semibold">תוכן ההודעה:</label>
+                            <textarea id="message-content" class="w-full border-2 border-gray-300 rounded-lg p-3" rows="4" placeholder="הי! יש לנו מבצע מיוחד רק בשבילך..."></textarea>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="sendMessage('sms')" class="action-btn btn-primary">📱 שלח SMS</button>
+                            <button onclick="sendMessage('email')" class="action-btn btn-success">📧 שלח מייל</button>
+                            <button onclick="sendMessage('whatsapp')" class="action-btn btn-success">💬 שלח WhatsApp</button>
+                        </div>
+                </div>
+            </div>
+
+                <!-- Customers List -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold mb-4">👥 רשימת לקוחות</h2>
+                    <div class="mb-4">
+                        <input type="text" id="search-customer" placeholder="חפש לקוח..." class="w-full">
+                    </div>
+                    <div id="customers-list" class="space-y-3">
+                        <p class="text-center text-gray-500 py-8">טוען לקוחות...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Tab: Finance -->
+        <div id="tab-finance">
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+                        <div class="text-sm mb-2">💰 הכנסות</div>
+                        <div class="text-3xl font-bold" id="finance-revenue">₪0</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6 shadow-lg">
+                        <div class="text-sm mb-2">💸 הוצאות</div>
+                        <div class="text-3xl font-bold" id="finance-expenses">₪0</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+                        <div class="text-sm mb-2">📊 רווח נקי</div>
+                        <div class="text-3xl font-bold" id="finance-profit">₪0</div>
+                </div>
+            </div>
+
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">➕ הוסף הוצאה</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="text" id="expense-desc" placeholder="תיאור הוצאה" class="w-full">
+                        <input type="number" id="expense-amount" placeholder="סכום" class="w-full">
+                        <select id="expense-category" class="w-full">
+                            <option>קטגוריה</option>
+                            <option>מלאי</option>
+                            <option>שיווק</option>
+                            <option>משלוחים</option>
+                            <option>שכירות</option>
+                            <option>אחר</option>
+                        </select>
+                        <button onclick="addExpense()" class="action-btn btn-primary">הוסף</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">📋 רשימת הוצאות</h3>
+                    <div id="expenses-list" class="space-y-2"></div>
+            </div>
+        </main>
+        </div>
+
+        <!-- Tab: Export -->
+        <div id="tab-export">
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="bg-white rounded-lg shadow p-8">
+                    <h2 class="text-2xl font-bold mb-6">📥 ייצוא נתונים לרשויות המס</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <label class="block mb-2 font-semibold">תאריך התחלה:</label>
+                            <input type="date" id="export-start-date" class="w-full">
+                        </div>
+                        <div>
+                            <label class="block mb-2 font-semibold">תאריך סיום:</label>
+                            <input type="date" id="export-end-date" class="w-full">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <button onclick="exportData('excel')" class="bg-green-600 text-white p-6 rounded-lg hover:bg-green-700 transition">
+                            <div class="text-4xl mb-2">📊</div>
+                            <div class="font-bold text-lg">Excel</div>
+                            <div class="text-sm opacity-90">קובץ .xlsx</div>
+                        </button>
+                        <button onclick="exportData('csv')" class="bg-blue-600 text-white p-6 rounded-lg hover:bg-blue-700 transition">
+                            <div class="text-4xl mb-2">📄</div>
+                            <div class="font-bold text-lg">CSV</div>
+                            <div class="text-sm opacity-90">קובץ .csv</div>
+                        </button>
+                        <button onclick="exportData('pdf')" class="bg-red-600 text-white p-6 rounded-lg hover:bg-red-700 transition">
+                            <div class="text-4xl mb-2">📑</div>
+                            <div class="font-bold text-lg">PDF</div>
+                            <div class="text-sm opacity-90">דוח PDF</div>
+                        </button>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-bold text-blue-900 mb-2">💡 מה כולל הקובץ?</h4>
+                        <ul class="text-blue-800 space-y-1 text-sm">
+                            <li>✓ כל ההזמנות בתקופה שנבחרה</li>
+                            <li>✓ פירוט מלא של כל עסקה (מוצרים, סכומים, תאריכים)</li>
+                            <li>✓ פירוט הוצאות</li>
+                            <li>✓ חישוב רווח נקי</li>
+                            <li>✓ מוכן להגשה לרשויות המס</li>
+                        </ul>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">פרטי הזמנה</h2>
+                <button onclick="closeOrderModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div id="order-details"></div>
+        </div>
+    </div>
+
+    <script>
+        // Error handling for Edge compatibility
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            e.preventDefault();
+        });
+
+        let allOrders = [];
+        let allCustomers = [];
+        let currentFilter = 'all';
+        let pageInfo = {};
+
+        function getPageInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            pageInfo = {
+                page: urlParams.get('page'),
+                userId: urlParams.get('userId')
+            };
+            console.log('📋 Page info from URL:', pageInfo);
+            return pageInfo;
+        }
+
+        async function loadStoreData() {
+            console.log('🔍 loadStoreData called');
+            const info = getPageInfo();
+            
+            if (!info.page || !info.userId) {
+                console.warn('⚠️ Missing page or userId in URL!');
+                const totalSalesEl = document.getElementById('totalSales');
+                const totalOrdersEl = document.getElementById('totalOrders');
+                const totalCustomersEl = document.getElementById('totalCustomers');
+                const avgOrderValueEl = document.getElementById('avgOrderValue');
+                
+                if (totalSalesEl) totalSalesEl.textContent = '₪0';
+                if (totalOrdersEl) totalOrdersEl.textContent = '0';
+                if (totalCustomersEl) totalCustomersEl.textContent = '0';
+                if (avgOrderValueEl) avgOrderValueEl.textContent = '₪0';
+                return;
+            }
+
+            console.log(`📊 Fetching analytics for: ${info.page}`);
+            
+            try {
+                const apiUrl = `/api/analytics/page/${info.page}?userId=${info.userId}`;
+                console.log('🌐 API URL:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                console.log('✅ Analytics data received:', data);
+                
+                // Update stats - with null checks for Edge compatibility
+                const totalSalesEl = document.getElementById('totalSales');
+                const totalOrdersEl = document.getElementById('totalOrders');
+                const totalCustomersEl = document.getElementById('totalCustomers');
+                const avgOrderValueEl = document.getElementById('avgOrderValue');
+                
+                if (totalSalesEl) totalSalesEl.textContent = '₪' + (data.totalSales || 0).toLocaleString('he-IL');
+                if (totalOrdersEl) totalOrdersEl.textContent = data.totalOrders || 0;
+                if (totalCustomersEl) totalCustomersEl.textContent = data.totalCustomers || 0;
+                if (avgOrderValueEl) avgOrderValueEl.textContent = '₪' + (data.averageOrderValue || 0).toFixed(0);
+                
+                // Store orders and customers
+                allOrders = data.purchases || [];
+                allCustomers = data.customers || [];
+                
+                // Render orders and customers
+                renderOrders(allOrders);
+                renderCustomers(allCustomers);
+                updateOrderStats();
+                updateFinanceData(data);
+                renderPopularProducts(data.topProducts || []);
+                
+                console.log('✅ Dashboard updated with analytics');
+            } catch (error) {
+                console.error('❌ Error loading analytics:', error);
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-list');
+            if (!container) return;
+            
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">אין הזמנות עדיין</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-card ${order.status}" data-status="${order.status}" data-order-id="${order.id}">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="font-bold text-lg">${order.customerName}</div>
+                            <div class="text-sm text-gray-600">${order.customerPhone || ''}</div>
+                            <div class="text-xs text-gray-500">${new Date(order.createdAt).toLocaleString('he-IL')}</div>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-2xl font-bold text-purple-600">₪${order.total}</div>
+                            <span class="status-badge status-${order.status}">${getStatusText(order.status)}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-sm font-semibold mb-1">מוצרים:</div>
+                        ${order.products.map(p => `<div class="text-sm text-gray-700">• ${p.name} (${p.quantity}x)</div>`).join('')}
+                    </div>
+                    ${order.customerAddress && order.customerAddress !== 'לא צוין' ? 
+                        `<div class="text-sm text-gray-600 mb-3">📍 ${order.customerAddress}</div>` : ''}
+                    <div class="flex gap-2">
+                        <button onclick="updateOrderStatus('${order.id}', 'processing')" class="action-btn btn-warning text-xs">⚙️ בטיפול</button>
+                        <button onclick="updateOrderStatus('${order.id}', 'shipped')" class="action-btn btn-primary text-xs">🚚 נשלח</button>
+                        <button onclick="updateOrderStatus('${order.id}', 'completed')" class="action-btn btn-success text-xs">✅ הושלם</button>
+                        <button onclick="viewOrderDetails('${order.id}')" class="action-btn bg-gray-500 text-white text-xs">👁️ פרטים</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCustomers(customers) {
+            const container = document.getElementById('customers-list');
+            if (!container) return;
+            
+            if (!customers || customers.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">אין לקוחות עדיין</p>';
+                return;
+            }
+
+            container.innerHTML = customers.map(customer => `
+                <div class="customer-card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-lg">${customer.name}</div>
+                            <div class="text-sm text-gray-600">${customer.phone || customer.email || ''}</div>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-xl font-bold text-purple-600">₪${customer.totalSpent.toLocaleString('he-IL')}</div>
+                            <div class="text-xs text-gray-500">${customer.purchaseCount} קניות</div>
+                            ${customer.purchaseCount >= 5 ? '<div class="text-xs font-bold text-yellow-600">⭐ VIP</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateOrderStats() {
+            const stats = {
+                new: allOrders.filter(o => o.status === 'new').length,
+                processing: allOrders.filter(o => o.status === 'processing').length,
+                shipped: allOrders.filter(o => o.status === 'shipped').length,
+                completed: allOrders.filter(o => o.status === 'completed').length
+            };
+            
+            const ordersNewEl = document.getElementById('orders-new');
+            const ordersProcessingEl = document.getElementById('orders-processing');
+            const ordersShippedEl = document.getElementById('orders-shipped');
+            const ordersCompletedEl = document.getElementById('orders-completed');
+            
+            if (ordersNewEl) ordersNewEl.textContent = stats.new;
+            if (ordersProcessingEl) ordersProcessingEl.textContent = stats.processing;
+            if (ordersShippedEl) ordersShippedEl.textContent = stats.shipped;
+            if (ordersCompletedEl) ordersCompletedEl.textContent = stats.completed;
+        }
+
+        function updateFinanceData(data) {
+            const revenue = data.totalSales || 0;
+            const expenses = 0; // TODO: Load from expenses data
+            const profit = revenue - expenses;
+            
+            const financeRevenueEl = document.getElementById('finance-revenue');
+            const financeExpensesEl = document.getElementById('finance-expenses');
+            const financeProfitEl = document.getElementById('finance-profit');
+            
+            if (financeRevenueEl) financeRevenueEl.textContent = '₪' + revenue.toLocaleString('he-IL');
+            if (financeExpensesEl) financeExpensesEl.textContent = '₪' + expenses.toLocaleString('he-IL');
+            if (financeProfitEl) financeProfitEl.textContent = '₪' + profit.toLocaleString('he-IL');
+        }
+
+        function renderPopularProducts(products) {
+            const container = document.getElementById('popular-products');
+            if (!container) return;
+            
+            if (!products || products.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-4">אין נתונים</p>';
+                return;
+            }
+            
+            container.innerHTML = products.slice(0, 5).map((p, i) => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="font-bold text-purple-600">#${i + 1}</div>
+                        <div>
+                            <div class="font-semibold">${p.name}</div>
+                            <div class="text-xs text-gray-500">${p.count} נמכרו</div>
+                        </div>
+                    </div>
+                    <div class="font-bold">₪${p.revenue.toLocaleString('he-IL')}</div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                new: '🆕 חדש',
+                processing: '⚙️ בטיפול',
+                shipped: '🚚 נשלח',
+                completed: '✅ הושלם'
+            };
+            return texts[status] || status;
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            // Find order
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            // Update on server
+            try {
+                const response = await fetch(`/api/order/${orderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    // Update local status
+                    order.status = newStatus;
+                    
+                    // Re-render
+                    filterOrders(currentFilter);
+                    updateOrderStats();
+                    
+                    // Show notification
+                    alert(`✅ הזמנה עודכנה ל: ${getStatusText(newStatus)}`);
+                } else {
+                    alert('❌ שגיאה בעדכון הזמנה');
+                }
+            } catch (error) {
+                console.error('Error updating order:', error);
+                alert('❌ שגיאה בעדכון הזמנה');
+            }
+        }
+
+        function filterOrders(status) {
+            currentFilter = status;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.status === status) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Filter orders
+            let filtered = status === 'all' ? allOrders : allOrders.filter(o => o.status === status);
+            
+            // Apply search
+            const search = document.getElementById('search-order')?.value?.toLowerCase();
+            if (search) {
+                filtered = filtered.filter(o => 
+                    o.customerName.toLowerCase().includes(search) ||
+                    o.customerPhone?.includes(search) ||
+                    o.id.includes(search)
+                );
+            }
+            
+            // Apply date filter
+            const dateFilter = document.getElementById('filter-date')?.value;
+            if (dateFilter) {
+                filtered = filtered.filter(o => 
+                    new Date(o.createdAt).toISOString().split('T')[0] === dateFilter
+                );
+            }
+            
+            renderOrders(filtered);
+        }
+
+        function viewOrderDetails(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const modal = document.getElementById('order-modal');
+            const details = document.getElementById('order-details');
+            
+            details.innerHTML = `
+                <div class="space-y-4">
+                    <div><strong>מספר הזמנה:</strong> ${order.id}</div>
+                    <div><strong>תאריך:</strong> ${new Date(order.createdAt).toLocaleString('he-IL')}</div>
+                    <div><strong>לקוח:</strong> ${order.customerName}</div>
+                    <div><strong>טלפון:</strong> ${order.customerPhone || 'לא צוין'}</div>
+                    <div><strong>כתובת:</strong> ${order.customerAddress || 'לא צוין'}</div>
+                    <div><strong>סטטוס:</strong> <span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></div>
+                    <div class="border-t pt-4">
+                        <strong>מוצרים:</strong>
+                        ${order.products.map(p => `
+                            <div class="flex justify-between py-2 border-b">
+                                <div>${p.name} × ${p.quantity}</div>
+                                <div>₪${p.price * p.quantity}</div>
+                        </div>
+                        `).join('')}
+                    </div>
+                    <div class="text-xl font-bold text-left">סה"כ: ₪${order.total}</div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.remove('active');
+        }
+
+        function sendMessage(type) {
+            const messageType = document.getElementById('message-type').value;
+            const content = document.getElementById('message-content').value;
+            
+            if (!content) {
+                alert('אנא כתוב הודעה');
+                return;
+            }
+            
+            // TODO: Implement actual sending
+            alert(`שולח ${type} ל${messageType === 'all' ? 'כל הלקוחות' : messageType}...\n\nתוכן: ${content}`);
+        }
+
+        function addExpense() {
+            const desc = document.getElementById('expense-desc').value;
+            const amount = document.getElementById('expense-amount').value;
+            const category = document.getElementById('expense-category').value;
+            
+            if (!desc || !amount || category === 'קטגוריה') {
+                alert('אנא מלא את כל השדות');
+                return;
+            }
+            
+            // TODO: Save expense to server
+            alert(`הוצאה נוספה: ${desc} - ₪${amount} (${category})`);
+            
+            // Clear fields
+            document.getElementById('expense-desc').value = '';
+            document.getElementById('expense-amount').value = '';
+            document.getElementById('expense-category').selectedIndex = 0;
+        }
+
+        function exportData(format) {
+            const startDate = document.getElementById('export-start-date').value;
+            const endDate = document.getElementById('export-end-date').value;
+            
+            if (!startDate || !endDate) {
+                alert('אנא בחר תאריכים');
+                return;
+            }
+            
+            // TODO: Implement actual export
+            alert(`מייצא נתונים ל-${format}\nמ-${startDate} עד ${endDate}`);
+        }
+
+        function switchTab(tabName, event) {
+            // Update active button
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // Scroll to the selected section smoothly - Edge compatible
+            const targetSection = document.getElementById('tab-' + tabName);
+            if (targetSection) {
+                try {
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (e) {
+                    // Fallback for older browsers
+                    targetSection.scrollIntoView();
+                }
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Log browser info for debugging
+            const userAgent = navigator.userAgent;
+            const isEdge = userAgent.indexOf('Edg') !== -1;
+            const isChrome = userAgent.indexOf('Chrome') !== -1 && !isEdge;
+            console.log('Browser detected:', { isEdge, isChrome, userAgent });
+            
+            loadStoreData();
+            
+            // Setup search
+            document.getElementById('search-order')?.addEventListener('input', () => filterOrders(currentFilter));
+            document.getElementById('filter-date')?.addEventListener('change', () => filterOrders(currentFilter));
+            document.getElementById('search-customer')?.addEventListener('input', (e) => {
+                const search = e.target.value.toLowerCase();
+                const filtered = allCustomers.filter(c => 
+                    c.name.toLowerCase().includes(search) ||
+                    c.phone?.includes(search) ||
+                    c.email?.toLowerCase().includes(search)
+                );
+                renderCustomers(filtered);
+            });
+        });
+    </script>
+</body>
+</html>

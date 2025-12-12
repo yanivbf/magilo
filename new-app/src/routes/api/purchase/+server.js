@@ -1,6 +1,7 @@
 // @ts-check
 import { json } from '@sveltejs/kit';
 import { createPurchase, incrementPurchaseAnalytics } from '$lib/server/strapi.js';
+import { STRAPI_URL, STRAPI_API_TOKEN } from '$env/static/private';
 
 /**
  * POST /api/purchase
@@ -28,15 +29,18 @@ export async function POST({ request }) {
 			pageId,
 			productsCount: products?.length,
 			total,
-			paymentMethod
+			paymentMethod,
+			fullBody: body
 		});
 
 		// Validate required fields
 		if (!userId) {
+			console.error('❌ Missing userId');
 			return json({ error: 'Missing userId' }, { status: 400 });
 		}
 
 		if (!pageId) {
+			console.error('❌ Missing pageId');
 			return json({ error: 'Missing pageId' }, { status: 400 });
 		}
 
@@ -60,10 +64,55 @@ export async function POST({ request }) {
 			return json({ error: 'Missing customerPhone' }, { status: 400 });
 		}
 
+		// Look up IDs in PARALLEL (not sequential) for speed
+		const [strapiUserId, strapiPageId] = await Promise.all([
+			// User lookup
+			(async () => {
+				if (!userId.startsWith('google_')) return userId;
+				
+				console.log(`🔍 Looking up user: ${userId}`);
+				const res = await fetch(`${STRAPI_URL}/api/users?filters[userId][$eq]=${userId}`, {
+					headers: { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+				});
+				
+				if (!res.ok) throw new Error(`User not found: ${userId}`);
+				const data = await res.json();
+				
+				if (!data.data || data.data.length === 0) throw new Error(`User not found: ${userId}`);
+				return data.data[0].id;
+			})(),
+			
+			// Page lookup
+			(async () => {
+				if (!isNaN(pageId)) return pageId;
+				
+				console.log(`🔍 Looking up page: ${pageId}`);
+				const res = await fetch(`${STRAPI_URL}/api/pages/${pageId}`, {
+					headers: { Authorization: `Bearer ${STRAPI_API_TOKEN}` }
+				});
+				
+				if (!res.ok) throw new Error(`Page not found: ${pageId}`);
+				const data = await res.json();
+				
+				if (!data.data || !data.data.id) throw new Error(`Page not found: ${pageId}`);
+				return data.data.id;
+			})()
+		]);
+
 		// Create purchase in Strapi
+		console.log('💾 Creating purchase in Strapi with data:', {
+			userId: strapiUserId,
+			pageId: strapiPageId,
+			productsCount: products.length,
+			total,
+			paymentMethod,
+			customerName,
+			customerPhone
+		});
+		
 		const purchaseResponse = await createPurchase({
-			userId,
-			pageId,
+			userId: strapiUserId,
+			pageId: strapiPageId,
 			products,
 			total,
 			paymentMethod,
@@ -75,17 +124,20 @@ export async function POST({ request }) {
 			status: 'pending'
 		});
 
+		console.log('📥 Purchase response:', purchaseResponse);
+		
+		if (!purchaseResponse || !purchaseResponse.data) {
+			console.error('❌ Invalid purchase response:', purchaseResponse);
+			throw new Error('Invalid response from Strapi when creating purchase');
+		}
+
 		const purchaseId = purchaseResponse.data.id;
 		console.log(`✅ Purchase created with ID: ${purchaseId}`);
 
-		// Update analytics
-		try {
-			await incrementPurchaseAnalytics(pageId, { total });
-			console.log(`✅ Analytics updated for page ${pageId}`);
-		} catch (analyticsError) {
-			console.error('⚠️ Failed to update analytics:', analyticsError);
-			// Don't fail the request if analytics update fails
-		}
+		// Update analytics asynchronously (don't wait for it)
+		incrementPurchaseAnalytics(pageId, { total }).catch(err => {
+			console.error('⚠️ Failed to update analytics:', err);
+		});
 
 		return json({
 			success: true,
@@ -93,11 +145,19 @@ export async function POST({ request }) {
 			message: 'Purchase created successfully'
 		});
 	} catch (error) {
-		console.error('❌ Error creating purchase:', error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorStack = error instanceof Error ? error.stack : undefined;
+		
+		console.error('❌ Error creating purchase:', errorMessage);
+		if (errorStack) {
+			console.error('❌ Stack trace:', errorStack);
+		}
+		
 		return json(
 			{
 				error: 'Failed to create purchase',
-				details: error.message
+				details: errorMessage,
+				timestamp: new Date().toISOString()
 			},
 			{ status: 500 }
 		);

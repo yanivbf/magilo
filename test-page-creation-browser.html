@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת יצירת דף</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .info {
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 בדיקת יצירת דף - Browser Test</h1>
+        
+        <div>
+            <button onclick="testPageCreation()">צור דף בדיקה</button>
+            <button onclick="clearLog()">נקה לוג</button>
+        </div>
+        
+        <div id="log" class="log">
+            <div class="info">לחץ על "צור דף בדיקה" כדי להתחיל...</div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const className = type;
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '<div class="info">לוג נוקה. לחץ על "צור דף בדיקה" כדי להתחיל...</div>';
+        }
+
+        async function testPageCreation() {
+            log('🧪 מתחיל בדיקת יצירת דף...', 'info');
+            
+            const testData = {
+                userId: 'test_user_' + Date.now(),
+                pageType: 'onlineStore',
+                formData: {
+                    mainName: 'חנות בדיקה ' + Date.now(),
+                    contactName: 'יוסי',
+                    email: 'test@example.com',
+                    phone: '050-1234567',
+                    description: 'חנות לבדיקה',
+                    address: 'תל אביב'
+                },
+                optionalSections: ['about', 'services', 'gallery', 'faq'],
+                designStyle: 'modern'
+            };
+            
+            log('📋 נתוני הבדיקה:', 'info');
+            log(JSON.stringify(testData, null, 2), 'info');
+            
+            try {
+                log('📤 שולח בקשה ל-/api/create-structured-page...', 'info');
+                
+                const response = await fetch('/api/create-structured-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                log(`📥 קוד תגובה: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const responseText = await response.text();
+                log('📥 תגובה גולמית:', 'info');
+                log(responseText.substring(0, 500), 'info');
+                
+                if (!response.ok) {
+                    log('❌ הבקשה נכשלה!', 'error');
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        log('❌ פרטי שגיאה:', 'error');
+                        log(JSON.stringify(errorData, null, 2), 'error');
+                    } catch (e) {
+                        log('❌ לא ניתן לפרסר את תגובת השגיאה', 'error');
+                    }
+                } else {
+                    log('✅ הדף נוצר בהצלחה!', 'success');
+                    const result = JSON.parse(responseText);
+                    log('✅ תוצאה:', 'success');
+                    log(JSON.stringify(result, null, 2), 'success');
+                    
+                    if (result.pageUrl) {
+                        log(`🔗 קישור לדף: ${window.location.origin}${result.pageUrl}`, 'success');
+                        log('💡 תוכל לפתוח את הדף בטאב חדש', 'info');
+                    }
+                }
+                
+            } catch (error) {
+                log('❌ שגיאה בבדיקה:', 'error');
+                log(error.message, 'error');
+                log(error.stack, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Hero Image - Client Side</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            direction: rtl;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        .hero-test {
+            width: 100%;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 2px solid #000;
+            margin: 20px 0;
+        }
+        .has-custom-image {
+            background: var(--hero-bg-image) !important;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>בדיקת תמונת Hero - צד לקוח</h1>
+    
+    <div class="test-section">
+        <h2>1. בדיקת טעינת נתונים מהשרת</h2>
+        <button onclick="loadPageData()">טען נתוני דף</button>
+        <pre id="page-data"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. בדיקת תצוגת תמונה</h2>
+        <div id="hero-test" class="hero-test">
+            <p style="color: white; text-align: center; padding-top: 180px; text-shadow: 2px 2px 4px black;">
+                אם אתה רואה תמונה כאן - זה עובד!
+            </p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. בדיקת CSS Variable</h2>
+        <pre id="css-var"></pre>
+    </div>
+
+    <script>
+        async function loadPageData() {
+            try {
+                // Load the page data from the server
+                const response = await fetch('/view/autopage');
+                const html = await response.text();
+                
+                // Try to extract the data from the HTML
+                console.log('📄 Page HTML loaded');
+                
+                // Check if we can access the page data
+                // In SvelteKit, we need to navigate to the page to get the data
+                document.getElementById('page-data').textContent = 'נתונים נטענים מהשרת...\n\nנסה לפתוח את הקונסול ולראות את הלוגים';
+                
+                // Try to fetch the page data directly from Strapi
+                const strapiResponse = await fetch('http://localhost:1337/api/pages?filters[slug][$eq]=autopage&populate=*', {
+                    headers: {
+                        'Authorization': 'Bearer 8ba3301bbe92b271829befae8c0c268dbe65efa2bd66517f9309d2e3127c36eca41e91db5a53deb48e8d8aaf095d700bbc4dd1ab32ad509705723f052241d1f0a352eb020cb675aa2e4d733d4bb48855d206eafed5d1196975ad06365767082044a7b5d955e5e3b43398e13aabee36a89e70392a390ef5b96bb4deff6ca43c6a'
+                    }
+                });
+                
+                const strapiData = await strapiResponse.json();
+                console.log('📦 Strapi data:', strapiData);
+                
+                if (strapiData.data && strapiData.data.length > 0) {
+                    const page = strapiData.data[0];
+                    const headerImage = page.metadata?.headerImage;
+                    
+                    document.getElementById('page-data').textContent = JSON.stringify({
+                        title: page.title,
+                        slug: page.slug,
+                        headerImage: headerImage,
+                        hasHeaderImage: !!headerImage
+                    }, null, 2);
+                    
+                    // Apply the image to the test hero
+                    if (headerImage) {
+                        const heroTest = document.getElementById('hero-test');
+                        heroTest.style.setProperty('--hero-bg-image', `url('${headerImage}')`);
+                        heroTest.classList.add('has-custom-image');
+                        
+                        // Also try direct background-image
+                        heroTest.style.backgroundImage = `url('${headerImage}')`;
+                        
+                        document.getElementById('css-var').textContent = 
+                            `CSS Variable: ${heroTest.style.getPropertyValue('--hero-bg-image')}\n` +
+                            `Background Image: ${heroTest.style.backgroundImage}\n` +
+                            `Computed Background: ${window.getComputedStyle(heroTest).backgroundImage}`;
+                        
+                        console.log('✅ Image applied:', headerImage);
+                    } else {
+                        console.log('❌ No header image found');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('page-data').textContent = 'שגיאה: ' + error.message;
+            }
+        }
+        
+        // Auto-load on page load
+        window.addEventListener('load', loadPageData);
+    </script>
+</body>
+</html>

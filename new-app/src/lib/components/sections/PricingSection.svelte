@@ -94,7 +94,7 @@
 		<div class="pricing-grid">
 			{#each plans as plan, planIndex}
 				<div class="pricing-card" class:highlighted={plan.highlighted} style="--delay: {planIndex * 0.15}s">
-					{#if editMode}
+					{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 						<div class="card-controls">
 							<button class="highlight-btn" onclick={() => toggleHighlight(planIndex)} title={plan.highlighted ? 'בטל הדגשה' : 'הדגש'}>
 								{plan.highlighted ? '⭐' : '☆'}
@@ -141,14 +141,14 @@
 									class="feature-text"
 									tag="span"
 								/>
-								{#if editMode}
+								{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 									<button class="delete-feature-btn" onclick={() => deleteFeature(planIndex, featureIndex)}>
 										×
 									</button>
 								{/if}
 							</li>
 						{/each}
-						{#if editMode}
+						{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 							<li class="feature-item">
 								<button class="add-feature-btn" onclick={() => addFeature(planIndex)}>
 									+ הוסף תכונה
@@ -161,7 +161,7 @@
 				</div>
 			{/each}
 			
-			{#if editMode}
+			{#if editMode && typeof editMode === 'function' ? editMode() : editMode}
 				<button class="add-plan-btn" onclick={addPlan}>
 					<div class="add-icon">➕</div>
 					<div class="add-text">הוסף חבילה</div>
@@ -174,7 +174,7 @@
 <style>
 	.pricing-section {
 		padding: 3rem 0;
-		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+		background-color: transparent !important;
 		direction: rtl;
 	}
 	
@@ -198,7 +198,7 @@
 	.section-subtitle {
 		text-align: center;
 		font-size: 1.3rem;
-		color: #6b7280;
+		color: var(--color-text-light, #6b7280);
 		margin-bottom: 4rem;
 	}
 	
@@ -213,7 +213,7 @@
 	}
 	
 	.pricing-card {
-		background: white;
+		background: var(--color-bg-alt, white);
 		padding: 1.5rem;
 		border-radius: 16px;
 		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -296,7 +296,7 @@
 		text-align: center;
 		font-size: 1.3rem;
 		font-weight: 700;
-		color: #1f2937;
+		color: var(--color-text, #1f2937);
 		margin-bottom: 1rem;
 	}
 	
@@ -319,7 +319,7 @@
 	
 	.plan-period {
 		font-size: 0.9rem;
-		color: #6b7280;
+		color: var(--color-text-light, #6b7280);
 	}
 	
 	.features-list {
@@ -353,7 +353,7 @@
 	.feature-text {
 		flex: 1;
 		font-size: 0.9rem;
-		color: #374151;
+		color: var(--color-text, #374151);
 	}
 	
 	.delete-feature-btn {
@@ -414,7 +414,7 @@
 	}
 	
 	.add-plan-btn {
-		background: white;
+		background: var(--color-bg-alt, white);
 		border: 3px dashed #667eea;
 		border-radius: 16px;
 		padding: 2rem;

@@ -89,6 +89,8 @@ export async function load({ locals, cookies, url }) {
 				email: pageData.email,
 				address: pageData.address,
 				metadata: pageData.metadata,
+				subscriptionStatus: pageData.subscriptionStatus || 'none', // PER PAGE
+				subscriptionExpiry: pageData.subscriptionExpiry || null, // PER PAGE
 				createdAt: pageData.createdAt || page.createdAt,
 				updatedAt: pageData.updatedAt || page.updatedAt
 			};

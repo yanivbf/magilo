@@ -1,6 +1,12 @@
 <script>
+	import { getContext } from 'svelte';
+	
 	/** @type {{ value: string, onsave: (newValue: string) => Promise<void>, tag?: string, className?: string, placeholder?: string }} */
 	let { value = '', onsave, tag = 'div', className = '', placeholder = 'לחץ לעריכה...' } = $props();
+	
+	// Get editMode from context - if false, disable editing
+	const editMode = getContext('editMode');
+	const isEditable = $derived(typeof editMode === 'function' ? editMode() : editMode);
 	
 	let element = $state(null);
 	let saving = $state(false);
@@ -64,17 +70,17 @@
 	bind:this={element}
 	class="editable-text {className}"
 	class:saving
-	contenteditable="true"
-	onblur={handleBlur}
+	class:edit-mode={isEditable}
+	contenteditable={isEditable}
+	onblur={isEditable ? handleBlur : undefined}
 	data-placeholder={placeholder}
 >
-	{value}
+	{@html displayValue}
 </svelte:element>
 
 <style>
 	:global(.editable-text) {
 		position: relative;
-		cursor: text;
 		transition: all 0.2s ease;
 		border-radius: 8px;
 		padding: 0.25rem;
@@ -82,13 +88,27 @@
 		min-height: 1.5em;
 	}
 	
-	:global(.editable-text:hover) {
+	/* In view-only mode - completely disable editing */
+	:global(.editable-text:not(.edit-mode)) {
+		cursor: default !important;
+		user-select: text;
+		-webkit-user-select: text;
+		-moz-user-select: text;
+		-ms-user-select: text;
+	}
+	
+	/* Only show edit indicators when in edit mode */
+	:global(.editable-text.edit-mode) {
+		cursor: text;
+	}
+	
+	:global(.editable-text.edit-mode:hover) {
 		background: rgba(102, 126, 234, 0.1);
 		outline: 2px dashed rgba(102, 126, 234, 0.3);
 		outline-offset: 4px;
 	}
 	
-	:global(.editable-text:focus) {
+	:global(.editable-text.edit-mode:focus) {
 		background: rgba(102, 126, 234, 0.15);
 		outline: 2px solid rgba(102, 126, 234, 0.5);
 		outline-offset: 4px;

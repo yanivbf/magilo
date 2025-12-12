@@ -9,6 +9,9 @@
 	// Determine if this is the home page for background styling (Svelte 5 Runes syntax)
 	let isHomePage = $derived($page.url.pathname === '/');
 	
+	// Check if this is a view page with viewOnly parameter
+	let isViewOnlyPage = $derived($page.url.pathname.startsWith('/view/') && $page.url.searchParams.get('viewOnly') === 'true');
+	
 	// User data from auth store (same as dashboard)
 	let userData = $state({ name: 'משתמש רשום', avatar: null, email: '' });
 	
@@ -73,8 +76,8 @@
 </svelte:head>
 
 <div class={isHomePage ? '' : 'bg-gray-50 min-h-screen'}>
-	{#if !isHomePage}
-		<!-- Navigation Bar - NEW DESIGN: Logo + Email on Right, Menu in Center -->
+	{#if !isHomePage && !isViewOnlyPage}
+		<!-- Navigation Bar - NEW DESIGN: Logo + Email on Right, Menu in Center (hidden in viewOnly mode) -->
 		<nav class="bg-white border-b shadow-sm sticky top-0 z-50">
 			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div class="flex justify-between items-center h-16">
@@ -104,6 +107,20 @@
 						>
 							שוק
 						</a>
+						
+						<!-- Admin Button - Only for admin users -->
+						{#if $currentUser && ($currentUser.email === 'britolam1@gmail.com' || $currentUser.isAdmin)}
+							<a 
+								href="/admin-simple"
+								class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+								title="דשבורד אדמין - סטטיסטיקות ונתונים"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+								</svg>
+								<span>אדמין</span>
+							</a>
+						{/if}
 					</div>
 					
 					<!-- CENTER: Empty space -->
