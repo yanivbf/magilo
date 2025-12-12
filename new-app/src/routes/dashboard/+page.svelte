@@ -101,7 +101,6 @@
 	}
 	
 	function viewPage(page) {
-		// All pages are active - no subscription check needed
 		const slug = page.slug || page.fileName || page.documentId || page.id;
 		console.log('🔍 Opening page in view-only mode:', { slug, page });
 		if (!slug) {
@@ -264,13 +263,22 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{#each (data?.pages || []) as page}
 						<div class="page-card bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-xl transition-all relative">
-							<!-- Status Badge - Top Right Corner - All pages are active -->
-							<div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
-								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-								</svg>
-								פעיל
-							</div>
+							<!-- Status Badge - Top Right Corner -->
+							{#if page.subscriptionStatus === 'active'}
+								<div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+									<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+									</svg>
+									פעיל
+								</div>
+							{:else}
+								<div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+									<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+									</svg>
+									לא פעיל
+								</div>
+							{/if}
 							
 							<!-- Page Preview - WITH REAL IMAGE -->
 							{#if page.metadata?.headerImage}
@@ -472,18 +480,31 @@
 										</button>
 									{/if}
 									
-									<!-- Page Status - All pages are active -->
-									<div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3">
-										<div class="flex items-center gap-2">
-											<svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-											</svg>
-											<div>
-												<div class="text-sm font-bold text-green-800">דף פעיל</div>
-												<div class="text-xs text-green-600">כל התכונות זמינות</div>
+									<!-- Page Status - Based on subscription -->
+									{#if page.subscriptionStatus === 'active'}
+										<div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3">
+											<div class="flex items-center gap-2">
+												<svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+													<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+												</svg>
+												<div>
+													<div class="text-sm font-bold text-green-800">דף פעיל</div>
+													<div class="text-xs text-green-600">כל התכונות זמינות</div>
+												</div>
 											</div>
 										</div>
-									</div>
+									{:else}
+										<button 
+											onclick={() => purchaseSubscription(page.documentId || page.id)}
+											class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition flex items-center justify-center gap-2"
+										>
+											<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+												<path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+												<path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+											</svg>
+											רכישת מנוי לדף
+										</button>
+									{/if}
 
 									<!-- Delete Button -->
 									<button 
