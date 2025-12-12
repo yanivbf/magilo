@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת אימות מנוי</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 בדיקת אימות מנוי</h1>
+    
+    <div class="test-section">
+        <h2>1. בדיקת מצב אימות נוכחי</h2>
+        <button onclick="checkCurrentAuth()">בדוק אימות</button>
+        <div id="authResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. בדיקת API מנוי</h2>
+        <input type="text" id="pageIdInput" placeholder="מזהה דף (pageId או documentId)" value="vrpyckmqwo9h50emse45zxzj">
+        <button onclick="testSubscriptionAPI()">בדוק API מנוי</button>
+        <div id="subscriptionResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. בדיקת עמוד ספציפי</h2>
+        <input type="text" id="slugInput" placeholder="slug של הדף" value="ef0bfa04-page-1764964110652">
+        <button onclick="checkPageOwnership()">בדוק בעלות על דף</button>
+        <div id="ownershipResult" class="result"></div>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+            console.log(message);
+        }
+
+        async function checkCurrentAuth() {
+            try {
+                log('authResult', 'בודק מצב אימות...', 'info');
+                
+                // Check cookies
+                const cookies = document.cookie;
+                const userId = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('userId='))
+                    ?.split('=')[1] || '';
+                
+                let result = `🍪 Cookies: ${cookies}\n`;
+                result += `👤 User ID: ${userId}\n`;
+                
+                if (!userId) {
+                    result += `❌ לא נמצא userId בעוגיות!`;
+                    log('authResult', result, 'error');
+                    return;
+                }
+                
+                // Test API call to check if server recognizes the user
+                const response = await fetch('/api/user/current', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    result += `✅ שרת מזהה את המשתמש: ${JSON.stringify(userData, null, 2)}`;
+                    log('authResult', result, 'success');
+                } else {
+                    result += `❌ שרת לא מזהה את המשתמש: ${response.status} ${response.statusText}`;
+                    log('authResult', result, 'error');
+                }
+                
+            } catch (error) {
+                log('authResult', `❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSubscriptionAPI() {
+            try {
+                const pageId = document.getElementById('pageIdInput').value;
+                if (!pageId) {
+                    log('subscriptionResult', '❌ יש להזין מזהה דף', 'error');
+                    return;
+                }
+                
+                log('subscriptionResult', 'בודק API מנוי...', 'info');
+                
+                const userId = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('userId='))
+                    ?.split('=')[1] || '';
+                
+                let result = `📄 Page ID: ${pageId}\n`;
+                result += `👤 User ID: ${userId}\n\n`;
+                
+                if (!userId) {
+                    result += `❌ לא נמצא userId בעוגיות!`;
+                    log('subscriptionResult', result, 'error');
+                    return;
+                }
+                
+                // Test subscription API
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        documentId: pageId,
+                        months: 1
+                    })
+                });
+                
+                const responseData = await response.json();
+                
+                if (response.ok) {
+                    result += `✅ API הצליח: ${JSON.stringify(responseData, null, 2)}`;
+                    log('subscriptionResult', result, 'success');
+                } else {
+                    result += `❌ API נכשל: ${response.status}\n`;
+                    result += `Response: ${JSON.stringify(responseData, null, 2)}`;
+                    log('subscriptionResult', result, 'error');
+                }
+                
+            } catch (error) {
+                log('subscriptionResult', `❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkPageOwnership() {
+            try {
+                const slug = document.getElementById('slugInput').value;
+                if (!slug) {
+                    log('ownershipResult', '❌ יש להזין slug של דף', 'error');
+                    return;
+                }
+                
+                log('ownershipResult', 'בודק בעלות על דף...', 'info');
+                
+                const userId = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('userId='))
+                    ?.split('=')[1] || '';
+                
+                let result = `📄 Page Slug: ${slug}\n`;
+                result += `👤 User ID: ${userId}\n\n`;
+                
+                // Load the page and check ownership
+                const response = await fetch(`/view/${slug}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    result += `✅ דף נטען בהצלחה\n`;
+                    result += `🔍 בדוק בקונסול לפרטי בעלות`;
+                    log('ownershipResult', result, 'success');
+                } else {
+                    result += `❌ לא ניתן לטעון את הדף: ${response.status}`;
+                    log('ownershipResult', result, 'error');
+                }
+                
+            } catch (error) {
+                log('ownershipResult', `❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check auth on page load
+        window.onload = () => {
+            checkCurrentAuth();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת אימות פשוטה</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: block;
+            width: 100%;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .critical-button {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        h1 { 
+            font-size: 2.5em; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+            margin-bottom: 30px;
+        }
+        
+        .result {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: right;
+        }
+        
+        .success {
+            background: rgba(34, 197, 94, 0.3);
+            border: 2px solid rgba(34, 197, 94, 0.5);
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.3);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+        }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            text-align: left;
+            direction: ltr;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ בדיקת אימות פשוטה</h1>
+        
+        <button class="test-button critical-button" onclick="testAuth()">
+            🔥 בדוק אימות עכשיו!
+        </button>
+        
+        <button class="test-button" onclick="setAuth()">
+            🔧 הגדר אימות
+        </button>
+        
+        <button class="test-button" onclick="goToDashboard()">
+            📊 לך לדשבורד
+        </button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testAuth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">🔍 בודק אימות...</div>';
+            
+            try {
+                // Check cookies first
+                const cookies = getCookies();
+                console.log('Cookies:', cookies);
+                
+                // Test server API
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                console.log('Server response:', data);
+                
+                let resultHTML = '<div class="result">';
+                
+                if (data.authenticated) {
+                    resultHTML += '<div class="success">';
+                    resultHTML += '<h3>✅ האימות עובד!</h3>';
+                    resultHTML += `<p><strong>משתמש:</strong> ${data.userId}</p>`;
+                    if (data.user) {
+                        resultHTML += `<p><strong>שם:</strong> ${data.user.name || 'לא זמין'}</p>`;
+                        resultHTML += `<p><strong>אימייל:</strong> ${data.user.email || 'לא זמין'}</p>`;
+                    }
+                    resultHTML += '</div>';
+                } else {
+                    resultHTML += '<div class="error">';
+                    resultHTML += '<h3>❌ האימות לא עובד</h3>';
+                    resultHTML += `<p><strong>שגיאה:</strong> ${data.error}</p>`;
+                    resultHTML += '</div>';
+                }
+                
+                resultHTML += '<div class="code">';
+                resultHTML += JSON.stringify(data, null, 2);
+                resultHTML += '</div>';
+                
+                resultHTML += '</div>';
+                
+                resultDiv.innerHTML = resultHTML;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ שגיאה בבדיקה</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function setAuth() {
+            const userId = 'google_111351120503275674259';
+            const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+            
+            // Set cookies with EXACT settings from hooks.server.js requirements
+            document.cookie = `jwt=dummy_jwt_token; expires=${expires}; path=/; secure=false; sameSite=lax`;
+            document.cookie = `userId=${userId}; expires=${expires}; path=/; secure=false; sameSite=lax`;
+            document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; secure=false; sameSite=lax`;
+            
+            // Set localStorage
+            try {
+                const userData = {
+                    id: userId,
+                    userId: userId,
+                    email: 'britolam1@gmail.com',
+                    name: 'ברית עולם להקה',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+            } catch (e) {
+                console.warn('localStorage not available');
+            }
+            
+            document.getElementById('result').innerHTML = `
+                <div class="result success">
+                    <h3>✅ אימות הוגדר!</h3>
+                    <p>המשתמש הראשי מחובר עכשיו</p>
+                    <p>לחץ על "בדוק אימות עכשיו" לוודא שהכל עובד</p>
+                </div>
+            `;
+        }
+        
+        function getCookies() {
+            return document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                if (key && value) {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {});
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            setTimeout(testAuth, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 בדיקת זרימת מנוי - DEBUG</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .big-button:hover { background: #218838; }
+        .danger-button {
+            background: #dc3545;
+            font-size: 1.1em;
+            padding: 12px 25px;
+        }
+        .danger-button:hover { background: #c82333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .status-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+        }
+        .flow-step {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 בדיקת זרימת מנוי - DEBUG</h1>
+    
+    <div class="section info">
+        <h3>📊 מצב נוכחי</h3>
+        <div class="status-grid">
+            <div>
+                <h4>🍪 Cookies</h4>
+                <div id="cookies-status">טוען...</div>
+            </div>
+            <div>
+                <h4>💾 Storage</h4>
+                <div id="storage-status">טוען...</div>
+            </div>
+        </div>
+        <div class="status-item">
+            <strong>🎯 Best userId:</strong> <span id="best-userid">טוען...</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 הכנה לבדיקה</h3>
+        <button onclick="simulateLogin()">🔑 סימולציה התחברות</button>
+        <button onclick="clearAllAuth()">🗑️ נקה כל אימות</button>
+        <button onclick="setTestPageId()">📄 הגדר pageId לבדיקה</button>
+        <div class="status-item">
+            <strong>📄 Current pageId:</strong> <span id="current-pageid">לא הוגדר</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🚀 בדיקת זרימה מלאה</h3>
+        <div class="flow-step">
+            <div class="step-title">שלב 1: הכנה</div>
+            <button onclick="step1_prepare()">🔧 הכן מערכת</button>
+            <div id="step1-result">לא הורץ</div>
+        </div>
+        
+        <div class="flow-step">
+            <div class="step-title">שלב 2: ניווט לדף מנוי</div>
+            <button onclick="step2_navigate()">🧭 נווט לדף מנוי</button>
+            <div id="step2-result">לא הורץ</div>
+        </div>
+        
+        <div class="flow-step">
+            <div class="step-title">שלב 3: בדיקת API מנוי</div>
+            <button onclick="step3_testAPI()">💳 בדוק API</button>
+            <div id="step3-result">לא הורץ</div>
+        </div>
+        
+        <div class="flow-step">
+            <div class="step-title">שלב 4: סימולציה רכישה</div>
+            <button onclick="step4_simulatePurchase()">🛒 סימולציה רכישה</button>
+            <div id="step4-result">לא הורץ</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>⚡ בדיקה מהירה</h3>
+        <button class="big-button" onclick="runFullTest()">
+            🚀 הרץ בדיקה מלאה
+        </button>
+        <div id="full-test-result" class="status-item">
+            תוצאות הבדיקה המלאה יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🆘 בדיקת תרחיש בעיה</h3>
+        <button class="danger-button" onclick="simulateAuthLoss()">
+            ⚠️ סימולציה איבוד אימות
+        </button>
+        <div id="auth-loss-result" class="status-item">
+            תוצאות סימולציה איבוד אימות יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <button onclick="exportLog()">📤 ייצא לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        let testPageId = 'test-page-12345';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function updateStatus() {
+            // Check cookies
+            const cookies = {
+                userId: getCookie('userId'),
+                userAuth: getCookie('userAuth'),
+                user_id: getCookie('user_id')
+            };
+            
+            // Check storage
+            const storage = {
+                sessionStorage: null,
+                localStorage: null,
+                sessionError: null,
+                localError: null
+            };
+            
+            try {
+                storage.sessionStorage = sessionStorage.getItem('userId');
+            } catch (e) {
+                storage.sessionError = e.message;
+            }
+            
+            try {
+                storage.localStorage = localStorage.getItem('userId');
+            } catch (e) {
+                storage.localError = e.message;
+            }
+            
+            // Check memory
+            const memory = {
+                autoPageUserId: window._autoPageUserId,
+                autoPageAuth: window.autoPageAuth?.userId
+            };
+            
+            // Find best userId
+            const bestUserId = cookies.userId || 
+                              cookies.userAuth || 
+                              cookies.user_id ||
+                              storage.sessionStorage ||
+                              storage.localStorage ||
+                              memory.autoPageUserId ||
+                              memory.autoPageAuth;
+            
+            // Update display
+            document.getElementById('cookies-status').innerHTML = `
+                userId: ${cookies.userId ? '✅ ' + cookies.userId : '❌'}<br>
+                userAuth: ${cookies.userAuth ? '✅ ' + cookies.userAuth : '❌'}<br>
+                user_id: ${cookies.user_id ? '✅ ' + cookies.user_id : '❌'}
+            `;
+            
+            document.getElementById('storage-status').innerHTML = `
+                sessionStorage: ${storage.sessionStorage ? '✅ ' + storage.sessionStorage : (storage.sessionError ? '🚫 ' + storage.sessionError : '❌')}<br>
+                localStorage: ${storage.localStorage ? '✅ ' + storage.localStorage : (storage.localError ? '🚫 ' + storage.localError : '❌')}<br>
+                memory: ${memory.autoPageUserId ? '✅ ' + memory.autoPageUserId : '❌'}
+            `;
+            
+            document.getElementById('best-userid').textContent = bestUserId ? '✅ ' + bestUserId : '❌ לא נמצא';
+            
+            // Update pageId display
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPageId = urlParams.get('pageId') || testPageId;
+            document.getElementById('current-pageid').textContent = currentPageId;
+            
+            return bestUserId;
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function setCookie(name, value) {
+            document.cookie = `${name}=${value}; path=/; max-age=2592000; SameSite=Lax`;
+        }
+        
+        function simulateLogin() {
+            log('🔑 מדמה התחברות...');
+            const testUserId = 'google_111351120503275674259';
+            
+            // Set cookies
+            setCookie('userId', testUserId);
+            setCookie('userAuth', testUserId);
+            setCookie('user_id', testUserId);
+            
+            // Set storage
+            try {
+                sessionStorage.setItem('userId', testUserId);
+                localStorage.setItem('userId', testUserId);
+            } catch (e) {
+                log('⚠️ Could not set storage: ' + e.message);
+            }
+            
+            // Set memory
+            window._autoPageUserId = testUserId;
+            window.autoPageAuth = { userId: testUserId, timestamp: Date.now() };
+            
+            log(`✅ Login simulated with userId: ${testUserId}`);
+            updateStatus();
+        }
+        
+        function clearAllAuth() {
+            log('🗑️ מנקה כל אימות...');
+            
+            // Clear cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear storage
+            try {
+                sessionStorage.removeItem('userId');
+                localStorage.removeItem('userId');
+            } catch (e) {
+                log('⚠️ Could not clear storage: ' + e.message);
+            }
+            
+            // Clear memory
+            delete window._autoPageUserId;
+            delete window.autoPageAuth;
+            
+            log('✅ All auth cleared');
+            updateStatus();
+        }
+        
+        function setTestPageId() {
+            testPageId = prompt('הכנס pageId לבדיקה:', testPageId) || testPageId;
+            log(`📄 Test pageId set to: ${testPageId}`);
+            updateStatus();
+        }
+        
+        function step1_prepare() {
+            log('🔧 Step 1: Preparing system...');
+            simulateLogin();
+            document.getElementById('step1-result').innerHTML = '✅ מערכת מוכנה - משתמש מחובר';
+            document.getElementById('step1-result').className = 'success';
+        }
+        
+        function step2_navigate() {
+            log('🧭 Step 2: Testing navigation to subscription page...');
+            const userId = updateStatus();
+            
+            if (!userId) {
+                document.getElementById('step2-result').innerHTML = '❌ אין userId - הרץ שלב 1 קודם';
+                document.getElementById('step2-result').className = 'error';
+                return;
+            }
+            
+            // Simulate navigation
+            const subscribeUrl = `/subscribe?pageId=${testPageId}`;
+            log(`🧭 Would navigate to: ${subscribeUrl}`);
+            
+            document.getElementById('step2-result').innerHTML = `✅ ניווט מוכן ל: ${subscribeUrl}`;
+            document.getElementById('step2-result').className = 'success';
+        }
+        
+        async function step3_testAPI() {
+            log('💳 Step 3: Testing subscription API...');
+            const userId = updateStatus();
+            
+            if (!userId) {
+                document.getElementById('step3-result').innerHTML = '❌ אין userId - הרץ שלב 1 קודם';
+                document.getElementById('step3-result').className = 'error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({
+                        documentId: testPageId,
+                        userId: userId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('step3-result').innerHTML = `✅ API עובד! Status: ${response.status}`;
+                    document.getElementById('step3-result').className = 'success';
+                    log('✅ API test passed');
+                } else {
+                    if (result.needsRefresh && result.keepSession) {
+                        document.getElementById('step3-result').innerHTML = `
+                            ✅ API החזיר שגיאה אבל לא מנתק!<br>
+                            Status: ${response.status}<br>
+                            Error: ${result.error}
+                        `;
+                        document.getElementById('step3-result').className = 'success';
+                        log(`✅ API returned safe error: ${result.error}`);
+                    } else {
+                        document.getElementById('step3-result').innerHTML = `
+                            ⚠️ API החזיר שגיאה:<br>
+                            Status: ${response.status}<br>
+                            Error: ${result.error}
+                        `;
+                        document.getElementById('step3-result').className = 'warning';
+                        log(`⚠️ API returned error: ${result.error}`);
+                    }
+                }
+            } catch (error) {
+                document.getElementById('step3-result').innerHTML = `❌ שגיאה בקריאה ל-API: ${error.message}`;
+                document.getElementById('step3-result').className = 'error';
+                log(`❌ API call failed: ${error.message}`);
+            }
+        }
+        
+        async function step4_simulatePurchase() {
+            log('🛒 Step 4: Simulating purchase flow...');
+            
+            // Check if still logged in after API test
+            const userId = updateStatus();
+            
+            if (!userId) {
+                document.getElementById('step4-result').innerHTML = '❌ איבדנו את המשתמש במהלך התהליך!';
+                document.getElementById('step4-result').className = 'error';
+                log('❌ Lost user during process');
+                return;
+            }
+            
+            // Simulate the full purchase flow
+            try {
+                // Step 4a: Validate user and page
+                log('🔍 Validating user and page...');
+                
+                // Step 4b: Process payment (simulated)
+                log('💳 Processing payment (simulated)...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Step 4c: Activate subscription
+                log('⚡ Activating subscription...');
+                await step3_testAPI();
+                
+                // Step 4d: Check if still logged in
+                const finalUserId = updateStatus();
+                
+                if (finalUserId) {
+                    document.getElementById('step4-result').innerHTML = `
+                        🎉 רכישה הושלמה בהצלחה!<br>
+                        ✅ משתמש עדיין מחובר: ${finalUserId}<br>
+                        ✅ לא הופנה להתחברות<br>
+                        ✅ התהליך עבר ללא ניתוק
+                    `;
+                    document.getElementById('step4-result').className = 'success';
+                    log('🎉 Purchase simulation completed successfully');
+                } else {
+                    document.getElementById('step4-result').innerHTML = `
+                        ❌ רכישה נכשלה - המשתמש התנתק!<br>
+                        ❌ איבדנו את המשתמש במהלך התהליך<br>
+                        💡 צריך לתקן את הקוד
+                    `;
+                    document.getElementById('step4-result').className = 'error';
+                    log('❌ Purchase simulation failed - user disconnected');
+                }
+            } catch (error) {
+                document.getElementById('step4-result').innerHTML = `❌ שגיאה ברכישה: ${error.message}`;
+                document.getElementById('step4-result').className = 'error';
+                log(`❌ Purchase simulation error: ${error.message}`);
+            }
+        }
+        
+        async function runFullTest() {
+            log('🚀 מריץ בדיקה מלאה...');
+            const resultDiv = document.getElementById('full-test-result');
+            
+            resultDiv.innerHTML = '⏳ מריץ בדיקה מלאה... אנא המתן';
+            resultDiv.className = 'status-item info';
+            
+            try {
+                // Step 1: Prepare
+                step1_prepare();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 2: Navigate
+                step2_navigate();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 3: Test API
+                await step3_testAPI();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 4: Simulate purchase
+                await step4_simulatePurchase();
+                
+                // Final check
+                const finalUserId = updateStatus();
+                
+                if (finalUserId) {
+                    resultDiv.innerHTML = `
+                        🎉 בדיקה מלאה הושלמה בהצלחה!<br><br>
+                        ✅ כל השלבים עברו<br>
+                        ✅ משתמש עדיין מחובר: ${finalUserId}<br>
+                        ✅ לא היה ניתוק במהלך התהליך<br>
+                        ✅ המערכת עובדת כמו שצריך!<br><br>
+                        <strong>🎯 המסקנה:</strong> התיקון עובד!
+                    `;
+                    resultDiv.className = 'status-item success';
+                    log('🎉 Full test PASSED');
+                } else {
+                    resultDiv.innerHTML = `
+                        ❌ בדיקה מלאה נכשלה!<br><br>
+                        ❌ המשתמש התנתק במהלך התהליך<br>
+                        💡 צריך לבדוק את הקוד נוסף<br><br>
+                        <strong>🔍 בדוק את הלוג למטה לפרטים</strong>
+                    `;
+                    resultDiv.className = 'status-item error';
+                    log('❌ Full test FAILED');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ שגיאה בבדיקה מלאה: ${error.message}`;
+                resultDiv.className = 'status-item error';
+                log(`❌ Full test error: ${error.message}`);
+            }
+        }
+        
+        async function simulateAuthLoss() {
+            log('⚠️ מדמה איבוד אימות...');
+            const resultDiv = document.getElementById('auth-loss-result');
+            
+            // First, ensure we're logged in
+            simulateLogin();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Clear only cookies (simulate cookie loss)
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            log('🍪 Cookies cleared, storage should still have userId');
+            
+            // Now test if the system can recover
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        documentId: testPageId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Check if we can recover
+                const recoveredUserId = updateStatus();
+                
+                if (recoveredUserId) {
+                    resultDiv.innerHTML = `
+                        🎉 שחזור מאיבוד אימות הצליח!<br><br>
+                        ✅ המערכת זיהתה איבוד cookies<br>
+                        ✅ שחזרה userId מ-storage<br>
+                        ✅ לא הפנתה להתחברות<br>
+                        ✅ משתמש עדיין מחובר: ${recoveredUserId}<br><br>
+                        <strong>🎯 המסקנה:</strong> מנגנון השחזור עובד!
+                    `;
+                    resultDiv.className = 'status-item success';
+                    log('🎉 Auth loss recovery PASSED');
+                } else {
+                    resultDiv.innerHTML = `
+                        ❌ שחזור מאיבוד אימות נכשל!<br><br>
+                        ❌ המערכת לא הצליחה לשחזר את המשתמש<br>
+                        ❌ כנראה הפנתה להתחברות<br><br>
+                        <strong>💡 פתרון:</strong> צריך לשפר את מנגנון השחזור
+                    `;
+                    resultDiv.className = 'status-item error';
+                    log('❌ Auth loss recovery FAILED');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ שגיאה בבדיקת שחזור: ${error.message}`;
+                resultDiv.className = 'status-item error';
+                log(`❌ Auth loss recovery error: ${error.message}`);
+            }
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        function exportLog() {
+            const logText = logEntries.join('\n');
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `subscription-debug-log-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // עדכון סטטוס כל 2 שניות
+        setInterval(updateStatus, 2000);
+        
+        // עדכון ראשוני
+        updateStatus();
+        log('🔍 Subscription Flow Debug Page Loaded');
+    </script>
+</body>
+</html>

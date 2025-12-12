@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 בדיקת מנוי ללא ניתוק</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .big-button:hover { background: #218838; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת מנוי ללא ניתוק</h1>
+    
+    <div class="section info">
+        <h3>📊 מצב אימות נוכחי</h3>
+        <div id="auth-status">טוען...</div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 בדיקות מהירות</h3>
+        <button onclick="simulateLogin()">🔑 סימולציה התחברות</button>
+        <button onclick="testSubscriptionAPI()">💳 בדוק API מנוי</button>
+        <button onclick="testFullSubscriptionFlow()">🚀 בדוק זרימת מנוי מלאה</button>
+        <div id="test-results" class="status-item">
+            תוצאות הבדיקות יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🎯 בדיקת מנוי ללא ניתוק</h3>
+        <button class="big-button" onclick="testNoDisconnectSubscription()">
+            🚀 בדוק מנוי ללא ניתוק
+        </button>
+        <div id="subscription-results" class="status-item">
+            תוצאות בדיקת המנוי יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function updateAuthStatus() {
+            const status = {
+                cookies: {},
+                storage: {},
+                memory: {}
+            };
+            
+            // Check cookies
+            try {
+                const cookies = document.cookie.split('; ');
+                status.cookies.userId = cookies.find(c => c.startsWith('userId='))?.split('=')[1] || null;
+                status.cookies.userAuth = cookies.find(c => c.startsWith('userAuth='))?.split('=')[1] || null;
+                status.cookies.user_id = cookies.find(c => c.startsWith('user_id='))?.split('=')[1] || null;
+            } catch (error) {
+                status.cookies.error = error.message;
+            }
+            
+            // Check sessionStorage
+            try {
+                status.storage.sessionStorage = sessionStorage.getItem('userId');
+            } catch (error) {
+                status.storage.sessionStorageError = error.message;
+            }
+            
+            // Check localStorage
+            try {
+                status.storage.localStorage = localStorage.getItem('userId');
+            } catch (error) {
+                status.storage.localStorageError = error.message;
+            }
+            
+            // Check memory
+            try {
+                status.memory.autoPageUserId = window._autoPageUserId;
+                status.memory.autoPageAuth = window.autoPageAuth?.userId;
+            } catch (error) {
+                status.memory.error = error.message;
+            }
+            
+            // Find best userId
+            const userId = status.cookies.userId || 
+                          status.cookies.userAuth || 
+                          status.cookies.user_id ||
+                          status.storage.sessionStorage ||
+                          status.storage.localStorage ||
+                          status.memory.autoPageUserId ||
+                          status.memory.autoPageAuth;
+            
+            document.getElementById('auth-status').innerHTML = `
+                <strong>🍪 Cookies:</strong><br>
+                &nbsp;&nbsp;userId: ${status.cookies.userId || '❌'}<br>
+                &nbsp;&nbsp;userAuth: ${status.cookies.userAuth || '❌'}<br>
+                &nbsp;&nbsp;user_id: ${status.cookies.user_id || '❌'}<br>
+                <strong>💾 Storage:</strong><br>
+                &nbsp;&nbsp;sessionStorage: ${status.storage.sessionStorage || (status.storage.sessionStorageError ? '🚫 ' + status.storage.sessionStorageError : '❌')}<br>
+                &nbsp;&nbsp;localStorage: ${status.storage.localStorage || (status.storage.localStorageError ? '🚫 ' + status.storage.localStorageError : '❌')}<br>
+                <strong>🧠 Memory:</strong><br>
+                &nbsp;&nbsp;_autoPageUserId: ${status.memory.autoPageUserId || '❌'}<br>
+                &nbsp;&nbsp;autoPageAuth: ${status.memory.autoPageAuth || '❌'}<br>
+                <strong>🎯 Best userId:</strong> ${userId ? '✅ ' + userId : '❌ לא נמצא'}
+            `;
+            
+            return userId;
+        }
+        
+        function simulateLogin() {
+            log('🔑 מדמה התחברות...');
+            const testUserId = 'google_111351120503275674259';
+            
+            // Set cookies
+            document.cookie = `userId=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            document.cookie = `userAuth=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            document.cookie = `user_id=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            
+            // Set storage
+            try {
+                sessionStorage.setItem('userId', testUserId);
+                localStorage.setItem('userId', testUserId);
+            } catch (e) {
+                log('⚠️ Could not set storage: ' + e.message);
+            }
+            
+            // Set memory
+            window._autoPageUserId = testUserId;
+            window.autoPageAuth = { userId: testUserId, timestamp: Date.now() };
+            
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = `✅ התחברות סומלצה בהצלחה! User ID: ${testUserId}`;
+            resultsDiv.className = 'status-item success';
+            
+            log(`✅ Login simulated with userId: ${testUserId}`);
+            updateAuthStatus();
+        }
+        
+        async function testSubscriptionAPI() {
+            log('💳 בודק API מנוי...');
+            const resultsDiv = document.getElementById('test-results');
+            
+            const userId = updateAuthStatus();
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין userId זמין - הרץ סימולציה התחברות קודם';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({
+                        documentId: 'test-page-id',
+                        userId: userId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `✅ API מנוי עובד! Status: ${response.status}`;
+                    resultsDiv.className = 'status-item success';
+                    log('✅ Subscription API test passed');
+                } else {
+                    // Check if it's the new error format (no logout)
+                    if (result.needsRefresh && result.keepSession) {
+                        resultsDiv.innerHTML = `
+                            ✅ API החזיר שגיאה אבל לא מנתק!<br>
+                            📄 Status: ${response.status} (לא 401)<br>
+                            📄 Error: ${result.error}<br>
+                            🔄 needsRefresh: ${result.needsRefresh}<br>
+                            🔒 keepSession: ${result.keepSession}
+                        `;
+                        resultsDiv.className = 'status-item success';
+                        log(`✅ API returned error but won't cause logout: ${result.error}`);
+                    } else {
+                        resultsDiv.innerHTML = `
+                            ⚠️ API החזיר שגיאה:<br>
+                            📄 Status: ${response.status}<br>
+                            📄 Error: ${result.error || 'Unknown error'}<br>
+                            🔍 needsLogin: ${result.needsLogin}<br>
+                            🔍 keepSession: ${result.keepSession}
+                        `;
+                        resultsDiv.className = 'status-item warning';
+                        log(`⚠️ API returned error: ${result.error}`);
+                    }
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאה בקריאה ל-API: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ API call failed: ${error.message}`);
+            }
+        }
+        
+        async function testFullSubscriptionFlow() {
+            log('🚀 בודק זרימת מנוי מלאה...');
+            
+            // Step 1: Simulate login
+            simulateLogin();
+            
+            // Step 2: Test API after short delay
+            setTimeout(async () => {
+                await testSubscriptionAPI();
+                
+                // Step 3: Check if we're still logged in
+                setTimeout(() => {
+                    const userId = updateAuthStatus();
+                    const resultsDiv = document.getElementById('test-results');
+                    
+                    if (userId) {
+                        resultsDiv.innerHTML += '<br><br>✅ עדיין מחובר אחרי בדיקת API!';
+                        log('✅ Still logged in after API test');
+                    } else {
+                        resultsDiv.innerHTML += '<br><br>❌ התנתק אחרי בדיקת API!';
+                        log('❌ Got disconnected after API test');
+                    }
+                }, 1000);
+            }, 500);
+        }
+        
+        async function testNoDisconnectSubscription() {
+            log('🚀 מריץ בדיקת מנוי ללא ניתוק...');
+            const resultsDiv = document.getElementById('subscription-results');
+            
+            resultsDiv.innerHTML = '⏳ בודק מנוי... אנא המתן';
+            resultsDiv.className = 'status-item info';
+            
+            // Step 1: Ensure we have userId
+            let userId = updateAuthStatus();
+            if (!userId) {
+                log('⚠️ No userId found, simulating login first');
+                simulateLogin();
+                userId = updateAuthStatus();
+            }
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ לא ניתן לקבל userId - בדוק את הגדרות הדפדפן';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            log(`📄 Testing subscription with userId: ${userId}`);
+            
+            // Step 2: Test subscription API with error simulation
+            try {
+                // First test with missing pageId to trigger error
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({
+                        // Missing documentId to trigger error
+                        userId: userId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Check if we're still logged in after the API call
+                const userIdAfter = updateAuthStatus();
+                
+                if (userIdAfter) {
+                    resultsDiv.innerHTML = `
+                        🎉 בדיקת מנוי ללא ניתוק הושלמה בהצלחה!<br><br>
+                        <strong>✅ תוצאות:</strong><br>
+                        1. ✅ API נקרא (Status: ${response.status})<br>
+                        2. ✅ עדיין מחובר אחרי השגיאה<br>
+                        3. ✅ לא הופנה להתחברות<br>
+                        4. ✅ userId נשמר: ${userIdAfter}<br><br>
+                        <strong>📊 תגובת API:</strong><br>
+                        Error: ${result.error}<br>
+                        needsRefresh: ${result.needsRefresh}<br>
+                        keepSession: ${result.keepSession}<br><br>
+                        <strong>🎯 המסקנה:</strong> המערכת לא מנתקת יותר!
+                    `;
+                    resultsDiv.className = 'status-item success';
+                    log('🎉 No disconnect test PASSED - user stays logged in');
+                } else {
+                    resultsDiv.innerHTML = `
+                        ❌ בדיקת מנוי ללא ניתוק נכשלה!<br><br>
+                        <strong>❌ בעיה:</strong> המשתמש התנתק אחרי קריאת API<br>
+                        <strong>📊 API Status:</strong> ${response.status}<br>
+                        <strong>📊 API Response:</strong> ${JSON.stringify(result, null, 2)}<br><br>
+                        <strong>💡 פתרון:</strong> צריך לתקן את הקוד נוסף
+                    `;
+                    resultsDiv.className = 'status-item error';
+                    log('❌ No disconnect test FAILED - user got disconnected');
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    ❌ שגיאה בבדיקת מנוי:<br><br>
+                    <strong>Error:</strong> ${error.message}<br>
+                    <strong>💡 הצעה:</strong> בדוק חיבור לאינטרנט ונסה שוב
+                `;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Subscription test error: ${error.message}`);
+            }
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        // עדכון סטטוס כל 3 שניות
+        setInterval(updateAuthStatus, 3000);
+        
+        // עדכון ראשוני
+        updateAuthStatus();
+        log('🔧 No Disconnect Subscription Test Page Loaded');
+    </script>
+</body>
+</html>

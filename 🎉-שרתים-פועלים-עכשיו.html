@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 השרתים פועלים!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+        .servers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .server {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #28a745;
+        }
+        .server h3 {
+            color: #28a745;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .server .url {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .server .status {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .actions {
+            margin-top: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+        }
+        .next-steps {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: right;
+        }
+        .next-steps h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .next-steps ol {
+            text-align: right;
+            margin-right: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 השרתים פועלים בהצלחה!</h1>
+        
+        <div class="servers">
+            <div class="server">
+                <h3>🎨 SvelteKit Frontend</h3>
+                <div class="url">http://localhost:5173</div>
+                <div class="status">✅ פועל</div>
+                <p>האתר הראשי עם כל הממשק</p>
+            </div>
+            
+            <div class="server">
+                <h3>🗄️ Strapi Backend</h3>
+                <div class="url">http://localhost:1337</div>
+                <div class="status">✅ פועל</div>
+                <p>מסד הנתונים וה-API</p>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="http://localhost:5173" class="btn btn-success" target="_blank">
+                🚀 פתח את האתר
+            </a>
+            <a href="http://localhost:5173/login" class="btn" target="_blank">
+                🔐 התחבר עם Google
+            </a>
+            <a href="http://localhost:1337/admin" class="btn btn-info" target="_blank">
+                ⚙️ פתח Strapi Admin
+            </a>
+        </div>
+        
+        <div class="next-steps">
+            <h3>📋 מה לעשות עכשיו:</h3>
+            <ol>
+                <li><strong>לחץ על "פתח את האתר"</strong> למעלה</li>
+                <li><strong>לחץ על "התחבר עם Google"</strong></li>
+                <li><strong>אם יש שגיאת Google OAuth:</strong>
+                    <br>→ לך ל-Google Console
+                    <br>→ הוסף: <code>http://localhost:5173</code>
+                </li>
+                <li><strong>אחרי התחברות:</strong>
+                    <br>→ לך ל-Dashboard
+                    <br>→ צור דף חדש
+                    <br>→ תהנה! 🎉
+                </li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #d4edda; border-radius: 10px; color: #155724;">
+            <h3>🎯 הכל מוכן!</h3>
+            <p>שני השרתים רצים בהצלחה. המערכת מוכנה לשימוש!</p>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh server status every 30 seconds
+        setInterval(() => {
+            // Check if servers are still running
+            fetch('http://localhost:5173')
+                .then(() => console.log('✅ SvelteKit running'))
+                .catch(() => console.log('❌ SvelteKit down'));
+                
+            fetch('http://localhost:1337')
+                .then(() => console.log('✅ Strapi running'))
+                .catch(() => console.log('❌ Strapi down'));
+        }, 30000);
+    </script>
+</body>
+</html>

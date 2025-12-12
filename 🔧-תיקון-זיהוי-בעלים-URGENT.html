@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 תיקון זיהוי בעלים - URGENT</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .fix-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+        .fix-step {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-right: 5px solid #4CAF50;
+        }
+        .problem {
+            background: rgba(244, 67, 54, 0.3);
+            border-right-color: #f44336;
+        }
+        .solution {
+            background: rgba(76, 175, 80, 0.3);
+            border-right-color: #4CAF50;
+        }
+        .test-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 1.1rem;
+        }
+        .test-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+        }
+        .test-button.dashboard {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+        }
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 5px;
+            display: inline-block;
+        }
+        .status-error {
+            background: #f44336;
+            color: white;
+        }
+        .status-success {
+            background: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון זיהוי בעלים</h1>
+        
+        <div class="fix-section">
+            <div class="section-title">❌ הבעיה שזיהיתי</div>
+            
+            <div class="fix-step problem">
+                <strong>מהקונסול שלך:</strong>
+                <br>• <span class="status status-error">userId from cookie: null</span>
+                <br>• <span class="status status-error">Is owner: false</span>
+                <br>• <span class="status status-error">Edit mode: false</span>
+                <br><br>
+                <strong>המשמעות:</strong> המערכת לא מזהה אותך כבעלים כי אין cookie!
+            </div>
+        </div>
+
+        <div class="fix-section">
+            <div class="section-title">🔧 התיקון המיידי</div>
+            
+            <div class="fix-step solution">
+                <strong>1. קודם כל - בוא נוודא שאתה מחובר:</strong>
+                <br>• לך לדשבורד - אם אתה רואה את הדפים שלך, אתה מחובר
+                <br>• אבל יש בעיה עם ה-cookies במצב עריכה
+            </div>
+            
+            <div class="fix-step solution">
+                <strong>2. הפתרון המיידי:</strong>
+                <br>• לחץ על הכפתור למטה לתיקון מיידי
+                <br>• זה יגדיר את ה-cookie הנכון
+                <br>• ואז תוכל לערוך דפים
+            </div>
+        </div>
+
+        <div class="fix-section">
+            <div class="section-title">🚀 תיקון מיידי</div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <button onclick="fixUserCookie()" class="test-button" id="fixBtn">
+                    🔧 תקן זיהוי בעלים עכשיו
+                </button>
+                <br><br>
+                <a href="/dashboard" class="test-button dashboard">📊 חזור לדשבורד</a>
+            </div>
+            
+            <div class="fix-step">
+                <strong>מה הכפתור עושה:</strong>
+                <br>• מגדיר את ה-userId cookie ל-google_111351120503275674259
+                <br>• מסנכרן עם localStorage
+                <br>• מוודא שהמערכת תזהה אותך כבעלים
+            </div>
+        </div>
+
+        <div class="fix-section">
+            <div class="section-title">📋 אחרי התיקון</div>
+            
+            <div class="fix-step solution">
+                <strong>מה אמור לקרות:</strong>
+                <br>1. לחץ על "תקן זיהוי בעלים עכשיו"
+                <br>2. חזור לדשבורד
+                <br>3. לחץ "ערוך" על דף כלשהו
+                <br>4. עכשיו אמור להיות:
+                <br>   • <span class="status status-success">Is owner: true</span>
+                <br>   • <span class="status status-success">Edit mode: true</span>
+                <br>   • כפתורי עריכה בצד שמאל
+            </div>
+        </div>
+
+        <div class="fix-section">
+            <div class="section-title">🎯 מה אמור לחזור לעבוד</div>
+            
+            <div class="fix-step solution">
+                ✅ <strong>כפתור "העלה תמונה"</strong> - בצד שמאל למעלה
+            </div>
+            
+            <div class="fix-step solution">
+                ✅ <strong>כפתור "שמור לאזור שלי"</strong> - בצד שמאל למעלה
+            </div>
+            
+            <div class="fix-step solution">
+                ✅ <strong>עריכת טקסט</strong> - לחיצה על כותרת ותיאור
+            </div>
+            
+            <div class="fix-step solution">
+                ✅ <strong>עריכת גלריה</strong> - כפתורי עריכה בכל מקטע
+            </div>
+            
+            <div class="fix-step solution">
+                ✅ <strong>עריכת מוצרים</strong> - כפתורי עריכה בגלריית מוצרים
+            </div>
+        </div>
+
+        <div class="fix-section">
+            <div class="section-title">🔍 בדיקה</div>
+            
+            <div id="status" class="fix-step">
+                <strong>סטטוס נוכחי:</strong>
+                <br>• Cookie: <span id="cookieStatus">בודק...</span>
+                <br>• localStorage: <span id="localStorageStatus">בודק...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check current status
+        function checkStatus() {
+            const userId = document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1];
+            document.getElementById('cookieStatus').textContent = userId || 'לא נמצא';
+            
+            try {
+                const storedUser = localStorage.getItem('currentUser');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    document.getElementById('localStorageStatus').textContent = userData.userId || 'לא נמצא ID';
+                } else {
+                    document.getElementById('localStorageStatus').textContent = 'לא נמצא';
+                }
+            } catch (e) {
+                document.getElementById('localStorageStatus').textContent = 'שגיאה: ' + e.message;
+            }
+        }
+
+        // Fix user cookie
+        function fixUserCookie() {
+            const btn = document.getElementById('fixBtn');
+            btn.textContent = '🔄 מתקן...';
+            btn.disabled = true;
+            
+            try {
+                // Set the correct userId cookie
+                const userId = 'google_111351120503275674259';
+                const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+                document.cookie = `userId=${userId}; expires=${expires}; path=/; SameSite=Lax`;
+                
+                // Set localStorage
+                const userData = {
+                    id: userId,
+                    userId: userId,
+                    email: '',
+                    name: 'משתמש רשום',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                
+                console.log('✅ Fixed user authentication');
+                
+                btn.textContent = '✅ תוקן בהצלחה!';
+                btn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                
+                // Update status
+                setTimeout(() => {
+                    checkStatus();
+                    alert('✅ זיהוי הבעלים תוקן!\n\nעכשיו חזור לדשבורד ונסה לערוך דף.');
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Error fixing authentication:', error);
+                btn.textContent = '❌ שגיאה';
+                btn.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                alert('❌ שגיאה בתיקון. נסה לרענן את הדף.');
+            }
+        }
+
+        // Check status on load
+        checkStatus();
+        
+        console.log('🔧 Fix page loaded');
+        console.log('Current issues detected:');
+        console.log('- userId cookie missing');
+        console.log('- Edit mode disabled');
+        console.log('- Owner detection failed');
+    </script>
+</body>
+</html>

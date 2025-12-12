@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקה ישירה - הפעלת מנוי</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+        }
+        .big-button:hover { background: #218838; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💳 בדיקה ישירה - הפעלת מנוי</h1>
+        
+        <div class="test-section info">
+            <h3>📊 מידע נוכחי</h3>
+            <div id="current-info">טוען...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔐 בדיקת אימות מהירה</h3>
+            <button onclick="quickAuthCheck()">בדוק אימות</button>
+            <div id="auth-status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💳 הפעלת מנוי</h3>
+            <label>מזהה דף (Document ID):</label>
+            <input type="text" id="pageId" value="fatwpc2p7xxnl9x9sm7nfv8r" placeholder="הזן מזהה דף">
+            
+            <label>מספר חודשים:</label>
+            <input type="number" id="months" value="1" min="1" max="12">
+            
+            <br><br>
+            <button class="big-button" onclick="activateSubscription()">🚀 הפעל מנוי עכשיו</button>
+            
+            <div id="subscription-result" style="margin-top: 15px;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔗 קישורים מהירים</h3>
+            <button onclick="goToSubscribePage()">📄 לדף מנוי רגיל</button>
+            <button onclick="goToDashboard()">📊 לדשבורד</button>
+            <button onclick="testCurrentUser()">👤 בדוק משתמש נוכחי</button>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            return document.cookie
+                .split('; ')
+                .find(row => row.startsWith(name + '='))
+                ?.split('=')[1] || '';
+        }
+        
+        function updateCurrentInfo() {
+            const userId = getCookie('userId');
+            const allCookies = document.cookie;
+            
+            document.getElementById('current-info').innerHTML = `
+                <strong>👤 User ID:</strong> ${userId || '❌ לא נמצא'}<br>
+                <strong>🍪 Cookies:</strong> ${allCookies || 'ריק'}<br>
+                <strong>🕒 זמן:</strong> ${new Date().toLocaleString('he-IL')}<br>
+                <strong>🌐 URL:</strong> ${window.location.href}
+            `;
+        }
+        
+        async function quickAuthCheck() {
+            const resultDiv = document.getElementById('auth-status');
+            const userId = getCookie('userId');
+            
+            if (!userId) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ אין User ID ב-Cookie<br>
+                        <button onclick="window.location.href='/login'">🔐 התחבר</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    ✅ נמצא User ID: ${userId}
+                </div>
+            `;
+        }
+        
+        async function activateSubscription() {
+            const resultDiv = document.getElementById('subscription-result');
+            const pageId = document.getElementById('pageId').value.trim();
+            const months = parseInt(document.getElementById('months').value) || 1;
+            const userId = getCookie('userId');
+            
+            // Clear previous result
+            resultDiv.innerHTML = '';
+            
+            // Validation
+            if (!userId) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ אין User ID - יש להתחבר קודם<br>
+                        <button onclick="window.location.href='/login'">🔐 התחבר</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (!pageId) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ יש להזין מזהה דף
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show loading
+            resultDiv.innerHTML = `
+                <div class="info">
+                    ⏳ מפעיל מנוי לדף ${pageId} ל-${months} חודשים...<br>
+                    משתמש: ${userId}
+                </div>
+            `;
+            
+            try {
+                console.log('🚀 Starting subscription activation...');
+                console.log('   - pageId:', pageId);
+                console.log('   - months:', months);
+                console.log('   - userId:', userId);
+                
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        documentId: pageId,
+                        months: months
+                    })
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('📄 Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>מנוי הופעל בהצלחה!</strong><br>
+                            📄 דף: ${data.documentId}<br>
+                            📅 תפוגה: ${new Date(data.subscriptionExpiry).toLocaleDateString('he-IL')}<br>
+                            🎯 סטטוס: ${data.subscriptionStatus}<br>
+                            <br>
+                            <button onclick="goToDashboard()">📊 חזור לדשבורד</button>
+                            <details style="margin-top: 10px;">
+                                <summary>🔍 פרטים טכניים</summary>
+                                <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                } else {
+                    let errorMsg = data.error || 'שגיאה לא ידועה';
+                    let extraInfo = '';
+                    
+                    if (data.needsLogin) {
+                        extraInfo = '<br><button onclick="window.location.href=\\'/login\\'">🔐 התחבר מחדש</button>';
+                    }
+                    
+                    if (data.currentUser && data.pageOwner) {
+                        extraInfo += `<br><small>משתמש נוכחי: ${data.currentUser} | בעל הדף: ${data.pageOwner}</small>`;
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ <strong>שגיאה בהפעלת מנוי</strong><br>
+                            ${errorMsg}${extraInfo}
+                            <details style="margin-top: 10px;">
+                                <summary>🔍 פרטי שגיאה</summary>
+                                <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>שגיאת רשת</strong><br>
+                        ${error.message}<br>
+                        <button onclick="activateSubscription()">🔄 נסה שוב</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function goToSubscribePage() {
+            const pageId = document.getElementById('pageId').value.trim();
+            if (pageId) {
+                window.location.href = `/subscribe?pageId=${pageId}`;
+            } else {
+                alert('יש להזין מזהה דף קודם');
+            }
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        async function testCurrentUser() {
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                alert(`סטטוס: ${response.status}\n\nתוצאה:\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                alert(`שגיאה: ${error.message}`);
+            }
+        }
+        
+        // Update info on load and every 5 seconds
+        updateCurrentInfo();
+        setInterval(updateCurrentInfo, 5000);
+        
+        // Auto-check auth on load
+        setTimeout(quickAuthCheck, 1000);
+    </script>
+</body>
+</html>

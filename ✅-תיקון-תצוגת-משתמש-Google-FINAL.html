@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיקון תצוגת משתמש Google - FINAL</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .success { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        .warning { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); }
+        
+        .test-button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .test-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        h1, h2 { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 3em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.8em; color: #fbbf24; }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ תיקון תצוגת משתמש Google - FINAL</h1>
+        
+        <div class="status-card success">
+            <h2>🎉 התיקון הושלם!</h2>
+            <p><strong>מה תוקן:</strong></p>
+            <ul>
+                <li>✅ הוספתי טעינת נתוני משתמש מ-API</li>
+                <li>✅ תיקנתי את פונקציה extractUserData</li>
+                <li>✅ הוספתי תצוגת שם ותמונה בסרגל הניווט</li>
+                <li>✅ הוספתי עדכון אוטומטי של נתוני Google</li>
+            </ul>
+        </div>
+
+        <div class="status-card warning">
+            <h2>🎯 עכשיו תראה:</h2>
+            <p>במקום "משתמש רשום" תראה:</p>
+            <div class="code">✅ השם שלך מ-Google: "ברית עולם להקה"
+✅ האימייל שלך: "britolam1@gmail.com"  
+✅ התמונה שלך מ-Google (אם יש)
+✅ כל הפרטים בסרגל הניווט ובדשבורד</div>
+            
+            <a href="/dashboard" class="test-button">
+                🚀 לך לדשבורד לראות את התיקון
+            </a>
+        </div>
+        
+        <div class="status-card success">
+            <h2>🔧 איך זה עובד עכשיו:</h2>
+            <div class="code">1. כשאתה מתחבר עם Google - הנתונים נשמרים בStrapi
+2. הדשבורד טוען את הנתונים המלאים מה-API
+3. המערכת מציגה את השם והתמונה הנכונים
+4. הכל מתעדכן אוטומטית בכל הדפים</div>
+        </div>
+
+        <div class="status-card success">
+            <h2>📋 מה השתנה בקוד:</h2>
+            <div class="code">✅ auth.js - תיקון extractUserData להציג שם ואימייל
+✅ +layout.svelte - הוספת תצוגת משתמש מלאה
+✅ dashboard/+page.svelte - טעינת נתונים מ-API
+✅ הוספת fetchUserDataFromAPI לעדכון אוטומטי</div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-redirect to dashboard after 3 seconds
+        setTimeout(() => {
+            if (confirm('האם תרצה לעבור לדשבורד לראות את התיקון?')) {
+                window.location.href = '/dashboard';
+            }
+        }, 3000);
+        
+        console.log('✅ תיקון תצוגת משתמש Google הושלם!');
+        console.log('🎯 עכשיו תראה את השם והתמונה שלך מ-Google');
+    </script>
+</body>
+</html>

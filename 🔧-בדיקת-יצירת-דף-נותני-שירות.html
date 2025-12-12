@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת יצירת דף נותני שירות</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 בדיקת יצירת דף נותני שירות</h1>
+        
+        <button onclick="testCreateServicePage()">יצור דף נותני שירות</button>
+        <button onclick="checkServers()">בדוק שרתים</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function checkServers() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">בודק שרתים...</div>';
+            
+            try {
+                // Check SvelteKit server
+                const svelteResponse = await fetch('http://localhost:5175/', { method: 'HEAD' });
+                const svelteStatus = svelteResponse.ok ? '✅ פועל' : '❌ לא פועל';
+                
+                // Check Strapi server
+                const strapiResponse = await fetch('http://localhost:1337/api/pages', { method: 'HEAD' });
+                const strapiStatus = strapiResponse.ok ? '✅ פועל' : '❌ לא פועל';
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h3>סטטוס שרתים:</h3>
+                        <p><strong>SvelteKit (5175):</strong> ${svelteStatus}</p>
+                        <p><strong>Strapi (1337):</strong> ${strapiStatus}</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        שגיאה בבדיקת שרתים: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testCreateServicePage() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">יוצר דף נותני שירות...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5175/api/create-structured-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: 'test_user_' + Date.now(),
+                        pageType: 'service',
+                        designStyle: 'modern',
+                        formData: {
+                            mainName: 'מוסך דוד - בדיקה ' + new Date().toLocaleTimeString('he-IL'),
+                            description: 'מוסך מקצועי עם ניסיון של 20 שנה',
+                            phone: '050-1234567',
+                            email: 'test@example.com',
+                            address: 'רחוב הרצל 123, תל אביב'
+                        },
+                        optionalSections: ['about', 'appointments', 'faq'],
+                        style: 'Modern'
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ דף נוצר בהצלחה!<br>
+                            <strong>Slug:</strong> ${result.slug}<br>
+                            <strong>Page URL:</strong> <a href="${result.pageUrl}" target="_blank">${result.pageUrl}</a>
+                        </div>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    // Auto-open the page
+                    setTimeout(() => {
+                        window.open('http://localhost:5175' + result.pageUrl, '_blank');
+                    }, 2000);
+                    
+                } else {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { error: errorText };
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ שגיאה ביצירת הדף (${response.status}): ${errorData.error || 'שגיאה לא ידועה'}
+                        </div>
+                        <pre>${JSON.stringify(errorData, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ שגיאת רשת: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-check servers on load
+        window.onload = checkServers;
+    </script>
+</body>
+</html>
+</content>
+</invoke>

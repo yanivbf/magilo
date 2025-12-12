@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת אישור רכישת מנוי</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .step {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .step h3 {
+            color: #495057;
+            margin-top: 0;
+        }
+        .result {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .emoji {
+            font-size: 2em;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; color: #333;">
+            <span class="emoji">🎯</span>
+            בדיקת אישור רכישת מנוי
+            <span class="emoji">💳</span>
+        </h1>
+        
+        <div class="test-section warning">
+            <h2>📋 מטרת הבדיקה</h2>
+            <p><strong>בעיה:</strong> המשתמש דיווח שכאשר הוא רוכש מנוי, הוא לא רואה שהמנוי נרכש בהצלחה.</p>
+            <p><strong>פתרון:</strong> שיפרנו את הודעת האישור והצגת סטטוס המנוי בדשבורד.</p>
+        </div>
+
+        <div class="step">
+            <h3>🔍 שלב 1: בדיקת סטטוס נוכחי</h3>
+            <button onclick="checkCurrentStatus()">בדוק סטטוס נוכחי</button>
+            <div id="currentStatus" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>💳 שלב 2: סימולציה של רכישת מנוי</h3>
+            <p>בחר סוג מנוי לבדיקה:</p>
+            <button onclick="simulateSubscription('user')">מנוי משתמש (כל הדפים)</button>
+            <button onclick="simulateSubscription('page')">מנוי דף בודד</button>
+            <div id="subscriptionResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>🎉 שלב 3: בדיקת הודעת אישור</h3>
+            <button onclick="testConfirmationMessage()">הצג הודעת אישור מדומה</button>
+            <div id="confirmationTest" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>🔄 שלב 4: בדיקת רענון דשבורד</h3>
+            <button onclick="testDashboardRefresh()">בדוק רענון דשבורד</button>
+            <div id="dashboardTest" class="result"></div>
+        </div>
+
+        <div class="test-section success">
+            <h2>✅ תיקונים שבוצעו</h2>
+            <ul>
+                <li><strong>הודעת אישור משופרת:</strong> הודעה מפורטת יותר עם רשימת תכונות</li>
+                <li><strong>רענון מלא של הדשבורד:</strong> שימוש ב-window.location.href במקום goto()</li>
+                <li><strong>הודעת הצלחה בדשבורד:</strong> באנר ירוק גדול עם אנימציה</li>
+                <li><strong>סטטוס מנוי מעודכן:</strong> תצוגה משופרת של סטטוס פרימיום</li>
+                <li><strong>עדכון cookies:</strong> שמירת סטטוס מנוי ב-cookies לתצוגה מיידית</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 איך לבדוק</h2>
+            <ol>
+                <li>לך לדף המנוי: <code>/subscribe</code></li>
+                <li>בחר תוכנית (חודשי או שנתי)</li>
+                <li>לחץ "הפעל מנוי כעת"</li>
+                <li>בדוק שמופיעה הודעת אישור מפורטת</li>
+                <li>בדוק שהדשבורד מציג באנר הצלחה ירוק</li>
+                <li>בדוק שכרטיסי הדפים מציגים "פרימיום" במקום "בסיסי"</li>
+                <li>בדוק שבכותרת המשתמש כתוב "חבר פרימיום"</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function checkCurrentStatus() {
+            const result = document.getElementById('currentStatus');
+            
+            // Check cookies
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+            
+            const status = {
+                userId: cookies.userId || 'לא נמצא',
+                subscriptionStatus: cookies.subscriptionStatus || 'לא נמצא',
+                subscriptionExpiry: cookies.subscriptionExpiry || 'לא נמצא',
+                subscriptionActivatedAt: cookies.subscriptionActivatedAt || 'לא נמצא'
+            };
+            
+            result.textContent = `סטטוס נוכחי:
+userId: ${status.userId}
+subscriptionStatus: ${status.subscriptionStatus}
+subscriptionExpiry: ${status.subscriptionExpiry}
+subscriptionActivatedAt: ${status.subscriptionActivatedAt}
+
+URL נוכחי: ${window.location.href}
+localStorage: ${localStorage.getItem('currentUser') ? 'קיים' : 'לא קיים'}`;
+        }
+
+        async function simulateSubscription(type) {
+            const result = document.getElementById('subscriptionResult');
+            result.textContent = 'מעבד בקשה...';
+            
+            try {
+                const endpoint = type === 'user' ? '/api/subscription/activate-user' : '/api/subscription/activate-page';
+                const body = type === 'user' 
+                    ? { userId: 'google_111351120503275674259', months: 1 }
+                    : { pageId: 'test-page-123', months: 1 };
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                result.textContent = `תגובת השרת (${response.status}):
+${JSON.stringify(data, null, 2)}
+
+סטטוס: ${response.ok ? '✅ הצלחה' : '❌ שגיאה'}`;
+                
+                if (response.ok) {
+                    // Simulate the success message that would appear
+                    setTimeout(() => {
+                        testConfirmationMessage();
+                    }, 1000);
+                }
+            } catch (error) {
+                result.textContent = `❌ שגיאה: ${error.message}`;
+            }
+        }
+
+        function testConfirmationMessage() {
+            const result = document.getElementById('confirmationTest');
+            
+            // Simulate the improved success message
+            const message = `🎉 מזל טוב! המנוי הופעל בהצלחה! 🎉
+
+תוכנית: חודשי
+מחיר: ₪59
+
+כל הדפים שלך כעת פרימיום עם כל התכונות המתקדמות!
+
+✅ הסרת מיתוג AutoPage
+✅ דומיין מותאם אישית
+✅ אנליטיקס מתקדם
+✅ תמיכה עדיפות 24/7
+✅ גיבוי אוטומטי יומי`;
+            
+            // Show the message as it would appear to the user
+            alert(message);
+            
+            result.textContent = `✅ הודעת האישור הוצגה בהצלחה!
+
+ההודעה כוללת:
+- אמוג'י וכותרת בולטת
+- פרטי התוכנית והמחיר
+- רשימת התכונות שהופעלו
+- הודעה ברורה על ההצלחה`;
+        }
+
+        function testDashboardRefresh() {
+            const result = document.getElementById('dashboardTest');
+            
+            // Simulate what happens after subscription
+            const userId = 'google_111351120503275674259';
+            const timestamp = Date.now();
+            const dashboardUrl = `/dashboard?userId=${userId}&subscriptionActivated=true&t=${timestamp}`;
+            
+            result.textContent = `🔄 סימולציה של מעבר לדשבורד:
+
+URL יעד: ${dashboardUrl}
+
+מה יקרה:
+1. הדף יטען מחדש לגמרי (window.location.href)
+2. יופיע באנר ירוק גדול עם הודעת הצלחה
+3. כרטיסי הדפים יציגו "פרימיום" במקום "בסיסי"
+4. בכותרת המשתמש יופיע "חבר פרימיום"
+5. סטטוס המנוי יעודכן בכל הדף
+
+✅ הפתרון משתמש ברענון מלא במקום ניווט SvelteKit
+✅ זה מבטיח שכל הנתונים יטענו מחדש מהשרת`;
+
+            // Option to actually test the redirect
+            if (confirm('האם תרצה לבדוק את המעבר לדשבורד בפועל?')) {
+                window.location.href = dashboardUrl;
+            }
+        }
+
+        // Auto-check status on load
+        window.onload = function() {
+            checkCurrentStatus();
+        };
+    </script>
+</body>
+</html>

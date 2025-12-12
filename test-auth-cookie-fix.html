@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת תיקון Authentication Cookie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+        }
+        .big-button:hover { background: #218838; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .status-item {
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת תיקון Authentication Cookie</h1>
+    
+    <div class="section info">
+        <h3>📊 מידע נוכחי</h3>
+        <div class="status-grid">
+            <div class="status-item">
+                <strong>🍪 Cookie userId:</strong>
+                <div id="cookie-userId">בודק...</div>
+            </div>
+            <div class="status-item">
+                <strong>🍪 Cookie userAuth:</strong>
+                <div id="cookie-userAuth">בודק...</div>
+            </div>
+            <div class="status-item">
+                <strong>🌐 URL נוכחי:</strong>
+                <div id="current-url">בודק...</div>
+            </div>
+            <div class="status-item">
+                <strong>🕒 זמן:</strong>
+                <div id="current-time">בודק...</div>
+            </div>
+        </div>
+        <div>
+            <strong>🍪 כל ה-Cookies:</strong>
+            <pre id="all-cookies">בודק...</pre>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🔐 בדיקת Authentication</h3>
+        <button onclick="checkAuth()">בדוק אימות</button>
+        <button onclick="checkUserAPI()">בדוק API משתמש</button>
+        <div id="auth-status" class="status-item" style="margin-top: 15px;">
+            לחץ על "בדוק אימות" כדי לבדוק את הסטטוס
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 בדיקות מהירות</h3>
+        <button onclick="testDashboard()">📊 בדוק דשבורד</button>
+        <button onclick="testSubscription()">💳 בדוק מנוי</button>
+        <button onclick="testLogin()">🔐 עבור להתחברות</button>
+        <button onclick="clearCookies()">🗑️ נקה Cookies</button>
+        <div id="test-results" class="status-item" style="margin-top: 15px;">
+            תוצאות הבדיקות יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🔗 קישורים מהירים</h3>
+        <button onclick="window.location.href='/dashboard'">📊 דשבורד</button>
+        <button onclick="window.location.href='/test-subscription'">💳 בדיקת מנוי</button>
+        <button onclick="window.location.href='/login'">🔐 התחברות</button>
+        <button onclick="window.location.href='/marketplace'">🏪 מרקטפלייס</button>
+    </div>
+
+    <script>
+        // פונקציות עזר
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function updateInfo() {
+            document.getElementById('cookie-userId').textContent = getCookie('userId') || '❌ לא נמצא';
+            document.getElementById('cookie-userAuth').textContent = getCookie('userAuth') || '❌ לא נמצא';
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('current-time').textContent = new Date().toLocaleString('he-IL');
+            document.getElementById('all-cookies').textContent = document.cookie || 'ריק';
+        }
+        
+        async function checkAuth() {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.innerHTML = '⏳ בודק...';
+            
+            const userId = getCookie('userId');
+            
+            if (!userId) {
+                statusDiv.innerHTML = '❌ אין User ID ב-Cookie';
+                statusDiv.className = 'status-item error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `✅ מחובר בהצלחה!<br>👤 משתמש: ${data.name || data.email}<br>🆔 ID: ${data.userId}`;
+                    statusDiv.className = 'status-item success';
+                } else {
+                    statusDiv.innerHTML = `❌ שגיאה: ${data.error}`;
+                    statusDiv.className = 'status-item error';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                statusDiv.className = 'status-item error';
+            }
+        }
+        
+        async function checkUserAPI() {
+            const statusDiv = document.getElementById('auth-status');
+            const userId = getCookie('userId');
+            
+            if (!userId) {
+                statusDiv.innerHTML = '❌ אין User ID לבדיקה';
+                statusDiv.className = 'status-item error';
+                return;
+            }
+            
+            statusDiv.innerHTML = '⏳ בודק API משתמש...';
+            
+            try {
+                const response = await fetch(`/api/user/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `✅ API עובד!<br>📊 נתונים: ${JSON.stringify(data, null, 2)}`;
+                    statusDiv.className = 'status-item success';
+                } else {
+                    statusDiv.innerHTML = `❌ API שגיאה: ${data.error}`;
+                    statusDiv.className = 'status-item error';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                statusDiv.className = 'status-item error';
+            }
+        }
+        
+        async function testDashboard() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '⏳ בודק דשבורד...';
+            
+            const userId = getCookie('userId');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין User ID - לא ניתן לגשת לדשבורד';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/pages/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `✅ דשבורד זמין!<br>📄 דפים: ${data.pages?.length || 0}`;
+                    resultsDiv.className = 'status-item success';
+                } else {
+                    resultsDiv.innerHTML = `❌ דשבורד שגיאה: ${data.error}`;
+                    resultsDiv.className = 'status-item error';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+            }
+        }
+        
+        async function testSubscription() {
+            const resultsDiv = document.getElementById('test-results');
+            const userId = getCookie('userId');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין User ID - לא ניתן לבדוק מנוי';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            resultsDiv.innerHTML = `✅ User ID נמצא: ${userId}<br>🔗 ניתן לגשת לדף מנוי`;
+            resultsDiv.className = 'status-item success';
+        }
+        
+        function testLogin() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '🔗 מעביר לדף התחברות...';
+            resultsDiv.className = 'status-item info';
+            
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
+        }
+        
+        function clearCookies() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            // Clear all auth cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            resultsDiv.innerHTML = '🗑️ Cookies נוקו! רענן את הדף לראות את השינוי';
+            resultsDiv.className = 'status-item warning';
+            
+            // Update info after clearing
+            setTimeout(updateInfo, 500);
+        }
+        
+        // עדכון מידע כל 5 שניות
+        setInterval(updateInfo, 5000);
+        
+        // עדכון ראשוני
+        updateInfo();
+        
+        console.log('🔧 Authentication Cookie Fix Test Page Loaded');
+        console.log('📊 Current cookies:', document.cookie);
+    </script>
+</body>
+</html>

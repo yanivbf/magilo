@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיקון מנוי מהיר</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 800px; margin: 0 auto; }
+        .success { color: #28a745; background: #d4edda; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #dc3545; background: #f8d7da; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        button { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; margin: 5px; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 14px; }
+        .step { background: #f8f9fa; padding: 15px; margin: 10px 0; border-right: 4px solid #007bff; border-radius: 4px; }
+        .step h4 { margin-top: 0; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון מנוי מהיר - עכשיו!</h1>
+        
+        <div class="warning">
+            <strong>🎯 המצב:</strong> אתה מחובר אבל המערכת מבקשת מנוי. בואו נתקן את זה מהר!
+        </div>
+        
+        <div class="step">
+            <h4>שלב 1: בדיקה מהירה</h4>
+            <button onclick="quickCheck()">🔍 בדוק מצב נוכחי</button>
+            <div id="checkResult"></div>
+        </div>
+        
+        <div class="step">
+            <h4>שלב 2: תיקון אוטומטי</h4>
+            <button onclick="autoFix()" class="btn-success">🔧 תקן אוטומטית</button>
+            <button onclick="manualFix()" class="btn-danger">🛠️ תיקון ידני</button>
+            <div id="fixResult"></div>
+        </div>
+        
+        <div class="step">
+            <h4>שלב 3: בדיקה אחרי תיקון</h4>
+            <button onclick="testAfterFix()">✅ בדוק שהכל עובד</button>
+            <div id="testResult"></div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        async function quickCheck() {
+            const checkResult = document.getElementById('checkResult');
+            checkResult.innerHTML = '<div class="info">🔍 בודק...</div>';
+            
+            let report = '';
+            
+            // Check cookies
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                if (key) acc[key] = value;
+                return acc;
+            }, {});
+            
+            const userId = cookies.userId;
+            
+            if (!userId) {
+                report += '<div class="error">❌ אין userId cookie</div>';
+            } else if (userId.startsWith('google_')) {
+                report += `<div class="success">✅ userId תקין: ${userId}</div>`;
+            } else {
+                report += `<div class="warning">⚠️ userId חשוד: ${userId}</div>`;
+            }
+            
+            // Check API
+            try {
+                const userResponse = await fetch('/api/user/current');
+                const userData = await userResponse.json();
+                
+                if (userData.authenticated) {
+                    report += `<div class="success">✅ API מזהה משתמש: ${userData.userId}</div>`;
+                    
+                    // Check subscription
+                    try {
+                        const subResponse = await fetch('/api/subscription/status/fatwpc2p7xxnl9x9sm7nfv8r');
+                        const subData = await subResponse.json();
+                        
+                        if (subData.hasSubscription) {
+                            report += '<div class="success">✅ יש מנוי פעיל!</div>';
+                        } else {
+                            report += '<div class="error">❌ אין מנוי פעיל</div>';
+                        }
+                    } catch (error) {
+                        report += `<div class="error">❌ שגיאה בבדיקת מנוי: ${error.message}</div>`;
+                    }
+                } else {
+                    report += '<div class="error">❌ API לא מזהה משתמש</div>';
+                }
+            } catch (error) {
+                report += `<div class="error">❌ שגיאת API: ${error.message}</div>`;
+            }
+            
+            checkResult.innerHTML = report;
+        }
+        
+        async function autoFix() {
+            const fixResult = document.getElementById('fixResult');
+            fixResult.innerHTML = '<div class="info">🔧 מתקן אוטומטית...</div>';
+            
+            let report = '';
+            
+            try {
+                // Step 1: Get current user
+                const userResponse = await fetch('/api/user/current');
+                const userData = await userResponse.json();
+                
+                if (!userData.authenticated) {
+                    report += '<div class="error">❌ משתמש לא מחובר - צריך התחברות ידנית</div>';
+                    fixResult.innerHTML = report;
+                    return;
+                }
+                
+                report += `<div class="success">✅ משתמש מזוהה: ${userData.userId}</div>`;
+                
+                // Step 2: Activate subscription for user
+                const activateResponse = await fetch('/api/subscription/activate-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userData.userId,
+                        months: 12,
+                        source: 'auto_fix'
+                    })
+                });
+                
+                const activateData = await activateResponse.json();
+                
+                if (activateResponse.ok) {
+                    report += '<div class="success">✅ מנוי הופעל בהצלחה!</div>';
+                    
+                    // Step 3: Also activate for the specific page
+                    const pageActivateResponse = await fetch('/api/subscription/activate-page', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            pageId: 'fatwpc2p7xxnl9x9sm7nfv8r',
+                            userId: userData.userId,
+                            months: 12
+                        })
+                    });
+                    
+                    if (pageActivateResponse.ok) {
+                        report += '<div class="success">✅ מנוי הופעל גם לדף הספציפי!</div>';
+                        report += '<div class="info">🎉 התיקון הושלם! נסה לרענן את הדף</div>';
+                    } else {
+                        report += '<div class="warning">⚠️ מנוי משתמש הופעל, אבל יש בעיה עם הדף הספציפי</div>';
+                    }
+                } else {
+                    report += `<div class="error">❌ שגיאה בהפעלת מנוי: ${activateData.error || 'שגיאה לא ידועה'}</div>`;
+                }
+                
+            } catch (error) {
+                report += `<div class="error">❌ שגיאה בתיקון אוטומטי: ${error.message}</div>`;
+            }
+            
+            fixResult.innerHTML = report;
+        }
+        
+        function manualFix() {
+            const fixResult = document.getElementById('fixResult');
+            fixResult.innerHTML = `
+                <div class="info">
+                    <h4>🛠️ תיקון ידני:</h4>
+                    <p><strong>1. נקה cookies:</strong></p>
+                    <button onclick="clearCookies()">🗑️ נקה cookies</button>
+                    
+                    <p><strong>2. התחבר מחדש:</strong></p>
+                    <a href="/login" target="_blank">🔐 דף התחברות</a>
+                    
+                    <p><strong>3. הפעל מנוי ידנית:</strong></p>
+                    <a href="/subscribe?pageId=fatwpc2p7xxnl9x9sm7nfv8r" target="_blank">💳 דף מנוי</a>
+                    
+                    <p><strong>4. חזור לדשבורד:</strong></p>
+                    <a href="/dashboard" target="_blank">📊 דשבורד</a>
+                </div>
+            `;
+        }
+        
+        function clearCookies() {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            alert('✅ Cookies נוקו! עכשיו התחבר מחדש');
+        }
+        
+        async function testAfterFix() {
+            const testResult = document.getElementById('testResult');
+            testResult.innerHTML = '<div class="info">✅ בודק אחרי תיקון...</div>';
+            
+            let report = '';
+            
+            try {
+                // Test user authentication
+                const userResponse = await fetch('/api/user/current');
+                const userData = await userResponse.json();
+                
+                if (userData.authenticated) {
+                    report += `<div class="success">✅ משתמש מחובר: ${userData.userId}</div>`;
+                    
+                    // Test subscription
+                    const subResponse = await fetch('/api/subscription/status/fatwpc2p7xxnl9x9sm7nfv8r');
+                    const subData = await subResponse.json();
+                    
+                    if (subData.hasSubscription) {
+                        report += '<div class="success">🎉 מנוי פעיל! הכל עובד!</div>';
+                        report += `
+                            <div class="info">
+                                <h4>🚀 קישורים מהירים:</h4>
+                                <a href="/dashboard" target="_blank">📊 דשבורד</a> | 
+                                <a href="/pages/fatwpc2p7xxnl9x9sm7nfv8r" target="_blank">👁️ צפה בדף</a> | 
+                                <a href="/edit/fatwpc2p7xxnl9x9sm7nfv8r" target="_blank">✏️ ערוך דף</a>
+                            </div>
+                        `;
+                    } else {
+                        report += '<div class="error">❌ עדיין אין מנוי - נסה תיקון אוטומטי שוב</div>';
+                    }
+                } else {
+                    report += '<div class="error">❌ משתמש לא מחובר - צריך התחברות</div>';
+                }
+            } catch (error) {
+                report += `<div class="error">❌ שגיאה בבדיקה: ${error.message}</div>`;
+            }
+            
+            testResult.innerHTML = report;
+        }
+        
+        // Auto-run quick check on load
+        window.onload = () => {
+            setTimeout(quickCheck, 1000);
+        };
+    </script>
+</body>
+</html>

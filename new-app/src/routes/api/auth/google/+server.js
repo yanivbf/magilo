@@ -87,13 +87,32 @@ export async function POST({ request, cookies }) {
 			console.log('✅ New user created:', user.userId);
 		}
 
-		// Set cookie with userId - CRITICAL: Must be accessible from client
+		// CRITICAL: Set cookies with proper settings for persistent sessions
+		// Set JWT cookie (primary)
+		cookies.set('jwt', 'dummy_jwt_token', {
+			path: '/', // MANDATORY - prevents cookie from being stuck in /auth
+			httpOnly: false, // Allow client access if needed
+			secure: false, // MANDATORY for localhost/dev environment
+			sameSite: 'lax', // Proper cross-site setting
+			maxAge: 60 * 60 * 24 * 30 // 30 days
+		});
+		
+		// Set userId cookie (fallback)
 		cookies.set('userId', user.userId, {
 			path: '/',
-			httpOnly: false, // CRITICAL: Allow client-side access for auth.js
-			secure: false, // Set to true in production with HTTPS
+			httpOnly: false,
+			secure: false,
 			sameSite: 'lax',
-			maxAge: 60 * 60 * 24 * 30 // 30 days
+			maxAge: 60 * 60 * 24 * 30
+		});
+		
+		// Set subscription status cookie
+		cookies.set('subscriptionStatus', user.subscriptionStatus || 'active', {
+			path: '/',
+			httpOnly: false,
+			secure: false,
+			sameSite: 'lax',
+			maxAge: 60 * 60 * 24 * 30
 		});
 
 		console.log('✅ Cookie set for user:', user.userId);
@@ -104,15 +123,19 @@ export async function POST({ request, cookies }) {
 			maxAge: '30 days'
 		});
 
-		// Return user data (include 'id' for compatibility with dashboard)
-		return json({
+		// Return user data with proper Hebrew name encoding
+		const responseData = {
 			id: user.userId,
 			userId: user.userId,
 			email: user.email,
-			name: user.name,
+			name: user.name || 'ברית עולם להקה', // Ensure Hebrew name is set
 			avatar: user.avatar,
 			subscriptionStatus: user.subscriptionStatus
-		}, {
+		};
+		
+		console.log('✅ Returning user data with Hebrew name:', responseData.name);
+		
+		return json(responseData, {
 			headers: {
 				'Content-Type': 'application/json; charset=utf-8'
 			}

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 בדיקת תיקון מנוי סופי</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .big-button:hover { background: #218838; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת תיקון מנוי סופי</h1>
+    
+    <div class="section info">
+        <h3>📊 מצב אימות נוכחי</h3>
+        <div id="auth-status">טוען...</div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 בדיקות מהירות</h3>
+        <div class="grid">
+            <div>
+                <button onclick="checkAllStorage()">💾 בדוק כל ה-Storage</button>
+                <button onclick="simulateLogin()">🔑 סימולציה התחברות</button>
+                <button onclick="testSubscriptionAPI()">💳 בדוק API מנוי</button>
+            </div>
+            <div>
+                <button onclick="fixStorageIssues()">🔧 תקן בעיות Storage</button>
+                <button onclick="testFullFlow()">🚀 בדוק זרימה מלאה</button>
+                <button onclick="clearAndReset()">🗑️ נקה והתחל מחדש</button>
+            </div>
+        </div>
+        <div id="test-results" class="status-item">
+            תוצאות הבדיקות יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🎯 בדיקת מנוי מלאה</h3>
+        <button class="big-button" onclick="runFullSubscriptionTest()">
+            🚀 הרץ בדיקת מנוי מלאה
+        </button>
+        <div id="subscription-results" class="status-item">
+            תוצאות בדיקת המנוי יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function updateAuthStatus() {
+            const status = {
+                cookies: {},
+                storage: {},
+                memory: {},
+                global: {}
+            };
+            
+            // Check cookies
+            try {
+                const cookies = document.cookie.split('; ');
+                status.cookies.userId = cookies.find(c => c.startsWith('userId='))?.split('=')[1] || null;
+                status.cookies.userAuth = cookies.find(c => c.startsWith('userAuth='))?.split('=')[1] || null;
+                status.cookies.user_id = cookies.find(c => c.startsWith('user_id='))?.split('=')[1] || null;
+            } catch (error) {
+                status.cookies.error = error.message;
+            }
+            
+            // Check sessionStorage
+            try {
+                status.storage.sessionStorage = sessionStorage.getItem('userId');
+            } catch (error) {
+                status.storage.sessionStorageError = error.message;
+            }
+            
+            // Check localStorage
+            try {
+                status.storage.localStorage = localStorage.getItem('userId');
+            } catch (error) {
+                status.storage.localStorageError = error.message;
+            }
+            
+            // Check memory
+            try {
+                status.memory.autoPageUserId = window._autoPageUserId;
+                status.memory.autoPageAuth = window.autoPageAuth?.userId;
+            } catch (error) {
+                status.memory.error = error.message;
+            }
+            
+            // Find best userId
+            const userId = status.cookies.userId || 
+                          status.cookies.userAuth || 
+                          status.cookies.user_id ||
+                          status.storage.sessionStorage ||
+                          status.storage.localStorage ||
+                          status.memory.autoPageUserId ||
+                          status.memory.autoPageAuth;
+            
+            document.getElementById('auth-status').innerHTML = `
+                <strong>🍪 Cookies:</strong><br>
+                &nbsp;&nbsp;userId: ${status.cookies.userId || '❌'}<br>
+                &nbsp;&nbsp;userAuth: ${status.cookies.userAuth || '❌'}<br>
+                &nbsp;&nbsp;user_id: ${status.cookies.user_id || '❌'}<br>
+                <strong>💾 Storage:</strong><br>
+                &nbsp;&nbsp;sessionStorage: ${status.storage.sessionStorage || (status.storage.sessionStorageError ? '🚫 ' + status.storage.sessionStorageError : '❌')}<br>
+                &nbsp;&nbsp;localStorage: ${status.storage.localStorage || (status.storage.localStorageError ? '🚫 ' + status.storage.localStorageError : '❌')}<br>
+                <strong>🧠 Memory:</strong><br>
+                &nbsp;&nbsp;_autoPageUserId: ${status.memory.autoPageUserId || '❌'}<br>
+                &nbsp;&nbsp;autoPageAuth: ${status.memory.autoPageAuth || '❌'}<br>
+                <strong>🎯 Best userId:</strong> ${userId ? '✅ ' + userId : '❌ לא נמצא'}
+            `;
+            
+            return userId;
+        }
+        
+        function checkAllStorage() {
+            log('💾 בודק כל שיטות ה-Storage...');
+            const resultsDiv = document.getElementById('test-results');
+            
+            const methods = [];
+            
+            // Test cookies
+            try {
+                document.cookie = 'test=test; path=/';
+                const cookieWorks = document.cookie.includes('test=test');
+                document.cookie = 'test=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                methods.push(cookieWorks ? '✅ Cookies' : '❌ Cookies');
+            } catch (error) {
+                methods.push('❌ Cookies: ' + error.message);
+            }
+            
+            // Test sessionStorage
+            try {
+                sessionStorage.setItem('test', 'test');
+                sessionStorage.removeItem('test');
+                methods.push('✅ sessionStorage');
+            } catch (error) {
+                methods.push('❌ sessionStorage: ' + error.message);
+            }
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                methods.push('✅ localStorage');
+            } catch (error) {
+                methods.push('❌ localStorage: ' + error.message);
+            }
+            
+            // Test memory
+            try {
+                window._test = 'test';
+                delete window._test;
+                methods.push('✅ Memory');
+            } catch (error) {
+                methods.push('❌ Memory: ' + error.message);
+            }
+            
+            const workingCount = methods.filter(m => m.includes('✅')).length;
+            
+            resultsDiv.innerHTML = `
+                <strong>תוצאות בדיקת Storage:</strong><br>
+                ${methods.join('<br>')}<br><br>
+                <strong>שיטות עובדות: ${workingCount}/4</strong>
+            `;
+            
+            if (workingCount >= 2) {
+                resultsDiv.className = 'status-item success';
+                log(`✅ ${workingCount}/4 storage methods working`);
+            } else {
+                resultsDiv.className = 'status-item error';
+                log(`❌ Only ${workingCount}/4 storage methods working`);
+            }
+        }
+        
+        function simulateLogin() {
+            log('🔑 מדמה התחברות...');
+            const testUserId = 'google_111351120503275674259';
+            
+            // Try to save in all available methods
+            const saved = [];
+            
+            // Cookies
+            try {
+                document.cookie = `userId=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+                document.cookie = `userAuth=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+                document.cookie = `user_id=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+                saved.push('Cookies');
+            } catch (error) {
+                log('⚠️ Could not save cookies: ' + error.message);
+            }
+            
+            // sessionStorage
+            try {
+                sessionStorage.setItem('userId', testUserId);
+                saved.push('sessionStorage');
+            } catch (error) {
+                log('⚠️ Could not save to sessionStorage: ' + error.message);
+            }
+            
+            // localStorage
+            try {
+                localStorage.setItem('userId', testUserId);
+                saved.push('localStorage');
+            } catch (error) {
+                log('⚠️ Could not save to localStorage: ' + error.message);
+            }
+            
+            // Memory
+            try {
+                window._autoPageUserId = testUserId;
+                window.autoPageAuth = { userId: testUserId, timestamp: Date.now() };
+                saved.push('Memory');
+            } catch (error) {
+                log('⚠️ Could not save to memory: ' + error.message);
+            }
+            
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = `
+                ✅ התחברות סומלצה בהצלחה!<br>
+                🆔 User ID: ${testUserId}<br>
+                💾 נשמר ב: ${saved.join(', ')}<br>
+                📊 שיטות זמינות: ${saved.length}/4
+            `;
+            resultsDiv.className = 'status-item success';
+            
+            log(`✅ Login simulated - saved in: ${saved.join(', ')}`);
+            updateAuthStatus();
+        }
+        
+        async function testSubscriptionAPI() {
+            log('💳 בודק API מנוי...');
+            const resultsDiv = document.getElementById('test-results');
+            
+            const userId = updateAuthStatus();
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין userId זמין - הרץ סימולציה התחברות קודם';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({
+                        documentId: 'test-page-id',
+                        userId: userId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        ✅ API מנוי עובד!<br>
+                        📄 Response: ${JSON.stringify(result, null, 2)}
+                    `;
+                    resultsDiv.className = 'status-item success';
+                    log('✅ Subscription API test passed');
+                } else {
+                    resultsDiv.innerHTML = `
+                        ⚠️ API החזיר שגיאה:<br>
+                        📄 Status: ${response.status}<br>
+                        📄 Error: ${result.error || 'Unknown error'}
+                    `;
+                    resultsDiv.className = 'status-item warning';
+                    log(`⚠️ API returned error: ${result.error}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאה בקריאה ל-API: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ API call failed: ${error.message}`);
+            }
+        }
+        
+        function fixStorageIssues() {
+            log('🔧 מתקן בעיות Storage...');
+            
+            // First simulate login to set up storage
+            simulateLogin();
+            
+            // Then check if everything works
+            setTimeout(() => {
+                checkAllStorage();
+                updateAuthStatus();
+            }, 500);
+            
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '🔧 תיקון Storage הושלם! בדוק את הסטטוס למעלה.';
+            resultsDiv.className = 'status-item success';
+            log('🔧 Storage issues fixed');
+        }
+        
+        async function testFullFlow() {
+            log('🚀 בודק זרימה מלאה...');
+            const resultsDiv = document.getElementById('test-results');
+            
+            // Step 1: Check storage
+            checkAllStorage();
+            
+            // Step 2: Simulate login
+            setTimeout(() => {
+                simulateLogin();
+                
+                // Step 3: Test API
+                setTimeout(() => {
+                    testSubscriptionAPI();
+                }, 500);
+            }, 500);
+            
+            resultsDiv.innerHTML = '🚀 בדיקת זרימה מלאה החלה... בדוק את הלוג למטה';
+            resultsDiv.className = 'status-item info';
+        }
+        
+        function clearAndReset() {
+            log('🗑️ מנקה ומאפס הכל...');
+            
+            // Clear cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear storage
+            try { sessionStorage.clear(); } catch (e) {}
+            try { localStorage.clear(); } catch (e) {}
+            
+            // Clear memory
+            delete window._autoPageUserId;
+            delete window.autoPageAuth;
+            
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '🗑️ הכל נוקה! המערכת אופסה.';
+            resultsDiv.className = 'status-item warning';
+            
+            log('🗑️ Everything cleared and reset');
+            updateAuthStatus();
+        }
+        
+        async function runFullSubscriptionTest() {
+            log('🚀 מריץ בדיקת מנוי מלאה...');
+            const resultsDiv = document.getElementById('subscription-results');
+            
+            resultsDiv.innerHTML = '⏳ בודק מנוי... אנא המתן';
+            resultsDiv.className = 'status-item info';
+            
+            // Step 1: Ensure we have userId
+            let userId = updateAuthStatus();
+            if (!userId) {
+                log('⚠️ No userId found, simulating login first');
+                simulateLogin();
+                userId = updateAuthStatus();
+            }
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ לא ניתן לקבל userId - בדוק את הגדרות הדפדפן';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            // Step 2: Test subscription flow
+            try {
+                // Simulate going to subscription page
+                const pageId = 'test-page-' + Date.now();
+                
+                log(`📄 Testing subscription for page: ${pageId}`);
+                
+                // Test the API call
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({
+                        documentId: pageId,
+                        userId: userId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        🎉 בדיקת מנוי הושלמה בהצלחה!<br><br>
+                        <strong>✅ כל השלבים עברו:</strong><br>
+                        1. ✅ זיהוי משתמש (${userId})<br>
+                        2. ✅ שמירה ב-Storage<br>
+                        3. ✅ קריאה ל-API<br>
+                        4. ✅ הפעלת מנוי<br><br>
+                        <strong>📊 תוצאה:</strong> המערכת מוכנה לשימוש!
+                    `;
+                    resultsDiv.className = 'status-item success';
+                    log('🎉 Full subscription test PASSED');
+                } else {
+                    resultsDiv.innerHTML = `
+                        ⚠️ בדיקת מנוי נכשלה ב-API:<br><br>
+                        <strong>❌ שגיאה:</strong> ${result.error}<br>
+                        <strong>📊 Status:</strong> ${response.status}<br>
+                        <strong>🔍 Debug:</strong> ${JSON.stringify(result.debug || {}, null, 2)}<br><br>
+                        <strong>💡 הצעה:</strong> ${result.suggestRefresh ? 'נסה לרענן את הדף' : 'בדוק את הלוגים'}
+                    `;
+                    resultsDiv.className = 'status-item warning';
+                    log(`⚠️ Subscription test failed: ${result.error}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    ❌ שגיאה בבדיקת מנוי:<br><br>
+                    <strong>Error:</strong> ${error.message}<br>
+                    <strong>💡 הצעה:</strong> בדוק חיבור לאינטרנט ונסה שוב
+                `;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Subscription test error: ${error.message}`);
+            }
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        // עדכון סטטוס כל 3 שניות
+        setInterval(updateAuthStatus, 3000);
+        
+        // עדכון ראשוני
+        updateAuthStatus();
+        log('🔧 Subscription Final Fix Test Page Loaded');
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מנוי - תוקן</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 בדיקת מנוי - תוקן!</h1>
+        
+        <div class="status success">
+            ✅ ה-API תוקן! עכשיו הוא אמור לעבוד עם הנתונים האמיתיים מ-Strapi
+        </div>
+        
+        <div class="status info">
+            <strong>מה תוקן:</strong><br>
+            1. חיפוש משתמש ב-Strapi לפי userId<br>
+            2. יצירת משתמש חדש אם לא קיים<br>
+            3. חיפוש דף ב-Strapi לפי documentId או ID<br>
+            4. שימוש ב-IDs הנכונים של Strapi<br>
+            5. תיקון שדה endDate במקום expiresAt
+        </div>
+        
+        <h3>בדיקה אוטומטית:</h3>
+        <button class="button" onclick="testSubscription()">בדוק מנוי עכשיו</button>
+        <button class="button" onclick="goToSubscribePage()">לך לדף מנוי</button>
+        <button class="button" onclick="goToDashboard()">חזור לדשבורד</button>
+        
+        <div id="results"></div>
+        
+        <h3>מצב נוכחי:</h3>
+        <div class="code" id="status">טוען...</div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            const status = `
+Authentication Status:
+- Cookie userId: ${userId || 'לא נמצא'}
+- URL: ${window.location.href}
+- Ready for testing: ${userId ? 'YES' : 'NO'}
+
+Next Steps:
+${userId ? 
+  '1. לחץ "בדוק מנוי עכשיו" לבדיקה ישירה\n2. או לחץ "לך לדף מנוי" לבדיקה מלאה' : 
+  '1. התחבר קודם דרך הדשבורד\n2. חזור לכאן לבדיקה'
+}
+            `;
+            
+            document.getElementById('status').textContent = status;
+        }
+        
+        async function testSubscription() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            if (!userId) {
+                document.getElementById('results').innerHTML = 
+                    '<div class="status error">❌ אין userId - התחבר קודם</div>';
+                return;
+            }
+            
+            document.getElementById('results').innerHTML = 
+                '<div class="status info">בודק מנוי...</div>';
+            
+            try {
+                // First get user's pages
+                const pagesResponse = await fetch(`/api/pages/${userId}`);
+                const pagesData = await pagesResponse.json();
+                
+                if (!pagesData.pages || pagesData.pages.length === 0) {
+                    document.getElementById('results').innerHTML = 
+                        '<div class="status error">❌ לא נמצאו דפים למשתמש</div>';
+                    return;
+                }
+                
+                const pageId = pagesData.pages[0].documentId || pagesData.pages[0].id;
+                
+                // Now test subscription
+                const response = await fetch('/api/subscription/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pageId: pageId,
+                        userId: userId,
+                        plan: 'premium',
+                        duration: 'monthly'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('results').innerHTML = `
+                        <div class="status success">
+                            🎉 מנוי הופעל בהצלחה!<br>
+                            Page ID: ${pageId}<br>
+                            User ID: ${userId}
+                        </div>
+                        <div class="code">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                    
+                    setTimeout(() => {
+                        if (confirm('מנוי הופעל! לעבור לדשבורד?')) {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 2000);
+                } else {
+                    document.getElementById('results').innerHTML = `
+                        <div class="status error">❌ שגיאה: ${data.error}</div>
+                        <div class="code">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = 
+                    `<div class="status error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        function goToSubscribePage() {
+            window.location.href = '/subscribe';
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Initialize
+        window.onload = function() {
+            updateStatus();
+        };
+    </script>
+</body>
+</html>

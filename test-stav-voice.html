@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 בדיקת קול סתיו</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+        
+        .test-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .quick-tests {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .quick-tests button {
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-right: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .info-box p {
+            color: #1e40af;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 בדיקת קול סתיו</h1>
+        <p class="subtitle">בדוק את הקול המקורי של סתיו עם Google TTS</p>
+        
+        <div class="info-box">
+            <h4>📋 הגדרות הקול:</h4>
+            <p>
+                <strong>קול:</strong> he-IL-Wavenet-A (נשי, איכות גבוהה)<br>
+                <strong>Pitch:</strong> 0 (טבעי)<br>
+                <strong>Speaking Rate:</strong> 1.1 (קצת מהיר)
+            </p>
+        </div>
+        
+        <div class="test-section">
+            <h3>✍️ טקסט מותאם אישית</h3>
+            <textarea id="customText" placeholder="הקלד כאן טקסט לבדיקה...">שלום! אני סתיו, העוזרת הווירטואלית שלך. אני כאן לעזור לך למצוא את הדף המושלם!</textarea>
+            <button id="speakCustom" onclick="speakCustom()">
+                <span id="customIcon">🔊</span>
+                <span id="customText">הקרא טקסט</span>
+            </button>
+            <div id="customStatus"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>⚡ בדיקות מהירות</h3>
+            <div class="quick-tests">
+                <button onclick="speakQuick('היי! אני סתיו 👋')">ברכה קצרה</button>
+                <button onclick="speakQuick('אני יכולה לעזור לך למצוא מספרה, חנות, או כל עסק אחר')">חיפוש עסקים</button>
+                <button onclick="speakQuick('מצאתי 5 תוצאות מתאימות בתל אביב')">תוצאות חיפוש</button>
+                <button onclick="speakQuick('האם תרצה לראות עוד אפשרויות?')">שאלה</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentAudio = null;
+        
+        async function speakCustom() {
+            const text = document.getElementById('customText').value.trim();
+            if (!text) {
+                showStatus('customStatus', 'error', 'נא להזין טקסט');
+                return;
+            }
+            
+            await speak(text, 'customStatus', 'customIcon', 'customText');
+        }
+        
+        async function speakQuick(text) {
+            await speak(text, 'customStatus', 'customIcon', 'customText');
+        }
+        
+        async function speak(text, statusId, iconId, textId) {
+            // Stop current audio if playing
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                resetButton(iconId, textId);
+                return;
+            }
+            
+            const statusEl = document.getElementById(statusId);
+            const iconEl = document.getElementById(iconId);
+            const textEl = document.getElementById(textId);
+            
+            // Show loading
+            iconEl.innerHTML = '<span class="spinner"></span>';
+            textEl.textContent = 'מייצר קול...';
+            showStatus(statusId, 'info', 'שולח בקשה ל-Google TTS...');
+            
+            try {
+                const response = await fetch('http://localhost:5177/api/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('audio')) {
+                    // Success - play audio
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    
+                    currentAudio = audio;
+                    
+                    iconEl.textContent = '⏸️';
+                    textEl.textContent = 'עצור';
+                    showStatus(statusId, 'success', '✅ מנגן קול...');
+                    
+                    audio.onended = () => {
+                        currentAudio = null;
+                        URL.revokeObjectURL(audioUrl);
+                        resetButton(iconId, textId);
+                        showStatus(statusId, 'success', '✅ הסתיים!');
+                    };
+                    
+                    audio.onerror = () => {
+                        currentAudio = null;
+                        URL.revokeObjectURL(audioUrl);
+                        resetButton(iconId, textId);
+                        showStatus(statusId, 'error', '❌ שגיאה בניגון');
+                    };
+                    
+                    await audio.play();
+                } else {
+                    // Fallback to browser TTS
+                    const data = await response.json();
+                    if (data.fallback) {
+                        showStatus(statusId, 'info', '⚠️ משתמש בקול הדפדפן (אין API Key)');
+                        useBrowserTTS(text);
+                        resetButton(iconId, textId);
+                    } else {
+                        throw new Error(data.error || 'Unknown error');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('TTS Error:', error);
+                showStatus(statusId, 'error', `❌ שגיאה: ${error.message}`);
+                resetButton(iconId, textId);
+            }
+        }
+        
+        function useBrowserTTS(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'he-IL';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function resetButton(iconId, textId) {
+            document.getElementById(iconId).textContent = '🔊';
+            document.getElementById(textId).textContent = 'הקרא טקסט';
+        }
+        
+        function showStatus(id, type, message) {
+            const el = document.getElementById(id);
+            el.className = `status ${type}`;
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

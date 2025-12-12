@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מצב עריכה - עכשיו</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success { background: rgba(34, 197, 94, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.3); }
+        .warning { background: rgba(245, 158, 11, 0.3); }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .test-results {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .check-icon {
+            display: inline-block;
+            width: 20px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 בדיקת מצב עריכה - עכשיו</h1>
+        <p><strong>המטרה:</strong> לוודא שמצב העריכה עובד אחרי תיקון ה-Cookie</p>
+        
+        <div id="status" class="status">
+            בודק מצב נוכחי...
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="checkAuthStatus()">🔍 בדוק אימות</button>
+            <button onclick="testPageAccess()">📄 בדוק גישה לדפים</button>
+            <button onclick="openTestPage()">🎯 פתח דף לבדיקה</button>
+            <button onclick="checkDashboard()">📊 בדוק דשבורד</button>
+        </div>
+
+        <div class="test-results">
+            <h3>📋 רשימת בדיקה - מצב עריכה</h3>
+            <ul class="checklist" id="checklist">
+                <li><span class="check-icon" id="check-cookie">⏳</span> Cookie userId מוגדר נכון</li>
+                <li><span class="check-icon" id="check-auth">⏳</span> אימות עובד</li>
+                <li><span class="check-icon" id="check-owner">⏳</span> זיהוי בעלות דפים</li>
+                <li><span class="check-icon" id="check-edit-mode">⏳</span> מצב עריכה פעיל</li>
+                <li><span class="check-icon" id="check-buttons">⏳</span> כפתורי עריכה מופיעים</li>
+                <li><span class="check-icon" id="check-inline">⏳</span> עריכה אינליין עובדת</li>
+                <li><span class="check-icon" id="check-save">⏳</span> שמירה עובדת</li>
+                <li><span class="check-icon" id="check-upload">⏳</span> העלאת תמונות עובדת</li>
+            </ul>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const MAIN_USER_ID = 'google_111351120503275674259';
+        
+        function log(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+            statusDiv.innerHTML = `<div class="${className}">[${timestamp}] ${message}</div>` + statusDiv.innerHTML;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function updateCheck(checkId, status) {
+            const icon = document.getElementById(checkId);
+            if (icon) {
+                icon.textContent = status === 'success' ? '✅' : status === 'error' ? '❌' : '⏳';
+            }
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function checkAuthStatus() {
+            log('🔍 בודק מצב אימות...');
+            
+            // Check cookie
+            const userId = getCookie('userId');
+            if (userId === MAIN_USER_ID) {
+                log('✅ Cookie userId נכון!', 'success');
+                updateCheck('check-cookie', 'success');
+            } else {
+                log(`❌ Cookie userId שגוי: ${userId}`, 'error');
+                updateCheck('check-cookie', 'error');
+                return;
+            }
+            
+            // Check localStorage
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const userData = JSON.parse(currentUser);
+                    if (userData.userId === MAIN_USER_ID) {
+                        log('✅ localStorage נכון!', 'success');
+                        updateCheck('check-auth', 'success');
+                    } else {
+                        log('❌ localStorage userId שגוי', 'error');
+                        updateCheck('check-auth', 'error');
+                    }
+                } else {
+                    log('⚠️ localStorage ריק', 'warning');
+                    updateCheck('check-auth', 'error');
+                }
+            } catch (e) {
+                log(`❌ localStorage שגיאה: ${e.message}`, 'error');
+                updateCheck('check-auth', 'error');
+            }
+        }
+
+        async function testPageAccess() {
+            log('📄 בודק גישה לדפים...');
+            
+            try {
+                // Test dashboard access
+                const dashResponse = await fetch('/dashboard?userId=' + MAIN_USER_ID);
+                if (dashResponse.ok) {
+                    log('✅ גישה לדשבורד תקינה', 'success');
+                    updateCheck('check-owner', 'success');
+                } else {
+                    log(`❌ דשבורד מחזיר: ${dashResponse.status}`, 'error');
+                    updateCheck('check-owner', 'error');
+                }
+                
+                // Test API access
+                const apiResponse = await fetch('/api/user/current');
+                if (apiResponse.ok) {
+                    const data = await apiResponse.json();
+                    log(`✅ API מחזיר: ${data.userId || 'no userId'}`, 'success');
+                } else {
+                    log(`⚠️ API מחזיר: ${apiResponse.status}`, 'warning');
+                }
+            } catch (e) {
+                log(`❌ שגיאת רשת: ${e.message}`, 'error');
+                updateCheck('check-owner', 'error');
+            }
+        }
+
+        function openTestPage() {
+            log('🎯 פותח דף לבדיקת עריכה...');
+            
+            // Try to open marketplace first to see if there are any pages
+            window.open('/marketplace', '_blank');
+            
+            // Also provide instructions
+            log('📝 הוראות: פתח דף כלשהו ובדוק:', 'info');
+            log('1. הקונסול מציג "Is owner: true"', 'info');
+            log('2. הקונסול מציג "Edit mode: true"', 'info');
+            log('3. יש כפתורי עריכה בדף', 'info');
+            log('4. אפשר לערוך טקסט בלחיצה', 'info');
+        }
+
+        function checkDashboard() {
+            log('📊 פותח דשבורד...');
+            window.open('/dashboard?userId=' + MAIN_USER_ID, '_blank');
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            log('🚀 מערכת בדיקת עריכה נטענה');
+            setTimeout(checkAuthStatus, 1000);
+        };
+
+        // Instructions for manual testing
+        setTimeout(() => {
+            log('📋 מה לבדוק בדף עריכה:', 'info');
+            log('• פתח F12 ובדוק הקונסול', 'info');
+            log('• חפש "Is owner: true"', 'info');
+            log('• חפש "Edit mode: true"', 'info');
+            log('• בדוק שיש כפתורי עריכה', 'info');
+            log('• נסה לערוך טקסט בלחיצה', 'info');
+        }, 3000);
+    </script>
+</body>
+</html>

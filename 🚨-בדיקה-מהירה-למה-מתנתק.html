@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 בדיקה מהירה - למה מתנתק?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #dc3545;
+            font-size: 1.3em;
+            padding: 20px 40px;
+            width: 100%;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .big-button:hover { background: #c82333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .status-box {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            background: #f8f9fa;
+        }
+        .step {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚨 בדיקה מהירה - למה מתנתק?</h1>
+    
+    <div class="section error">
+        <h3>⚠️ הבעיה</h3>
+        <p><strong>המשתמש מתנתק כשמנסה לרכוש מנוי למרות שהוא מחובר!</strong></p>
+        <p>בואו נבדוק בדיוק איפה זה קורה ונתקן את זה.</p>
+    </div>
+    
+    <div class="section info">
+        <h3>🔍 מצב אימות נוכחי</h3>
+        <div id="auth-status" class="status-box">טוען...</div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 בדיקות מהירות</h3>
+        <button onclick="checkAuthState()">🔍 בדוק מצב אימות</button>
+        <button onclick="simulateLogin()">🔑 התחבר זמנית</button>
+        <button onclick="testSubscriptionDirect()">💳 בדוק API מנוי ישירות</button>
+        <button onclick="clearAllAndStart()">🗑️ נקה הכל והתחל מחדש</button>
+    </div>
+    
+    <div class="section">
+        <h3>🎯 בדיקת זרימה מלאה</h3>
+        <button class="big-button" onclick="testFullFlow()">
+            🚨 בדוק למה מתנתק - זרימה מלאה
+        </button>
+        <div id="flow-result" class="status-box">
+            תוצאות הבדיקה יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 שלבי הבדיקה</h3>
+        <div class="step">
+            <div class="step-title">שלב 1: בדיקת מצב התחלתי</div>
+            <button onclick="step1()">🔍 בדוק מצב התחלתי</button>
+            <div id="step1-result">לא הורץ</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">שלב 2: סימולציה התחברות</div>
+            <button onclick="step2()">🔑 התחבר</button>
+            <div id="step2-result">לא הורץ</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">שלב 3: ניסיון רכישת מנוי</div>
+            <button onclick="step3()">💳 נסה לרכוש מנוי</button>
+            <div id="step3-result">לא הורץ</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">שלב 4: בדיקה אם התנתק</div>
+            <button onclick="step4()">❓ בדוק אם עדיין מחובר</button>
+            <div id="step4-result">לא הורץ</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function updateAuthStatus() {
+            const status = {
+                cookies: {},
+                storage: {},
+                memory: {},
+                url: {}
+            };
+            
+            // Check cookies
+            try {
+                const cookies = document.cookie.split('; ');
+                status.cookies.userId = cookies.find(c => c.startsWith('userId='))?.split('=')[1] || null;
+                status.cookies.userAuth = cookies.find(c => c.startsWith('userAuth='))?.split('=')[1] || null;
+                status.cookies.user_id = cookies.find(c => c.startsWith('user_id='))?.split('=')[1] || null;
+                status.cookies.all = document.cookie;
+            } catch (error) {
+                status.cookies.error = error.message;
+            }
+            
+            // Check storage
+            try {
+                status.storage.sessionStorage = sessionStorage.getItem('userId');
+                status.storage.localStorage = localStorage.getItem('userId');
+            } catch (error) {
+                status.storage.error = error.message;
+            }
+            
+            // Check memory
+            try {
+                status.memory.autoPageUserId = window._autoPageUserId;
+                status.memory.autoPageAuth = window.autoPageAuth?.userId;
+            } catch (error) {
+                status.memory.error = error.message;
+            }
+            
+            // Check URL
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                status.url.userId = urlParams.get('userId');
+                status.url.pageId = urlParams.get('pageId');
+            } catch (error) {
+                status.url.error = error.message;
+            }
+            
+            // Find best userId
+            const userId = status.cookies.userId || 
+                          status.cookies.userAuth || 
+                          status.cookies.user_id ||
+                          status.storage.sessionStorage ||
+                          status.storage.localStorage ||
+                          status.memory.autoPageUserId ||
+                          status.memory.autoPageAuth ||
+                          status.url.userId;
+            
+            document.getElementById('auth-status').innerHTML = `
+                <strong>🍪 Cookies:</strong><br>
+                &nbsp;&nbsp;userId: ${status.cookies.userId ? '✅ ' + status.cookies.userId : '❌'}<br>
+                &nbsp;&nbsp;userAuth: ${status.cookies.userAuth ? '✅ ' + status.cookies.userAuth : '❌'}<br>
+                &nbsp;&nbsp;user_id: ${status.cookies.user_id ? '✅ ' + status.cookies.user_id : '❌'}<br>
+                &nbsp;&nbsp;All cookies: ${status.cookies.all || 'ריק'}<br><br>
+                
+                <strong>💾 Storage:</strong><br>
+                &nbsp;&nbsp;sessionStorage: ${status.storage.sessionStorage ? '✅ ' + status.storage.sessionStorage : (status.storage.error ? '🚫 ' + status.storage.error : '❌')}<br>
+                &nbsp;&nbsp;localStorage: ${status.storage.localStorage ? '✅ ' + status.storage.localStorage : '❌'}<br><br>
+                
+                <strong>🧠 Memory:</strong><br>
+                &nbsp;&nbsp;_autoPageUserId: ${status.memory.autoPageUserId ? '✅ ' + status.memory.autoPageUserId : '❌'}<br>
+                &nbsp;&nbsp;autoPageAuth: ${status.memory.autoPageAuth ? '✅ ' + status.memory.autoPageAuth : '❌'}<br><br>
+                
+                <strong>🔗 URL:</strong><br>
+                &nbsp;&nbsp;userId: ${status.url.userId ? '✅ ' + status.url.userId : '❌'}<br>
+                &nbsp;&nbsp;pageId: ${status.url.pageId ? '✅ ' + status.url.pageId : '❌'}<br><br>
+                
+                <strong>🎯 Best userId:</strong> ${userId ? '✅ ' + userId : '❌ לא נמצא'}
+            `;
+            
+            return { userId, status };
+        }
+        
+        function checkAuthState() {
+            log('🔍 בודק מצב אימות...');
+            const result = updateAuthStatus();
+            
+            if (result.userId) {
+                log(`✅ נמצא userId: ${result.userId}`);
+            } else {
+                log('❌ לא נמצא userId בשום מקום');
+            }
+            
+            return result;
+        }
+        
+        function simulateLogin() {
+            log('🔑 מדמה התחברות...');
+            const testUserId = 'google_111351120503275674259';
+            
+            // Set all possible cookies
+            document.cookie = `userId=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            document.cookie = `userAuth=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            document.cookie = `user_id=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            
+            // Set storage
+            try {
+                sessionStorage.setItem('userId', testUserId);
+                localStorage.setItem('userId', testUserId);
+            } catch (e) {
+                log('⚠️ Could not set storage: ' + e.message);
+            }
+            
+            // Set memory
+            window._autoPageUserId = testUserId;
+            window.autoPageAuth = { userId: testUserId, timestamp: Date.now() };
+            
+            log(`✅ התחברות סומלצה עם userId: ${testUserId}`);
+            updateAuthStatus();
+        }
+        
+        async function testSubscriptionDirect() {
+            log('💳 בודק API מנוי ישירות...');
+            
+            const authResult = checkAuthState();
+            if (!authResult.userId) {
+                log('❌ אין userId - מריץ סימולציה התחברות קודם');
+                simulateLogin();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            const finalAuth = checkAuthState();
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': finalAuth.userId
+                    },
+                    body: JSON.stringify({
+                        documentId: 'test-page-123',
+                        userId: finalAuth.userId,
+                        months: 1
+                    })
+                });
+                
+                const result = await response.json();
+                
+                log(`📊 API Response: Status ${response.status}`);
+                log(`📊 API Result: ${JSON.stringify(result, null, 2)}`);
+                
+                // Check if still logged in after API call
+                const afterAuth = checkAuthState();
+                
+                if (afterAuth.userId) {
+                    log('✅ עדיין מחובר אחרי קריאת API');
+                } else {
+                    log('❌ התנתק אחרי קריאת API!');
+                }
+                
+                return { response, result, stillLoggedIn: !!afterAuth.userId };
+            } catch (error) {
+                log(`❌ שגיאה בקריאת API: ${error.message}`);
+                return { error: error.message };
+            }
+        }
+        
+        function clearAllAndStart() {
+            log('🗑️ מנקה הכל ומתחיל מחדש...');
+            
+            // Clear cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear storage
+            try {
+                sessionStorage.clear();
+                localStorage.clear();
+            } catch (e) {
+                log('⚠️ Could not clear storage: ' + e.message);
+            }
+            
+            // Clear memory
+            delete window._autoPageUserId;
+            delete window.autoPageAuth;
+            
+            log('✅ הכל נוקה');
+            updateAuthStatus();
+        }
+        
+        async function testFullFlow() {
+            log('🚨 מתחיל בדיקת זרימה מלאה...');
+            const resultDiv = document.getElementById('flow-result');
+            
+            resultDiv.innerHTML = '⏳ בודק למה מתנתק... אנא המתן';
+            resultDiv.className = 'status-box info';
+            
+            try {
+                // Step 1: Clear everything
+                clearAllAndStart();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 2: Login
+                simulateLogin();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 3: Test subscription
+                const subscriptionResult = await testSubscriptionDirect();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Step 4: Final check
+                const finalAuth = checkAuthState();
+                
+                if (finalAuth.userId && subscriptionResult.stillLoggedIn) {
+                    resultDiv.innerHTML = `
+                        🎉 הבדיקה הושלמה - לא התנתק!<br><br>
+                        ✅ התחברות עבדה<br>
+                        ✅ API מנוי עבד<br>
+                        ✅ עדיין מחובר אחרי הכל<br><br>
+                        <strong>🎯 המסקנה:</strong> התיקון עובד!<br>
+                        אם אתה עדיין מתנתק, זה קורה במקום אחר.
+                    `;
+                    resultDiv.className = 'status-box success';
+                    log('🎉 Full flow test PASSED - no disconnect detected');
+                } else {
+                    resultDiv.innerHTML = `
+                        ❌ נמצאה בעיה - המשתמש מתנתק!<br><br>
+                        ❌ התנתק במהלך התהליך<br>
+                        📊 API Status: ${subscriptionResult.response?.status || 'N/A'}<br>
+                        📊 Still logged in: ${subscriptionResult.stillLoggedIn ? 'Yes' : 'No'}<br><br>
+                        <strong>🔍 בדוק את הלוג למטה לפרטים</strong>
+                    `;
+                    resultDiv.className = 'status-box error';
+                    log('❌ Full flow test FAILED - disconnect detected');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ שגיאה בבדיקה: ${error.message}`;
+                resultDiv.className = 'status-box error';
+                log(`❌ Full flow test error: ${error.message}`);
+            }
+        }
+        
+        function step1() {
+            log('🔍 שלב 1: בודק מצב התחלתי...');
+            const result = checkAuthState();
+            
+            document.getElementById('step1-result').innerHTML = 
+                result.userId ? 
+                `✅ נמצא userId: ${result.userId}` : 
+                '❌ אין userId - צריך להתחבר';
+        }
+        
+        function step2() {
+            log('🔑 שלב 2: מתחבר...');
+            simulateLogin();
+            document.getElementById('step2-result').innerHTML = '✅ התחברות הושלמה';
+        }
+        
+        async function step3() {
+            log('💳 שלב 3: מנסה לרכוש מנוי...');
+            const result = await testSubscriptionDirect();
+            
+            document.getElementById('step3-result').innerHTML = 
+                result.error ? 
+                `❌ שגיאה: ${result.error}` : 
+                `✅ API עבד (Status: ${result.response?.status})`;
+        }
+        
+        function step4() {
+            log('❓ שלב 4: בודק אם עדיין מחובר...');
+            const result = checkAuthState();
+            
+            document.getElementById('step4-result').innerHTML = 
+                result.userId ? 
+                `✅ עדיין מחובר: ${result.userId}` : 
+                '❌ התנתק!';
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        // עדכון סטטוס כל 3 שניות
+        setInterval(updateAuthStatus, 3000);
+        
+        // עדכון ראשוני
+        updateAuthStatus();
+        log('🚨 Quick Disconnect Debug Page Loaded');
+    </script>
+</body>
+</html>

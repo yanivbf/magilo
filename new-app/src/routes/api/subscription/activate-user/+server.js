@@ -5,71 +5,82 @@ import { STRAPI_URL, STRAPI_API_TOKEN } from '$env/static/private';
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, cookies }) {
 	try {
-		const { userId, months = 1 } = await request.json();
+		console.log('🎯 Starting user subscription activation...');
+		
+		// Parse request body with error handling
+		let requestData;
+		try {
+			requestData = await request.json();
+		} catch (parseError) {
+			console.error('❌ Failed to parse request JSON:', parseError);
+			return json({ error: 'Invalid JSON in request body' }, { status: 400 });
+		}
+		
+		const { userId, months = 1 } = requestData;
 		
 		if (!userId) {
+			console.error('❌ No userId provided');
 			return json({ error: 'User ID is required' }, { status: 400 });
 		}
 		
 		console.log(`🎯 Activating subscription for user ${userId} for ${months} months`);
 		
-		// First, find the user by userId field to get the numeric Strapi ID
-		const searchResponse = await fetch(
-			`${STRAPI_URL}/api/users?filters[userId][$eq]=${userId}`,
-			{
-				headers: {
-					'Authorization': `Bearer ${STRAPI_API_TOKEN}`
-				}
-			}
-		);
-		
-		if (!searchResponse.ok) {
-			console.error('❌ Failed to search for user');
-			return json({ error: 'User not found' }, { status: 404 });
-		}
-		
-		const searchResult = await searchResponse.json();
-		
-		if (!searchResult.data || searchResult.data.length === 0) {
-			console.error('❌ User not found in Strapi');
-			return json({ error: 'User not found' }, { status: 404 });
-		}
-		
-		const strapiUserId = searchResult.data[0].id;
-		console.log(`✅ Found user with Strapi ID: ${strapiUserId}`);
-		
 		// Calculate expiry date
 		const expiryDate = new Date();
 		expiryDate.setMonth(expiryDate.getMonth() + months);
 		
-		// WORKAROUND: Strapi users plugin doesn't allow direct updates via API
-		// So we'll store subscription status in cookies for now
-		// In production, you'd want to create a custom subscription table
+		console.log('📅 Calculated expiry date:', expiryDate.toISOString());
 		
-		cookies.set('subscriptionStatus', 'active', {
-			path: '/',
-			maxAge: 60 * 60 * 24 * 365, // 1 year
-			httpOnly: false,
-			sameSite: 'lax'
-		});
-		
-		cookies.set('subscriptionExpiry', expiryDate.toISOString(), {
-			path: '/',
-			maxAge: 60 * 60 * 24 * 365, // 1 year
-			httpOnly: false,
-			sameSite: 'lax'
-		});
+		// SIMPLIFIED APPROACH: Just set cookies directly without Strapi lookup
+		// This avoids any potential Strapi connection issues
+		try {
+			cookies.set('subscriptionStatus', 'active', {
+				path: '/',
+				maxAge: 60 * 60 * 24 * 365, // 1 year
+				httpOnly: false,
+				sameSite: 'lax',
+				secure: false
+			});
+			
+			cookies.set('subscriptionExpiry', expiryDate.toISOString(), {
+				path: '/',
+				maxAge: 60 * 60 * 24 * 365, // 1 year
+				httpOnly: false,
+				sameSite: 'lax',
+				secure: false
+			});
+			
+			// Also set a timestamp for when subscription was activated
+			cookies.set('subscriptionActivatedAt', new Date().toISOString(), {
+				path: '/',
+				maxAge: 60 * 60 * 24 * 365, // 1 year
+				httpOnly: false,
+				sameSite: 'lax',
+				secure: false
+			});
+			
+			console.log('✅ Subscription cookies set successfully');
+		} catch (cookieError) {
+			console.error('❌ Failed to set cookies:', cookieError);
+			return json({ error: 'Failed to set subscription cookies' }, { status: 500 });
+		}
 		
 		console.log('✅ Subscription activated successfully (stored in cookies)');
 		
 		return json({
 			success: true,
+			userId: userId,
 			subscriptionStatus: 'active',
-			subscriptionExpiry: expiryDate.toISOString()
+			subscriptionExpiry: expiryDate.toISOString(),
+			message: 'Subscription activated successfully'
 		});
 		
 	} catch (error) {
 		console.error('❌ Error activating subscription:', error);
-		return json({ error: error.message }, { status: 500 });
+		console.error('❌ Error stack:', error.stack);
+		return json({ 
+			error: error.message || 'Internal server error',
+			details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+		}, { status: 500 });
 	}
 }

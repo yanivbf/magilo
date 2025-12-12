@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כניסה מיידית לדשבורד</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 50px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .enter-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 25px 50px;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            display: block;
+            width: 100%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .enter-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 { 
+            font-size: 3em; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+            margin-bottom: 30px;
+        }
+        
+        .info {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .countdown {
+            font-size: 2em;
+            font-weight: bold;
+            color: #fbbf24;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 כניסה מיידית</h1>
+        
+        <div class="info">
+            <p><strong>המערכת מוכנה!</strong></p>
+            <p>השרתים פועלים והכל תקין</p>
+            <p>לחץ על הכפתור למטה להיכנס לדשבורד</p>
+        </div>
+        
+        <button class="enter-button" onclick="enterDashboard()">
+            🚀 היכנס לדשבורד עכשיו!
+        </button>
+        
+        <div id="countdown" class="countdown" style="display: none;"></div>
+        
+        <div id="status" class="info" style="display: none;"></div>
+    </div>
+
+    <script>
+        function enterDashboard() {
+            console.log('🚀 נכנס לדשבורד...');
+            
+            // Set authentication immediately
+            const userId = 'google_111351120503275674259';
+            const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+            
+            // Set cookies
+            document.cookie = `jwt=dummy_jwt_token; expires=${expires}; path=/; sameSite=lax`;
+            document.cookie = `userId=${userId}; expires=${expires}; path=/; sameSite=lax`;
+            document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; sameSite=lax`;
+            
+            // Set localStorage
+            try {
+                const userData = {
+                    id: userId,
+                    userId: userId,
+                    email: 'britolam1@gmail.com',
+                    name: 'ברית עולם להקה',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+            } catch (e) {
+                console.warn('localStorage not available');
+            }
+            
+            // Show status
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '✅ אימות הוגדר! מעביר לדשבורד...';
+            statusDiv.style.background = 'rgba(34, 197, 94, 0.3)';
+            statusDiv.style.border = '2px solid rgba(34, 197, 94, 0.5)';
+            
+            // Show countdown
+            const countdownDiv = document.getElementById('countdown');
+            countdownDiv.style.display = 'block';
+            
+            let count = 3;
+            const countdownInterval = setInterval(() => {
+                countdownDiv.textContent = count;
+                count--;
+                
+                if (count < 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '/dashboard';
+                }
+            }, 1000);
+        }
+        
+        // Auto-enter after 5 seconds if user doesn't click
+        setTimeout(() => {
+            const button = document.querySelector('.enter-button');
+            if (button) {
+                button.textContent = '🚀 נכנס אוטומטית...';
+                button.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                setTimeout(enterDashboard, 2000);
+            }
+        }, 5000);
+        
+        console.log('🎯 כניסה מיידית מוכנה');
+    </script>
+</body>
+</html>

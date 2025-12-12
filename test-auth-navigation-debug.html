@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת ניווט ואימות - Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 20px; border: 2px solid #e0e0e0; border-radius: 8px; }
+        .success { border-color: #4CAF50; background: #f8fff8; }
+        .error { border-color: #f44336; background: #fff8f8; }
+        .warning { border-color: #ff9800; background: #fff8f0; }
+        button { padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 14px; }
+        .status { font-weight: bold; padding: 5px 10px; border-radius: 4px; display: inline-block; margin: 5px 0; }
+        .status.online { background: #4CAF50; color: white; }
+        .status.offline { background: #f44336; color: white; }
+        .log { max-height: 300px; overflow-y: auto; background: #000; color: #0f0; padding: 15px; border-radius: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת בעיית ניווט ואימות</h1>
+        <p><strong>בעיה:</strong> משתמש מתחבר בהצלחה, נכנס לעורך, אבל כשחוזר לדשבורד הוא מתנתק</p>
+        
+        <div class="test-section">
+            <h2>📊 מצב נוכחי</h2>
+            <div id="currentStatus">טוען...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🍪 בדיקת Cookies</h2>
+            <div id="cookieStatus">טוען...</div>
+            <button class="btn-primary" onclick="checkCookies()">רענן בדיקת Cookies</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔄 בדיקת API אימות</h2>
+            <div id="apiStatus">טוען...</div>
+            <button class="btn-primary" onclick="checkAuthAPI()">בדוק API אימות</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 סימולציית הבעיה</h2>
+            <p>נסה לשחזר את הבעיה:</p>
+            <button class="btn-success" onclick="simulateLogin()">1. התחבר (סימולציה)</button>
+            <button class="btn-warning" onclick="simulateEditorNavigation()">2. נווט לעורך</button>
+            <button class="btn-danger" onclick="simulateDashboardNavigation()">3. חזור לדשבורד</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 לוג בדיקות</h2>
+            <div id="testLog" class="log"></div>
+            <button class="btn-primary" onclick="clearLog()">נקה לוג</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 פתרונות מוצעים</h2>
+            <button class="btn-success" onclick="testFix1()">תיקון 1: Cookie Scope</button>
+            <button class="btn-success" onclick="testFix2()">תיקון 2: Auth Store</button>
+            <button class="btn-success" onclick="testFix3()">תיקון 3: Navigation</button>
+        </div>
+    </div>
+
+    <script>
+        let logElement = document.getElementById('testLog');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f44' : type === 'success' ? '#4f4' : type === 'warning' ? '#fa4' : '#0f0';
+            logElement.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+        
+        async function checkCurrentStatus() {
+            log('🔍 בודק מצב נוכחי...');
+            
+            // Check if servers are running
+            try {
+                const frontendResponse = await fetch('http://localhost:5173/api/user/current');
+                const backendResponse = await fetch('http://localhost:1337/api/users/me');
+                
+                document.getElementById('currentStatus').innerHTML = `
+                    <div class="status ${frontendResponse.ok ? 'online' : 'offline'}">
+                        Frontend (5173): ${frontendResponse.ok ? 'פועל' : 'לא פועל'}
+                    </div>
+                    <div class="status ${backendResponse.ok ? 'online' : 'offline'}">
+                        Backend (1337): ${backendResponse.ok ? 'פועל' : 'לא פועל'}
+                    </div>
+                `;
+                
+                log(`Frontend: ${frontendResponse.ok ? '✅ פועל' : '❌ לא פועל'}`, frontendResponse.ok ? 'success' : 'error');
+                log(`Backend: ${backendResponse.ok ? '✅ פועל' : '❌ לא פועל'}`, backendResponse.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                log(`❌ שגיאה בבדיקת שרתים: ${error.message}`, 'error');
+                document.getElementById('currentStatus').innerHTML = '<div class="status offline">שגיאה בבדיקת שרתים</div>';
+            }
+        }
+        
+        function checkCookies() {
+            log('🍪 בודק cookies...');
+            
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+            
+            const userId = cookies.userId;
+            const subscriptionStatus = cookies.subscriptionStatus;
+            
+            let cookieHtml = '<h3>Cookies נוכחיים:</h3><pre>';
+            cookieHtml += JSON.stringify(cookies, null, 2);
+            cookieHtml += '</pre>';
+            
+            if (userId) {
+                cookieHtml += `<div class="status online">userId: ${userId}</div>`;
+                log(`✅ userId cookie נמצא: ${userId}`, 'success');
+            } else {
+                cookieHtml += `<div class="status offline">userId: לא נמצא</div>`;
+                log(`❌ userId cookie לא נמצא`, 'error');
+            }
+            
+            if (subscriptionStatus) {
+                cookieHtml += `<div class="status online">subscriptionStatus: ${subscriptionStatus}</div>`;
+                log(`✅ subscriptionStatus: ${subscriptionStatus}`, 'success');
+            }
+            
+            document.getElementById('cookieStatus').innerHTML = cookieHtml;
+        }
+        
+        async function checkAuthAPI() {
+            log('🔄 בודק API אימות...');
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                let apiHtml = `<h3>תגובת API:</h3>`;
+                apiHtml += `<div class="status ${response.ok ? 'online' : 'offline'}">Status: ${response.status}</div>`;
+                apiHtml += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                document.getElementById('apiStatus').innerHTML = apiHtml;
+                
+                if (response.ok && data.authenticated) {
+                    log(`✅ API אימות: משתמש מחובר (${data.userId})`, 'success');
+                } else {
+                    log(`❌ API אימות: משתמש לא מחובר`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ שגיאה ב-API אימות: ${error.message}`, 'error');
+                document.getElementById('apiStatus').innerHTML = `<div class="status offline">שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        function simulateLogin() {
+            log('🔐 מדמה התחברות...');
+            
+            // Set a test userId cookie
+            const testUserId = 'google_test_' + Date.now();
+            document.cookie = `userId=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            
+            log(`✅ Cookie נוצר: userId=${testUserId}`, 'success');
+            checkCookies();
+        }
+        
+        function simulateEditorNavigation() {
+            log('📝 מדמה ניווט לעורך...');
+            
+            // Check if userId still exists
+            const userId = document.cookie.split(';').find(c => c.trim().startsWith('userId='));
+            
+            if (userId) {
+                log(`✅ בעורך: userId עדיין קיים (${userId.split('=')[1]})`, 'success');
+            } else {
+                log(`❌ בעורך: userId נעלם!`, 'error');
+            }
+        }
+        
+        function simulateDashboardNavigation() {
+            log('🏠 מדמה ניווט לדשבורד...');
+            
+            // This is where the problem occurs - check auth state
+            const userId = document.cookie.split(';').find(c => c.trim().startsWith('userId='));
+            
+            if (userId) {
+                log(`✅ בדשבורד: userId עדיין קיים (${userId.split('=')[1]})`, 'success');
+                log(`🔍 בודק אם הבעיה היא ב-auth store או ב-dashboard component...`, 'warning');
+            } else {
+                log(`❌ בדשבורד: userId נעלם! זו הבעיה!`, 'error');
+            }
+            
+            checkAuthAPI();
+        }
+        
+        function testFix1() {
+            log('🔧 בודק תיקון 1: Cookie Scope...');
+            
+            // Test cookie with explicit path and domain
+            const testUserId = 'google_fix1_' + Date.now();
+            document.cookie = `userId=${testUserId}; path=/; domain=localhost; max-age=2592000; SameSite=Lax; Secure=false`;
+            
+            log(`✅ Cookie עם scope מפורש נוצר: ${testUserId}`, 'success');
+            
+            setTimeout(() => {
+                const cookie = document.cookie.split(';').find(c => c.trim().startsWith('userId='));
+                if (cookie && cookie.includes(testUserId)) {
+                    log(`✅ תיקון 1: Cookie נשמר בהצלחה`, 'success');
+                } else {
+                    log(`❌ תיקון 1: Cookie לא נשמר`, 'error');
+                }
+            }, 1000);
+        }
+        
+        function testFix2() {
+            log('🔧 בודק תיקון 2: Auth Store...');
+            
+            // Test localStorage as backup
+            const testUserId = 'google_fix2_' + Date.now();
+            localStorage.setItem('userId', testUserId);
+            document.cookie = `userId=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+            
+            log(`✅ userId נשמר גם ב-localStorage וגם ב-cookie`, 'success');
+            
+            // Test retrieval
+            const cookieUserId = document.cookie.split(';').find(c => c.trim().startsWith('userId='))?.split('=')[1];
+            const localStorageUserId = localStorage.getItem('userId');
+            
+            if (cookieUserId === testUserId && localStorageUserId === testUserId) {
+                log(`✅ תיקון 2: שני המקורות עובדים`, 'success');
+            } else {
+                log(`❌ תיקון 2: בעיה באחד המקורות`, 'error');
+            }
+        }
+        
+        function testFix3() {
+            log('🔧 בודק תיקון 3: Navigation...');
+            
+            // Test different navigation methods
+            log(`🔍 בודק שיטות ניווט שונות:`, 'info');
+            log(`   - goto('/dashboard') - SvelteKit client-side routing`, 'info');
+            log(`   - window.location.href = '/dashboard' - Full page reload`, 'info');
+            log(`   - history.pushState() - Manual history manipulation`, 'info');
+            
+            log(`💡 המלצה: להשתמש ב-goto עם replaceState או לוודא שה-auth store מתעדכן לפני הניווט`, 'warning');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 מתחיל בדיקת ניווט ואימות...');
+            checkCurrentStatus();
+            checkCookies();
+            checkAuthAPI();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 בדיקת תיקון כפתור ערוך ומנוי</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+        .test-step {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-right: 4px solid #4CAF50;
+        }
+        .expected {
+            background: rgba(76, 175, 80, 0.2);
+            border-right-color: #4CAF50;
+        }
+        .issue {
+            background: rgba(244, 67, 54, 0.2);
+            border-right-color: #f44336;
+        }
+        .fixed {
+            background: rgba(33, 150, 243, 0.2);
+            border-right-color: #2196F3;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .button.dashboard {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון כפתור ערוך ומנוי - בדיקה</h1>
+        
+        <div class="test-section">
+            <div class="test-title">🎯 בעיה 1: כפתור "ערוך" לא עובד</div>
+            
+            <div class="test-step issue">
+                <strong>❌ הבעיה:</strong> לחיצה על "ערוך" מהדשבורד מעבירה ל-/view/ במקום למצב עריכה אמיתי
+            </div>
+            
+            <div class="test-step fixed">
+                <strong>✅ התיקון:</strong> שינוי הניווט מ-/view/ ל-/edit/ לעריכה אמיתית
+            </div>
+            
+            <div class="code">
+// לפני התיקון:
+window.location.href = `/view/${slug}?t=${timestamp}`;
+
+// אחרי התיקון:
+window.location.href = `/edit/${slug}?t=${timestamp}`;
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔐 בעיה 2: בעיית אימות במנוי</div>
+            
+            <div class="test-step issue">
+                <strong>❌ הבעיה:</strong> דף המנוי מבקש התחברות למרות שהמשתמש מחובר
+            </div>
+            
+            <div class="test-step fixed">
+                <strong>✅ התיקון:</strong> בדיקת localStorage כגיבוי אם אין cookie + סנכרון אוטומטי
+            </div>
+            
+            <div class="code">
+// הוספת בדיקת localStorage כגיבוי:
+if (!userId) {
+    try {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            userId = userData.userId || userData.id;
+            // שחזור cookie אוטומטי
+        }
+    } catch (e) {
+        console.warn('localStorage not available');
+    }
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🧪 איך לבדוק שהתיקונים עובדים</div>
+            
+            <div class="test-step expected">
+                <strong>1. בדיקת כפתור ערוך:</strong>
+                <br>• לך לדשבורד
+                <br>• לחץ על כפתור "ערוך" (כחול)
+                <br>• ✅ אמור להיפתח במצב עריכה אמיתי עם כלי עריכה
+                <br>• ❌ לא אמור להישאר במצב צפייה
+            </div>
+            
+            <div class="test-step expected">
+                <strong>2. בדיקת מנוי:</strong>
+                <br>• לחץ על "הפעל מנוי לדף זה" (כפתור צהוב)
+                <br>• ✅ אמור להיכנס ישירות לדף המנוי
+                <br>• ❌ לא אמור לבקש התחברות מחדש
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🚀 קישורים מהירים לבדיקה</div>
+            
+            <a href="/dashboard" class="button dashboard">📊 דשבורד</a>
+            <a href="/marketplace" class="button">🏪 מרקטפלייס</a>
+            
+            <div style="margin-top: 20px;">
+                <strong>📝 הוראות בדיקה:</strong>
+                <br>1. לחץ על "דשבורד"
+                <br>2. בחר דף קיים
+                <br>3. לחץ "ערוך" - אמור להיפתח במצב עריכה
+                <br>4. לחץ "הפעל מנוי" - אמור לעבוד ללא בעיות אימות
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📋 סיכום התיקונים</div>
+            
+            <div class="test-step fixed">
+                ✅ <strong>תוקן:</strong> כפתור "ערוך" עכשיו מנווט ל-/edit/ במקום /view/
+            </div>
+            
+            <div class="test-step fixed">
+                ✅ <strong>תוקן:</strong> דף המנוי בודק localStorage כגיבוי לאימות
+            </div>
+            
+            <div class="test-step fixed">
+                ✅ <strong>תוקן:</strong> סנכרון אוטומטי של cookies מ-localStorage
+            </div>
+            
+            <div class="test-step expected">
+                🎯 <strong>תוצאה:</strong> שני המצבים (עריכה ומנוי) אמורים לעבוד מושלם עכשיו!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔧 Testing page loaded');
+        console.log('👤 Current userId cookie:', document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1] || 'NOT FOUND');
+        
+        // Test localStorage
+        try {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                const userData = JSON.parse(storedUser);
+                console.log('👤 User in localStorage:', userData.userId || userData.id || 'NO ID');
+            } else {
+                console.log('👤 No user in localStorage');
+            }
+        } catch (e) {
+            console.log('❌ localStorage error:', e.message);
+        }
+    </script>
+</body>
+</html>

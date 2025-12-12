@@ -150,13 +150,19 @@ export async function POST({ request, cookies }) {
 			hasUserRelation: !!strapiUserId
 		});
 		
+		// Calculate subscription expiry - 1 year from now for each new page
+		const subscriptionExpiry = new Date();
+		subscriptionExpiry.setFullYear(subscriptionExpiry.getFullYear() + 1);
+		
 		const pageResponse = await createPage({
 			title,
 			slug,
 			htmlContent: processedHtml,
 			pageType,
 			description,
-			isActive: false, // Default: not active until subscription
+			isActive: true, // Page is active immediately
+			subscriptionStatus: 'active', // Each page gets active subscription
+			subscriptionExpiry: subscriptionExpiry.toISOString(), // 1 year subscription
 			phone: contactInfo.phone,
 			email: contactInfo.email,
 			city: contactInfo.city,

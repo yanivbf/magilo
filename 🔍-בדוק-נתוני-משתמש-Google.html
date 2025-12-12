@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדוק נתוני משתמש Google</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .success { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        .warning { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); }
+        .error { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+        
+        .test-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1, h2 { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.8em; color: #fbbf24; }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .user-display {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1f2937;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3b82f6;
+        }
+        
+        .avatar-fallback {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדוק נתוני משתמש Google</h1>
+        
+        <div class="status-card success">
+            <h2>✅ מצב נוכחי:</h2>
+            <p>בודק איך המערכת מציגה את הנתונים שלך מ-Google OAuth</p>
+        </div>
+
+        <div class="status-card warning">
+            <h2>🔧 בדיקות:</h2>
+            
+            <button class="test-button" onclick="checkCurrentUser()">
+                בדוק משתמש נוכחי
+            </button>
+            
+            <button class="test-button" onclick="checkCookies()">
+                בדוק Cookies
+            </button>
+            
+            <button class="test-button" onclick="checkLocalStorage()">
+                בדוק LocalStorage
+            </button>
+            
+            <button class="test-button" onclick="testUserAPI()">
+                בדוק API משתמש
+            </button>
+        </div>
+
+        <div id="userDisplay" class="user-display" style="display: none;">
+            <div id="avatarContainer"></div>
+            <div>
+                <div id="userName" style="font-size: 18px; font-weight: bold; margin-bottom: 5px;"></div>
+                <div id="userEmail" style="font-size: 14px; color: #6b7280;"></div>
+                <div id="userId" style="font-size: 12px; color: #9ca3af; margin-top: 5px;"></div>
+            </div>
+        </div>
+
+        <div id="result" class="status-card" style="display: none;">
+            <h2>תוצאות:</h2>
+            <div id="resultContent" class="code"></div>
+        </div>
+    </div>
+
+    <script>
+        let logContent = '';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent += `[${timestamp}] ${message}\n`;
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.textContent = logContent;
+        }
+        
+        function displayUser(userData) {
+            const userDisplay = document.getElementById('userDisplay');
+            const avatarContainer = document.getElementById('avatarContainer');
+            const userName = document.getElementById('userName');
+            const userEmail = document.getElementById('userEmail');
+            const userId = document.getElementById('userId');
+            
+            userDisplay.style.display = 'flex';
+            
+            // Display avatar
+            if (userData.avatar) {
+                avatarContainer.innerHTML = `<img src="${userData.avatar}" alt="${userData.name}" class="avatar" />`;
+            } else {
+                const initial = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
+                avatarContainer.innerHTML = `<div class="avatar-fallback">${initial}</div>`;
+            }
+            
+            // Display user info
+            userName.textContent = userData.name || 'משתמש רשום';
+            userEmail.textContent = userData.email || 'אין אימייל';
+            userId.textContent = `ID: ${userData.userId || userData.id || 'לא נמצא'}`;
+        }
+        
+        function checkCurrentUser() {
+            log('🔍 בודק משתמש נוכחי...');
+            
+            // Check if we're on a page with auth store access
+            if (typeof window !== 'undefined') {
+                // Try to access auth store data from the page
+                const cookies = document.cookie;
+                log(`Cookies: ${cookies}`);
+                
+                // Parse userId from cookie
+                const userIdMatch = cookies.match(/userId=([^;]+)/);
+                const userId = userIdMatch ? userIdMatch[1] : null;
+                log(`UserId from cookie: ${userId}`);
+                
+                if (userId) {
+                    // Create user object from available data
+                    const userData = {
+                        userId: userId,
+                        id: userId,
+                        name: 'משתמש רשום', // Will be updated from API
+                        email: '',
+                        avatar: null
+                    };
+                    
+                    displayUser(userData);
+                    log('✅ משתמש נמצא מ-cookie');
+                } else {
+                    log('❌ לא נמצא userId ב-cookie');
+                }
+            }
+        }
+        
+        function checkCookies() {
+            log('🍪 בודק cookies...');
+            
+            const cookies = document.cookie.split(';');
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.trim().split('=');
+                log(`Cookie: ${name} = ${value}`);
+            });
+            
+            if (cookies.length === 0 || document.cookie === '') {
+                log('❌ אין cookies');
+            }
+        }
+        
+        function checkLocalStorage() {
+            log('💾 בודק localStorage...');
+            
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const userData = JSON.parse(currentUser);
+                    log(`LocalStorage user: ${JSON.stringify(userData, null, 2)}`);
+                    displayUser(userData);
+                } else {
+                    log('❌ אין נתוני משתמש ב-localStorage');
+                }
+            } catch (error) {
+                log(`❌ שגיאה ב-localStorage: ${error.message}`);
+            }
+        }
+        
+        async function testUserAPI() {
+            log('🌐 בודק API משתמש...');
+            
+            // Get userId from cookie
+            const userIdMatch = document.cookie.match(/userId=([^;]+)/);
+            const userId = userIdMatch ? userIdMatch[1] : null;
+            
+            if (!userId) {
+                log('❌ אין userId לבדיקת API');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/user/${userId}`);
+                log(`API Response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    log(`API User data: ${JSON.stringify(userData, null, 2)}`);
+                    
+                    if (userData.user) {
+                        displayUser(userData.user);
+                        log('✅ נתוני משתמש התקבלו מ-API');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ API Error: ${errorText}`);
+                }
+            } catch (error) {
+                log(`❌ שגיאת רשת: ${error.message}`);
+            }
+        }
+        
+        // Auto-start check
+        window.onload = function() {
+            log('🚀 מתחיל בדיקה אוטומטית...');
+            setTimeout(() => {
+                checkCurrentUser();
+                checkLocalStorage();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 למה הקול לא עובד במרקטפלייס?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .test-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error {
+            color: #ff4444;
+        }
+        .success {
+            color: #00ff00;
+        }
+        .info {
+            color: #00aaff;
+        }
+        .warning {
+            color: #ffaa00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 למה הקול לא עובד במרקטפלייס?</h1>
+        
+        <p><strong>בדיקה זו תראה לך בדיוק מה קורה כשמנסים להפעיל את הקול:</strong></p>
+        
+        <button class="test-btn" onclick="testGoogleTTS()">🎤 בדוק קול Google TTS</button>
+        <button class="test-btn" onclick="clearLog()">🗑️ נקה לוג</button>
+        
+        <div class="log" id="log">
+📋 לוג יופיע כאן...
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const className = type;
+            logEl.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '📋 לוג נוקה...\n';
+        }
+
+        async function testGoogleTTS() {
+            clearLog();
+            log('🚀 מתחיל בדיקה...', 'info');
+            
+            const testText = 'שלום, אני סתיו';
+            log(`📝 טקסט לבדיקה: "${testText}"`, 'info');
+            
+            // Clean text (same as in StavBot)
+            const cleanText = testText
+                .replace(/<[^>]*>/g, '')
+                .replace(/&[^;]+;/g, '')
+                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                .replace(/[😊💡📍📞📧🏠💰✅❌🔗📄🏪🎉🎓🔧👁️🎯🔍📚📝🔊🎤🔴]/g, '')
+                .replace(/\*\*/g, '')
+                .replace(/\*/g, '')
+                .replace(/\([^)]*\)/g, '')
+                .replace(/\.{2,}/g, '')
+                .replace(/\n\n+/g, '. ')
+                .replace(/\n/g, '. ')
+                .replace(/•/g, '')
+                .replace(/\|/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            log(`🧹 טקסט אחרי ניקוי: "${cleanText}"`, 'info');
+            
+            try {
+                const API_KEY = 'AIzaSyBexR71l9bdJ28OKx8P7QhyQDQpqTPa56o';
+                log('🔑 API Key: ' + API_KEY.substring(0, 20) + '...', 'info');
+                
+                const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`;
+                log('🌐 URL: ' + url.substring(0, 60) + '...', 'info');
+                
+                const requestBody = {
+                    input: { text: cleanText },
+                    voice: {
+                        languageCode: 'he-IL',
+                        name: 'he-IL-Wavenet-A',
+                        ssmlGender: 'FEMALE'
+                    },
+                    audioConfig: {
+                        audioEncoding: 'MP3',
+                        pitch: -5.0,
+                        speakingRate: 1.35,
+                        volumeGainDb: 0.0,
+                        effectsProfileId: ['small-bluetooth-speaker-class-device']
+                    }
+                };
+                
+                log('📦 Request Body:', 'info');
+                log(JSON.stringify(requestBody, null, 2), 'info');
+                
+                log('⏳ שולח בקשה ל-Google TTS API...', 'warning');
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                log(`📡 Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                log(`📋 Response Headers:`, 'info');
+                for (const [key, value] of response.headers.entries()) {
+                    log(`   ${key}: ${value}`, 'info');
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ שגיאה מ-Google TTS:', 'error');
+                    log(JSON.stringify(data.error, null, 2), 'error');
+                    throw new Error(data.error.message);
+                }
+                
+                if (data.audioContent) {
+                    log('✅ התקבל אודיו מ-Google TTS!', 'success');
+                    log(`📊 גודל אודיו (base64): ${data.audioContent.length} תווים`, 'success');
+                    
+                    log('🔊 מנסה לנגן...', 'warning');
+                    const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
+                    
+                    audio.onloadeddata = () => {
+                        log('✅ האודיו נטען בהצלחה!', 'success');
+                        log(`⏱️ משך: ${audio.duration.toFixed(2)} שניות`, 'info');
+                    };
+                    
+                    audio.onplay = () => {
+                        log('▶️ האודיו מתחיל לנגן...', 'success');
+                    };
+                    
+                    audio.onended = () => {
+                        log('✅ האודיו הסתיים!', 'success');
+                        log('🎉 הבדיקה הצליחה! הקול עובד מושלם!', 'success');
+                    };
+                    
+                    audio.onerror = (e) => {
+                        log('❌ שגיאה בניגון האודיו:', 'error');
+                        log(JSON.stringify(e, null, 2), 'error');
+                    };
+                    
+                    await audio.play();
+                    log('🎵 הקול מנגן עכשיו...', 'success');
+                    
+                } else {
+                    log('❌ לא התקבל תוכן אודיו', 'error');
+                    log('Response:', 'error');
+                    log(JSON.stringify(data, null, 2), 'error');
+                }
+                
+            } catch (error) {
+                log('❌ שגיאה כללית:', 'error');
+                log(`   שם: ${error.name}`, 'error');
+                log(`   הודעה: ${error.message}`, 'error');
+                log(`   Stack: ${error.stack}`, 'error');
+                
+                if (error.message.includes('CORS')) {
+                    log('⚠️ זו שגיאת CORS - הדפדפן חוסם את הבקשה', 'warning');
+                } else if (error.message.includes('quota')) {
+                    log('⚠️ חריגה מהמכסה של Google TTS', 'warning');
+                } else if (error.message.includes('API key')) {
+                    log('⚠️ בעיה עם ה-API Key', 'warning');
+                }
+            }
+        }
+
+        log('✅ דף הבדיקה מוכן!', 'success');
+        log('👉 לחץ על "בדוק קול Google TTS" כדי להתחיל', 'info');
+    </script>
+</body>
+</html>

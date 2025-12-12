@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 בדיקת תיקון localStorage Security</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .big-button:hover { background: #218838; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת תיקון localStorage Security</h1>
+    
+    <div class="section info">
+        <h3>📊 מצב Storage נוכחי</h3>
+        <div id="storage-status">טוען...</div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 בדיקות Storage</h3>
+        <div class="grid">
+            <div>
+                <button onclick="testLocalStorage()">💾 בדוק localStorage</button>
+                <button onclick="testSessionStorage()">🔄 בדוק sessionStorage</button>
+                <button onclick="testMemoryStorage()">🧠 בדוק Memory Storage</button>
+            </div>
+            <div>
+                <button onclick="testCookies()">🍪 בדוק Cookies</button>
+                <button onclick="testAllMethods()">🔬 בדוק כל השיטות</button>
+                <button onclick="simulateAuthFlow()">🔑 סימולציה התחברות</button>
+            </div>
+        </div>
+        <div id="storage-results" class="status-item">
+            תוצאות בדיקות ה-Storage יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🛠️ כלי תיקון</h3>
+        <div class="grid">
+            <div>
+                <button onclick="setTestUser()">👤 הגדר משתמש בדיקה</button>
+                <button onclick="clearAllStorage()">🗑️ נקה כל ה-Storage</button>
+                <button onclick="migrateToSafeStorage()">🔄 העבר ל-Storage בטוח</button>
+            </div>
+            <div>
+                <button onclick="testSubscriptionFlow()">💳 בדוק זרימת מנוי</button>
+                <button onclick="debugStorageIssues()">🐛 דבג בעיות Storage</button>
+                <button onclick="forceRecovery()">⚡ שחזור בכוח</button>
+            </div>
+        </div>
+        <div id="fix-results" class="status-item">
+            תוצאות כלי התיקון יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function updateStorageStatus() {
+            const status = {
+                localStorage: 'unknown',
+                sessionStorage: 'unknown',
+                memoryStorage: 'unknown',
+                cookies: 'unknown'
+            };
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                status.localStorage = '✅ זמין';
+            } catch (error) {
+                status.localStorage = '❌ חסום: ' + error.message;
+            }
+            
+            // Test sessionStorage
+            try {
+                sessionStorage.setItem('test', 'test');
+                sessionStorage.removeItem('test');
+                status.sessionStorage = '✅ זמין';
+            } catch (error) {
+                status.sessionStorage = '❌ חסום: ' + error.message;
+            }
+            
+            // Test memory storage
+            try {
+                window._testMemory = 'test';
+                delete window._testMemory;
+                status.memoryStorage = '✅ זמין';
+            } catch (error) {
+                status.memoryStorage = '❌ חסום: ' + error.message;
+            }
+            
+            // Test cookies
+            try {
+                document.cookie = 'test=test';
+                const cookieExists = document.cookie.includes('test=test');
+                document.cookie = 'test=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                status.cookies = cookieExists ? '✅ זמין' : '⚠️ מוגבל';
+            } catch (error) {
+                status.cookies = '❌ חסום: ' + error.message;
+            }
+            
+            document.getElementById('storage-status').innerHTML = `
+                <strong>💾 localStorage:</strong> ${status.localStorage}<br>
+                <strong>🔄 sessionStorage:</strong> ${status.sessionStorage}<br>
+                <strong>🧠 Memory Storage:</strong> ${status.memoryStorage}<br>
+                <strong>🍪 Cookies:</strong> ${status.cookies}<br>
+                <strong>🕒 זמן:</strong> ${new Date().toLocaleString('he-IL')}
+            `;
+        }
+        
+        function testLocalStorage() {
+            log('💾 בודק localStorage...');
+            const resultsDiv = document.getElementById('storage-results');
+            
+            try {
+                const testValue = 'test-' + Date.now();
+                localStorage.setItem('testKey', testValue);
+                const retrieved = localStorage.getItem('testKey');
+                localStorage.removeItem('testKey');
+                
+                if (retrieved === testValue) {
+                    resultsDiv.innerHTML = '✅ localStorage עובד תקין!';
+                    resultsDiv.className = 'status-item success';
+                    log('✅ localStorage test passed');
+                    return true;
+                } else {
+                    resultsDiv.innerHTML = '❌ localStorage לא מחזיר נתונים נכונים';
+                    resultsDiv.className = 'status-item error';
+                    log('❌ localStorage data mismatch');
+                    return false;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ localStorage חסום: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ localStorage blocked: ${error.message}`);
+                return false;
+            }
+        }
+        
+        function testSessionStorage() {
+            log('🔄 בודק sessionStorage...');
+            const resultsDiv = document.getElementById('storage-results');
+            
+            try {
+                const testValue = 'test-' + Date.now();
+                sessionStorage.setItem('testKey', testValue);
+                const retrieved = sessionStorage.getItem('testKey');
+                sessionStorage.removeItem('testKey');
+                
+                if (retrieved === testValue) {
+                    resultsDiv.innerHTML = '✅ sessionStorage עובד תקין!';
+                    resultsDiv.className = 'status-item success';
+                    log('✅ sessionStorage test passed');
+                    return true;
+                } else {
+                    resultsDiv.innerHTML = '❌ sessionStorage לא מחזיר נתונים נכונים';
+                    resultsDiv.className = 'status-item error';
+                    log('❌ sessionStorage data mismatch');
+                    return false;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ sessionStorage חסום: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ sessionStorage blocked: ${error.message}`);
+                return false;
+            }
+        }
+        
+        function testMemoryStorage() {
+            log('🧠 בודק Memory Storage...');
+            const resultsDiv = document.getElementById('storage-results');
+            
+            try {
+                const testValue = 'test-' + Date.now();
+                window._testMemoryStorage = testValue;
+                const retrieved = window._testMemoryStorage;
+                delete window._testMemoryStorage;
+                
+                if (retrieved === testValue) {
+                    resultsDiv.innerHTML = '✅ Memory Storage עובד תקין!';
+                    resultsDiv.className = 'status-item success';
+                    log('✅ Memory storage test passed');
+                    return true;
+                } else {
+                    resultsDiv.innerHTML = '❌ Memory Storage לא עובד';
+                    resultsDiv.className = 'status-item error';
+                    log('❌ Memory storage failed');
+                    return false;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ Memory Storage שגיאה: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Memory storage error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        function testCookies() {
+            log('🍪 בודק Cookies...');
+            const resultsDiv = document.getElementById('storage-results');
+            
+            try {
+                const testValue = 'test-' + Date.now();
+                document.cookie = `testCookie=${testValue}; path=/; max-age=60`;
+                
+                const cookieExists = document.cookie.includes(`testCookie=${testValue}`);
+                
+                // Clean up
+                document.cookie = 'testCookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                
+                if (cookieExists) {
+                    resultsDiv.innerHTML = '✅ Cookies עובדים תקין!';
+                    resultsDiv.className = 'status-item success';
+                    log('✅ Cookies test passed');
+                    return true;
+                } else {
+                    resultsDiv.innerHTML = '❌ Cookies לא נשמרים';
+                    resultsDiv.className = 'status-item error';
+                    log('❌ Cookies not saving');
+                    return false;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ Cookies שגיאה: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Cookies error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        function testAllMethods() {
+            log('🔬 בודק כל השיטות...');
+            const resultsDiv = document.getElementById('storage-results');
+            
+            const results = [];
+            results.push(`localStorage: ${testLocalStorage() ? '✅' : '❌'}`);
+            results.push(`sessionStorage: ${testSessionStorage() ? '✅' : '❌'}`);
+            results.push(`Memory: ${testMemoryStorage() ? '✅' : '❌'}`);
+            results.push(`Cookies: ${testCookies() ? '✅' : '❌'}`);
+            
+            const workingMethods = results.filter(r => r.includes('✅')).length;
+            
+            resultsDiv.innerHTML = `
+                <strong>תוצאות בדיקה:</strong><br>
+                ${results.join('<br>')}<br><br>
+                <strong>שיטות עובדות: ${workingMethods}/4</strong>
+            `;
+            
+            if (workingMethods >= 2) {
+                resultsDiv.className = 'status-item success';
+                log(`✅ ${workingMethods}/4 storage methods working`);
+            } else if (workingMethods >= 1) {
+                resultsDiv.className = 'status-item warning';
+                log(`⚠️ Only ${workingMethods}/4 storage methods working`);
+            } else {
+                resultsDiv.className = 'status-item error';
+                log('❌ No storage methods working');
+            }
+        }
+        
+        function simulateAuthFlow() {
+            log('🔑 מדמה זרימת התחברות...');
+            const resultsDiv = document.getElementById('storage-results');
+            const testUserId = 'google_111351120503275674259';
+            
+            const methods = [];
+            
+            // Try cookies
+            try {
+                document.cookie = `userId=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+                document.cookie = `userAuth=${testUserId}; path=/; max-age=2592000; SameSite=Lax`;
+                methods.push('✅ Cookies');
+            } catch (error) {
+                methods.push('❌ Cookies');
+            }
+            
+            // Try sessionStorage
+            try {
+                sessionStorage.setItem('userId', testUserId);
+                methods.push('✅ sessionStorage');
+            } catch (error) {
+                methods.push('❌ sessionStorage');
+            }
+            
+            // Try localStorage
+            try {
+                localStorage.setItem('userId', testUserId);
+                methods.push('✅ localStorage');
+            } catch (error) {
+                methods.push('❌ localStorage');
+            }
+            
+            // Try memory
+            try {
+                window._autoPageUserId = testUserId;
+                window.autoPageAuth = { userId: testUserId, timestamp: Date.now() };
+                methods.push('✅ Memory');
+            } catch (error) {
+                methods.push('❌ Memory');
+            }
+            
+            resultsDiv.innerHTML = `
+                <strong>סימולציה הושלמה:</strong><br>
+                ${methods.join('<br>')}<br><br>
+                <strong>🆔 Test User ID:</strong> ${testUserId}
+            `;
+            resultsDiv.className = 'status-item success';
+            log(`✅ Auth simulation complete: ${methods.filter(m => m.includes('✅')).length}/4 methods`);
+        }
+        
+        function setTestUser() {
+            const userId = prompt('הכנס userId לבדיקה:', 'google_111351120503275674259');
+            if (userId) {
+                simulateAuthFlow();
+                
+                const resultsDiv = document.getElementById('fix-results');
+                resultsDiv.innerHTML = `✅ משתמש בדיקה הוגדר: ${userId}`;
+                resultsDiv.className = 'status-item success';
+                log(`✅ Test user set: ${userId}`);
+            }
+        }
+        
+        function clearAllStorage() {
+            log('🗑️ מנקה כל ה-Storage...');
+            
+            // Clear cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear storages
+            try { localStorage.clear(); } catch (e) {}
+            try { sessionStorage.clear(); } catch (e) {}
+            
+            // Clear memory
+            delete window._autoPageUserId;
+            delete window.autoPageAuth;
+            
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '🗑️ כל ה-Storage נוקה!';
+            resultsDiv.className = 'status-item warning';
+            log('🗑️ All storage cleared');
+            updateStorageStatus();
+        }
+        
+        function migrateToSafeStorage() {
+            log('🔄 מעביר ל-Storage בטוח...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            let userId = null;
+            
+            // Try to find existing userId
+            try {
+                userId = localStorage.getItem('userId') || 
+                         sessionStorage.getItem('userId') ||
+                         window._autoPageUserId ||
+                         document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1];
+            } catch (error) {
+                log(`⚠️ Error reading existing storage: ${error.message}`);
+            }
+            
+            if (!userId) {
+                userId = 'google_111351120503275674259'; // Default test user
+                log('⚠️ No existing userId found, using default test user');
+            }
+            
+            const methods = [];
+            
+            // Store in all available methods
+            // 1. Cookies (most reliable)
+            try {
+                document.cookie = `userId=${userId}; path=/; max-age=2592000; SameSite=Lax`;
+                document.cookie = `userAuth=${userId}; path=/; max-age=2592000; SameSite=Lax`;
+                methods.push('✅ Cookies');
+            } catch (error) {
+                methods.push('❌ Cookies');
+            }
+            
+            // 2. sessionStorage (more permissive than localStorage)
+            try {
+                sessionStorage.setItem('userId', userId);
+                methods.push('✅ sessionStorage');
+            } catch (error) {
+                methods.push('❌ sessionStorage');
+            }
+            
+            // 3. Memory (always works)
+            try {
+                window._autoPageUserId = userId;
+                window.autoPageAuth = { userId: userId, timestamp: Date.now() };
+                methods.push('✅ Memory');
+            } catch (error) {
+                methods.push('❌ Memory');
+            }
+            
+            // 4. localStorage (if available)
+            try {
+                localStorage.setItem('userId', userId);
+                methods.push('✅ localStorage');
+            } catch (error) {
+                methods.push('❌ localStorage (blocked)');
+            }
+            
+            resultsDiv.innerHTML = `
+                <strong>העברה ל-Storage בטוח הושלמה:</strong><br>
+                ${methods.join('<br>')}<br><br>
+                <strong>🆔 User ID:</strong> ${userId}
+            `;
+            resultsDiv.className = 'status-item success';
+            log(`✅ Safe storage migration complete: ${methods.filter(m => m.includes('✅')).length}/4 methods`);
+        }
+        
+        function testSubscriptionFlow() {
+            log('💳 בודק זרימת מנוי...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            // Check if we have userId in any storage
+            let userId = null;
+            const sources = [];
+            
+            try {
+                userId = document.cookie.split('; ').find(row => row.startsWith('userId='))?.split('=')[1];
+                if (userId) sources.push('Cookie');
+            } catch (e) {}
+            
+            try {
+                if (!userId) {
+                    userId = sessionStorage.getItem('userId');
+                    if (userId) sources.push('sessionStorage');
+                }
+            } catch (e) {}
+            
+            try {
+                if (!userId) {
+                    userId = localStorage.getItem('userId');
+                    if (userId) sources.push('localStorage');
+                }
+            } catch (e) {}
+            
+            try {
+                if (!userId) {
+                    userId = window._autoPageUserId;
+                    if (userId) sources.push('Memory');
+                }
+            } catch (e) {}
+            
+            if (userId) {
+                resultsDiv.innerHTML = `
+                    ✅ זרימת מנוי זמינה!<br>
+                    🆔 User ID: ${userId}<br>
+                    📍 מקור: ${sources.join(', ')}<br>
+                    🔗 ניתן לעבור לדף מנוי
+                `;
+                resultsDiv.className = 'status-item success';
+                log(`✅ Subscription flow available - userId from: ${sources.join(', ')}`);
+            } else {
+                resultsDiv.innerHTML = '❌ אין userId זמין - זרימת מנוי לא תעבוד';
+                resultsDiv.className = 'status-item error';
+                log('❌ No userId available for subscription flow');
+            }
+        }
+        
+        function debugStorageIssues() {
+            log('🐛 מדבג בעיות Storage...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            const debug = {
+                userAgent: navigator.userAgent,
+                cookieEnabled: navigator.cookieEnabled,
+                storageQuota: 'unknown',
+                securityErrors: []
+            };
+            
+            // Test storage quota
+            try {
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    navigator.storage.estimate().then(estimate => {
+                        debug.storageQuota = `${Math.round(estimate.usage / 1024 / 1024)}MB / ${Math.round(estimate.quota / 1024 / 1024)}MB`;
+                    });
+                }
+            } catch (error) {
+                debug.securityErrors.push('Storage API: ' + error.message);
+            }
+            
+            // Test each storage method
+            ['localStorage', 'sessionStorage'].forEach(storageType => {
+                try {
+                    const storage = window[storageType];
+                    storage.setItem('test', 'test');
+                    storage.removeItem('test');
+                } catch (error) {
+                    debug.securityErrors.push(`${storageType}: ${error.message}`);
+                }
+            });
+            
+            resultsDiv.innerHTML = `
+                <strong>🐛 Storage Debug Info:</strong><br>
+                <strong>Browser:</strong> ${debug.userAgent.split(' ').pop()}<br>
+                <strong>Cookies Enabled:</strong> ${debug.cookieEnabled ? 'Yes' : 'No'}<br>
+                <strong>Storage Quota:</strong> ${debug.storageQuota}<br>
+                <strong>Security Errors:</strong><br>
+                ${debug.securityErrors.length > 0 ? debug.securityErrors.join('<br>') : 'None'}
+            `;
+            resultsDiv.className = 'status-item info';
+            log('🐛 Storage debug completed');
+        }
+        
+        function forceRecovery() {
+            log('⚡ מבצע שחזור בכוח...');
+            
+            // First migrate to safe storage
+            migrateToSafeStorage();
+            
+            // Then test subscription flow
+            setTimeout(() => {
+                testSubscriptionFlow();
+            }, 500);
+            
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '⚡ שחזור בכוח הושלם! בדוק את התוצאות למעלה.';
+            resultsDiv.className = 'status-item success';
+            log('⚡ Force recovery completed');
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        // עדכון סטטוס כל 5 שניות
+        setInterval(updateStorageStatus, 5000);
+        
+        // עדכון ראשוני
+        updateStorageStatus();
+        log('🔧 localStorage Security Fix Test Page Loaded');
+    </script>
+</body>
+</html>

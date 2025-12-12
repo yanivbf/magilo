@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 בדיקת תיקון Cookie + localStorage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .big-button:hover { background: #218838; }
+        .danger-button {
+            background: #dc3545;
+        }
+        .danger-button:hover { background: #c82333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת תיקון Cookie + localStorage</h1>
+    
+    <div class="section info">
+        <h3>📊 מצב נוכחי</h3>
+        <div class="grid">
+            <div>
+                <h4>🍪 Cookies</h4>
+                <div id="cookies-status">טוען...</div>
+            </div>
+            <div>
+                <h4>💾 localStorage</h4>
+                <div id="localStorage-status">טוען...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🧪 בדיקות אימות</h3>
+        <div class="grid">
+            <div>
+                <button onclick="testCookieAuth()">🍪 בדוק Cookie Auth</button>
+                <button onclick="testLocalStorageAuth()">💾 בדוק localStorage Auth</button>
+                <button onclick="testFullAuth()">🔐 בדוק אימות מלא</button>
+            </div>
+            <div>
+                <button onclick="simulateLogin()">🔑 סימולציה התחברות</button>
+                <button onclick="testSubscriptionFlow()">💳 בדוק זרימת מנוי</button>
+                <button onclick="testDashboardAccess()">📊 בדוק גישה לדשבורד</button>
+            </div>
+        </div>
+        <div id="auth-results" class="status-item">
+            תוצאות בדיקות האימות יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🔧 כלי תיקון</h3>
+        <div class="grid">
+            <div>
+                <button onclick="setCookieManually()">🍪 הגדר Cookie ידנית</button>
+                <button onclick="setLocalStorageManually()">💾 הגדר localStorage ידנית</button>
+                <button onclick="syncCookieToLocalStorage()">🔄 סנכרן Cookie → localStorage</button>
+            </div>
+            <div>
+                <button class="danger-button" onclick="clearAllAuth()">🗑️ נקה הכל</button>
+                <button class="danger-button" onclick="clearCookiesOnly()">🍪 נקה Cookies בלבד</button>
+                <button class="danger-button" onclick="clearLocalStorageOnly()">💾 נקה localStorage בלבד</button>
+            </div>
+        </div>
+        <div id="fix-results" class="status-item">
+            תוצאות כלי התיקון יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🚀 בדיקות זרימה מלאה</h3>
+        <button class="big-button" onclick="testCompleteFlow()">🔄 בדוק זרימה מלאה</button>
+        <button class="big-button" onclick="goToSubscribe()">💳 עבור לדף מנוי</button>
+        <button class="big-button" onclick="goToDashboard()">📊 עבור לדשבורד</button>
+        <div id="flow-results" class="status-item">
+            תוצאות בדיקת הזרימה יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function setCookie(name, value, days = 30) {
+            const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+        }
+        
+        function getLocalStorage(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (error) {
+                return null;
+            }
+        }
+        
+        function setLocalStorage(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+        
+        function updateStatus() {
+            // Update cookies status
+            const userId = getCookie('userId');
+            const userAuth = getCookie('userAuth');
+            const user_id = getCookie('user_id');
+            
+            document.getElementById('cookies-status').innerHTML = `
+                <strong>userId:</strong> ${userId || '❌ לא נמצא'}<br>
+                <strong>userAuth:</strong> ${userAuth || '❌ לא נמצא'}<br>
+                <strong>user_id:</strong> ${user_id || '❌ לא נמצא'}<br>
+                <strong>כל ה-cookies:</strong> ${document.cookie || 'ריק'}
+            `;
+            
+            // Update localStorage status
+            const localUserId = getLocalStorage('userId');
+            const localUserAuth = getLocalStorage('userAuth');
+            
+            document.getElementById('localStorage-status').innerHTML = `
+                <strong>userId:</strong> ${localUserId || '❌ לא נמצא'}<br>
+                <strong>userAuth:</strong> ${localUserAuth || '❌ לא נמצא'}<br>
+                <strong>גודל localStorage:</strong> ${localStorage.length} פריטים
+            `;
+        }
+        
+        async function testCookieAuth() {
+            log('🍪 בודק אימות Cookie...');
+            const resultsDiv = document.getElementById('auth-results');
+            
+            const userId = getCookie('userId') || getCookie('userAuth') || getCookie('user_id');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ לא נמצא userId ב-cookies';
+                resultsDiv.className = 'status-item error';
+                log('❌ Cookie auth failed - no userId found');
+                return false;
+            }
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `✅ Cookie auth עובד!<br>👤 משתמש: ${data.name}<br>🆔 ID: ${data.userId}`;
+                    resultsDiv.className = 'status-item success';
+                    log(`✅ Cookie auth success: ${data.name} (${data.userId})`);
+                    return true;
+                } else {
+                    resultsDiv.innerHTML = `❌ Cookie auth נכשל: ${data.error}`;
+                    resultsDiv.className = 'status-item error';
+                    log(`❌ Cookie auth failed: ${data.error}`);
+                    return false;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Cookie auth network error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        function testLocalStorageAuth() {
+            log('💾 בודק אימות localStorage...');
+            const resultsDiv = document.getElementById('auth-results');
+            
+            const localUserId = getLocalStorage('userId');
+            
+            if (!localUserId) {
+                resultsDiv.innerHTML = '❌ לא נמצא userId ב-localStorage';
+                resultsDiv.className = 'status-item error';
+                log('❌ localStorage auth failed - no userId found');
+                return false;
+            }
+            
+            resultsDiv.innerHTML = `✅ localStorage auth זמין!<br>🆔 ID: ${localUserId}`;
+            resultsDiv.className = 'status-item success';
+            log(`✅ localStorage auth available: ${localUserId}`);
+            return true;
+        }
+        
+        async function testFullAuth() {
+            log('🔐 בודק אימות מלא...');
+            const cookieAuth = await testCookieAuth();
+            const localAuth = testLocalStorageAuth();
+            
+            const resultsDiv = document.getElementById('auth-results');
+            
+            if (cookieAuth && localAuth) {
+                resultsDiv.innerHTML = '✅ אימות מלא עובד! Cookie + localStorage';
+                resultsDiv.className = 'status-item success';
+                log('✅ Full auth working - both Cookie and localStorage');
+            } else if (cookieAuth) {
+                resultsDiv.innerHTML = '⚠️ רק Cookie auth עובד - localStorage חסר';
+                resultsDiv.className = 'status-item warning';
+                log('⚠️ Only Cookie auth working');
+            } else if (localAuth) {
+                resultsDiv.innerHTML = '⚠️ רק localStorage auth זמין - Cookie חסר';
+                resultsDiv.className = 'status-item warning';
+                log('⚠️ Only localStorage auth available');
+            } else {
+                resultsDiv.innerHTML = '❌ אין אימות זמין';
+                resultsDiv.className = 'status-item error';
+                log('❌ No auth available');
+            }
+        }
+        
+        function simulateLogin() {
+            log('🔑 מדמה התחברות...');
+            const testUserId = 'google_111351120503275674259';
+            
+            // Set multiple cookies
+            setCookie('userId', testUserId);
+            setCookie('userAuth', testUserId);
+            setCookie('user_id', testUserId);
+            
+            // Set localStorage
+            setLocalStorage('userId', testUserId);
+            setLocalStorage('userAuth', testUserId);
+            
+            const resultsDiv = document.getElementById('auth-results');
+            resultsDiv.innerHTML = `✅ סימולציה הושלמה!<br>🆔 ID: ${testUserId}`;
+            resultsDiv.className = 'status-item success';
+            
+            log(`✅ Login simulation complete: ${testUserId}`);
+            updateStatus();
+        }
+        
+        async function testSubscriptionFlow() {
+            log('💳 בודק זרימת מנוי...');
+            const resultsDiv = document.getElementById('auth-results');
+            
+            const userId = getCookie('userId') || getLocalStorage('userId');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין userId - לא ניתן לבדוק מנוי';
+                resultsDiv.className = 'status-item error';
+                log('❌ Subscription flow failed - no userId');
+                return;
+            }
+            
+            // Test subscription page access
+            const testPageId = 'test-page-id';
+            const subscribeUrl = `/subscribe?pageId=${testPageId}`;
+            
+            resultsDiv.innerHTML = `✅ זרימת מנוי זמינה!<br>🆔 User: ${userId}<br>🔗 URL: ${subscribeUrl}`;
+            resultsDiv.className = 'status-item success';
+            log(`✅ Subscription flow available for user: ${userId}`);
+        }
+        
+        async function testDashboardAccess() {
+            log('📊 בודק גישה לדשבורד...');
+            const resultsDiv = document.getElementById('auth-results');
+            
+            const userId = getCookie('userId') || getLocalStorage('userId');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין userId - לא ניתן לגשת לדשבורד';
+                resultsDiv.className = 'status-item error';
+                log('❌ Dashboard access failed - no userId');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/pages/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `✅ גישה לדשבורד זמינה!<br>📄 דפים: ${data.pages?.length || 0}`;
+                    resultsDiv.className = 'status-item success';
+                    log(`✅ Dashboard access available - ${data.pages?.length || 0} pages`);
+                } else {
+                    resultsDiv.innerHTML = `❌ שגיאה בגישה לדשבורד: ${data.error}`;
+                    resultsDiv.className = 'status-item error';
+                    log(`❌ Dashboard access error: ${data.error}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Dashboard network error: ${error.message}`);
+            }
+        }
+        
+        function setCookieManually() {
+            const userId = prompt('הכנס userId:');
+            if (userId) {
+                setCookie('userId', userId);
+                setCookie('userAuth', userId);
+                setCookie('user_id', userId);
+                
+                const resultsDiv = document.getElementById('fix-results');
+                resultsDiv.innerHTML = `✅ Cookie הוגדר: ${userId}`;
+                resultsDiv.className = 'status-item success';
+                log(`✅ Manual cookie set: ${userId}`);
+                updateStatus();
+            }
+        }
+        
+        function setLocalStorageManually() {
+            const userId = prompt('הכנס userId:');
+            if (userId) {
+                setLocalStorage('userId', userId);
+                setLocalStorage('userAuth', userId);
+                
+                const resultsDiv = document.getElementById('fix-results');
+                resultsDiv.innerHTML = `✅ localStorage הוגדר: ${userId}`;
+                resultsDiv.className = 'status-item success';
+                log(`✅ Manual localStorage set: ${userId}`);
+                updateStatus();
+            }
+        }
+        
+        function syncCookieToLocalStorage() {
+            const userId = getCookie('userId') || getCookie('userAuth') || getCookie('user_id');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין Cookie לסנכרון';
+                resultsDiv.className = 'status-item error';
+                log('❌ No cookie to sync');
+                return;
+            }
+            
+            setLocalStorage('userId', userId);
+            setLocalStorage('userAuth', userId);
+            
+            resultsDiv.innerHTML = `✅ סונכרן Cookie → localStorage: ${userId}`;
+            resultsDiv.className = 'status-item success';
+            log(`✅ Synced cookie to localStorage: ${userId}`);
+            updateStatus();
+        }
+        
+        function clearAllAuth() {
+            // Clear cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear localStorage
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userAuth');
+            
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '🗑️ כל האימות נוקה!';
+            resultsDiv.className = 'status-item warning';
+            log('🗑️ All auth cleared');
+            updateStatus();
+        }
+        
+        function clearCookiesOnly() {
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '🍪 Cookies נוקו!';
+            resultsDiv.className = 'status-item warning';
+            log('🍪 Cookies cleared');
+            updateStatus();
+        }
+        
+        function clearLocalStorageOnly() {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userAuth');
+            
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '💾 localStorage נוקה!';
+            resultsDiv.className = 'status-item warning';
+            log('💾 localStorage cleared');
+            updateStatus();
+        }
+        
+        async function testCompleteFlow() {
+            log('🔄 מתחיל בדיקת זרימה מלאה...');
+            const resultsDiv = document.getElementById('flow-results');
+            resultsDiv.innerHTML = '⏳ בודק זרימה מלאה...';
+            
+            const tests = [];
+            
+            // Test 1: Check auth
+            const cookieAuth = await testCookieAuth();
+            const localAuth = testLocalStorageAuth();
+            tests.push(`Auth: ${cookieAuth ? '✅' : '❌'} Cookie, ${localAuth ? '✅' : '❌'} localStorage`);
+            
+            // Test 2: Dashboard access
+            try {
+                const userId = getCookie('userId') || getLocalStorage('userId');
+                if (userId) {
+                    const response = await fetch(`/api/pages/${userId}`);
+                    tests.push(`Dashboard: ${response.ok ? '✅' : '❌'} (${response.status})`);
+                } else {
+                    tests.push('Dashboard: ❌ (no userId)');
+                }
+            } catch (error) {
+                tests.push('Dashboard: ❌ (network error)');
+            }
+            
+            // Test 3: Subscription readiness
+            const userId = getCookie('userId') || getLocalStorage('userId');
+            tests.push(`Subscription: ${userId ? '✅' : '❌'} (userId ${userId ? 'available' : 'missing'})`);
+            
+            resultsDiv.innerHTML = tests.join('<br>');
+            
+            if (tests.every(t => t.includes('✅'))) {
+                resultsDiv.className = 'status-item success';
+                log('✅ Complete flow test passed');
+            } else {
+                resultsDiv.className = 'status-item warning';
+                log('⚠️ Complete flow test has issues');
+            }
+        }
+        
+        function goToSubscribe() {
+            const userId = getCookie('userId') || getLocalStorage('userId');
+            if (userId) {
+                const testPageId = 'test-page-id';
+                window.location.href = `/subscribe?pageId=${testPageId}`;
+            } else {
+                alert('אין userId - יש להתחבר קודם');
+                log('❌ Cannot go to subscribe - no userId');
+            }
+        }
+        
+        function goToDashboard() {
+            const userId = getCookie('userId') || getLocalStorage('userId');
+            if (userId) {
+                window.location.href = '/dashboard';
+            } else {
+                alert('אין userId - יש להתחבר קודם');
+                log('❌ Cannot go to dashboard - no userId');
+            }
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        // עדכון סטטוס כל 3 שניות
+        setInterval(updateStatus, 3000);
+        
+        // עדכון ראשוני
+        updateStatus();
+        log('🔧 Cookie + localStorage Fix Test Page Loaded');
+    </script>
+</body>
+</html>

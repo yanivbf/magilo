@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת מנוי מהירה</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .result { padding: 15px; margin: 10px 0; border-radius: 8px; font-family: monospace; white-space: pre-wrap; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 בדיקת מנוי מהירה</h1>
+    
+    <button onclick="checkAuth()">בדוק אימות</button>
+    <button onclick="checkPages()">בדוק דפים שלי</button>
+    <button onclick="testSubscription()">בדוק מנוי</button>
+    
+    <div id="result" class="result info">לחץ על כפתור לבדיקה...</div>
+
+    <script>
+        async function checkAuth() {
+            const result = document.getElementById('result');
+            result.className = 'result info';
+            result.textContent = 'בודק אימות...';
+            
+            try {
+                const userId = getCookie('userId');
+                let text = `👤 User ID: ${userId}\n`;
+                text += `🍪 All cookies: ${document.cookie}\n\n`;
+                
+                if (!userId) {
+                    text += '❌ אין userId! צריך להתחבר מחדש';
+                    result.className = 'result error';
+                    result.textContent = text;
+                    return;
+                }
+                
+                // Test current user API
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    const data = await response.json();
+                    text += `✅ שרת מזהה: ${JSON.stringify(data, null, 2)}`;
+                    result.className = 'result success';
+                } else {
+                    text += `❌ שרת לא מזהה: ${response.status}`;
+                    result.className = 'result error';
+                }
+                result.textContent = text;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ שגיאה: ${error.message}`;
+            }
+        }
+        
+        async function checkPages() {
+            const result = document.getElementById('result');
+            result.className = 'result info';
+            result.textContent = 'בודק דפים...';
+            
+            try {
+                const response = await fetch('/dashboard');
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = '✅ דשבורד נטען - יש לך גישה לדפים\n\nעכשיו בדוק מנוי עם הכפתור הבא';
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ לא ניתן לטעון דשבורד: ${response.status}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ שגיאה: ${error.message}`;
+            }
+        }
+        
+        async function testSubscription() {
+            const result = document.getElementById('result');
+            result.className = 'result info';
+            result.textContent = 'בודק מנוי...';
+            
+            try {
+                const userId = getCookie('userId');
+                if (!userId) {
+                    result.className = 'result error';
+                    result.textContent = '❌ אין userId - התחבר קודם';
+                    return;
+                }
+                
+                // Use a test page ID - you'll need to replace this with your actual page
+                const testPageId = 'vrpyckmqwo9h50emse45zxzj'; // From our earlier check
+                
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documentId: testPageId, months: 1 })
+                });
+                
+                const data = await response.json();
+                
+                let text = `📄 Page ID: ${testPageId}\n`;
+                text += `👤 User ID: ${userId}\n`;
+                text += `📊 Response: ${response.status}\n\n`;
+                text += `Data: ${JSON.stringify(data, null, 2)}`;
+                
+                if (response.ok) {
+                    result.className = 'result success';
+                    text = '✅ מנוי הופעל בהצלחה!\n\n' + text;
+                } else {
+                    result.className = 'result error';
+                    text = '❌ שגיאה בהפעלת מנוי:\n\n' + text;
+                }
+                
+                result.textContent = text;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ שגיאה: ${error.message}`;
+            }
+        }
+        
+        function getCookie(name) {
+            return document.cookie
+                .split('; ')
+                .find(row => row.startsWith(name + '='))
+                ?.split('=')[1] || '';
+        }
+    </script>
+</body>
+</html>

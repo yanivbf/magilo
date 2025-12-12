@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מנוי מהירה</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .error { background: #f44336; }
+        .success { background: #4CAF50; }
+        .warning { background: #ff9800; }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 בדיקת מנוי מהירה</h1>
+        
+        <button class="button" onclick="setTestUser()">הגדר משתמש בדיקה</button>
+        <button class="button" onclick="testSubscription()">בדוק מנוי</button>
+        <button class="button" onclick="goToSubscribe()">לך לדף מנוי</button>
+        <button class="button" onclick="goToDashboard()">דשבורד</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        function setTestUser() {
+            // Set a test userId cookie
+            const testUserId = 'google_111351120503275674259';
+            document.cookie = `userId=${testUserId}; path=/; max-age=86400`;
+            log(`✅ הוגדר userId: ${testUserId}`, 'success');
+        }
+        
+        async function testSubscription() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1];
+            
+            if (!userId) {
+                log('❌ אין userId - הגדר משתמש בדיקה קודם', 'error');
+                return;
+            }
+            
+            log(`🔍 בודק עם userId: ${userId}`, 'warning');
+            
+            try {
+                // First get user pages
+                const pagesResponse = await fetch(`/api/pages/${userId}`);
+                const pagesData = await pagesResponse.json();
+                
+                if (!pagesResponse.ok || !pagesData.pages || pagesData.pages.length === 0) {
+                    log('❌ לא נמצאו דפים למשתמש', 'error');
+                    return;
+                }
+                
+                const pageId = pagesData.pages[0].documentId || pagesData.pages[0].id;
+                log(`✅ נמצא דף: ${pageId}`, 'success');
+                
+                // Now test subscription
+                const response = await fetch('/api/subscription/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pageId: pageId,
+                        userId: userId,
+                        plan: 'premium',
+                        duration: 'monthly'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('🎉 מנוי הופעל בהצלחה!', 'success');
+                } else {
+                    log(`❌ שגיאה: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToSubscribe() {
+            window.location.href = '/subscribe';
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Check current state on load
+        window.onload = function() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1];
+            
+            if (userId) {
+                log(`✅ משתמש מחובר: ${userId}`, 'success');
+            } else {
+                log('⚠️ אין משתמש מחובר', 'warning');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקה פשוטה - יצירת דף</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>בדיקה פשוטה - יצירת דף נותני שירות</h1>
+    
+    <button onclick="testCreate()">יצור דף נותני שירות</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testCreate() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="success">יוצר דף...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5173/api/create-structured-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: 'test_user_' + Date.now(),
+                        pageType: 'service',
+                        designStyle: 'modern',
+                        formData: {
+                            mainName: 'מוסך דוד - בדיקה פשוטה',
+                            description: 'מוסך מקצועי',
+                            phone: '050-1234567',
+                            email: 'test@example.com'
+                        },
+                        optionalSections: ['about', 'appointments'],
+                        style: 'Modern'
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ דף נוצר בהצלחה!<br>
+                            <a href="http://localhost:5173${result.pageUrl}" target="_blank">פתח דף</a>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ שגיאה: ${errorText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ שגיאת רשת: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

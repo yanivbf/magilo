@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת עריכת דף - אימות</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת עריכת דף - אימות</h1>
+        
+        <div>
+            <label>Page ID לבדיקה:</label>
+            <input type="text" id="pageId" placeholder="הכנס Page ID או documentId">
+        </div>
+        
+        <button onclick="checkAuth()">1. בדוק אימות</button>
+        <button onclick="getUserPages()">2. קבל דפים של המשתמש</button>
+        <button onclick="testPageEdit()">3. בדוק עריכת דף</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        async function checkAuth() {
+            results.innerHTML = '<div class="info">בודק אימות...</div>';
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok && data.authenticated) {
+                    results.innerHTML += `
+                        <div class="success">✅ משתמש מחובר: ${data.userId}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    return data.userId;
+                } else {
+                    results.innerHTML += `
+                        <div class="error">❌ משתמש לא מחובר</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    return null;
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="error">❌ שגיאה: ${error.message}</div>`;
+                return null;
+            }
+        }
+        
+        async function getUserPages() {
+            results.innerHTML += '<div class="info">מקבל דפים של המשתמש...</div>';
+            
+            try {
+                const response = await fetch('/dashboard');
+                if (response.ok) {
+                    results.innerHTML += `<div class="success">✅ הצלחה לגשת לדשבורד</div>`;
+                    
+                    // Try to get pages via API
+                    const authResponse = await fetch('/api/user/current');
+                    if (authResponse.ok) {
+                        const authData = await authResponse.json();
+                        if (authData.userId) {
+                            const pagesResponse = await fetch(`/api/pages/${authData.userId}`);
+                            if (pagesResponse.ok) {
+                                const pagesData = await pagesResponse.json();
+                                results.innerHTML += `
+                                    <div class="success">✅ נמצאו ${pagesData.pages?.length || 0} דפים</div>
+                                    <pre>${JSON.stringify(pagesData.pages?.slice(0, 3), null, 2)}</pre>
+                                `;
+                                
+                                // Auto-fill first page ID
+                                if (pagesData.pages && pagesData.pages.length > 0) {
+                                    document.getElementById('pageId').value = pagesData.pages[0].documentId || pagesData.pages[0].id;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    results.innerHTML += `<div class="error">❌ לא הצלחה לגשת לדשבורד: ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        async function testPageEdit() {
+            const pageId = document.getElementById('pageId').value;
+            if (!pageId) {
+                results.innerHTML += `<div class="error">❌ אנא הכנס Page ID</div>`;
+                return;
+            }
+            
+            results.innerHTML += `<div class="info">בודק עריכת דף ${pageId}...</div>`;
+            
+            try {
+                // Test simple field update
+                const response = await fetch('/api/update-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pageId: pageId,
+                        field: 'title',
+                        value: 'כותרת בדיקה - ' + new Date().toLocaleTimeString()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML += `
+                        <div class="success">✅ עריכת דף הצליחה!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    results.innerHTML += `
+                        <div class="error">❌ עריכת דף נכשלה: ${data.error}</div>
+                        <div class="info">Status: ${response.status}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="error">❌ שגיאה בעריכת דף: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-check on load
+        window.onload = async () => {
+            await checkAuth();
+            await getUserPages();
+        };
+    </script>
+</body>
+</html>

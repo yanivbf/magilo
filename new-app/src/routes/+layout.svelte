@@ -12,12 +12,51 @@
 	// User data from auth store (same as dashboard)
 	let userData = $state({ name: 'משתמש רשום', avatar: null, email: '' });
 	
-	// Update user data when currentUser changes
+	// Update user data when currentUser changes - FIXED: Removed problematic console.log
 	$effect(() => {
 		if ($currentUser) {
-			userData = extractUserData($currentUser);
+			// Extract user data properly from Google OAuth
+			const name = $currentUser.name || $currentUser.email?.split('@')[0] || 'משתמש רשום';
+			const email = $currentUser.email || '';
+			const avatar = $currentUser.avatar || $currentUser.picture || null;
+			
+			userData = { name, email, avatar };
+			
+			// If we have basic data but missing Google info, try to fetch from API
+			if (name === 'משתמש רשום' && $currentUser.userId) {
+				fetchCompleteUserData($currentUser.userId);
+			}
+		} else {
+			userData = { name: 'משתמש רשום', avatar: null, email: '' };
 		}
 	});
+	
+	// Function to fetch complete user data from API
+	async function fetchCompleteUserData(userId) {
+		try {
+			const response = await fetch(`/api/user/${userId}`);
+			if (response.ok) {
+				const result = await response.json();
+				if (result.success && result.user) {
+					console.log('✅ Layout - Complete user data received:', result.user);
+					
+					// Update auth store with complete data
+					const completeUser = {
+						id: result.user.userId,
+						userId: result.user.userId,
+						email: result.user.email || '',
+						name: result.user.name || 'משתמש רשום',
+						avatar: result.user.avatar || null,
+						subscriptionStatus: result.user.subscriptionStatus || 'active'
+					};
+					
+					currentUser.set(completeUser);
+				}
+			}
+		} catch (error) {
+			// Silent error handling - don't spam console
+		}
+	}
 	
 	// Logout function (same as dashboard)
 	async function handleSignOut() {
@@ -70,7 +109,7 @@
 					<!-- CENTER: Empty space -->
 					<div></div>
 					
-					<!-- LEFT SIDE: Logo + Email + Logout -->
+					<!-- LEFT SIDE: Logo + User Info + Logout -->
 					<div class="flex items-center gap-4">
 						{#if $currentUser}
 							<button 
@@ -85,9 +124,32 @@
 							</button>
 						{/if}
 						
-						{#if $currentUser && userData.email}
-							<div class="text-sm text-gray-600 border-l pl-4" dir="ltr">
-								{userData.email}
+						{#if $currentUser}
+							<div class="flex items-center gap-3 border-l pl-4">
+								<!-- User Avatar -->
+								{#if userData.avatar}
+									<img 
+										src={userData.avatar} 
+										alt={userData.name}
+										class="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+									/>
+								{:else}
+									<div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+										{userData.name.charAt(0).toUpperCase()}
+									</div>
+								{/if}
+								
+								<!-- User Name and Email -->
+								<div class="text-right">
+									<div class="text-sm font-medium text-gray-900">
+										{userData.name}
+									</div>
+									{#if userData.email}
+										<div class="text-xs text-gray-500" dir="ltr">
+											{userData.email}
+										</div>
+									{/if}
+								</div>
 							</div>
 						{/if}
 						

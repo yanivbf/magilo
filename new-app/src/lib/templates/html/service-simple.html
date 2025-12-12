@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{businessName}} - {{profession}}</title>
+    <meta name="description" content="{{description}}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header .profession {
+            color: #764ba2;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .header .description {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .contact-info {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .contact-info h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .contact-item i {
+            margin-left: 15px;
+            color: #764ba2;
+            width: 20px;
+        }
+
+        .appointment-form {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .appointment-form h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .working-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .day-checkbox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 4px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .day-checkbox:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .day-checkbox.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .day-checkbox input {
+            display: none;
+        }
+
+        .business-hours {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .business-hours h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .hours-info {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header,
+            .contact-info,
+            .appointment-form {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>{{businessName}}</h1>
+            <div class="profession">{{profession}}</div>
+            <div class="description">{{description}}</div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="contact-info">
+            <h2>📞 פרטי התקשרות</h2>
+            <div class="contact-item">
+                <i>📱</i>
+                <span><a href="tel:{{phone}}" style="color: inherit; text-decoration: none;">{{phone}}</a></span>
+            </div>
+            {{#if email}}
+            <div class="contact-item">
+                <i>📧</i>
+                <span><a href="mailto:{{email}}" style="color: inherit; text-decoration: none;">{{email}}</a></span>
+            </div>
+            {{/if}}
+            {{#if address}}
+            <div class="contact-item">
+                <i>📍</i>
+                <span>{{address}}</span>
+            </div>
+            {{/if}}
+            {{#if startTime}}
+            <div class="contact-item">
+                <i>🕐</i>
+                <span>{{startTime}}-{{endTime}}{{#if breakStart}}, הפסקה {{breakStart}}-{{breakEnd}}{{/if}}</span>
+            </div>
+            {{/if}}
+            {{#if workingDays}}
+            <div class="contact-item">
+                <i>📅</i>
+                <span>ימי עבודה: {{workingDays}}</span>
+            </div>
+            {{/if}}
+        </div>
+
+        <!-- Appointment Form -->
+        <div class="appointment-form">
+            <h2>📅 קביעת תור</h2>
+
+            {{#if startTime}}
+            <div class="business-hours">
+                <h3>🕐 שעות עבודה</h3>
+                <div class="hours-info">{{startTime}}-{{endTime}}{{#if breakStart}}, הפסקה {{breakStart}}-{{breakEnd}}{{/if}}</div>
+            </div>
+            {{/if}}
+            
+            <div class="success-message" id="successMessage">
+                ✅ התור נקבע בהצלחה! נחזור אליך בהקדם לאישור.
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                ❌ אירעה שגיאה. אנא נסה שוב או התקשר אלינו ישירות.
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>שולח בקשה...</div>
+            </div>
+
+            <form id="appointmentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customerName">שם מלא *</label>
+                        <input type="text" id="customerName" name="customerName" required placeholder="הזן את שמך המלא">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">טלפון *</label>
+                        <input type="tel" id="customerPhone" name="customerPhone" required placeholder="050-1234567">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="preferredDate">תאריך מועדף</label>
+                        <input type="date" id="preferredDate" name="preferredDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="preferredTime">שעה מועדפת</label>
+                        <select id="preferredTime" name="preferredTime">
+                            <option value="">בחר שעה</option>
+                            <option value="08:00">08:00</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="13:00">13:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="serviceType">סוג השירות</label>
+                    <input type="text" id="serviceType" name="serviceType" placeholder="לדוגמה: תיקון, בדיקה, התקנה...">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">הערות נוספות</label>
+                    <textarea id="notes" name="notes" placeholder="פרט על הבעיה או השירות הנדרש..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">📅 קבע תור</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            try {
+                // Get page ID from URL or set default
+                const pathParts = window.location.pathname.split('/');
+                const pageId = pathParts[pathParts.length - 1] || 'default';
+                
+                const response = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...data,
+                        pageId: pageId,
+                        businessName: '{{businessName}}',
+                        businessPhone: '{{phone}}',
+                        status: 'pending'
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('successMessage').style.display = 'block';
+                    form.reset();
+                    
+                    // Scroll to success message
+                    document.getElementById('successMessage').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('errorMessage').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        // Set minimum date to today
+        document.getElementById('preferredDate').min = new Date().toISOString().split('T')[0];
+
+        // Working days configuration
+        const workingDaysStr = '{{workingDays}}';
+        const workingDays = workingDaysStr ? workingDaysStr.split(',').map(d => d.trim()) : [];
+        
+        // Map Hebrew days to JavaScript day numbers
+        const dayMap = {
+            'sunday': 0,
+            'monday': 1,
+            'tuesday': 2,
+            'wednesday': 3,
+            'thursday': 4,
+            'friday': 5,
+            'saturday': 6
+        };
+
+        // Convert working days to numbers
+        const workingDayNumbers = workingDays.map(day => dayMap[day]).filter(d => d !== undefined);
+
+        // Disable dates that are not working days
+        if (workingDayNumbers.length > 0) {
+            const dateInput = document.getElementById('preferredDate');
+            
+            dateInput.addEventListener('input', function() {
+                const selectedDate = new Date(this.value);
+                const dayOfWeek = selectedDate.getDay();
+                
+                if (!workingDayNumbers.includes(dayOfWeek)) {
+                    alert('התאריך שבחרת אינו יום עבודה. אנא בחר תאריך אחר.');
+                    this.value = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

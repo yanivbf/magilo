@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 בדיקה מהירה - תיקונים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f8ff;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 5px solid;
+        }
+        .success {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .warning {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #ef6c00;
+        }
+        .info {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1565c0;
+        }
+        button {
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+        .urgent {
+            background: linear-gradient(45deg, #ff5722, #ff9800);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #4caf50, #8bc34a);
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 בדיקה מהירה - תיקונים</h1>
+        
+        <div class="info">
+            <h3>📊 סטטוס כללי</h3>
+            <div class="progress">
+                <div class="progress-bar" id="overallProgress" style="width: 0%"></div>
+            </div>
+            <p id="overallStatus">מתחיל בדיקות...</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🔐 בדיקת אימות</h3>
+                <div id="authStatus" class="status info">בודק...</div>
+                <button onclick="testAuth()">בדוק אימות</button>
+                <button onclick="fixAuth()" class="urgent">תקן אימות</button>
+            </div>
+
+            <div class="card">
+                <h3>🍪 בדיקת Cookies</h3>
+                <div id="cookieStatus" class="status info">בודק...</div>
+                <button onclick="testCookies()">בדוק Cookies</button>
+                <button onclick="fixCookies()" class="urgent">תקן Cookies</button>
+            </div>
+
+            <div class="card">
+                <h3>💾 בדיקת localStorage</h3>
+                <div id="localStorageStatus" class="status info">בודק...</div>
+                <button onclick="testLocalStorage()">בדוק localStorage</button>
+                <button onclick="fixLocalStorage()" class="urgent">תקן localStorage</button>
+            </div>
+
+            <div class="card">
+                <h3>🔗 בדיקת Google OAuth</h3>
+                <div id="googleStatus" class="status info">בודק...</div>
+                <button onclick="testGoogle()">בדוק Google</button>
+                <button onclick="fixGoogle()" class="urgent">תקן Google</button>
+            </div>
+        </div>
+
+        <div class="status warning">
+            <h3>⚡ פעולות מהירות</h3>
+            <button onclick="runAllTests()">בדוק הכל</button>
+            <button onclick="fixAllIssues()" class="urgent">תקן הכל</button>
+            <button onclick="resetEverything()" class="urgent">איפוס מלא</button>
+            <button onclick="goToDashboard()">לך לדשבורד</button>
+        </div>
+
+        <div id="detailedResults"></div>
+    </div>
+
+    <script>
+        let testsCompleted = 0;
+        const totalTests = 4;
+
+        function updateProgress() {
+            const progress = (testsCompleted / totalTests) * 100;
+            document.getElementById('overallProgress').style.width = progress + '%';
+            document.getElementById('overallStatus').textContent = 
+                `הושלמו ${testsCompleted} מתוך ${totalTests} בדיקות (${Math.round(progress)}%)`;
+        }
+
+        function setStatus(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${type}`;
+            element.textContent = message;
+        }
+
+        async function testAuth() {
+            setStatus('authStatus', 'info', 'בודק אימות...');
+            
+            try {
+                // בדוק cookie
+                const cookies = document.cookie;
+                const userIdMatch = cookies.match(/userId=([^;]+)/);
+                const userId = userIdMatch ? userIdMatch[1] : null;
+                
+                if (userId) {
+                    // בדוק עם השרת
+                    const response = await fetch('/api/user/current');
+                    if (response.ok) {
+                        const data = await response.json();
+                        setStatus('authStatus', 'success', `✅ מחובר: ${data.name || userId}`);
+                    } else {
+                        setStatus('authStatus', 'warning', `⚠️ Cookie קיים אבל שרת לא מזהה: ${userId}`);
+                    }
+                } else {
+                    setStatus('authStatus', 'error', '❌ לא מחובר - אין userId');
+                }
+            } catch (error) {
+                setStatus('authStatus', 'error', `❌ שגיאה: ${error.message}`);
+            }
+            
+            testsCompleted++;
+            updateProgress();
+        }
+
+        function testCookies() {
+            setStatus('cookieStatus', 'info', 'בודק cookies...');
+            
+            try {
+                // נסה ליצור cookie
+                document.cookie = 'test=value; path=/';
+                
+                // בדוק אם נוצר
+                if (document.cookie.includes('test=value')) {
+                    const cookies = document.cookie.split(';').length;
+                    setStatus('cookieStatus', 'success', `✅ Cookies עובדים (${cookies} cookies)`);
+                } else {
+                    setStatus('cookieStatus', 'error', '❌ לא יכול ליצור cookies');
+                }
+            } catch (error) {
+                setStatus('cookieStatus', 'error', `❌ שגיאה בcookies: ${error.message}`);
+            }
+            
+            testsCompleted++;
+            updateProgress();
+        }
+
+        function testLocalStorage() {
+            setStatus('localStorageStatus', 'info', 'בודק localStorage...');
+            
+            try {
+                localStorage.setItem('test', 'value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (value === 'value') {
+                    setStatus('localStorageStatus', 'success', '✅ localStorage עובד תקין');
+                } else {
+                    setStatus('localStorageStatus', 'error', '❌ localStorage לא עובד');
+                }
+            } catch (error) {
+                setStatus('localStorageStatus', 'error', `❌ localStorage חסום: ${error.message}`);
+            }
+            
+            testsCompleted++;
+            updateProgress();
+        }
+
+        function testGoogle() {
+            setStatus('googleStatus', 'info', 'בודק Google OAuth...');
+            
+            const currentUrl = window.location.origin;
+            const expectedUrls = [
+                'http://localhost:3000',
+                'http://localhost:5173',
+                'http://localhost:5174',
+                'http://localhost:5175'
+            ];
+            
+            if (expectedUrls.includes(currentUrl)) {
+                setStatus('googleStatus', 'success', `✅ פורט מוגדר: ${currentUrl}`);
+            } else {
+                setStatus('googleStatus', 'error', `❌ פורט לא מוגדר: ${currentUrl}`);
+            }
+            
+            testsCompleted++;
+            updateProgress();
+        }
+
+        function fixAuth() {
+            const tempUserId = 'temp_' + Date.now();
+            document.cookie = `userId=${tempUserId}; path=/; max-age=3600`;
+            setStatus('authStatus', 'success', `✅ הוגדר משתמש זמני: ${tempUserId}`);
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        function fixCookies() {
+            try {
+                // נקה cookies ישנים
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                // צור cookie חדש
+                const userId = 'user_' + Date.now();
+                document.cookie = `userId=${userId}; path=/; max-age=86400`;
+                
+                setStatus('cookieStatus', 'success', '✅ Cookies תוקנו');
+            } catch (error) {
+                setStatus('cookieStatus', 'error', `❌ שגיאה בתיקון: ${error.message}`);
+            }
+        }
+
+        function fixLocalStorage() {
+            try {
+                localStorage.clear();
+                setStatus('localStorageStatus', 'success', '✅ localStorage נוקה');
+            } catch (error) {
+                setStatus('localStorageStatus', 'warning', '⚠️ localStorage לא זמין - נשתמש רק בcookies');
+            }
+        }
+
+        function fixGoogle() {
+            const currentPort = window.location.port || '80';
+            const googleConsoleUrl = 'https://console.developers.google.com/apis/credentials';
+            
+            alert(`
+🔧 תיקון Google OAuth:
+
+1. פתח: ${googleConsoleUrl}
+2. הוסף את הכתובות:
+   • JavaScript origins: ${window.location.origin}
+   • Redirect URIs: ${window.location.origin}/api/auth/google
+
+3. שמור ובדוק שוב
+            `);
+            
+            window.open(googleConsoleUrl, '_blank');
+            setStatus('googleStatus', 'warning', '⚠️ עדכן ב-Google Console ובדוק שוב');
+        }
+
+        async function runAllTests() {
+            testsCompleted = 0;
+            updateProgress();
+            
+            await testAuth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testCookies();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testLocalStorage();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testGoogle();
+        }
+
+        function fixAllIssues() {
+            fixAuth();
+            fixCookies();
+            fixLocalStorage();
+            
+            alert('✅ כל התיקונים הופעלו! הדף יתרענן...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+
+        function resetEverything() {
+            if (confirm('⚠️ האם אתה בטוח שאתה רוצה לאפס הכל?')) {
+                try {
+                    // נקה localStorage
+                    localStorage.clear();
+                    
+                    // נקה sessionStorage
+                    sessionStorage.clear();
+                    
+                    // נקה cookies
+                    document.cookie.split(";").forEach(function(c) { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                    });
+                    
+                    alert('✅ הכל נוקה! הדף יתרענן...');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } catch (error) {
+                    alert('❌ שגיאה באיפוס: ' + error.message);
+                }
+            }
+        }
+
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+
+        // הפעל בדיקות אוטומטיות בטעינת הדף
+        window.onload = function() {
+            setTimeout(runAllTests, 1000);
+        };
+    </script>
+</body>
+</html>

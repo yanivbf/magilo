@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת סטטוס אימות</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת סטטוס אימות</h1>
+        
+        <button onclick="checkAuthStatus()">בדוק סטטוס אימות</button>
+        <button onclick="checkCookies()">בדוק Cookies</button>
+        <button onclick="testUpdateAPI()">בדוק API עדכון</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        async function checkAuthStatus() {
+            results.innerHTML = '<div class="info">בודק סטטוס אימות...</div>';
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML += `
+                        <div class="success">✅ משתמש מחובר!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    results.innerHTML += `
+                        <div class="error">❌ משתמש לא מחובר</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        function checkCookies() {
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+            
+            results.innerHTML += `
+                <div class="info">🍪 Cookies נוכחיים:</div>
+                <pre>${JSON.stringify(cookies, null, 2)}</pre>
+            `;
+            
+            if (cookies.userId) {
+                results.innerHTML += `<div class="success">✅ יש userId cookie: ${cookies.userId}</div>`;
+            } else {
+                results.innerHTML += `<div class="error">❌ אין userId cookie</div>`;
+            }
+        }
+        
+        async function testUpdateAPI() {
+            results.innerHTML += '<div class="info">בודק API עדכון...</div>';
+            
+            try {
+                // Try to update a non-existent page to test auth
+                const response = await fetch('/api/update-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pageId: 'test-123',
+                        field: 'title',
+                        value: 'test'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    results.innerHTML += `<div class="error">❌ API מחזיר: ${data.error}</div>`;
+                } else if (response.status === 404) {
+                    results.innerHTML += `<div class="success">✅ אימות עבר! (דף לא נמצא - זה צפוי)</div>`;
+                } else {
+                    results.innerHTML += `
+                        <div class="info">📊 תגובת API:</div>
+                        <pre>Status: ${response.status}\n${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="error">❌ שגיאה ב-API: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-check on load
+        window.onload = () => {
+            checkAuthStatus();
+            checkCookies();
+        };
+    </script>
+</body>
+</html>

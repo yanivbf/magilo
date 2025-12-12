@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיקון מיידי - שגיאת User ID</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .urgent {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .fix-button {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            border: none;
+            font-size: 20px;
+            padding: 20px 40px;
+        }
+        .status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 תיקון מיידי - שגיאת User ID</h1>
+        
+        <div class="urgent">
+            <h2>🔥 בעיה זוהתה!</h2>
+            <p>המערכת מציגה: <strong>"No user ID found. Please log in again"</strong></p>
+            <p>זה אומר שה-Cookie לא הוגדר נכון. בואו נתקן את זה עכשיו!</p>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="fix-button" onclick="fixNow()">🔧 תקן עכשיו!</button>
+        </div>
+
+        <div id="status" class="status">
+            מוכן לתיקון...
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="checkStatus()">🔍 בדוק מצב</button>
+            <button onclick="clearAndReload()">🔄 נקה ורענן</button>
+            <button onclick="openDashboard()">📊 פתח דשבורד</button>
+        </div>
+    </div>
+
+    <script>
+        const MAIN_USER_ID = 'google_111351120503275674259';
+        
+        function log(message) {
+            const statusDiv = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            statusDiv.innerHTML = `<div>[${timestamp}] ${message}</div>` + statusDiv.innerHTML;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function setCookie(name, value, days = 30) {
+            const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+            log(`✅ Cookie נוצר: ${name}=${value}`);
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function fixNow() {
+            log('🔧 מתחיל תיקון מיידי...');
+            
+            // 1. הגדרת Cookies
+            log('📝 מגדיר Cookies...');
+            setCookie('userId', MAIN_USER_ID, 30);
+            setCookie('subscriptionStatus', 'active', 30);
+            setCookie('subscriptionExpiry', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), 30);
+            
+            // 2. הגדרת localStorage
+            log('💾 מגדיר localStorage...');
+            try {
+                const userData = {
+                    id: MAIN_USER_ID,
+                    userId: MAIN_USER_ID,
+                    email: '',
+                    name: 'משתמש רשום',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                log('✅ localStorage הוגדר בהצלחה');
+            } catch (e) {
+                log(`⚠️ localStorage לא זמין: ${e.message}`);
+            }
+            
+            // 3. בדיקה
+            log('🔍 בודק שהתיקון עבד...');
+            const userId = getCookie('userId');
+            if (userId === MAIN_USER_ID) {
+                log('✅ התיקון הצליח! Cookie הוגדר נכון');
+                log('🔄 מרענן את הדף בעוד 3 שניות...');
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                log('❌ התיקון נכשל - Cookie לא הוגדר');
+            }
+        }
+
+        function checkStatus() {
+            log('🔍 בודק מצב נוכחי...');
+            
+            const userId = getCookie('userId');
+            const subscriptionStatus = getCookie('subscriptionStatus');
+            
+            log(`Cookie userId: ${userId || 'חסר!'}`);
+            log(`Cookie subscriptionStatus: ${subscriptionStatus || 'חסר'}`);
+            
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const userData = JSON.parse(currentUser);
+                    log(`localStorage user: ${userData.userId || 'חסר ID'}`);
+                } else {
+                    log('localStorage: ריק');
+                }
+            } catch (e) {
+                log(`localStorage שגיאה: ${e.message}`);
+            }
+        }
+
+        function clearAndReload() {
+            log('🧹 מנקה הכל...');
+            
+            // נקה cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // נקה localStorage
+            try {
+                localStorage.clear();
+                log('✅ localStorage נוקה');
+            } catch (e) {
+                log(`⚠️ לא ניתן לנקות localStorage: ${e.message}`);
+            }
+            
+            log('🔄 מרענן בעוד 2 שניות...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+
+        function openDashboard() {
+            log('📊 פותח דשבורד...');
+            window.location.href = '/dashboard?userId=' + MAIN_USER_ID;
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            log('🚀 מערכת תיקון נטענה');
+            checkStatus();
+        };
+    </script>
+</body>
+</html>

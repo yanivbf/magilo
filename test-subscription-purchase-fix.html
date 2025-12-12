@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 בדיקת תיקון רכישת מנוי</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; border-left: 5px solid #28a745; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .big-button {
+            background: #28a745;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .big-button:hover { background: #218838; }
+        .danger-button {
+            background: #dc3545;
+        }
+        .danger-button:hover { background: #c82333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת תיקון רכישת מנוי</h1>
+    
+    <div class="section info">
+        <h3>📊 מצב נוכחי</h3>
+        <div id="current-status">טוען...</div>
+    </div>
+    
+    <div class="section">
+        <h3>🔐 בדיקת אימות לפני רכישה</h3>
+        <div class="grid">
+            <div>
+                <button onclick="checkAuthStatus()">🔍 בדוק אימות</button>
+                <button onclick="checkCookiesAndStorage()">🍪 בדוק Cookies + localStorage</button>
+                <button onclick="simulateLogin()">🔑 סימולציה התחברות</button>
+            </div>
+            <div>
+                <button onclick="testSubscriptionAPI()">🧪 בדוק API מנוי</button>
+                <button onclick="testFullPurchaseFlow()">💳 בדוק זרימת רכישה מלאה</button>
+                <button onclick="goToSubscribePage()">🚀 עבור לדף מנוי</button>
+            </div>
+        </div>
+        <div id="auth-results" class="status-item">
+            תוצאות בדיקת האימות יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>🛠️ כלי תיקון מהיר</h3>
+        <div class="grid">
+            <div>
+                <button onclick="fixCookiesFromLocalStorage()">🔄 תקן Cookies מ-localStorage</button>
+                <button onclick="setTestUserManually()">👤 הגדר משתמש בדיקה</button>
+                <button onclick="clearAllAndRestart()">🗑️ נקה הכל והתחל מחדש</button>
+            </div>
+            <div>
+                <button onclick="testWithDifferentMethods()">🔬 בדוק שיטות שונות</button>
+                <button onclick="debugCookieIssues()">🐛 דבג בעיות Cookies</button>
+                <button onclick="forceRefreshAuth()">⚡ רענן אימות בכוח</button>
+            </div>
+        </div>
+        <div id="fix-results" class="status-item">
+            תוצאות כלי התיקון יופיעו כאן
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📋 לוג מפורט</h3>
+        <button onclick="clearLog()">🗑️ נקה לוג</button>
+        <pre id="detailed-log">הלוג יופיע כאן...</pre>
+    </div>
+
+    <script>
+        let logEntries = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            document.getElementById('detailed-log').textContent = logEntries.join('\n');
+            console.log(entry);
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function setCookie(name, value, days = 30) {
+            const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+        }
+        
+        function updateStatus() {
+            const userId = getCookie('userId');
+            const userAuth = getCookie('userAuth');
+            const user_id = getCookie('user_id');
+            const localUserId = localStorage.getItem('userId');
+            
+            document.getElementById('current-status').innerHTML = `
+                <strong>🍪 Cookies:</strong><br>
+                - userId: ${userId || '❌ לא נמצא'}<br>
+                - userAuth: ${userAuth || '❌ לא נמצא'}<br>
+                - user_id: ${user_id || '❌ לא נמצא'}<br><br>
+                <strong>💾 localStorage:</strong><br>
+                - userId: ${localUserId || '❌ לא נמצא'}<br><br>
+                <strong>🕒 זמן:</strong> ${new Date().toLocaleString('he-IL')}<br>
+                <strong>🌐 URL:</strong> ${window.location.href}
+            `;
+        }
+        
+        async function checkAuthStatus() {
+            log('🔍 בודק סטטוס אימות...');
+            const resultsDiv = document.getElementById('auth-results');
+            resultsDiv.innerHTML = '⏳ בודק...';
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `✅ מחובר בהצלחה!<br>👤 משתמש: ${data.name}<br>🆔 ID: ${data.userId}`;
+                    resultsDiv.className = 'status-item success';
+                    log(`✅ Auth check success: ${data.name} (${data.userId})`);
+                    return true;
+                } else {
+                    resultsDiv.innerHTML = `❌ שגיאת אימות: ${data.error}`;
+                    resultsDiv.className = 'status-item error';
+                    log(`❌ Auth check failed: ${data.error}`);
+                    return false;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Auth check network error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        function checkCookiesAndStorage() {
+            log('🍪 בודק Cookies ו-localStorage...');
+            const resultsDiv = document.getElementById('auth-results');
+            
+            const userId = getCookie('userId');
+            const userAuth = getCookie('userAuth');
+            const user_id = getCookie('user_id');
+            const localUserId = localStorage.getItem('userId');
+            
+            const cookieCount = [userId, userAuth, user_id].filter(Boolean).length;
+            const hasLocalStorage = !!localUserId;
+            
+            if (cookieCount > 0 || hasLocalStorage) {
+                resultsDiv.innerHTML = `✅ נמצאו נתוני אימות!<br>
+                    🍪 Cookies: ${cookieCount}/3<br>
+                    💾 localStorage: ${hasLocalStorage ? 'יש' : 'אין'}<br>
+                    🆔 Best userId: ${userId || userAuth || user_id || localUserId}`;
+                resultsDiv.className = 'status-item success';
+                log(`✅ Found auth data - cookies: ${cookieCount}, localStorage: ${hasLocalStorage}`);
+                return true;
+            } else {
+                resultsDiv.innerHTML = '❌ לא נמצאו נתוני אימות';
+                resultsDiv.className = 'status-item error';
+                log('❌ No auth data found');
+                return false;
+            }
+        }
+        
+        function simulateLogin() {
+            log('🔑 מדמה התחברות...');
+            const testUserId = 'google_111351120503275674259';
+            
+            // Set all cookie formats
+            setCookie('userId', testUserId);
+            setCookie('userAuth', testUserId);
+            setCookie('user_id', testUserId);
+            
+            // Set localStorage
+            localStorage.setItem('userId', testUserId);
+            
+            const resultsDiv = document.getElementById('auth-results');
+            resultsDiv.innerHTML = `✅ סימולציה הושלמה!<br>🆔 ID: ${testUserId}`;
+            resultsDiv.className = 'status-item success';
+            
+            log(`✅ Login simulation complete: ${testUserId}`);
+            updateStatus();
+        }
+        
+        async function testSubscriptionAPI() {
+            log('🧪 בודק API מנוי...');
+            const resultsDiv = document.getElementById('auth-results');
+            
+            const userId = getCookie('userId') || getCookie('userAuth') || getCookie('user_id') || localStorage.getItem('userId');
+            
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין userId - לא ניתן לבדוק API';
+                resultsDiv.className = 'status-item error';
+                log('❌ No userId for API test');
+                return;
+            }
+            
+            resultsDiv.innerHTML = '⏳ בודק API מנוי...';
+            
+            try {
+                const testPageId = 'test-page-id-' + Date.now();
+                
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({ 
+                        documentId: testPageId,
+                        userId: userId,
+                        months: 1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `✅ API מנוי עובד!<br>📄 תוצאה: ${JSON.stringify(data).substring(0, 100)}...`;
+                    resultsDiv.className = 'status-item success';
+                    log('✅ Subscription API test passed');
+                } else {
+                    resultsDiv.innerHTML = `❌ API מנוי נכשל: ${data.error}<br>🔍 Debug: ${JSON.stringify(data.debug || {}).substring(0, 200)}`;
+                    resultsDiv.className = 'status-item error';
+                    log(`❌ Subscription API failed: ${data.error}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ שגיאת רשת: ${error.message}`;
+                resultsDiv.className = 'status-item error';
+                log(`❌ Subscription API network error: ${error.message}`);
+            }
+        }
+        
+        async function testFullPurchaseFlow() {
+            log('💳 בודק זרימת רכישה מלאה...');
+            const resultsDiv = document.getElementById('auth-results');
+            resultsDiv.innerHTML = '⏳ בודק זרימה מלאה...';
+            
+            const tests = [];
+            
+            // Test 1: Check auth
+            const authOk = await checkAuthStatus();
+            tests.push(`Auth: ${authOk ? '✅' : '❌'}`);
+            
+            // Test 2: Check cookies/storage
+            const dataOk = checkCookiesAndStorage();
+            tests.push(`Data: ${dataOk ? '✅' : '❌'}`);
+            
+            // Test 3: Test API
+            if (authOk && dataOk) {
+                try {
+                    const userId = getCookie('userId') || getCookie('userAuth') || localStorage.getItem('userId');
+                    const response = await fetch('/api/subscription/activate-page', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-User-ID': userId
+                        },
+                        body: JSON.stringify({ 
+                            documentId: 'test-flow-' + Date.now(),
+                            userId: userId,
+                            months: 1
+                        })
+                    });
+                    
+                    tests.push(`API: ${response.ok ? '✅' : '❌'} (${response.status})`);
+                } catch (error) {
+                    tests.push('API: ❌ (network error)');
+                }
+            } else {
+                tests.push('API: ⏭️ (skipped - no auth)');
+            }
+            
+            resultsDiv.innerHTML = tests.join('<br>');
+            
+            if (tests.every(t => t.includes('✅'))) {
+                resultsDiv.className = 'status-item success';
+                log('✅ Full purchase flow test passed');
+            } else {
+                resultsDiv.className = 'status-item warning';
+                log('⚠️ Full purchase flow has issues');
+            }
+        }
+        
+        function goToSubscribePage() {
+            const userId = getCookie('userId') || getCookie('userAuth') || localStorage.getItem('userId');
+            if (userId) {
+                const testPageId = 'test-page-' + Date.now();
+                window.location.href = `/subscribe?pageId=${testPageId}`;
+            } else {
+                alert('אין userId - יש להתחבר קודם או להריץ סימולציה');
+                log('❌ Cannot go to subscribe - no userId');
+            }
+        }
+        
+        function fixCookiesFromLocalStorage() {
+            log('🔄 מתקן Cookies מ-localStorage...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            const localUserId = localStorage.getItem('userId');
+            if (!localUserId) {
+                resultsDiv.innerHTML = '❌ אין userId ב-localStorage לתיקון';
+                resultsDiv.className = 'status-item error';
+                log('❌ No localStorage userId to fix from');
+                return;
+            }
+            
+            setCookie('userId', localUserId);
+            setCookie('userAuth', localUserId);
+            setCookie('user_id', localUserId);
+            
+            resultsDiv.innerHTML = `✅ Cookies תוקנו מ-localStorage!<br>🆔 ID: ${localUserId}`;
+            resultsDiv.className = 'status-item success';
+            log(`✅ Cookies fixed from localStorage: ${localUserId}`);
+            updateStatus();
+        }
+        
+        function setTestUserManually() {
+            const userId = prompt('הכנס userId לבדיקה:', 'google_111351120503275674259');
+            if (userId) {
+                setCookie('userId', userId);
+                setCookie('userAuth', userId);
+                setCookie('user_id', userId);
+                localStorage.setItem('userId', userId);
+                
+                const resultsDiv = document.getElementById('fix-results');
+                resultsDiv.innerHTML = `✅ משתמש בדיקה הוגדר: ${userId}`;
+                resultsDiv.className = 'status-item success';
+                log(`✅ Test user set: ${userId}`);
+                updateStatus();
+            }
+        }
+        
+        function clearAllAndRestart() {
+            // Clear cookies
+            document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear localStorage
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userAuth');
+            
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '🗑️ כל הנתונים נוקו! עכשיו הגדר משתמש חדש.';
+            resultsDiv.className = 'status-item warning';
+            log('🗑️ All auth data cleared');
+            updateStatus();
+        }
+        
+        async function testWithDifferentMethods() {
+            log('🔬 בודק שיטות שונות...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            const userId = getCookie('userId') || localStorage.getItem('userId');
+            if (!userId) {
+                resultsDiv.innerHTML = '❌ אין userId לבדיקה';
+                resultsDiv.className = 'status-item error';
+                return;
+            }
+            
+            const methods = [];
+            
+            // Method 1: Cookie only
+            try {
+                const response1 = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documentId: 'test-cookie-' + Date.now(), months: 1 })
+                });
+                methods.push(`Cookie only: ${response1.ok ? '✅' : '❌'} (${response1.status})`);
+            } catch (error) {
+                methods.push('Cookie only: ❌ (error)');
+            }
+            
+            // Method 2: Body userId
+            try {
+                const response2 = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documentId: 'test-body-' + Date.now(), userId: userId, months: 1 })
+                });
+                methods.push(`Body userId: ${response2.ok ? '✅' : '❌'} (${response2.status})`);
+            } catch (error) {
+                methods.push('Body userId: ❌ (error)');
+            }
+            
+            // Method 3: Header userId
+            try {
+                const response3 = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify({ documentId: 'test-header-' + Date.now(), months: 1 })
+                });
+                methods.push(`Header userId: ${response3.ok ? '✅' : '❌'} (${response3.status})`);
+            } catch (error) {
+                methods.push('Header userId: ❌ (error)');
+            }
+            
+            resultsDiv.innerHTML = methods.join('<br>');
+            resultsDiv.className = 'status-item info';
+            log('🔬 Different methods test completed');
+        }
+        
+        function debugCookieIssues() {
+            log('🐛 מדבג בעיות Cookies...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            const cookieString = document.cookie;
+            const cookieParts = cookieString.split('; ');
+            const userCookies = cookieParts.filter(c => c.includes('user') || c.includes('User'));
+            
+            resultsDiv.innerHTML = `
+                <strong>🍪 Cookie Debug:</strong><br>
+                - Raw cookie string: ${cookieString || 'ריק'}<br>
+                - Cookie parts count: ${cookieParts.length}<br>
+                - User-related cookies: ${userCookies.length}<br>
+                - User cookies: ${userCookies.join(', ') || 'אין'}<br><br>
+                <strong>💾 localStorage Debug:</strong><br>
+                - localStorage length: ${localStorage.length}<br>
+                - userId in localStorage: ${localStorage.getItem('userId') || 'אין'}
+            `;
+            resultsDiv.className = 'status-item info';
+            log('🐛 Cookie debug completed');
+        }
+        
+        function forceRefreshAuth() {
+            log('⚡ מרענן אימות בכוח...');
+            const resultsDiv = document.getElementById('fix-results');
+            
+            // Try to restore from localStorage
+            const backupUserId = localStorage.getItem('userId');
+            if (backupUserId) {
+                setCookie('userId', backupUserId);
+                setCookie('userAuth', backupUserId);
+                setCookie('user_id', backupUserId);
+                
+                resultsDiv.innerHTML = `⚡ אימות רוענן בכוח!<br>🆔 ID: ${backupUserId}`;
+                resultsDiv.className = 'status-item success';
+                log(`⚡ Auth force refreshed: ${backupUserId}`);
+            } else {
+                resultsDiv.innerHTML = '❌ אין נתוני גיבוי לרענון';
+                resultsDiv.className = 'status-item error';
+                log('❌ No backup data for force refresh');
+            }
+            
+            updateStatus();
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            document.getElementById('detailed-log').textContent = 'הלוג נוקה...';
+        }
+        
+        // עדכון סטטוס כל 3 שניות
+        setInterval(updateStatus, 3000);
+        
+        // עדכון ראשוני
+        updateStatus();
+        log('🔧 Subscription Purchase Fix Test Page Loaded');
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת API מנוי ישירה</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת API מנוי ישירה</h1>
+        
+        <div class="status info">
+            <strong>מטרה:</strong> לבדוק את ה-API של המנוי ישירות ולראות מה השגיאה המדויקת
+        </div>
+        
+        <h3>פרטים לבדיקה:</h3>
+        <div>
+            <label>User ID:</label>
+            <input type="text" id="userId" placeholder="הכנס userId">
+            <button class="button" onclick="getUserIdFromCookie()">קבל מ-Cookie</button>
+        </div>
+        <div>
+            <label>Page ID:</label>
+            <input type="text" id="pageId" placeholder="הכנס pageId">
+            <button class="button" onclick="getUserPages()">קבל דפים של המשתמש</button>
+        </div>
+        
+        <h3>פעולות:</h3>
+        <button class="button" onclick="testSubscriptionAPI()">בדוק API מנוי</button>
+        <button class="button" onclick="checkStrapiConnection()">בדוק חיבור ל-Strapi</button>
+        <button class="button" onclick="showCurrentAuth()">הצג מצב נוכחי</button>
+        
+        <div id="results"></div>
+        
+        <h3>לוגים:</h3>
+        <div class="code" id="logs">לוגים יופיעו כאן...</div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.textContent += `[${timestamp}] ${message}\n`;
+            console.log(message);
+        }
+        
+        function getUserIdFromCookie() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            document.getElementById('userId').value = userId;
+            log(`קיבלתי userId מ-cookie: ${userId}`);
+        }
+        
+        async function getUserPages() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                alert('הכנס userId קודם');
+                return;
+            }
+            
+            try {
+                log(`מחפש דפים למשתמש: ${userId}`);
+                const response = await fetch(`/api/pages/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok && data.pages && data.pages.length > 0) {
+                    const firstPage = data.pages[0];
+                    const pageId = firstPage.documentId || firstPage.id;
+                    document.getElementById('pageId').value = pageId;
+                    log(`מצאתי דף ראשון: ${pageId}`);
+                } else {
+                    log(`לא מצאתי דפים: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                log(`שגיאה בחיפוש דפים: ${error.message}`);
+            }
+        }
+        
+        async function testSubscriptionAPI() {
+            const userId = document.getElementById('userId').value;
+            const pageId = document.getElementById('pageId').value;
+            
+            if (!userId || !pageId) {
+                alert('הכנס userId ו-pageId');
+                return;
+            }
+            
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="status info">בודק API מנוי...</div>';
+            
+            try {
+                log(`מנסה להפעיל מנוי: userId=${userId}, pageId=${pageId}`);
+                
+                const requestData = {
+                    pageId: pageId,
+                    userId: userId,
+                    plan: 'premium',
+                    duration: 'monthly'
+                };
+                
+                log(`נתונים נשלחים: ${JSON.stringify(requestData, null, 2)}`);
+                
+                const response = await fetch('/api/subscription/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                log(`תגובת שרת: status=${response.status}`);
+                
+                const data = await response.json();
+                log(`תוכן תגובה: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.ok) {
+                    results.innerHTML = `
+                        <div class="status success">✅ מנוי הופעל בהצלחה!</div>
+                        <div class="code">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="status error">❌ שגיאה: ${data.error}</div>
+                        <div class="code">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                log(`שגיאה כללית: ${error.message}`);
+                results.innerHTML = `<div class="status error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        async function checkStrapiConnection() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="status info">בודק חיבור ל-Strapi...</div>';
+            
+            try {
+                // Try to fetch pages to test Strapi connection
+                const response = await fetch('/api/pages/test-connection');
+                
+                if (response.ok) {
+                    results.innerHTML = '<div class="status success">✅ חיבור ל-Strapi תקין</div>';
+                } else {
+                    results.innerHTML = `<div class="status error">❌ בעיה בחיבור ל-Strapi: ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ שגיאה בחיבור: ${error.message}</div>`;
+            }
+        }
+        
+        function showCurrentAuth() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="status info">
+                    <strong>מצב נוכחי:</strong><br>
+                    - Cookie userId: ${userId || 'לא נמצא'}<br>
+                    - URL: ${window.location.href}<br>
+                    - All cookies: ${document.cookie || 'אין cookies'}
+                </div>
+            `;
+            
+            log(`מצב נוכחי: userId=${userId}, URL=${window.location.href}`);
+        }
+        
+        // Initialize
+        window.onload = function() {
+            getUserIdFromCookie();
+            showCurrentAuth();
+            log('דף נטען - מוכן לבדיקה');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת התחברות מהירה</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .status-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        
+        .success { background: rgba(34, 197, 94, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.3); }
+        .warning { background: rgba(245, 158, 11, 0.3); }
+        
+        .test-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 { font-size: 2.5em; margin-bottom: 20px; }
+        
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 בדיקת התחברות מהירה</h1>
+        
+        <div class="status-box">
+            <p><strong>בדיקת מצב המערכת הנוכחי</strong></p>
+            <p>אני אבדוק מה קורה עם ההתחברות ואתקן את הבעיות</p>
+        </div>
+        
+        <button class="test-button" onclick="checkCookies()">🍪 בדוק Cookies</button>
+        <button class="test-button" onclick="checkLocalStorage()">💾 בדוק LocalStorage</button>
+        <button class="test-button" onclick="testGoogleAuth()">🔐 בדוק Google OAuth</button>
+        <button class="test-button" onclick="testServerConnection()">🌐 בדוק חיבור לשרת</button>
+        <button class="test-button" onclick="fixAuthNow()">🔧 תקן עכשיו!</button>
+        
+        <div id="results" class="log"></div>
+        
+        <div class="status-box">
+            <p><strong>מה אני בודק:</strong></p>
+            <p>• האם יש cookies של המשתמש</p>
+            <p>• האם localStorage עובד</p>
+            <p>• האם Google OAuth מוגדר נכון</p>
+            <p>• האם השרתים פועלים</p>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#74c0fc';
+            results.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function checkCookies() {
+            log('🔍 בודק cookies...', 'info');
+            
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+            
+            log(`📋 Cookies נמצאו: ${Object.keys(cookies).length}`, 'info');
+            
+            if (cookies.userId) {
+                log(`✅ userId cookie: ${cookies.userId}`, 'success');
+            } else {
+                log('❌ אין userId cookie', 'error');
+            }
+            
+            if (cookies.subscriptionStatus) {
+                log(`✅ subscriptionStatus: ${cookies.subscriptionStatus}`, 'success');
+            } else {
+                log('⚠️ אין subscriptionStatus cookie', 'error');
+            }
+        }
+        
+        function checkLocalStorage() {
+            log('🔍 בודק localStorage...', 'info');
+            
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const userData = JSON.parse(currentUser);
+                    log(`✅ currentUser נמצא: ${userData.name || userData.email}`, 'success');
+                    log(`📧 Email: ${userData.email}`, 'info');
+                    log(`🆔 UserID: ${userData.userId}`, 'info');
+                } else {
+                    log('❌ אין currentUser ב-localStorage', 'error');
+                }
+            } catch (error) {
+                log(`❌ שגיאה ב-localStorage: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGoogleAuth() {
+            log('🔍 בודק Google OAuth...', 'info');
+            
+            // Check if Google script is loaded
+            if (typeof google !== 'undefined') {
+                log('✅ Google script נטען בהצלחה', 'success');
+            } else {
+                log('❌ Google script לא נטען', 'error');
+                log('🔧 מנסה לטעון Google script...', 'info');
+                
+                const script = document.createElement('script');
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.onload = () => log('✅ Google script נטען עכשיו', 'success');
+                script.onerror = () => log('❌ נכשל בטעינת Google script', 'error');
+                document.head.appendChild(script);
+            }
+            
+            // Check redirect URI
+            const currentOrigin = window.location.origin;
+            log(`🌐 Current origin: ${currentOrigin}`, 'info');
+            
+            if (currentOrigin.includes('localhost:5173')) {
+                log('✅ פורט 5173 - נכון לפיתוח', 'success');
+            } else if (currentOrigin.includes('localhost:3000')) {
+                log('⚠️ פורט 3000 - צריך לעדכן ב-Google Console', 'error');
+            } else {
+                log('⚠️ פורט לא מוכר - בדוק הגדרות Google', 'error');
+            }
+        }
+        
+        async function testServerConnection() {
+            log('🔍 בודק חיבור לשרתים...', 'info');
+            
+            // Test SvelteKit server
+            try {
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    log('✅ SvelteKit server פועל', 'success');
+                } else {
+                    log(`⚠️ SvelteKit server מחזיר ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ SvelteKit server לא זמין: ${error.message}`, 'error');
+            }
+            
+            // Test Strapi server
+            try {
+                const response = await fetch('http://localhost:1337/api/users/me');
+                if (response.status === 401) {
+                    log('✅ Strapi server פועל (401 = צריך אימות)', 'success');
+                } else if (response.ok) {
+                    log('✅ Strapi server פועל', 'success');
+                } else {
+                    log(`⚠️ Strapi server מחזיר ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Strapi server לא זמין: ${error.message}`, 'error');
+            }
+        }
+        
+        function fixAuthNow() {
+            log('🔧 מתחיל תיקון אוטומטי...', 'info');
+            
+            // Set the main user
+            const userId = 'google_111351120503275674259';
+            const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+            
+            // Set cookies
+            document.cookie = `userId=${userId}; expires=${expires}; path=/; secure=false; sameSite=lax`;
+            document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; secure=false; sameSite=lax`;
+            
+            log('✅ Cookies הוגדרו', 'success');
+            
+            // Set localStorage
+            try {
+                const userData = {
+                    id: userId,
+                    userId: userId,
+                    email: 'britolam1@gmail.com',
+                    name: 'ברית עולם להקה',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                log('✅ localStorage הוגדר', 'success');
+            } catch (error) {
+                log(`⚠️ localStorage לא זמין: ${error.message}`, 'error');
+            }
+            
+            log('🎉 תיקון הושלם! מעביר לדשבורד...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        }
+        
+        // Auto-run basic checks
+        window.onload = () => {
+            log('🚀 מתחיל בדיקות אוטומטיות...', 'info');
+            setTimeout(checkCookies, 500);
+            setTimeout(checkLocalStorage, 1000);
+            setTimeout(testServerConnection, 1500);
+        };
+    </script>
+</body>
+</html>

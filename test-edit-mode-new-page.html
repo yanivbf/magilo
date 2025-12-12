@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מצב עריכה לדף חדש</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .result {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        .step {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 בדיקת מצב עריכה לדף חדש</h1>
+        
+        <div class="step">
+            <h3>📋 מה אנחנו בודקים:</h3>
+            <ul>
+                <li>✅ יצירת דף חדש</li>
+                <li>✅ הפניה לדף עם פרמטר newPage=true</li>
+                <li>✅ זיהוי בעלות זמנית</li>
+                <li>✅ הפעלת מצב עריכה</li>
+                <li>✅ הצגת אינדיקטור עריכה</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">1️⃣ יצירת דף חדש ובדיקת מצב עריכה</div>
+            <button onclick="testCreateAndEditMode()">יצור דף ובדוק מצב עריכה</button>
+            <div id="createResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">2️⃣ בדיקת בעלות דף קיים</div>
+            <input type="text" id="slugInput" placeholder="הכנס slug של דף" style="padding: 8px; margin: 5px; width: 200px;">
+            <button onclick="testPageOwnership()">בדוק בעלות</button>
+            <div id="ownershipResult"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testCreateAndEditMode() {
+            const resultDiv = document.getElementById('createResult');
+            resultDiv.innerHTML = '<div class="info">יוצר דף חדש...</div>';
+            
+            try {
+                // Step 1: Create a new page
+                const response = await fetch('/api/create-structured-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: 'test_edit_user_' + Date.now(),
+                        pageType: 'service',
+                        designStyle: 'modern',
+                        formData: {
+                            mainName: 'בדיקת מצב עריכה - ' + new Date().toLocaleTimeString('he-IL'),
+                            description: 'דף לבדיקת מצב עריכה',
+                            phone: '050-1234567',
+                            email: 'test@example.com'
+                        },
+                        optionalSections: ['about', 'appointments'],
+                        style: 'Modern'
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ דף נוצר בהצלחה!<br>
+                            <strong>Slug:</strong> ${result.slug}<br>
+                            <strong>Page URL:</strong> <a href="${result.pageUrl}" target="_blank">${result.pageUrl}</a>
+                        </div>
+                        <div class="step">
+                            <h4>🔍 מה לבדוק בדף החדש:</h4>
+                            <ol>
+                                <li><strong>אינדיקטור עריכה:</strong> צריך להופיע למעלה "מצב עריכה" + "דף חדש"</li>
+                                <li><strong>הודעת הצלחה:</strong> צריכה להופיע הודעה "הדף נוצר בהצלחה! אתה במצב עריכה"</li>
+                                <li><strong>עריכת טקסט:</strong> לחיצה על הכותרת והתיאור צריכה לאפשר עריכה</li>
+                                <li><strong>כפתורי פעולה:</strong> צריכים להופיע כפתורי "העלה תמונה" ו"שמור לאזור שלי"</li>
+                            </ol>
+                        </div>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    // Auto-open the page after 2 seconds
+                    setTimeout(() => {
+                        window.open(result.pageUrl, '_blank');
+                    }, 2000);
+                    
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ שגיאה ביצירת הדף: ${error.error}
+                        </div>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ שגיאה: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testPageOwnership() {
+            const slug = document.getElementById('slugInput').value;
+            const resultDiv = document.getElementById('ownershipResult');
+            
+            if (!slug) {
+                resultDiv.innerHTML = '<div class="error">❌ נא להכניס slug של דף</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="info">בודק בעלות דף...</div>';
+            
+            try {
+                // Try to load the page and check ownership
+                const response = await fetch(`/view/${slug}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/html'
+                    }
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    
+                    // Check for edit mode indicators in the HTML
+                    const hasEditModeIndicator = html.includes('edit-mode-indicator') || html.includes('מצב עריכה');
+                    const hasEditModeClass = html.includes('edit-mode-active');
+                    const hasOwnerButtons = html.includes('owner-action-buttons');
+                    
+                    let ownershipHtml = '<div class="success">✅ דף נטען בהצלחה!</div>';
+                    ownershipHtml += '<h4>🔍 בדיקת מצב עריכה:</h4><ul>';
+                    ownershipHtml += `<li>אינדיקטור מצב עריכה: ${hasEditModeIndicator ? '✅ נמצא' : '❌ לא נמצא'}</li>`;
+                    ownershipHtml += `<li>מחלקת מצב עריכה: ${hasEditModeClass ? '✅ פעילה' : '❌ לא פעילה'}</li>`;
+                    ownershipHtml += `<li>כפתורי בעלים: ${hasOwnerButtons ? '✅ נמצאו' : '❌ לא נמצאו'}</li>`;
+                    ownershipHtml += '</ul>';
+                    
+                    if (hasEditModeIndicator && hasEditModeClass) {
+                        ownershipHtml += '<div class="success">🎉 מצב עריכה פעיל!</div>';
+                    } else {
+                        ownershipHtml += '<div class="error">❌ מצב עריכה לא פעיל</div>';
+                    }
+                    
+                    resultDiv.innerHTML = ownershipHtml;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ שגיאה בטעינת הדף: ${response.status}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ שגיאה: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+</content>
+</invoke>

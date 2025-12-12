@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיקון מנוי מהיר</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון מנוי מהיר</h1>
+        
+        <div id="status" class="status info">מתחיל בדיקה...</div>
+        
+        <h3>פעולות מהירות:</h3>
+        <button class="button" onclick="quickTest()">בדיקה מהירה</button>
+        <button class="button" onclick="testSubscriptionAPI()">בדוק API מנוי</button>
+        <button class="button" onclick="testStrapiConnection()">בדוק Strapi</button>
+        <button class="button danger" onclick="goToDashboard()">חזור לדשבורד</button>
+        
+        <h3>תוצאות:</h3>
+        <div class="code" id="results">מחכה לבדיקה...</div>
+    </div>
+
+    <script>
+        let testData = {};
+        
+        function log(message) {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            results.textContent += `[${timestamp}] ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+        
+        async function quickTest() {
+            log('🔄 מתחיל בדיקה מהירה...');
+            updateStatus('בודק authentication...', 'info');
+            
+            // Check cookies
+            const cookies = document.cookie;
+            log(`Cookies: ${cookies}`);
+            
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            if (!userId) {
+                log('❌ אין userId cookie');
+                updateStatus('❌ לא מחובר - אין userId', 'error');
+                return;
+            }
+            
+            log(`✅ userId: ${userId}`);
+            testData.userId = userId;
+            
+            // Try to get user pages
+            try {
+                log('🔍 מחפש דפים של המשתמש...');
+                const response = await fetch(`/api/pages/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok && data.pages && data.pages.length > 0) {
+                    const firstPage = data.pages[0];
+                    testData.pageId = firstPage.documentId || firstPage.id;
+                    log(`✅ נמצא דף: ${testData.pageId}`);
+                    updateStatus(`✅ מוכן לבדיקת מנוי - דף: ${testData.pageId}`, 'success');
+                } else {
+                    log(`❌ לא נמצאו דפים: ${JSON.stringify(data)}`);
+                    updateStatus('❌ לא נמצאו דפים למשתמש', 'error');
+                }
+            } catch (error) {
+                log(`❌ שגיאה בקבלת דפים: ${error.message}`);
+                updateStatus('❌ שגיאה בקבלת דפים', 'error');
+            }
+        }
+        
+        async function testSubscriptionAPI() {
+            if (!testData.userId || !testData.pageId) {
+                log('❌ חסרים נתונים - הרץ בדיקה מהירה קודם');
+                updateStatus('❌ חסרים נתונים', 'error');
+                return;
+            }
+            
+            log('🔄 בודק API מנוי...');
+            updateStatus('בודק API מנוי...', 'info');
+            
+            try {
+                const response = await fetch('/api/subscription/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pageId: testData.pageId,
+                        userId: testData.userId,
+                        plan: 'premium',
+                        duration: 'monthly'
+                    })
+                });
+                
+                const responseText = await response.text();
+                log(`Response status: ${response.status}`);
+                log(`Response text: ${responseText}`);
+                
+                if (response.ok) {
+                    const data = JSON.parse(responseText);
+                    log('✅ מנוי הופעל בהצלחה!');
+                    updateStatus('✅ מנוי עובד!', 'success');
+                } else {
+                    log(`❌ שגיאה ${response.status}: ${responseText}`);
+                    updateStatus(`❌ שגיאה ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`);
+                updateStatus('❌ שגיאה ב-API', 'error');
+            }
+        }
+        
+        async function testStrapiConnection() {
+            log('🔄 בודק חיבור ל-Strapi...');
+            updateStatus('בודק Strapi...', 'info');
+            
+            try {
+                // Test basic Strapi connection
+                const response = await fetch('/api/pages/all/marketplace');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Strapi עובד - נמצאו ${data.pages?.length || 0} דפים`);
+                    updateStatus('✅ Strapi עובד', 'success');
+                } else {
+                    log(`❌ Strapi לא עובד: ${JSON.stringify(data)}`);
+                    updateStatus('❌ Strapi לא עובד', 'error');
+                }
+            } catch (error) {
+                log(`❌ שגיאה בחיבור ל-Strapi: ${error.message}`);
+                updateStatus('❌ שגיאה בחיבור ל-Strapi', 'error');
+            }
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Auto-start quick test
+        window.onload = function() {
+            setTimeout(quickTest, 1000);
+        };
+    </script>
+</body>
+</html>

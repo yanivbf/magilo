@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מנוי - מצב יציב</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .big-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 המערכת חזרה למצב יציב!</h1>
+        
+        <div id="status" class="status success">✅ השרתים רצים בהצלחה</div>
+        
+        <h3>בדיקות מהירות:</h3>
+        <button class="button" onclick="testDashboard()">בדוק דשבורד</button>
+        <button class="button" onclick="testMarketplace()">בדוק מרקטפלייס</button>
+        <button class="button" onclick="testSubscription()">בדוק מנוי</button>
+        
+        <h3>מעבר לאתר:</h3>
+        <button class="button big-button" onclick="goToDashboard()">🚀 פתח דשבורד</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        async function testDashboard() {
+            addResult('🔍 בודק דשבורד...', 'info');
+            try {
+                const response = await fetch('/dashboard');
+                if (response.ok) {
+                    addResult('✅ דשבורד עובד!', 'success');
+                } else {
+                    addResult(`❌ דשבורד לא עובד: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ שגיאה בדשבורד: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testMarketplace() {
+            addResult('🔍 בודק מרקטפלייס...', 'info');
+            try {
+                const response = await fetch('/marketplace');
+                if (response.ok) {
+                    addResult('✅ מרקטפלייס עובד!', 'success');
+                } else {
+                    addResult(`❌ מרקטפלייס לא עובד: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ שגיאה במרקטפלייס: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSubscription() {
+            addResult('🔍 בודק API מנוי...', 'info');
+            
+            // Set test user
+            document.cookie = 'userId=google_111351120503275674259; path=/; max-age=86400';
+            
+            try {
+                // Get user pages first
+                const pagesResponse = await fetch('/api/pages/google_111351120503275674259');
+                if (!pagesResponse.ok) {
+                    addResult('❌ לא ניתן לקבל דפים של המשתמש', 'error');
+                    return;
+                }
+                
+                const pagesData = await pagesResponse.json();
+                if (!pagesData.pages || pagesData.pages.length === 0) {
+                    addResult('⚠️ אין דפים למשתמש - צור דף קודם', 'warning');
+                    return;
+                }
+                
+                const pageId = pagesData.pages[0].documentId || pagesData.pages[0].id;
+                addResult(`📄 נמצא דף: ${pageId}`, 'info');
+                
+                // Test subscription API
+                const response = await fetch('/api/subscription/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pageId: pageId,
+                        userId: 'google_111351120503275674259',
+                        plan: 'premium',
+                        duration: 'monthly'
+                    })
+                });
+                
+                if (response.ok) {
+                    addResult('🎉 מנוי עובד בהצלחה!', 'success');
+                } else {
+                    const errorData = await response.json();
+                    addResult(`❌ מנוי לא עובד: ${errorData.error}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ שגיאה במנוי: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            updateStatus('✅ המערכת מוכנה לשימוש!', 'success');
+        };
+    </script>
+</body>
+</html>

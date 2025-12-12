@@ -17,7 +17,17 @@
 	}
 	
 	function goToDashboard() {
-		goto('/dashboard');
+		// Get userId from cookie to ensure it's passed in URL
+		const userId = document.cookie
+			.split('; ')
+			.find(row => row.startsWith('userId='))
+			?.split('=')[1];
+		
+		if (userId) {
+			goto(`/dashboard?userId=${userId}`);
+		} else {
+			goto('/dashboard');
+		}
 	}
 </script>
 

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הגדרת עוגיית משתמש לבדיקה</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .user-option {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .user-option:hover {
+            background: #e9ecef;
+        }
+        .user-option.active {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 הגדרת עוגיית משתמש לבדיקה</h1>
+    
+    <div class="test-section">
+        <h2>בחר משתמש לבדיקה:</h2>
+        <p>בחר אחד מהמשתמשים הקיימים במערכת כדי לבדוק את זרימת המנוי:</p>
+        
+        <div class="user-option" onclick="setUserCookie('ef0bfa04-0d2a-48b0-8c0e-67c8b4ed0241')">
+            <strong>User 7: britolam21@gmail.com</strong><br>
+            userId: ef0bfa04-0d2a-48b0-8c0e-67c8b4ed0241<br>
+            מנוי: לא פעיל<br>
+            דף: ef0bfa04-page-1764964110652 (vrpyckmqwo9h50emse45zxzj)
+        </div>
+        
+        <div class="user-option" onclick="setUserCookie('google_111351120503275674259')">
+            <strong>User 8: בריט עולמיק (britolam1@gmail.com)</strong><br>
+            userId: google_111351120503275674259<br>
+            מנוי: פעיל<br>
+            דף: google_1-page-1765015437106 (fatwpc2p7xxnl9x9sm7nfv8r)
+        </div>
+        
+        <div class="user-option" onclick="setUserCookie('google_103581929264853836922')">
+            <strong>User 9: magilo (automationprojectt@gmail.com)</strong><br>
+            userId: google_103581929264853836922<br>
+            מנוי: פעיל<br>
+            דף: אין דפים
+        </div>
+        
+        <div class="user-option" onclick="setUserCookie('google_test_123')">
+            <strong>User 10: Test User</strong><br>
+            userId: google_test_123<br>
+            מנוי: פעיל<br>
+            דף: אין דפים
+        </div>
+        
+        <div id="cookieResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>בדיקות מהירות:</h2>
+        <button onclick="window.open('/test-subscription-auth.html', '_blank')">פתח בדיקת מנוי</button>
+        <button onclick="window.open('/dashboard', '_blank')">פתח דשבורד</button>
+        <button onclick="window.open('/subscribe?pageId=vrpyckmqwo9h50emse45zxzj', '_blank')">בדוק רכישת מנוי</button>
+        <button onclick="clearCookies()">נקה עוגיות</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>מצב נוכחי:</h2>
+        <div id="currentStatus" class="result info"></div>
+        <button onclick="checkCurrentStatus()">רענן מצב</button>
+    </div>
+
+    <script>
+        function setUserCookie(userId) {
+            // Set the userId cookie
+            document.cookie = `userId=${userId}; path=/; max-age=86400`; // 24 hours
+            
+            // Visual feedback
+            document.querySelectorAll('.user-option').forEach(el => el.classList.remove('active'));
+            event.target.closest('.user-option').classList.add('active');
+            
+            // Show result
+            document.getElementById('cookieResult').className = 'result success';
+            document.getElementById('cookieResult').textContent = `✅ הוגדרה עוגיית userId: ${userId}`;
+            
+            // Update current status
+            checkCurrentStatus();
+        }
+        
+        function clearCookies() {
+            document.cookie = 'userId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            document.getElementById('cookieResult').className = 'result info';
+            document.getElementById('cookieResult').textContent = '🧹 עוגיות נוקו';
+            checkCurrentStatus();
+        }
+        
+        function checkCurrentStatus() {
+            const userId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            let status = `🍪 עוגיות נוכחיות: ${document.cookie}\n`;
+            status += `👤 userId נוכחי: ${userId || 'לא מוגדר'}\n`;
+            
+            if (userId) {
+                status += `\n📋 מה אפשר לבדוק עכשיו:`;
+                status += `\n  • דשבורד: /dashboard`;
+                status += `\n  • בדיקת מנוי: /test-subscription-auth.html`;
+                
+                // Show relevant page for this user
+                if (userId === 'ef0bfa04-0d2a-48b0-8c0e-67c8b4ed0241') {
+                    status += `\n  • הדף שלך: /view/ef0bfa04-page-1764964110652`;
+                    status += `\n  • רכישת מנוי: /subscribe?pageId=vrpyckmqwo9h50emse45zxzj`;
+                } else if (userId === 'google_111351120503275674259') {
+                    status += `\n  • הדף שלך: /view/google_1-page-1765015437106`;
+                    status += `\n  • רכישת מנוי: /subscribe?pageId=fatwpc2p7xxnl9x9sm7nfv8r`;
+                }
+            } else {
+                status += `\n❌ אין משתמש מחובר - בחר משתמש מהרשימה למעלה`;
+            }
+            
+            document.getElementById('currentStatus').textContent = status;
+        }
+        
+        // Check status on page load
+        window.onload = () => {
+            checkCurrentStatus();
+        };
+    </script>
+</body>
+</html>

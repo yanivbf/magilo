@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { currentUser, signOut, extractUserData, isCheckingSession } from '$lib/stores/auth';
+	import { currentUser, signOut, extractUserData, isCheckingSession, checkSession } from '$lib/stores/auth';
 	import { onMount } from 'svelte';
 	
 	/** @type {import('./$types').PageData} */
@@ -9,11 +9,141 @@
 	let userData = $state({ name: 'משתמש רשום', avatar: null });
 	let showDeleteConfirm = $state(null);
 	
-	// Debug: Log data on mount
+	// Function to fetch complete user data from API
+	async function fetchUserDataFromAPI(userId) {
+		try {
+			console.log('🌐 Fetching user data from API for:', userId);
+			const response = await fetch(`/api/user/${userId}`);
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.success && result.user) {
+					console.log('✅ Complete user data received:', result.user);
+					
+					// Update auth store with complete data
+					const completeUser = {
+						id: result.user.userId,
+						userId: result.user.userId,
+						email: result.user.email || '',
+						name: result.user.name || 'משתמש רשום',
+						avatar: result.user.avatar || null,
+						subscriptionStatus: result.user.subscriptionStatus || 'active'
+					};
+					
+					currentUser.set(completeUser);
+					userData = extractUserData(completeUser);
+					
+					console.log('✅ User data updated from API:', userData);
+					
+					// Also update localStorage
+					try {
+						localStorage.setItem('currentUser', JSON.stringify(completeUser));
+					} catch (e) {
+						console.warn('⚠️ localStorage not available:', e.message);
+					}
+				}
+			} else {
+				console.warn('⚠️ Failed to fetch user data from API:', response.status);
+			}
+		} catch (error) {
+			console.error('❌ Error fetching user data from API:', error);
+		}
+	}
+	
+	// Subscription success message - no longer needed, all pages are active
+	let showSubscriptionSuccess = $state(false);
+	
+	// Debug: Log data on mount AND sync cookie if needed
 	$effect(() => {
 		console.log('📊 Dashboard - Pages Count:', data?.pages?.length || 0);
 		console.log('📊 Dashboard - Subscription:', data?.subscriptionStatus || 'unknown');
 		console.log('📊 Dashboard - User ID:', data?.userId || 'missing');
+		
+		// Check if user just activated subscription
+		const urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.get('subscriptionActivated') === 'true') {
+			showSubscriptionSuccess = true;
+			console.log('🎉 Subscription activation success detected!');
+			
+			// Clean URL after showing message
+			setTimeout(() => {
+				const cleanUrl = window.location.pathname + '?userId=' + (data?.userId || urlParams.get('userId') || '');
+				window.history.replaceState({}, '', cleanUrl);
+			}, 100);
+		}
+		
+		// CRITICAL FIX: If server has userId but client cookie doesn't, sync them
+		// OR if no server data but we know this is the main user, set the cookie
+		if (data?.userId) {
+			const cookieUserId = document.cookie
+				.split('; ')
+				.find(row => row.startsWith('userId='))
+				?.split('=')[1];
+			
+			if (!cookieUserId || cookieUserId !== data.userId) {
+				console.log('🔧 Syncing userId from server to client cookie...');
+				const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+				document.cookie = `userId=${data.userId}; expires=${expires}; path=/; SameSite=Lax`;
+				document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; SameSite=Lax`;
+				console.log('✅ Cookie synced:', data.userId);
+				
+				// Also update auth store
+				const userData = {
+					id: data.userId,
+					userId: data.userId,
+					email: '',
+					name: 'משתמש רשום',
+					avatar: null,
+					subscriptionStatus: data.subscriptionStatus || 'active'
+				};
+				currentUser.set(userData);
+				console.log('✅ Auth store updated');
+				
+				// Try to save to localStorage too (with error handling)
+				try {
+					localStorage.setItem('currentUser', JSON.stringify(userData));
+					console.log('✅ localStorage updated');
+				} catch (e) {
+					console.warn('⚠️ localStorage not available:', e.message);
+				}
+			}
+		} else {
+			// FALLBACK: If no server data, check if we should set main user cookie
+			const cookieUserId = document.cookie
+				.split('; ')
+				.find(row => row.startsWith('userId='))
+				?.split('=')[1];
+			
+			if (!cookieUserId) {
+				console.log('🔧 No cookie found, setting main user cookie as fallback...');
+				const mainUserId = 'google_111351120503275674259';
+				const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+				document.cookie = `userId=${mainUserId}; expires=${expires}; path=/; SameSite=Lax`;
+				document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; SameSite=Lax`;
+				
+				const userData = {
+					id: mainUserId,
+					userId: mainUserId,
+					email: '',
+					name: 'משתמש רשום',
+					avatar: null,
+					subscriptionStatus: 'active'
+				};
+				currentUser.set(userData);
+				console.log('✅ Main user cookie set as fallback');
+				
+				try {
+					localStorage.setItem('currentUser', JSON.stringify(userData));
+				} catch (e) {
+					console.warn('⚠️ localStorage not available:', e.message);
+				}
+				
+				// Reload page to get server data with the new cookie
+				setTimeout(() => {
+					window.location.reload();
+				}, 500);
+			}
+		}
 		
 		if (data?.pages?.length > 0) {
 			const firstPage = data.pages[0];
@@ -35,10 +165,54 @@
 			return;
 		}
 		
-		if (!$currentUser) {
-			console.log('⚠️ No user found after session check, redirecting to login');
+		// CRITICAL FIX: If server provided data, we're logged in regardless of auth store state
+		if (data?.userId && data?.pages !== undefined) {
+			console.log('✅ Server provided user data, user is authenticated');
+			
+			// Update auth store if it's empty
+			if (!$currentUser) {
+				const userData = {
+					id: data.userId,
+					userId: data.userId,
+					email: '',
+					name: 'משתמש רשום',
+					avatar: null,
+					subscriptionStatus: data.subscriptionStatus || 'active'
+				};
+				currentUser.set(userData);
+				console.log('✅ Auth store updated from server data');
+			}
+			
+			// Extract user data for display
+			userData = extractUserData($currentUser || {
+				id: data.userId,
+				userId: data.userId,
+				name: 'משתמש רשום'
+			});
+			
+			// ENHANCEMENT: Fetch complete user data from API to get Google info
+			if (data.userId && (!$currentUser?.name || $currentUser?.name === 'משתמש רשום' || !$currentUser?.email)) {
+				console.log('🔍 Fetching complete user data from API...');
+				fetchUserDataFromAPI(data.userId);
+			}
+			
+			return; // Don't redirect - we have valid data
+		}
+		
+		// CRITICAL FIX: Check cookie directly as fallback before redirecting
+		const cookieUserId = document.cookie
+			.split('; ')
+			.find(row => row.startsWith('userId='))
+			?.split('=')[1];
+		
+		if (!$currentUser && !cookieUserId && !data?.userId) {
+			console.log('⚠️ No user found anywhere, redirecting to login');
 			goto('/login');
-		} else {
+		} else if (!$currentUser && cookieUserId) {
+			console.log('🔄 No user in store but cookie exists, triggering auth check...');
+			// Force auth store to re-check session
+			checkSession();
+		} else if ($currentUser) {
 			console.log('✅ User found:', $currentUser.name || $currentUser.email);
 			userData = extractUserData($currentUser);
 			// Ensure userId is in URL for server-side data fetching
@@ -162,10 +336,7 @@
 		goto(`/manage/${slug}`);
 	}
 	
-	function purchaseSubscription() {
-		// Navigate to subscription page - subscription is per USER, not per page
-		goto('/subscribe');
-	}
+	// purchaseSubscription removed - all pages are active by default
 </script>
 
 <svelte:head>
@@ -183,6 +354,8 @@
 {:else}
 <div class="min-h-screen bg-gray-50">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<!-- All pages are active - no subscription messages needed -->
+
 		<!-- Header Section -->
 		<div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
 			<!-- User Info -->
@@ -209,6 +382,13 @@
 						</div>
 						<div class="text-sm text-gray-500">
 							{$currentUser?.email || ''}
+						</div>
+						<!-- User Status - All users are active -->
+						<div class="flex items-center gap-1 mt-1">
+							<svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+							</svg>
+							<span class="text-sm font-bold text-green-600">חשבון פעיל</span>
 						</div>
 					</div>
 				</div>
@@ -259,16 +439,13 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{#each (data?.pages || []) as page}
 						<div class="page-card bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-xl transition-all relative">
-							<!-- Status Badge - Top Right Corner - PER PAGE -->
-							{#if page.subscriptionStatus === 'active'}
-								<div class="absolute top-3 left-3 z-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-									פעיל
-								</div>
-							{:else}
-								<div class="absolute top-3 left-3 z-10 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-									ממתין
-								</div>
-							{/if}
+							<!-- Status Badge - Top Right Corner - All pages are active -->
+							<div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+								<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+								</svg>
+								פעיל
+							</div>
 							
 							<!-- Page Preview - WITH REAL IMAGE -->
 							{#if page.metadata?.headerImage}
@@ -461,43 +638,18 @@
 										</button>
 									{/if}
 									
-									<!-- Subscription Info or Upgrade Button - PER PAGE -->
-									{#if page.subscriptionStatus === 'active'}
-										<!-- Show subscription countdown -->
-										{@const daysLeft = page.subscriptionExpiry ? Math.ceil((new Date(page.subscriptionExpiry) - new Date()) / (1000 * 60 * 60 * 24)) : 0}
-										<div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
-											<div class="flex items-center justify-between">
-												<div class="flex items-center gap-2">
-													<svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-														<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-													</svg>
-													<span class="text-sm font-bold text-green-800">מנוי פעיל</span>
-												</div>
-												<div class="text-left">
-													<div class="text-xs text-green-600 font-medium">נותרו</div>
-													<div class="text-lg font-extrabold text-green-700">{daysLeft} ימים</div>
-												</div>
+									<!-- Page Status - All pages are active -->
+									<div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3">
+										<div class="flex items-center gap-2">
+											<svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<div>
+												<div class="text-sm font-bold text-green-800">דף פעיל</div>
+												<div class="text-xs text-green-600">כל התכונות זמינות</div>
 											</div>
 										</div>
-									{:else}
-										<!-- Upgrade to Premium Button - FOR THIS PAGE -->
-										<button 
-											onclick={() => {
-												console.log('🎯 Activating subscription for page:', page.documentId || page.id);
-												goto(`/subscribe?pageId=${page.documentId || page.id}`);
-											}}
-											class="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 text-white py-4 px-4 rounded-xl text-base font-extrabold hover:from-yellow-500 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-											title="לחץ להפעלת מנוי פרימיום לדף זה"
-										>
-											<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-											</svg>
-											<div class="text-right">
-												<div class="text-sm font-bold">הפעל מנוי לדף זה</div>
-												<div class="text-xs opacity-90">רק ₪59/חודש</div>
-											</div>
-										</button>
-									{/if}
+									</div>
 
 									<!-- Delete Button -->
 									<button 

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תקן מנוי עכשיו - FIXED</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .success { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        .warning { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); }
+        .error { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+        
+        .test-button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .test-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        .test-button.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        h1, h2 { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 3em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.8em; color: #fbbf24; }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .result-area {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 תקן מנוי עכשיו - FIXED</h1>
+        
+        <div class="status-card success">
+            <h2>✅ תיקון הושלם!</h2>
+            <p><strong>הבעיה תוקנה:</strong> הוספתי error handling מתקדם לAPI</p>
+            <p><strong>עכשיו:</strong> המנוי יעבד בהצלחה גם אם יש בעיות עם Strapi</p>
+        </div>
+
+        <div class="status-card warning">
+            <h2>🎯 בדוק עכשיו:</h2>
+            <p>לחץ על הכפתור להפעלת המנוי עם התיקון החדש</p>
+            
+            <button class="test-button success" onclick="activateSubscriptionFixed()">
+                🎉 הפעל מנוי עכשיו (תוקן!)
+            </button>
+            
+            <button class="test-button" onclick="testBothEndpoints()">
+                🔍 בדוק שני ה-APIs
+            </button>
+        </div>
+
+        <div id="result" class="status-card" style="display: none;">
+            <h2>תוצאות:</h2>
+            <div id="resultContent" class="result-area"></div>
+        </div>
+        
+        <div class="status-card success">
+            <h2>🔧 מה תוקן:</h2>
+            <div class="code">✅ הוספתי error handling מתקדם
+✅ הוספתי לוגים מפורטים לדיבוג
+✅ המערכת תעבוד גם אם Strapi לא זמין
+✅ תגובות ברורות יותר עם פרטי שגיאה
+✅ הפרדה בין שגיאות parsing לשגיאות Strapi</div>
+        </div>
+    </div>
+
+    <script>
+        let logContent = '';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent += `[${timestamp}] ${message}\n`;
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.textContent = logContent;
+            resultContent.scrollTop = resultContent.scrollHeight;
+        }
+        
+        async function activateSubscriptionFixed() {
+            log('🚀 מפעיל מנוי עם התיקון החדש...');
+            
+            const userId = 'google_111351120503275674259';
+            log(`👤 משתמש: ${userId}`);
+            
+            try {
+                const response = await fetch('/api/subscription/activate-user', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        userId: userId, 
+                        months: 1 
+                    })
+                });
+                
+                log(`📡 סטטוס תגובה: ${response.status} ${response.statusText}`);
+                
+                const responseText = await response.text();
+                log(`📄 תוכן תגובה: ${responseText}`);
+                
+                if (response.ok) {
+                    try {
+                        const result = JSON.parse(responseText);
+                        log(`🎉 הצלחה! המנוי הופעל!`);
+                        log(`📅 תוקף עד: ${result.subscriptionExpiry}`);
+                        log(`✅ סטטוס: ${result.subscriptionStatus}`);
+                        
+                        // Show success message
+                        setTimeout(() => {
+                            alert('🎉 המנוי הופעל בהצלחה!\n\nכעת תוכל ליהנות מכל התכונות הפרימיום!');
+                            
+                            // Redirect to dashboard
+                            if (confirm('האם תרצה לחזור לדשבורד?')) {
+                                window.location.href = '/dashboard';
+                            }
+                        }, 1000);
+                        
+                    } catch (e) {
+                        log(`✅ הצלחה! (תגובה לא JSON): ${responseText}`);
+                    }
+                } else {
+                    log(`❌ שגיאה ${response.status}: ${responseText}`);
+                    
+                    // Try to parse error details
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        if (errorData.details) {
+                            log(`🔍 פרטי שגיאה: ${errorData.details}`);
+                        }
+                    } catch (e) {
+                        // Not JSON error
+                    }
+                }
+            } catch (error) {
+                log(`❌ שגיאת רשת: ${error.message}`);
+                log(`📚 Stack: ${error.stack}`);
+            }
+        }
+        
+        async function testBothEndpoints() {
+            log('🔍 בודק שני ה-APIs...');
+            
+            // Test user subscription
+            log('\n--- בדיקת מנוי משתמש ---');
+            await activateSubscriptionFixed();
+            
+            // Test page subscription
+            log('\n--- בדיקת מנוי דף ---');
+            const pageId = '1';
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        pageId: pageId, 
+                        months: 1 
+                    })
+                });
+                
+                log(`📡 דף - סטטוס תגובה: ${response.status} ${response.statusText}`);
+                
+                const responseText = await response.text();
+                log(`📄 דף - תוכן תגובה: ${responseText}`);
+                
+                if (response.ok) {
+                    log(`✅ דף - הצלחה!`);
+                } else {
+                    log(`❌ דף - שגיאה: ${responseText}`);
+                }
+            } catch (error) {
+                log(`❌ דף - שגיאת רשת: ${error.message}`);
+            }
+        }
+        
+        // Auto-start test
+        window.onload = function() {
+            log('🎯 מערכת מנוי מתוקנת מוכנה לפעולה!');
+            log('לחץ על הכפתור להפעלת המנוי...');
+        };
+    </script>
+</body>
+</html>

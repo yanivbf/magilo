@@ -94,12 +94,12 @@ export async function getUserImages(userId) {
  * Validate image file
  * @param {File} file - File to validate
  * @param {Object} [options] - Validation options
- * @param {number} [options.maxSize] - Max file size in bytes (default: 10MB)
+ * @param {number} [options.maxSize] - Max file size in bytes (default: 50MB)
  * @param {string[]} [options.allowedTypes] - Allowed MIME types
  * @returns {{valid: boolean, error?: string}}
  */
 export function validateImageFile(file, options = {}) {
-	const maxSize = options.maxSize || 10 * 1024 * 1024; // 10MB default
+	const maxSize = options.maxSize || 50 * 1024 * 1024; // 50MB default - increased for larger images
 	const allowedTypes = options.allowedTypes || [
 		'image/jpeg',
 		'image/jpg',

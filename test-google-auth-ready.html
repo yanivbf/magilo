@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת Google OAuth - מוכן לעבודה</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            text-align: center;
+        }
+        .status {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .info { color: #3b82f6; }
+        .step {
+            background: #f8fafc;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+        }
+        .step h3 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            direction: ltr;
+            text-align: left;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .test-result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 המערכת מוכנה לעבודה!</h1>
+        
+        <div class="status success">
+            ✅ Strapi Server: פועל על פורט 1337
+        </div>
+        
+        <div class="status success">
+            ✅ SvelteKit Server: פועל על פורט 5173
+        </div>
+        
+        <div class="status warning">
+            ⚠️ Google OAuth: דורש עדכון ב-Google Console
+        </div>
+        
+        <div class="step">
+            <h3>🔧 מה צריך לעשות עכשיו:</h3>
+            <p><strong>1. עדכן את Google Cloud Console:</strong></p>
+            <div class="code">
+                https://console.cloud.google.com/apis/credentials
+            </div>
+            <p><strong>2. הוסף את הכתובת הזו ל-Authorized JavaScript origins:</strong></p>
+            <div class="code">
+                http://localhost:5173
+            </div>
+            <p><strong>3. שמור את השינויים ב-Google Console</strong></p>
+            <p><strong>4. חכה 1-2 דקות לעדכון</strong></p>
+        </div>
+        
+        <div class="step">
+            <h3>🧪 בדיקות מערכת:</h3>
+            <button class="button" onclick="testStrapi()">בדוק Strapi</button>
+            <button class="button" onclick="testAuth()">בדוק Authentication API</button>
+            <button class="button" onclick="testGoogle()">בדוק Google OAuth</button>
+            <div id="testResults"></div>
+        </div>
+        
+        <div class="step">
+            <h3>🚀 אחרי העדכון ב-Google:</h3>
+            <button class="button" onclick="window.location.href='http://localhost:5173'">
+                פתח את האתר
+            </button>
+            <button class="button" onclick="window.location.href='http://localhost:5173/login'">
+                בדוק התחברות
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function testStrapi() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="test-result info">בודק Strapi...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:1337/api/users', {
+                    headers: {
+                        'Authorization': 'Bearer 8ba3301bbe92b271829befae8c0c268dbe65efa2bd66517f9309d2e3127c36eca41e91db5a53deb48e8d8aaf095d700bbc4dd1ab32ad509705723f052241d1f0a352eb020cb675aa2e4d733d4bb48855d206eafed5d1196975ad06365767082044a7b5d955e5e3b43398e13aabee36a89e70392a390ef5b96bb4deff6ca43c6a'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `<div class="test-result success">✅ Strapi עובד! נמצאו ${data.data.length} משתמשים</div>`;
+                } else {
+                    results.innerHTML = `<div class="test-result error">❌ Strapi Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="test-result error">❌ Strapi לא זמין: ${error.message}</div>`;
+            }
+        }
+        
+        async function testAuth() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="test-result info">בודק Authentication API...</div>';
+            
+            try {
+                // Test with dummy data to see if API responds
+                const response = await fetch('http://localhost:5173/api/auth/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        googleId: 'test123',
+                        email: 'test@example.com',
+                        name: 'Test User'
+                    })
+                });
+                
+                if (response.ok) {
+                    results.innerHTML = '<div class="test-result success">✅ Authentication API עובד!</div>';
+                } else if (response.status === 400) {
+                    results.innerHTML = '<div class="test-result success">✅ Authentication API מגיב (400 צפוי עם נתוני בדיקה)</div>';
+                } else {
+                    results.innerHTML = `<div class="test-result error">❌ Auth API Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="test-result error">❌ Auth API לא זמין: ${error.message}</div>`;
+            }
+        }
+        
+        function testGoogle() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="test-result warning">⚠️ Google OAuth דורש עדכון ב-Console קודם</div>';
+            
+            // Show current Google Client ID
+            setTimeout(() => {
+                results.innerHTML += `
+                    <div class="test-result info">
+                        <strong>Google Client ID:</strong><br>
+                        <div class="code">965923411238-6e3a40oluusgqnvvlb1iuh70mesion3j.apps.googleusercontent.com</div>
+                        <strong>נדרש להוסיף:</strong><br>
+                        <div class="code">http://localhost:5173</div>
+                        <strong>ב-Authorized JavaScript origins</strong>
+                    </div>
+                `;
+            }, 1000);
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            testStrapi();
+        };
+    </script>
+</body>
+</html>

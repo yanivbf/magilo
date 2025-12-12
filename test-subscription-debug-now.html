@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מנוי - DEBUG</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת מנוי - DEBUG</h1>
+        
+        <div id="authStatus" class="status info">בודק authentication...</div>
+        <div id="pageStatus" class="status info">בודק pageId...</div>
+        <div id="urlStatus" class="status info">בודק URL...</div>
+        
+        <h3>פרטי DEBUG:</h3>
+        <div class="code" id="debugInfo">טוען...</div>
+        
+        <h3>פעולות:</h3>
+        <button class="button" onclick="testAuth()">בדוק Authentication</button>
+        <button class="button" onclick="testSubscription()">בדוק API מנוי</button>
+        <button class="button" onclick="goToDashboard()">חזור לדשבורד</button>
+        <button class="button" onclick="fixUrl()">תקן URL עם pageId</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        let debugData = {};
+        
+        function updateDebugInfo() {
+            const info = `
+URL: ${window.location.href}
+URL Params: ${window.location.search}
+All Cookies: ${document.cookie}
+User Agent: ${navigator.userAgent}
+
+Parsed Data:
+- userId: ${debugData.userId || 'לא נמצא'}
+- pageId: ${debugData.pageId || 'לא נמצא'}
+- URL pageId: ${debugData.urlPageId || 'לא נמצא'}
+- Cookie userId: ${debugData.cookieUserId || 'לא נמצא'}
+
+Server Data (if available):
+${JSON.stringify(debugData.serverData || {}, null, 2)}
+            `;
+            document.getElementById('debugInfo').textContent = info;
+        }
+        
+        function checkAuth() {
+            // Get userId from cookie
+            const cookieUserId = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('userId='))
+                ?.split('=')[1] || '';
+            
+            debugData.cookieUserId = cookieUserId;
+            debugData.userId = cookieUserId;
+            
+            const authStatus = document.getElementById('authStatus');
+            if (cookieUserId) {
+                authStatus.className = 'status success';
+                authStatus.textContent = `✅ מחובר: ${cookieUserId}`;
+            } else {
+                authStatus.className = 'status error';
+                authStatus.textContent = '❌ לא מחובר - אין userId cookie';
+            }
+        }
+        
+        function checkPageId() {
+            // Get pageId from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlPageId = urlParams.get('pageId');
+            
+            debugData.urlPageId = urlPageId;
+            debugData.pageId = urlPageId;
+            
+            const pageStatus = document.getElementById('pageStatus');
+            if (urlPageId) {
+                pageStatus.className = 'status success';
+                pageStatus.textContent = `✅ pageId נמצא: ${urlPageId}`;
+            } else {
+                pageStatus.className = 'status error';
+                pageStatus.textContent = '❌ אין pageId ב-URL';
+            }
+        }
+        
+        function checkUrl() {
+            const urlStatus = document.getElementById('urlStatus');
+            const currentUrl = window.location.href;
+            
+            if (currentUrl.includes('pageId=')) {
+                urlStatus.className = 'status success';
+                urlStatus.textContent = `✅ URL תקין: ${currentUrl}`;
+            } else {
+                urlStatus.className = 'status warning';
+                urlStatus.textContent = `⚠️ URL ללא pageId: ${currentUrl}`;
+            }
+        }
+        
+        async function testAuth() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="status info">בודק authentication...</div>';
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok && data.userId) {
+                    results.innerHTML = `<div class="status success">✅ Authentication API עובד: ${data.userId}</div>`;
+                } else {
+                    results.innerHTML = `<div class="status error">❌ Authentication API: ${JSON.stringify(data)}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        async function testSubscription() {
+            const results = document.getElementById('testResults');
+            
+            if (!debugData.userId) {
+                results.innerHTML = '<div class="status error">❌ אין userId - לא ניתן לבדוק מנוי</div>';
+                return;
+            }
+            
+            if (!debugData.pageId) {
+                results.innerHTML = '<div class="status error">❌ אין pageId - לא ניתן לבדוק מנוי</div>';
+                return;
+            }
+            
+            results.innerHTML = '<div class="status info">בודק API מנוי...</div>';
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        documentId: debugData.pageId,
+                        months: 1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML = `<div class="status success">✅ מנוי הופעל בהצלחה!</div>`;
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                } else {
+                    results.innerHTML = `<div class="status error">❌ שגיאה: ${data.error}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        function fixUrl() {
+            // If we don't have pageId, try to get it from dashboard
+            if (!debugData.pageId) {
+                alert('אין pageId. חוזר לדשבורד לבחירת דף.');
+                window.location.href = '/dashboard';
+            } else {
+                alert('URL כבר תקין עם pageId');
+            }
+        }
+        
+        // Initialize on load
+        window.onload = function() {
+            checkAuth();
+            checkPageId();
+            checkUrl();
+            updateDebugInfo();
+        };
+    </script>
+</body>
+</html>

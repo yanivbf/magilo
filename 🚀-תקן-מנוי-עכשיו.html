@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תקן מנוי עכשיו!</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container { 
+            background: rgba(255,255,255,0.95); 
+            color: #333;
+            padding: 30px; 
+            border-radius: 15px; 
+            max-width: 600px; 
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .success { 
+            color: #28a745; 
+            background: #d4edda; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+            border: 1px solid #c3e6cb;
+        }
+        .error { 
+            color: #dc3545; 
+            background: #f8d7da; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+        }
+        .info { 
+            color: #0c5460; 
+            background: #d1ecf1; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+            border: 1px solid #bee5eb;
+        }
+        .warning { 
+            color: #856404; 
+            background: #fff3cd; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+            border: 1px solid #ffeaa7;
+        }
+        button { 
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 10px 5px; 
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        .btn-danger { 
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+        .btn-info { 
+            background: linear-gradient(45deg, #17a2b8, #3498db);
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+        }
+        .btn-info:hover {
+            box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-right: 5px solid #007bff;
+            border-radius: 8px;
+        }
+        .step h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 תקן מנוי עכשיו!</h1>
+        
+        <div class="warning">
+            <strong>🎯 המצב:</strong> אתה מחובר אבל המערכת לא מזהה את המנוי שלך. בואו נתקן את זה!
+        </div>
+        
+        <div class="step">
+            <h3>🔍 שלב 1: בדיקה מהירה</h3>
+            <button onclick="quickDiagnosis()" class="btn-info">בדוק מה הבעיה</button>
+            <div id="diagnosisResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>⚡ שלב 2: תיקון מהיר</h3>
+            <button onclick="quickFix()">🔧 תקן אוטומטית</button>
+            <button onclick="manualSteps()" class="btn-info">📋 הוראות ידניות</button>
+            <div id="fixResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>✅ שלב 3: אימות</h3>
+            <button onclick="verifyFix()">בדוק שהתיקון עבד</button>
+            <div id="verifyResult"></div>
+        </div>
+        
+        <div id="finalResult"></div>
+    </div>
+
+    <script>
+        async function quickDiagnosis() {
+            const result = document.getElementById('diagnosisResult');
+            result.innerHTML = '<div class="info"><span class="loading"></span> בודק...</div>';
+            
+            let report = '<h4>📊 תוצאות בדיקה:</h4>';
+            
+            // Check cookies
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                if (key) acc[key] = value;
+                return acc;
+            }, {});
+            
+            const userId = cookies.userId;
+            const subscriptionStatus = cookies.subscriptionStatus;
+            
+            if (!userId) {
+                report += '<div class="error">❌ אין userId - צריך להתחבר מחדש</div>';
+            } else if (userId.startsWith('google_')) {
+                report += `<div class="success">✅ משתמש מזוהה: ${userId}</div>`;
+            } else {
+                report += `<div class="warning">⚠️ userId חשוד: ${userId}</div>`;
+            }
+            
+            if (subscriptionStatus === 'active') {
+                report += '<div class="success">✅ יש מנוי ב-cookies</div>';
+            } else {
+                report += '<div class="error">❌ אין מנוי ב-cookies</div>';
+            }
+            
+            // Test API
+            try {
+                const userResponse = await fetch('/api/user/current');
+                const userData = await userResponse.json();
+                
+                if (userData.authenticated) {
+                    report += `<div class="success">✅ API מזהה משתמש</div>`;
+                    
+                    // Test subscription API
+                    const subResponse = await fetch('/api/subscription/status/fatwpc2p7xxnl9x9sm7nfv8r');
+                    const subData = await subResponse.json();
+                    
+                    if (subData.hasSubscription) {
+                        report += '<div class="success">🎉 יש מנוי ב-API!</div>';
+                        report += '<div class="info">הבעיה כנראה ב-cache או ב-cookies</div>';
+                    } else {
+                        report += '<div class="error">❌ אין מנוי ב-API</div>';
+                        report += '<div class="info">צריך להפעיל מנוי</div>';
+                    }
+                } else {
+                    report += '<div class="error">❌ API לא מזהה משתמש</div>';
+                }
+            } catch (error) {
+                report += `<div class="error">❌ שגיאת API: ${error.message}</div>`;
+            }
+            
+            result.innerHTML = report;
+        }
+        
+        async function quickFix() {
+            const result = document.getElementById('fixResult');
+            result.innerHTML = '<div class="info"><span class="loading"></span> מתקן...</div>';
+            
+            let report = '<h4>🔧 תהליך תיקון:</h4>';
+            
+            try {
+                // Step 1: Get current user
+                const userResponse = await fetch('/api/user/current');
+                const userData = await userResponse.json();
+                
+                if (!userData.authenticated) {
+                    report += '<div class="error">❌ משתמש לא מחובר</div>';
+                    report += '<div class="info">פתרון: <a href="/login">התחבר כאן</a></div>';
+                    result.innerHTML = report;
+                    return;
+                }
+                
+                report += `<div class="success">✅ משתמש מזוהה: ${userData.userId}</div>`;
+                
+                // Step 2: Activate user subscription
+                const activateUserResponse = await fetch('/api/subscription/activate-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userData.userId,
+                        months: 12
+                    })
+                });
+                
+                if (activateUserResponse.ok) {
+                    report += '<div class="success">✅ מנוי משתמש הופעל</div>';
+                } else {
+                    report += '<div class="warning">⚠️ בעיה בהפעלת מנוי משתמש</div>';
+                }
+                
+                // Step 3: Activate page subscription
+                const activatePageResponse = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pageId: 'fatwpc2p7xxnl9x9sm7nfv8r',
+                        userId: userData.userId,
+                        months: 12
+                    })
+                });
+                
+                if (activatePageResponse.ok) {
+                    report += '<div class="success">✅ מנוי דף הופעל</div>';
+                } else {
+                    report += '<div class="warning">⚠️ בעיה בהפעלת מנוי דף</div>';
+                }
+                
+                // Step 4: Set cookies manually
+                document.cookie = 'subscriptionStatus=active; path=/; max-age=31536000';
+                const expiryDate = new Date();
+                expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                document.cookie = `subscriptionExpiry=${expiryDate.toISOString()}; path=/; max-age=31536000`;
+                
+                report += '<div class="success">✅ Cookies עודכנו</div>';
+                report += '<div class="info">🎉 התיקון הושלם! רענן את הדף</div>';
+                
+            } catch (error) {
+                report += `<div class="error">❌ שגיאה: ${error.message}</div>`;
+            }
+            
+            result.innerHTML = report;
+        }
+        
+        function manualSteps() {
+            const result = document.getElementById('fixResult');
+            result.innerHTML = `
+                <div class="info">
+                    <h4>📋 הוראות תיקון ידני:</h4>
+                    <ol>
+                        <li><strong>נקה cookies:</strong>
+                            <button onclick="clearAllCookies()" class="btn-danger">🗑️ נקה</button>
+                        </li>
+                        <li><strong>התחבר מחדש:</strong>
+                            <a href="/login" target="_blank">🔐 דף התחברות</a>
+                        </li>
+                        <li><strong>הפעל מנוי:</strong>
+                            <a href="/subscribe?pageId=fatwpc2p7xxnl9x9sm7nfv8r" target="_blank">💳 דף מנוי</a>
+                        </li>
+                        <li><strong>חזור לדשבורד:</strong>
+                            <a href="/dashboard" target="_blank">📊 דשבורד</a>
+                        </li>
+                    </ol>
+                </div>
+            `;
+        }
+        
+        function clearAllCookies() {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+            alert('✅ כל ה-cookies נוקו!');
+        }
+        
+        async function verifyFix() {
+            const result = document.getElementById('verifyResult');
+            result.innerHTML = '<div class="info"><span class="loading"></span> בודק...</div>';
+            
+            let report = '<h4>🔍 בדיקת אימות:</h4>';
+            
+            try {
+                // Check user
+                const userResponse = await fetch('/api/user/current');
+                const userData = await userResponse.json();
+                
+                if (userData.authenticated) {
+                    report += `<div class="success">✅ משתמש מחובר: ${userData.userId}</div>`;
+                    
+                    // Check subscription
+                    const subResponse = await fetch('/api/subscription/status/fatwpc2p7xxnl9x9sm7nfv8r');
+                    const subData = await subResponse.json();
+                    
+                    if (subData.hasSubscription) {
+                        report += '<div class="success">🎉 מנוי פעיל! הכל עובד מושלם!</div>';
+                        
+                        document.getElementById('finalResult').innerHTML = `
+                            <div class="success" style="text-align: center; font-size: 1.2em; margin-top: 30px;">
+                                <h2>🎉 התיקון הצליח!</h2>
+                                <p>המנוי שלך פעיל ועובד. עכשיו אתה יכול:</p>
+                                <div style="margin: 20px 0;">
+                                    <a href="/dashboard" target="_blank" style="margin: 0 10px;">📊 דשבורד</a>
+                                    <a href="/pages/fatwpc2p7xxnl9x9sm7nfv8r" target="_blank" style="margin: 0 10px;">👁️ צפה בדף</a>
+                                    <a href="/edit/fatwpc2p7xxnl9x9sm7nfv8r" target="_blank" style="margin: 0 10px;">✏️ ערוך דף</a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        report += '<div class="error">❌ עדיין אין מנוי - נסה שוב</div>';
+                    }
+                } else {
+                    report += '<div class="error">❌ משתמש לא מחובר</div>';
+                }
+            } catch (error) {
+                report += `<div class="error">❌ שגיאה: ${error.message}</div>`;
+            }
+            
+            result.innerHTML = report;
+        }
+        
+        // Auto-run diagnosis on load
+        window.onload = () => {
+            setTimeout(quickDiagnosis, 1000);
+        };
+    </script>
+</body>
+</html>

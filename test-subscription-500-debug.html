@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת שגיאת 500 במנוי</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .success { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        .warning { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); }
+        .error { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+        
+        .test-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .test-button.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        h1, h2 { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.8em; color: #fbbf24; }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .log-area {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת שגיאת 500 במנוי</h1>
+        
+        <div class="status-card success">
+            <h2>✅ מצב נוכחי:</h2>
+            <p><strong>האימות עובד!</strong> המשתמש מחובר בהצלחה.</p>
+            <p><strong>הבעיה:</strong> שגיאת 500 Internal Server Error בAPI של המנוי</p>
+        </div>
+
+        <div class="status-card warning">
+            <h2>🔧 בדיקות:</h2>
+            
+            <button class="test-button" onclick="testUserSubscription()">
+                בדוק מנוי משתמש
+            </button>
+            
+            <button class="test-button" onclick="testPageSubscription()">
+                בדוק מנוי דף
+            </button>
+            
+            <button class="test-button warning" onclick="testWithDetailedLogging()">
+                בדיקה מפורטת עם לוגים
+            </button>
+            
+            <button class="test-button warning" onclick="checkServerLogs()">
+                בדוק לוגי שרת
+            </button>
+        </div>
+
+        <div id="result" class="status-card" style="display: none;">
+            <h2>תוצאות:</h2>
+            <div id="resultContent" class="log-area"></div>
+        </div>
+    </div>
+
+    <script>
+        let logContent = '';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent += `[${timestamp}] ${message}\n`;
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.textContent = logContent;
+            resultContent.scrollTop = resultContent.scrollHeight;
+        }
+        
+        async function testUserSubscription() {
+            log('🎯 בודק מנוי משתמש...');
+            
+            const userId = 'google_111351120503275674259';
+            log(`משתמש: ${userId}`);
+            
+            try {
+                const response = await fetch('/api/subscription/activate-user', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        userId: userId, 
+                        months: 1 
+                    })
+                });
+                
+                log(`סטטוס תגובה: ${response.status} ${response.statusText}`);
+                log(`Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                const responseText = await response.text();
+                log(`תוכן תגובה: ${responseText}`);
+                
+                if (response.ok) {
+                    try {
+                        const result = JSON.parse(responseText);
+                        log(`✅ הצלחה! ${JSON.stringify(result, null, 2)}`);
+                    } catch (e) {
+                        log(`✅ הצלחה! (לא JSON): ${responseText}`);
+                    }
+                } else {
+                    log(`❌ שגיאה ${response.status}: ${responseText}`);
+                }
+            } catch (error) {
+                log(`❌ שגיאת רשת: ${error.message}`);
+                log(`Stack: ${error.stack}`);
+            }
+        }
+        
+        async function testPageSubscription() {
+            log('📄 בודק מנוי דף...');
+            
+            const pageId = '1'; // Test page ID
+            log(`דף: ${pageId}`);
+            
+            try {
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        pageId: pageId, 
+                        months: 1 
+                    })
+                });
+                
+                log(`סטטוס תגובה: ${response.status} ${response.statusText}`);
+                log(`Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                const responseText = await response.text();
+                log(`תוכן תגובה: ${responseText}`);
+                
+                if (response.ok) {
+                    try {
+                        const result = JSON.parse(responseText);
+                        log(`✅ הצלחה! ${JSON.stringify(result, null, 2)}`);
+                    } catch (e) {
+                        log(`✅ הצלחה! (לא JSON): ${responseText}`);
+                    }
+                } else {
+                    log(`❌ שגיאה ${response.status}: ${responseText}`);
+                }
+            } catch (error) {
+                log(`❌ שגיאת רשת: ${error.message}`);
+                log(`Stack: ${error.stack}`);
+            }
+        }
+        
+        async function testWithDetailedLogging() {
+            log('🔍 בדיקה מפורטת...');
+            
+            // Check current authentication state
+            log('בודק מצב אימות נוכחי:');
+            log(`Cookies: ${document.cookie}`);
+            log(`URL: ${window.location.href}`);
+            log(`User Agent: ${navigator.userAgent}`);
+            
+            // Check localStorage
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                log(`localStorage currentUser: ${currentUser}`);
+            } catch (e) {
+                log(`localStorage error: ${e.message}`);
+            }
+            
+            // Test both endpoints with detailed error handling
+            await testUserSubscription();
+            await testPageSubscription();
+        }
+        
+        async function checkServerLogs() {
+            log('📊 בודק לוגי שרת...');
+            
+            // Try to get server status
+            try {
+                const response = await fetch('/api/user/current', {
+                    method: 'GET',
+                    headers: { 
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                log(`API user/current: ${response.status}`);
+                const text = await response.text();
+                log(`Response: ${text}`);
+            } catch (error) {
+                log(`Server connection error: ${error.message}`);
+            }
+        }
+        
+        // Auto-start basic test
+        window.onload = function() {
+            log('🚀 מתחיל בדיקה אוטומטית...');
+            setTimeout(testUserSubscription, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 בדיקת בעיית Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .big-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת בעיית Authentication</h1>
+        
+        <div id="status" class="status info">מתחיל בדיקה...</div>
+        
+        <h3>פעולות בדיקה:</h3>
+        <button class="button" onclick="checkCookies()">בדוק Cookies</button>
+        <button class="button" onclick="checkSession()">בדוק Session</button>
+        <button class="button" onclick="testSubscriptionAPI()">בדוק API מנוי</button>
+        <button class="button" onclick="fixAuth()">תקן Authentication</button>
+        
+        <h3>פעולות מהירות:</h3>
+        <button class="button big-button" onclick="goToLogin()">🔑 התחבר מחדש</button>
+        <button class="button big-button" onclick="goToDashboard()">📊 חזור לדשבורד</button>
+        
+        <h3>פרטי DEBUG:</h3>
+        <div class="code" id="debugInfo">טוען...</div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let debugData = {};
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        function updateDebugInfo() {
+            const info = `
+🔍 DEBUG INFO:
+=============
+
+URL: ${window.location.href}
+User Agent: ${navigator.userAgent}
+Timestamp: ${new Date().toISOString()}
+
+COOKIES:
+--------
+All Cookies: ${document.cookie}
+Parsed Cookies:
+${Object.entries(parseCookies()).map(([key, value]) => `  ${key}: ${value}`).join('\n')}
+
+AUTHENTICATION:
+--------------
+userId: ${debugData.userId || 'לא נמצא'}
+Has userId Cookie: ${!!getCookie('userId')}
+Cookie Value: ${getCookie('userId') || 'ריק'}
+
+BROWSER STORAGE:
+---------------
+localStorage keys: ${Object.keys(localStorage).join(', ') || 'ריק'}
+sessionStorage keys: ${Object.keys(sessionStorage).join(', ') || 'ריק'}
+
+NETWORK:
+--------
+Online: ${navigator.onLine}
+Connection: ${navigator.connection?.effectiveType || 'לא ידוע'}
+            `;
+            document.getElementById('debugInfo').textContent = info;
+        }
+        
+        function parseCookies() {
+            const cookies = {};
+            document.cookie.split(';').forEach(cookie => {
+                const [name, value] = cookie.trim().split('=');
+                if (name) cookies[name] = value || '';
+            });
+            return cookies;
+        }
+        
+        function getCookie(name) {
+            return parseCookies()[name];
+        }
+        
+        function setCookie(name, value, days = 7) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/`;
+        }
+        
+        function checkCookies() {
+            addResult('🔍 בודק cookies...', 'info');
+            
+            const cookies = parseCookies();
+            const userId = getCookie('userId');
+            
+            if (userId) {
+                addResult(`✅ נמצא userId: ${userId}`, 'success');
+                debugData.userId = userId;
+            } else {
+                addResult('❌ לא נמצא userId cookie', 'error');
+            }
+            
+            addResult(`📊 סה"כ cookies: ${Object.keys(cookies).length}`, 'info');
+            
+            updateDebugInfo();
+        }
+        
+        async function checkSession() {
+            addResult('🔍 בודק session...', 'info');
+            
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                
+                if (response.ok && data.userId) {
+                    addResult(`✅ Session תקין: ${data.userId}`, 'success');
+                    debugData.sessionUserId = data.userId;
+                } else {
+                    addResult(`❌ Session לא תקין: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ שגיאה בבדיקת session: ${error.message}`, 'error');
+            }
+            
+            updateDebugInfo();
+        }
+        
+        async function testSubscriptionAPI() {
+            const userId = getCookie('userId');
+            
+            if (!userId) {
+                addResult('❌ אין userId - לא ניתן לבדוק מנוי', 'error');
+                return;
+            }
+            
+            addResult('🔍 בודק API מנוי...', 'info');
+            
+            try {
+                // Get user pages first
+                const pagesResponse = await fetch(`/api/pages/${userId}`);
+                const pagesData = await pagesResponse.json();
+                
+                if (!pagesResponse.ok || !pagesData.pages || pagesData.pages.length === 0) {
+                    addResult('❌ לא נמצאו דפים למשתמש', 'error');
+                    return;
+                }
+                
+                const pageId = pagesData.pages[0].documentId || pagesData.pages[0].id;
+                addResult(`📄 נמצא דף: ${pageId}`, 'info');
+                
+                // Test subscription API
+                const response = await fetch('/api/subscription/activate-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        documentId: pageId,
+                        months: 1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('🎉 API מנוי עובד!', 'success');
+                } else {
+                    addResult(`❌ API מנוי נכשל: ${data.error}`, 'error');
+                    
+                    if (data.needsLogin) {
+                        addResult('🔑 נדרשת התחברות מחדש', 'warning');
+                    }
+                }
+                
+            } catch (error) {
+                addResult(`❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+        
+        function fixAuth() {
+            addResult('🔧 מתקן authentication...', 'info');
+            
+            // Set test userId if missing
+            if (!getCookie('userId')) {
+                const testUserId = 'google_111351120503275674259';
+                setCookie('userId', testUserId);
+                addResult(`✅ הוגדר userId: ${testUserId}`, 'success');
+                debugData.userId = testUserId;
+            }
+            
+            // Clear any problematic storage
+            localStorage.clear();
+            sessionStorage.clear();
+            addResult('🧹 נוקה browser storage', 'info');
+            
+            updateDebugInfo();
+            updateStatus('✅ Authentication תוקן!', 'success');
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login';
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Auto-start checks
+        window.onload = function() {
+            updateStatus('🔍 מתחיל בדיקות...', 'info');
+            setTimeout(() => {
+                checkCookies();
+                setTimeout(checkSession, 1000);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

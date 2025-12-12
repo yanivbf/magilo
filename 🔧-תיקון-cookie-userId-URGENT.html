@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיקון Cookie UserId - URGENT</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success { background: rgba(34, 197, 94, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.3); }
+        .warning { background: rgba(245, 158, 11, 0.3); }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .critical {
+            background: rgba(239, 68, 68, 0.4);
+            border: 2px solid rgba(239, 68, 68, 0.6);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון Cookie UserId - URGENT</h1>
+        <p><strong>בעיה:</strong> המערכת לא מזהה את המשתמש כבעלים של הדף כי ה-cookie לא מוגדר נכון</p>
+        
+        <div class="critical">
+            <h2>🚨 תיקון מיידי נדרש</h2>
+            <p>המשתמש <code>google_111351120503275674259</code> לא יכול לערוך דפים כי ה-userId cookie חסר</p>
+        </div>
+
+        <div id="status" class="status">
+            בודק מצב נוכחי...
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="checkCurrentStatus()">🔍 בדוק מצב נוכחי</button>
+            <button onclick="fixCookieNow()">🔧 תקן Cookie עכשיו</button>
+            <button onclick="testEditMode()">🎯 בדוק מצב עריכה</button>
+            <button onclick="clearAllAndRestart()">🔄 נקה הכל והתחל מחדש</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const MAIN_USER_ID = 'google_111351120503275674259';
+        
+        function log(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+            statusDiv.innerHTML = `<div class="${className}">[${timestamp}] ${message}</div>` + statusDiv.innerHTML;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function setCookie(name, value, days = 30) {
+            const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+            log(`✅ Cookie נוצר: ${name}=${value}`, 'success');
+        }
+
+        function checkCurrentStatus() {
+            log('🔍 בודק מצב נוכחי...');
+            
+            // Check cookies
+            const userId = getCookie('userId');
+            const subscriptionStatus = getCookie('subscriptionStatus');
+            
+            log(`Cookie userId: ${userId || 'חסר!'}`);
+            log(`Cookie subscriptionStatus: ${subscriptionStatus || 'חסר'}`);
+            
+            // Check localStorage
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const userData = JSON.parse(currentUser);
+                    log(`localStorage user: ${userData.userId || 'חסר ID'}`);
+                } else {
+                    log('localStorage: ריק', 'warning');
+                }
+            } catch (e) {
+                log(`localStorage שגיאה: ${e.message}`, 'error');
+            }
+            
+            // Check if we're the main user
+            if (userId === MAIN_USER_ID) {
+                log('✅ המשתמש הראשי מזוהה נכון!', 'success');
+            } else {
+                log('❌ המשתמש הראשי לא מזוהה - נדרש תיקון!', 'error');
+            }
+        }
+
+        function fixCookieNow() {
+            log('🔧 מתקן Cookie עכשיו...');
+            
+            // Set the main user cookie
+            setCookie('userId', MAIN_USER_ID, 30);
+            setCookie('subscriptionStatus', 'active', 30);
+            setCookie('subscriptionExpiry', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), 30);
+            
+            // Set localStorage
+            try {
+                const userData = {
+                    id: MAIN_USER_ID,
+                    userId: MAIN_USER_ID,
+                    email: '',
+                    name: 'משתמש רשום',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                log('✅ localStorage עודכן', 'success');
+            } catch (e) {
+                log(`⚠️ localStorage לא זמין: ${e.message}`, 'warning');
+            }
+            
+            log('✅ תיקון הושלם! בדוק שוב...', 'success');
+            
+            // Auto-check after fix
+            setTimeout(checkCurrentStatus, 1000);
+        }
+
+        async function testEditMode() {
+            log('🎯 בודק מצב עריכה...');
+            
+            const userId = getCookie('userId');
+            if (!userId) {
+                log('❌ אין userId cookie - תקן קודם!', 'error');
+                return;
+            }
+            
+            // Test with a sample page
+            try {
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ API מחזיר: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    log(`❌ API שגיאה: ${response.status}`, 'error');
+                }
+            } catch (e) {
+                log(`❌ שגיאת רשת: ${e.message}`, 'error');
+            }
+            
+            // Check if we can access dashboard
+            log('🔄 בודק גישה לדשבורד...');
+            try {
+                const dashResponse = await fetch(`/dashboard?userId=${userId}`);
+                if (dashResponse.ok) {
+                    log('✅ גישה לדשבורד תקינה', 'success');
+                } else {
+                    log(`⚠️ דשבורד מחזיר: ${dashResponse.status}`, 'warning');
+                }
+            } catch (e) {
+                log(`❌ שגיאה בגישה לדשבורד: ${e.message}`, 'error');
+            }
+        }
+
+        function clearAllAndRestart() {
+            log('🔄 מנקה הכל ומתחיל מחדש...');
+            
+            // Clear all cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Clear localStorage
+            try {
+                localStorage.clear();
+                log('✅ localStorage נוקה', 'success');
+            } catch (e) {
+                log(`⚠️ לא ניתן לנקות localStorage: ${e.message}`, 'warning');
+            }
+            
+            log('🔄 מגדיר מחדש...');
+            setTimeout(() => {
+                fixCookieNow();
+            }, 1000);
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            log('🚀 מערכת תיקון Cookie נטענה');
+            checkCurrentStatus();
+        };
+    </script>
+</body>
+</html>

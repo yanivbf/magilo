@@ -174,6 +174,14 @@
     "workingHours": {
       "type": "json",
       "default": {}
+    },
+    "subscriptionStatus": {
+      "type": "enumeration",
+      "enum": ["active", "inactive", "expired"],
+      "default": "active"
+    },
+    "subscriptionExpiry": {
+      "type": "datetime"
     }
   }
 }

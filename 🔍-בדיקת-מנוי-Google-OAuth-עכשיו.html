@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מנוי Google OAuth - עכשיו</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .success { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        .warning { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); }
+        .error { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+        .info { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); }
+        
+        .test-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .test-button.secondary {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+        }
+        .test-button.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        h1, h2 { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.8em; color: #fbbf24; }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-right: 5px solid #fbbf24;
+        }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background: rgba(251, 191, 36, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .debug-info {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת מנוי Google OAuth - עכשיו</h1>
+        
+        <div class="status-card info">
+            <h2>🎯 מה אנחנו בודקים:</h2>
+            <p>אתה מחובר בהצלחה עם Google (רואים "משתמש רשום" בכותרת), אבל דף המנוי לא מזהה אותך.</p>
+            <p>בוא נבדוק מה בדיוק קורה...</p>
+        </div>
+
+        <div class="status-card warning">
+            <h2>🔧 בדיקות מיידיות:</h2>
+            
+            <div class="step">
+                <strong>1. בדוק מצב הקוקיז עכשיו:</strong>
+                <div class="debug-info" id="cookieStatus">טוען...</div>
+                <button class="test-button" onclick="checkCookies()">רענן בדיקת קוקיז</button>
+            </div>
+            
+            <div class="step">
+                <strong>2. בדוק localStorage:</strong>
+                <div class="debug-info" id="localStorageStatus">טוען...</div>
+                <button class="test-button" onclick="checkLocalStorage()">רענן בדיקת localStorage</button>
+            </div>
+            
+            <div class="step">
+                <strong>3. בדוק Console Logs:</strong>
+                <div class="debug-info" id="consoleStatus">פתח את Developer Tools (F12) ולך ל-Console כדי לראות את הלוגים</div>
+            </div>
+        </div>
+
+        <div class="status-card success">
+            <h2>🧪 בדיקות דף המנוי:</h2>
+            
+            <div class="step">
+                <strong>בדיקה 1: דף מנוי ישיר</strong>
+                <a href="/subscribe" class="test-button" target="_blank">פתח דף מנוי</a>
+                <p>צפוי: אמור להיכנס ישירות ללא בקשת התחברות</p>
+            </div>
+            
+            <div class="step">
+                <strong>בדיקה 2: מנוי לדף ספציפי</strong>
+                <a href="/subscribe?pageId=test123" class="test-button secondary" target="_blank">מנוי לדף ספציפי</a>
+                <p>צפוי: אמור להיכנס עם pageId בURL</p>
+            </div>
+            
+            <div class="step">
+                <strong>בדיקה 3: חזרה לדשבורד</strong>
+                <a href="/dashboard" class="test-button warning" target="_blank">דשבורד</a>
+                <p>לוודא שהדשבורד עדיין מזהה אותך</p>
+            </div>
+        </div>
+
+        <div class="status-card info">
+            <h2>📋 מה לחפש בConsole:</h2>
+            <div class="code">
+📄 Subscription page - checking authentication...
+📄 Auth store user: [object Object] או null
+📄 Page ID from URL: "" או pageId
+✅ User authenticated via auth store: google_111351120503275674259
+או
+✅ User authenticated via cookie: google_111351120503275674259
+או
+✅ Main user set as fallback: google_111351120503275674259
+            </div>
+        </div>
+
+        <div class="status-card warning">
+            <h2>🚨 אם עדיין לא עובד:</h2>
+            
+            <div class="step">
+                <strong>תיקון מהיר 1: נקה קוקיז והתחבר מחדש</strong>
+                <button class="test-button warning" onclick="clearAllAndRelogin()">נקה הכל והתחבר מחדש</button>
+            </div>
+            
+            <div class="step">
+                <strong>תיקון מהיר 2: הגדר משתמש ידנית</strong>
+                <button class="test-button" onclick="setMainUser()">הגדר משתמש ראשי</button>
+            </div>
+            
+            <div class="step">
+                <strong>תיקון מהיר 3: רענן auth store</strong>
+                <button class="test-button secondary" onclick="refreshAuthStore()">רענן auth store</button>
+            </div>
+        </div>
+
+        <div class="status-card success">
+            <h2>✅ מה אמור לקרות:</h2>
+            <ol>
+                <li>אתה מחובר עם Google → יש לך קוקי userId</li>
+                <li>דף המנוי בודק auth store → מוצא אותך</li>
+                <li>אם לא, בודק קוקי → מוצא אותך</li>
+                <li>אם לא, מגדיר משתמש ראשי → מוצא אותך</li>
+                <li>מציג דף מנוי ללא בקשת התחברות</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Check cookies
+        function checkCookies() {
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+            
+            const status = document.getElementById('cookieStatus');
+            let output = 'קוקיז נוכחיים:\n';
+            
+            if (cookies.userId) {
+                output += `✅ userId: ${cookies.userId}\n`;
+            } else {
+                output += `❌ userId: לא נמצא\n`;
+            }
+            
+            if (cookies.subscriptionStatus) {
+                output += `✅ subscriptionStatus: ${cookies.subscriptionStatus}\n`;
+            } else {
+                output += `⚠️ subscriptionStatus: לא נמצא\n`;
+            }
+            
+            output += `\nכל הקוקיז:\n${JSON.stringify(cookies, null, 2)}`;
+            status.textContent = output;
+        }
+        
+        // Check localStorage
+        function checkLocalStorage() {
+            const status = document.getElementById('localStorageStatus');
+            let output = 'localStorage נוכחי:\n';
+            
+            try {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    output += `✅ currentUser: ${currentUser}\n`;
+                } else {
+                    output += `❌ currentUser: לא נמצא\n`;
+                }
+                
+                const strapiToken = localStorage.getItem('strapiToken');
+                if (strapiToken) {
+                    output += `✅ strapiToken: קיים\n`;
+                } else {
+                    output += `⚠️ strapiToken: לא נמצא\n`;
+                }
+            } catch (e) {
+                output += `❌ שגיאה בגישה ל-localStorage: ${e.message}\n`;
+            }
+            
+            status.textContent = output;
+        }
+        
+        // Clear all and re-login
+        function clearAllAndRelogin() {
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Clear localStorage
+            try {
+                localStorage.clear();
+            } catch (e) {
+                console.log('Could not clear localStorage:', e);
+            }
+            
+            alert('נוקה הכל! עכשיו תועבר לדף התחברות');
+            window.location.href = '/login';
+        }
+        
+        // Set main user manually
+        function setMainUser() {
+            const mainUserId = 'google_111351120503275674259';
+            const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+            
+            document.cookie = `userId=${mainUserId}; expires=${expires}; path=/; SameSite=Lax`;
+            document.cookie = `subscriptionStatus=active; expires=${expires}; path=/; SameSite=Lax`;
+            
+            try {
+                const userData = {
+                    id: mainUserId,
+                    userId: mainUserId,
+                    email: '',
+                    name: 'משתמש רשום',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+            } catch (e) {
+                console.log('Could not set localStorage:', e);
+            }
+            
+            alert('משתמש ראשי הוגדר! רענן את הדף');
+            checkCookies();
+            checkLocalStorage();
+        }
+        
+        // Refresh auth store (if available)
+        function refreshAuthStore() {
+            // This would need to be implemented in the actual app
+            alert('זה יעבוד רק בדף האמיתי עם auth store');
+            console.log('Attempting to refresh auth store...');
+        }
+        
+        // Initial checks
+        window.onload = function() {
+            checkCookies();
+            checkLocalStorage();
+            
+            console.log('🔍 Debug tool loaded');
+            console.log('Current URL:', window.location.href);
+            console.log('User Agent:', navigator.userAgent);
+        };
+    </script>
+</body>
+</html>

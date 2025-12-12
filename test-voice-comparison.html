@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת קול סתיו - השוואה</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        .test-section:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        .test-section h3 {
+            color: #667eea;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge.original {
+            background: #10b981;
+        }
+        .badge.new {
+            background: #3b82f6;
+        }
+        .badge.fallback {
+            background: #f59e0b;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        button.stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #e3f2fd;
+            font-weight: 500;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .info {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .specs {
+            background: #f0f4ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #555;
+            border-right: 4px solid #667eea;
+        }
+        .specs strong {
+            color: #667eea;
+        }
+        .comparison {
+            background: #fffbeb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 2px dashed #f59e0b;
+        }
+        .comparison h4 {
+            color: #f59e0b;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 בדיקת קול סתיו - השוואה מלאה</h1>
+        <p class="subtitle">בדוק את ההבדלים בין הקול המקורי לחדש</p>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold; color: #667eea;">טקסט לבדיקה:</label>
+            <textarea id="testText" rows="3">שלום! אני סתיו, העוזרת הדיגיטלית שלך. איך אוכל לעזור לך היום?</textarea>
+        </div>
+
+        <div class="test-section">
+            <h3>
+                <span>🎯 בדיקה 1: הקול המקורי מהמערכת הישנה</span>
+                <span class="badge original">ORIGINAL</span>
+            </h3>
+            <div class="specs">
+                <strong>מפרט טכני:</strong><br>
+                • קול: he-IL-Wavenet-A (נקבה, Wavenet איכות גבוהה)<br>
+                • Pitch: -5.0 (נמוך מאוד - אפקט רובוטי)<br>
+                • Speed: 1.35 (מהיר)<br>
+                • Effects: small-bluetooth-speaker-class-device (אפקט רמקול)<br>
+                • API: Google Cloud Text-to-Speech
+            </div>
+            <button onclick="testOriginalVoice()">🔊 נגן קול מקורי (מהמערכת הישנה)</button>
+            <button class="stop" onclick="stopAudio()">⏹️ עצור</button>
+            <div id="status1" class="status" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>
+                <span>🆕 בדיקה 2: הקול דרך ה-API החדש</span>
+                <span class="badge new">NEW API</span>
+            </h3>
+            <div class="specs">
+                <strong>מפרט טכני:</strong><br>
+                • אותן הגדרות בדיוק כמו המקורי<br>
+                • עובר דרך SvelteKit API Route<br>
+                • API Key מ-Environment Variables
+            </div>
+            <button onclick="testNewAPI()">🔊 נגן דרך API החדש</button>
+            <button class="stop" onclick="stopAudio()">⏹️ עצור</button>
+            <div id="status2" class="status" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>
+                <span>🌐 בדיקה 3: קול דפדפן (Fallback)</span>
+                <span class="badge fallback">FALLBACK</span>
+            </h3>
+            <div class="specs">
+                <strong>מפרט טכני:</strong><br>
+                • משתמש ב-Web Speech API של הדפדפן<br>
+                • איכות נמוכה יותר<br>
+                • לא דורש API Key<br>
+                • תלוי בדפדפן ובמערכת ההפעלה
+            </div>
+            <button onclick="testBrowserTTS()">🔊 נגן דפדפן</button>
+            <button class="stop" onclick="stopBrowserTTS()">⏹️ עצור</button>
+            <div id="status3" class="status" style="display:none;"></div>
+        </div>
+
+        <div class="comparison">
+            <h4>❓ איך לזהות את הקול הנכון?</h4>
+            <p><strong>הקול המקורי של סתיו צריך להישמע:</strong></p>
+            <ul>
+                <li>✅ רובוטי וממוכן (בגלל ה-pitch הנמוך)</li>
+                <li>✅ מהיר (1.35x מהירות רגילה)</li>
+                <li>✅ עם אפקט רמקול קטן</li>
+                <li>✅ קול נשי אבל לא טבעי</li>
+            </ul>
+            <p><strong>אם הקול נשמע טבעי מדי או איטי - זה לא הקול הנכון!</strong></p>
+        </div>
+    </div>
+
+    <script>
+        let currentAudio = null;
+
+        function showStatus(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = 'status ' + type;
+            el.style.display = 'block';
+        }
+
+        function stopAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+                console.log('🔇 Audio stopped');
+            }
+        }
+
+        function stopBrowserTTS() {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                console.log('🔇 Browser TTS stopped');
+            }
+        }
+
+        async function testOriginalVoice() {
+            stopAudio();
+            stopBrowserTTS();
+            const text = document.getElementById('testText').value;
+            
+            showStatus('status1', '⏳ מתחבר ל-Google TTS API (הגדרות מקוריות)...', 'info');
+            
+            try {
+                // 🎯 EXACT API KEY from old system
+                const API_KEY = 'AIzaSyBexR71l9bdJ28OKx8P7QhyQDQpqTPa56o';
+                
+                console.log('🎤 Calling Google TTS with ORIGINAL settings...');
+                
+                const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        input: { text },
+                        voice: {
+                            languageCode: 'he-IL',
+                            name: 'he-IL-Wavenet-A', // ORIGINAL
+                            ssmlGender: 'FEMALE'
+                        },
+                        audioConfig: {
+                            audioEncoding: 'MP3',
+                            pitch: -5.0,        // ORIGINAL - robotic
+                            speakingRate: 1.35, // ORIGINAL - fast
+                            volumeGainDb: 0.0,  // ORIGINAL
+                            effectsProfileId: ['small-bluetooth-speaker-class-device'] // ORIGINAL
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+                
+                if (data.audioContent) {
+                    showStatus('status1', '✅ מנגן את הקול המקורי של סתיו...', 'success');
+                    console.log('✅ Audio received, size:', data.audioContent.length);
+                    
+                    const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
+                    currentAudio = audio;
+                    
+                    audio.onended = () => {
+                        showStatus('status1', '✅ הקול הסתיים - זה הקול המקורי!', 'success');
+                        currentAudio = null;
+                    };
+                    
+                    audio.onerror = (e) => {
+                        console.error('Audio error:', e);
+                        showStatus('status1', '❌ שגיאה בניגון האודיו', 'error');
+                        currentAudio = null;
+                    };
+                    
+                    await audio.play();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('status1', '❌ שגיאה: ' + error.message, 'error');
+            }
+        }
+
+        async function testNewAPI() {
+            stopAudio();
+            stopBrowserTTS();
+            const text = document.getElementById('testText').value;
+            
+            showStatus('status2', '⏳ מתחבר ל-API החדש...', 'info');
+            
+            try {
+                console.log('🆕 Calling NEW API endpoint...');
+                
+                const response = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API failed (${response.status}): ${errorText}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                console.log('Response content-type:', contentType);
+
+                if (!contentType || !contentType.includes('audio')) {
+                    throw new Error('Response is not audio: ' + contentType);
+                }
+
+                const audioBlob = await response.blob();
+                console.log('✅ Audio blob received, size:', audioBlob.size);
+                
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                
+                currentAudio = audio;
+                
+                showStatus('status2', '✅ מנגן דרך API החדש...', 'success');
+                
+                audio.onended = () => {
+                    showStatus('status2', '✅ הקול הסתיים - האם זה נשמע זהה למקורי?', 'success');
+                    currentAudio = null;
+                    URL.revokeObjectURL(audioUrl);
+                };
+                
+                audio.onerror = (e) => {
+                    console.error('Audio error:', e);
+                    showStatus('status2', '❌ שגיאה בניגון האודיו', 'error');
+                    currentAudio = null;
+                    URL.revokeObjectURL(audioUrl);
+                };
+                
+                await audio.play();
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('status2', '❌ שגיאה: ' + error.message, 'error');
+            }
+        }
+
+        function testBrowserTTS() {
+            stopAudio();
+            stopBrowserTTS();
+            const text = document.getElementById('testText').value;
+            
+            if (!('speechSynthesis' in window)) {
+                showStatus('status3', '❌ הדפדפן לא תומך ב-TTS', 'error');
+                return;
+            }
+
+            showStatus('status3', '⏳ מנגן דרך דפדפן (fallback)...', 'info');
+            console.log('🌐 Using browser TTS...');
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'he-IL';
+            utterance.rate = 1.35;
+            utterance.pitch = 0.6;
+            
+            utterance.onstart = () => {
+                showStatus('status3', '✅ מנגן דרך דפדפן - איכות נמוכה יותר', 'success');
+            };
+            
+            utterance.onend = () => {
+                showStatus('status3', '✅ הקול הסתיים - זה לא הקול המקורי!', 'info');
+            };
+            
+            utterance.onerror = (e) => {
+                console.error('Browser TTS error:', e);
+                showStatus('status3', '❌ שגיאה: ' + e.error, 'error');
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Auto-test on load (optional)
+        console.log('🎤 Test page loaded. Ready to compare voices!');
+    </script>
+</body>
+</html>

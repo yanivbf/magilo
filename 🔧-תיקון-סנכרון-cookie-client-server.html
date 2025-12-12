@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 תיקון סנכרון Cookie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        .urgent {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 תיקון סנכרון Cookie בין שרת לקליינט</h1>
+        
+        <div class="info">
+            <strong>🎯 הבעיה:</strong> השרת מוצא את המשתמש אבל הקליינט לא רואה את הcookie
+        </div>
+
+        <div id="currentStatus" class="status info">בודק מצב נוכחי...</div>
+
+        <button onclick="diagnoseIssue()">🔍 אבחן בעיה</button>
+        <button onclick="fixCookieSync()" class="urgent">🔧 תקן סנכרון</button>
+        <button onclick="forceUserLogin()" class="urgent">👤 כפה התחברות</button>
+        <button onclick="testDashboard()">📊 בדוק דשבורד</button>
+
+        <div class="console" id="console">מתחיל אבחון...\n</div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function setStatus(type, message) {
+            const status = document.getElementById('currentStatus');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        async function diagnoseIssue() {
+            log('🔍 מתחיל אבחון בעיית סנכרון...');
+            setStatus('info', 'מאבחן...');
+
+            // 1. בדוק cookies נוכחיים
+            const cookies = document.cookie;
+            log(`🍪 Cookies נוכחיים: ${cookies || 'אין'}`);
+
+            const userIdMatch = cookies.match(/userId=([^;]+)/);
+            const userId = userIdMatch ? userIdMatch[1] : null;
+            log(`👤 userId מcookie: ${userId || 'לא נמצא'}`);
+
+            // 2. בדוק URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUserId = urlParams.get('userId');
+            log(`🔗 userId מURL: ${urlUserId || 'לא נמצא'}`);
+
+            // 3. בדוק localStorage
+            let localStorageUser = null;
+            try {
+                const stored = localStorage.getItem('currentUser');
+                if (stored) {
+                    localStorageUser = JSON.parse(stored);
+                    log(`💾 localStorage user: ${localStorageUser.userId || 'לא תקין'}`);
+                } else {
+                    log('💾 localStorage: ריק');
+                }
+            } catch (e) {
+                log(`💾 localStorage שגיאה: ${e.message}`);
+            }
+
+            // 4. בדוק API
+            try {
+                const response = await fetch('/api/user/current');
+                const data = await response.json();
+                log(`🌐 API response: ${JSON.stringify(data)}`);
+                
+                if (data.authenticated) {
+                    log(`✅ API מזהה משתמש: ${data.userId}`);
+                } else {
+                    log('❌ API לא מזהה משתמש');
+                }
+            } catch (error) {
+                log(`❌ API שגיאה: ${error.message}`);
+            }
+
+            // 5. סיכום
+            if (userId) {
+                setStatus('success', `✅ נמצא userId: ${userId}`);
+                log('✅ Cookie קיים - הבעיה כנראה בauth store');
+            } else if (urlUserId) {
+                setStatus('warning', '⚠️ יש userId בURL אבל לא בcookie');
+                log('⚠️ צריך להעביר מURL לcookie');
+            } else if (localStorageUser) {
+                setStatus('warning', '⚠️ יש user בlocalStorage אבל לא בcookie');
+                log('⚠️ צריך להעביר מlocalStorage לcookie');
+            } else {
+                setStatus('error', '❌ לא נמצא משתמש בשום מקום');
+                log('❌ צריך התחברות מחדש');
+            }
+        }
+
+        async function fixCookieSync() {
+            log('🔧 מתחיל תיקון סנכרון...');
+            setStatus('info', 'מתקן...');
+
+            let userId = null;
+
+            // 1. נסה למצוא userId מכל המקורות
+            const cookies = document.cookie;
+            const userIdMatch = cookies.match(/userId=([^;]+)/);
+            userId = userIdMatch ? userIdMatch[1] : null;
+
+            if (!userId) {
+                // נסה מURL
+                const urlParams = new URLSearchParams(window.location.search);
+                userId = urlParams.get('userId');
+                log(`🔗 מצאתי userId בURL: ${userId}`);
+            }
+
+            if (!userId) {
+                // נסה מlocalStorage
+                try {
+                    const stored = localStorage.getItem('currentUser');
+                    if (stored) {
+                        const userData = JSON.parse(stored);
+                        userId = userData.userId;
+                        log(`💾 מצאתי userId בlocalStorage: ${userId}`);
+                    }
+                } catch (e) {
+                    log(`💾 שגיאה בקריאת localStorage: ${e.message}`);
+                }
+            }
+
+            if (!userId) {
+                // נסה לקבל מהשרת
+                try {
+                    const response = await fetch('/api/user/current');
+                    const data = await response.json();
+                    if (data.authenticated && data.userId) {
+                        userId = data.userId;
+                        log(`🌐 מצאתי userId בשרת: ${userId}`);
+                    }
+                } catch (error) {
+                    log(`🌐 שגיאה בקריאה מהשרת: ${error.message}`);
+                }
+            }
+
+            if (userId) {
+                // שמור בcookie
+                const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+                document.cookie = `userId=${userId}; expires=${expires}; path=/; SameSite=Lax`;
+                log(`✅ שמרתי userId בcookie: ${userId}`);
+
+                // שמור בlocalStorage
+                try {
+                    const userData = {
+                        id: userId,
+                        userId: userId,
+                        email: '',
+                        name: 'משתמש רשום',
+                        avatar: null,
+                        subscriptionStatus: 'active'
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    log('✅ שמרתי גם בlocalStorage');
+                } catch (e) {
+                    log(`⚠️ לא הצליח לשמור בlocalStorage: ${e.message}`);
+                }
+
+                setStatus('success', `✅ תוקן! userId: ${userId}`);
+                log('🎉 סנכרון הושלם בהצלחה!');
+
+                // הצע לרענן
+                setTimeout(() => {
+                    if (confirm('✅ התיקון הושלם! האם לרענן את הדף?')) {
+                        window.location.reload();
+                    }
+                }, 2000);
+
+            } else {
+                setStatus('error', '❌ לא נמצא userId בשום מקום');
+                log('❌ לא הצליח למצוא userId - צריך התחברות מחדש');
+            }
+        }
+
+        async function forceUserLogin() {
+            log('👤 כופה התחברות עם המשתמש הידוע...');
+            
+            // המשתמש הידוע מהלוגים
+            const knownUserId = 'google_111351120503275674259';
+            
+            log(`🎯 משתמש ידוע: ${knownUserId}`);
+            
+            // שמור בcookie
+            const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = `userId=${knownUserId}; expires=${expires}; path=/; SameSite=Lax`;
+            log('✅ שמרתי בcookie');
+
+            // שמור בlocalStorage
+            try {
+                const userData = {
+                    id: knownUserId,
+                    userId: knownUserId,
+                    email: '',
+                    name: 'משתמש Google',
+                    avatar: null,
+                    subscriptionStatus: 'active'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                log('✅ שמרתי בlocalStorage');
+            } catch (e) {
+                log(`⚠️ localStorage לא זמין: ${e.message}`);
+            }
+
+            setStatus('success', `✅ כפיתי התחברות: ${knownUserId}`);
+            log('🎉 התחברות נכפתה בהצלחה!');
+
+            // רענן אוטומטית
+            setTimeout(() => {
+                log('🔄 מרענן את הדף...');
+                window.location.reload();
+            }, 2000);
+        }
+
+        async function testDashboard() {
+            log('📊 בודק גישה לדשבורד...');
+            
+            try {
+                // נסה לגשת לדשבורד
+                const response = await fetch('/dashboard');
+                log(`📊 Dashboard response: ${response.status}`);
+                
+                if (response.ok) {
+                    log('✅ דשבורד נגיש');
+                    setStatus('success', '✅ דשבורד עובד');
+                    
+                    // פתח בטאב חדש
+                    window.open('/dashboard', '_blank');
+                } else {
+                    log(`❌ דשבורד לא נגיש: ${response.status}`);
+                    setStatus('error', `❌ דשבורד שגיאה: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ שגיאה בגישה לדשבורד: ${error.message}`);
+                setStatus('error', '❌ שגיאה בדשבורד');
+            }
+        }
+
+        // הפעלה אוטומטית
+        window.onload = function() {
+            log('🚀 מערכת תיקון סנכרון נטענה');
+            setTimeout(diagnoseIssue, 1000);
+        };
+    </script>
+</body>
+</html>

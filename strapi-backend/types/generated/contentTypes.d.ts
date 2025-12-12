@@ -760,6 +760,11 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::product.product'
     >;
+    subscriptionExpiry: Schema.Attribute.DateTime;
+    subscriptionStatus: Schema.Attribute.Enumeration<
+      ['active', 'inactive', 'expired']
+    > &
+      Schema.Attribute.DefaultTo<'active'>;
     testimonials: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;

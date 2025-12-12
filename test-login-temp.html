@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>התחברות זמנית - AutoPage</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+        }
+        .container {
+            max-width: 400px;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .temp-btn {
+            background: #28a745;
+        }
+        .temp-btn:hover {
+            background: #218838;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #0c5460;
+            font-size: 0.9rem;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AutoPage</h1>
+        
+        <div class="info">
+            <strong>התחברות זמנית</strong><br>
+            כרגע Google OAuth לא מוגדר נכון.<br>
+            השתמש בהתחברות זמנית לבדיקות.
+        </div>
+        
+        <button class="btn temp-btn" onclick="loginTemporary()">
+            🔑 התחבר זמנית
+        </button>
+        
+        <button class="btn" onclick="testCreatePage()">
+            📄 בדוק יצירת דף
+        </button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function loginTemporary() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="success">מתחבר...</div>';
+            
+            try {
+                // יצירת userId זמני
+                const userId = 'temp_user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                
+                // שמירה ב-localStorage
+                localStorage.setItem('userId', userId);
+                
+                // שמירה ב-cookie
+                document.cookie = `userId=${userId}; path=/; max-age=${60*60*24*30}; SameSite=Lax`;
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ התחברת בהצלחה!<br>
+                        <strong>User ID:</strong> ${userId}<br>
+                        מפנה לדשבורד...
+                    </div>
+                `;
+                
+                // הפניה לדשבורד אחרי 2 שניות
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:5173/dashboard';
+                }, 2000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ שגיאה בהתחברות: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testCreatePage() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="success">בודק יצירת דף...</div>';
+            
+            try {
+                // בדיקה שיש userId
+                let userId = localStorage.getItem('userId');
+                if (!userId) {
+                    userId = 'temp_user_' + Date.now();
+                    localStorage.setItem('userId', userId);
+                    document.cookie = `userId=${userId}; path=/; max-age=${60*60*24*30}; SameSite=Lax`;
+                }
+                
+                const response = await fetch('http://localhost:5173/api/create-structured-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        userId: userId,
+                        pageType: 'service',
+                        designStyle: 'modern',
+                        formData: {
+                            mainName: 'מוסך דוד - בדיקה ' + new Date().toLocaleTimeString('he-IL'),
+                            description: 'מוסך מקצועי עם ניסיון של 20 שנה',
+                            phone: '050-1234567',
+                            email: 'test@example.com',
+                            address: 'רחוב הרצל 123, תל אביב'
+                        },
+                        optionalSections: ['about', 'appointments', 'faq'],
+                        style: 'Modern'
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ דף נוצר בהצלחה!<br>
+                            <strong>Slug:</strong> ${result.slug}<br>
+                            <a href="http://localhost:5173${result.pageUrl}" target="_blank">פתח דף</a>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ שגיאה ביצירת דף: ${errorText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ שגיאת רשת: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // בדיקה אם כבר מחובר
+        window.onload = function() {
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        ✅ כבר מחובר<br>
+                        <strong>User ID:</strong> ${userId}
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>
