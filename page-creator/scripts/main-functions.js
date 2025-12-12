@@ -198,6 +198,13 @@ async function handleFormSubmit(event) {
             console.log('Store scripts injected successfully');
         }
         
+        // Add appointment JavaScript if this is a serviceProvider with appointments
+        if (data.pageType === 'serviceProvider' && (data.appointments === 'true' || data.appointments === true || data.appointments === 'on')) {
+            console.log(`Detected serviceProvider with appointments, injecting appointment scripts...`);
+            htmlContent = injectAppointmentScripts(htmlContent);
+            console.log('Appointment scripts injected successfully');
+        }
+        
         // Enforcement: ensure mandatory bubbles/buttons are present (per page type)
         let processedHtml = ensureMandatoryFloatingElements(htmlContent, data);
 
@@ -851,6 +858,279 @@ document.addEventListener('DOMContentLoaded', function() {
     return htmlContent;
 }
 
+// Inject appointment booking scripts for serviceProvider pages
+function injectAppointmentScripts(htmlContent) {
+    console.log('Starting appointment script injection...');
+    
+    // Check if appointment booking form exists
+    const hasBookingForm = htmlContent.includes('id="booking-form"') || htmlContent.includes('id="contact-form"');
+    const hasAppointmentKeywords = htmlContent.includes('appointment') || htmlContent.includes('calendar') || htmlContent.includes('selected-date') || htmlContent.includes('selected-time');
+    
+    if (!hasBookingForm && !hasAppointmentKeywords) {
+        console.log('No appointment form found, skipping injection');
+        return htmlContent;
+    }
+    
+    // Check if scripts already exist
+    if (htmlContent.includes('Appointment Booking Handler') || htmlContent.includes('generateTimeSlots')) {
+        console.log('Appointment scripts already exist, skipping injection');
+        return htmlContent;
+    }
+    
+    console.log('Injecting fresh appointment scripts...');
+    
+    const appointmentScript = `
+<script>
+console.log('📅 Appointment scripts loaded!');
+
+// 📅 Appointment Booking Handler
+document.addEventListener('DOMContentLoaded', function() {
+  const bookingForm = document.getElementById('booking-form') || document.getElementById('contact-form');
+  
+  if (bookingForm) {
+    console.log('✅ Booking form found, initializing...');
+    
+    // Handle form submission
+    bookingForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Get form data
+      const formData = new FormData(bookingForm);
+      const appointmentDate = document.getElementById('appointment-date')?.value || document.getElementById('selected-date')?.value;
+      const appointmentTime = document.getElementById('appointment-time')?.value || document.getElementById('selected-time')?.value;
+      
+      // Validate date and time
+      if (!appointmentDate || !appointmentTime) {
+        alert('❌ אנא בחר תאריך ושעה לתור');
+        return;
+      }
+      
+      // Get userId and pageId from URL path
+      const pathParts = window.location.pathname.split('/');
+      const userId = pathParts[2];
+      const pageId = pathParts[3].replace('.html', '');
+      
+      // Prepare appointment data
+      const appointmentData = {
+        userId: userId,
+        pageId: pageId,
+        customerName: formData.get('name'),
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email') || '',
+        service: formData.get('service') || '',
+        date: appointmentDate,
+        time: appointmentTime,
+        duration: formData.get('duration') || '',
+        price: formData.get('price') || '',
+        notes: formData.get('notes') || ''
+      };
+      
+      console.log('📅 Sending appointment:', appointmentData);
+      
+      try {
+        // Send to API
+        const response = await fetch('/api/appointments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(appointmentData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Success message
+          alert('✅ התור נקבע בהצלחה!\\n\\n📅 תאריך: ' + appointmentDate + '\\n🕐 שעה: ' + appointmentTime + '\\n\\nנתראה בקרוב! 😊');
+          
+          // Reset form
+          bookingForm.reset();
+          if (document.getElementById('appointment-date')) {
+            document.getElementById('appointment-date').value = '';
+          }
+          if (document.getElementById('appointment-time')) {
+            document.getElementById('appointment-time').value = '';
+          }
+          if (document.getElementById('selected-date')) {
+            document.getElementById('selected-date').value = '';
+          }
+          if (document.getElementById('selected-time')) {
+            document.getElementById('selected-time').value = '';
+          }
+          
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          alert('❌ שגיאה בשמירת התור. אנא נסה שוב.');
+        }
+      } catch (error) {
+        console.error('Error saving appointment:', error);
+        alert('❌ שגיאה בשמירת התור. אנא נסה שוב או צור קשר טלפונית.');
+      }
+    });
+  }
+  
+  // Initialize time slots if needed
+  const timeSlotsGrid = document.getElementById('time-slots-grid');
+  const dateSelector = document.getElementById('selected-date-display');
+  
+  if (timeSlotsGrid || dateSelector) {
+    console.log('✅ Time slots interface found, initializing calendar...');
+    
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    // Generate time slots for a day
+    function generateTimeSlots(date) {
+      if (!timeSlotsGrid) return;
+      
+      timeSlotsGrid.innerHTML = '';
+      
+      // Default working hours: 9:00 - 18:00
+      const workingHours = { start: 9, end: 18 };
+      const slotDuration = 30; // minutes
+      
+      const slots = [];
+      for (let hour = workingHours.start; hour < workingHours.end; hour++) {
+        for (let minute = 0; minute < 60; minute += slotDuration) {
+          const timeString = \`\${String(hour).padStart(2, '0')}:\${String(minute).padStart(2, '0')}\`;
+          slots.push(timeString);
+        }
+      }
+      
+      // Create slot buttons
+      slots.forEach(time => {
+        const slotBtn = document.createElement('button');
+        slotBtn.type = 'button';
+        slotBtn.className = 'time-slot available';
+        slotBtn.textContent = time;
+        slotBtn.onclick = function() {
+          // Remove selection from all slots
+          document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+          // Mark this slot as selected
+          this.classList.add('selected');
+          // Update hidden input
+          if (document.getElementById('appointment-time')) {
+            document.getElementById('appointment-time').value = time;
+          }
+        };
+        timeSlotsGrid.appendChild(slotBtn);
+      });
+    }
+    
+    // Update date display
+    function updateDateDisplay() {
+      if (!dateSelector) return;
+      
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      dateSelector.textContent = currentDate.toLocaleDateString('he-IL', options);
+      
+      // Update hidden input
+      if (document.getElementById('appointment-date')) {
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        document.getElementById('appointment-date').value = \`\${year}-\${month}-\${day}\`;
+      }
+      
+      // Update day name
+      const dayName = document.getElementById('day-name');
+      if (dayName) {
+        dayName.textContent = currentDate.toLocaleDateString('he-IL', { weekday: 'long' });
+      }
+      
+      generateTimeSlots(currentDate);
+    }
+    
+    // Previous day button
+    const prevDayBtn = document.getElementById('prev-day');
+    if (prevDayBtn) {
+      prevDayBtn.addEventListener('click', function() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (currentDate > today) {
+          currentDate.setDate(currentDate.getDate() - 1);
+          updateDateDisplay();
+        }
+      });
+    }
+    
+    // Next day button
+    const nextDayBtn = document.getElementById('next-day');
+    if (nextDayBtn) {
+      nextDayBtn.addEventListener('click', function() {
+        currentDate.setDate(currentDate.getDate() + 1);
+        updateDateDisplay();
+      });
+    }
+    
+    // Quick date buttons
+    const quickDateBtns = document.querySelectorAll('.quick-date-btn');
+    quickDateBtns.forEach((btn, index) => {
+      btn.addEventListener('click', function() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        currentDate = new Date(today);
+        currentDate.setDate(today.getDate() + index);
+        updateDateDisplay();
+      });
+    });
+    
+    // Initialize
+    updateDateDisplay();
+  }
+});
+
+// Add selected style for time slots
+const style = document.createElement('style');
+style.textContent = \`
+  .time-slot {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    font-weight: 600;
+  }
+  .time-slot.available {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+  }
+  .time-slot.available:hover {
+    background: #28a745;
+    color: white;
+    transform: translateY(-2px);
+  }
+  .time-slot.selected {
+    background: #007bff !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+    transform: scale(1.05);
+  }
+\`;
+document.head.appendChild(style);
+
+console.log('✅ Appointment system initialized successfully!');
+</script>
+`;
+
+    // Insert before </body> tag
+    if (htmlContent.includes('</body>')) {
+        htmlContent = htmlContent.replace('</body>', appointmentScript + '</body>');
+        console.log('Appointment scripts injected before </body> tag');
+    } else {
+        // If no </body> tag, append at the end
+        htmlContent += appointmentScript;
+        console.log('Appointment scripts appended to end of HTML');
+    }
+    
+    console.log('Appointment script injection completed');
+    return htmlContent;
+}
+
 // Add footer links to the page
 function addFooterLinks(htmlContent, data) {
     // Check if footer already exists (AI might have added it)
@@ -1167,6 +1447,7 @@ if (typeof module !== 'undefined' && module.exports) {
         handleFormSubmit,
         addFooterLinks,
         generateHtmlFromApi,
-        injectStoreScripts
+        injectStoreScripts,
+        injectAppointmentScripts
     };
 }

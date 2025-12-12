@@ -195,9 +195,9 @@ app.get('/page-creator/templates/page-templates.js', (req, res) => {
 });
 
 // Get appointment template
-app.get('/page-creator/templates/appointment-template.html', (req, res) => {
+app.get('/page-creator/templates/appointment-template-v2.html', (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.sendFile(path.join(__dirname, 'page-creator', 'templates', 'appointment-template.html'));
+    res.sendFile(path.join(__dirname, 'page-creator', 'templates', 'appointment-template-v2.html'));
 });
 
 // Configure multer for image uploads
@@ -269,9 +269,18 @@ app.post('/api/create-page', async (req, res) => {
       pageHtml = htmlContent;
       // Special naming for messageInBottle pages
       if (selectedPageType === 'messageInBottle') {
-        fileName = `מסר_בבקבוק_${Date.now()}_html`.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
+        fileName = `מסר_בבקבוק_${Date.now()}_html.html`.replace(/[^a-zA-Z0-9\u0590-\u05FF.]/g, '_');
       } else {
-      fileName = `${title || 'דף נחיתה'}_${Date.now()}_html`.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
+      fileName = `${title || 'דף נחיתה'}_${Date.now()}_html.html`.replace(/[^a-zA-Z0-9\u0590-\u05FF.]/g, '_');
+      }
+      
+      // 🎯 Replace TEMP placeholders with real IDs (for appointment template)
+      const pageId = fileName.replace('.html', '');
+      if (pageHtml.includes('TEMP_USER_ID') || pageHtml.includes('TEMP_PAGE_ID')) {
+        console.log('📅 Replacing TEMP placeholders with real IDs in /api/create-page');
+        pageHtml = pageHtml.replace(/TEMP_USER_ID/g, userId);
+        pageHtml = pageHtml.replace(/TEMP_PAGE_ID/g, pageId);
+        console.log('✅ Placeholders replaced:', { userId, pageId });
       }
       
       // 🍾 For messageInBottle, inject metadata into the HTML
@@ -372,12 +381,35 @@ app.post('/api/create-page', async (req, res) => {
       console.log(`✅ Detected STORE page from keywords`);
     }
     
-    // FORCE INJECT meta tag to ensure future detection is 100% reliable
+    // FORCE INJECT meta tags to ensure future detection is 100% reliable
     const metaTag = `<meta name="page-type" content="${pageType}">`;
-    if (!pageHtml.includes('page-type')) {
+    const pageIdMetaTag = `<meta name="page-id" content="${fileName}">`;
+    const userIdMetaTag = `<meta name="user-id" content="${userId}">`;
+    
+    // Always inject page-id and user-id (critical for appointments, purchases, etc.)
+    if (!pageHtml.includes('page-id') && !pageHtml.includes('user-id')) {
       if (pageHtml.includes('</head>')) {
-        pageHtml = pageHtml.replace('</head>', `    ${metaTag}\n</head>`);
-        console.log(`✅ Injected meta tag: ${metaTag}`);
+        // If page-type already exists, just add the IDs
+        if (pageHtml.includes('page-type')) {
+          pageHtml = pageHtml.replace('</head>', `    ${pageIdMetaTag}\n    ${userIdMetaTag}\n</head>`);
+          console.log(`✅ Injected meta tags: page-id, user-id (page-type already exists)`);
+        } else {
+          // Inject all three tags
+          pageHtml = pageHtml.replace('</head>', `    ${metaTag}\n    ${pageIdMetaTag}\n    ${userIdMetaTag}\n</head>`);
+          console.log(`✅ Injected meta tags: page-type, page-id, user-id`);
+        }
+      }
+    } else if (!pageHtml.includes('page-id')) {
+      // Only page-id is missing
+      if (pageHtml.includes('</head>')) {
+        pageHtml = pageHtml.replace('</head>', `    ${pageIdMetaTag}\n</head>`);
+        console.log(`✅ Injected meta tag: page-id`);
+      }
+    } else if (!pageHtml.includes('user-id')) {
+      // Only user-id is missing
+      if (pageHtml.includes('</head>')) {
+        pageHtml = pageHtml.replace('</head>', `    ${userIdMetaTag}\n</head>`);
+        console.log(`✅ Injected meta tag: user-id`);
       }
     }
     
@@ -413,8 +445,42 @@ app.post('/api/create-page', async (req, res) => {
     console.log('📊 Has <body>?', pageHtml.includes('<body'));
     console.log('📊 Has </body>?', pageHtml.includes('</body>'));
     
+    // 🎯 Check if page has appointments calendar
+    // STRONG INDICATORS: Must have actual appointment booking functionality
+    const hasAppointmentsCalendar = pageHtml.includes('WORKING_DAYS') || 
+                                     pageHtml.includes('/api/appointments') ||
+                                     pageHtml.includes('fetchAppointments') ||
+                                     pageHtml.includes('loadAppointments') ||
+                                     pageHtml.includes('time-slots-grid') ||
+                                     pageHtml.includes('appointment-date') ||
+                                     pageHtml.includes('appointment-time') ||
+                                     pageHtml.includes('booking-form') ||
+                                     pageHtml.includes('date-selector') ||
+                                     (pageHtml.includes('appointment') && pageHtml.includes('calendar'));
+    
+    // 🔥 CRITICAL: If page has appointments calendar, FORCE pageType to serviceProvider
+    if (hasAppointmentsCalendar && pageType !== 'serviceProvider') {
+      console.log(`🔄 Page has appointments calendar - CHANGING pageType from "${pageType}" to "serviceProvider"`);
+      pageType = 'serviceProvider';
+      
+      // Update the meta tag in the HTML
+      if (pageHtml.includes('page-type')) {
+        pageHtml = pageHtml.replace(/name="page-type" content="[^"]*"/, `name="page-type" content="serviceProvider"`);
+        console.log('✅ Updated page-type meta tag to serviceProvider');
+      }
+    }
+    
+    // ✅ INJECT premium styles CSS for ALL pages
+    pageHtml = injectPremiumStyles(pageHtml);
+    
     // ✅ INJECT universal data extractor for ALL page types BEFORE saving
     pageHtml = injectPageDataExtractor(pageHtml, pageType);
+    
+    // ✅ INJECT appointment scripts for serviceProvider pages with appointments BEFORE saving
+    if (pageType === 'serviceProvider' && hasAppointmentsCalendar) {
+      console.log('🎯 Detected serviceProvider with appointments - injecting scripts...');
+      pageHtml = injectAppointmentScripts(pageHtml);
+    }
     
     // ✅ FIX WhatsApp code in event pages BEFORE saving
     pageHtml = fixEventPageWhatsApp(pageHtml, pageType);
@@ -468,19 +534,22 @@ app.post('/api/create-page', async (req, res) => {
     const contactInfo = extractContactInfoFromHTML(pageHtml);
     const products = extractProductsFromHTML(pageHtml);
     
+    // 🔥 CRITICAL: Extract services for serviceProvider pages with appointments
+    let services = [];
+    if (pageType === 'serviceProvider' && hasAppointmentsCalendar) {
+      console.log('🔍 Extracting services for service provider page...');
+      services = extractServicesFromHTML(pageHtml);
+      console.log(`✅ Extracted ${services.length} services from HTML`);
+    }
+    
     console.log('✅ Extracted metadata:', {
       phone: contactInfo.phone,
       city: contactInfo.city,
       email: contactInfo.email,
       address: contactInfo.address,
-      productsCount: products.length
+      productsCount: products.length,
+      servicesCount: services.length
     });
-    
-    // 🎯 Check if page has appointments calendar
-    const hasAppointmentsCalendar = pageHtml.includes('WORKING_DAYS') || 
-                                     pageHtml.includes('appointment') ||
-                                     pageHtml.includes('fetchAppointments') ||
-                                     pageHtml.includes('/api/appointments');
     
     const metadataContent = {
       pageType,
@@ -498,7 +567,9 @@ app.post('/api/create-page', async (req, res) => {
       city: contactInfo.city,
       address: contactInfo.address,
       // Products and prices
-      products: products || []
+      products: products || [],
+      // 🔥 CRITICAL: Add services for serviceProvider pages
+      services: services.length > 0 ? services : undefined
     };
     
     console.log('🔍 Appointment detection:', { 
@@ -541,6 +612,7 @@ app.post('/api/create-page', async (req, res) => {
     const customersFile = path.join(dataDir, 'customers.json');
     const leadsFile = path.join(dataDir, 'leads.json');
     const analyticsFile = path.join(dataDir, 'analytics.json');
+    const appointmentsFile = path.join(dataDir, 'appointments.json');
     
     if (!await fs.pathExists(purchasesFile)) {
       await fs.writeFile(purchasesFile, '[]');
@@ -559,6 +631,14 @@ app.post('/api/create-page', async (req, res) => {
         totalLeads: 0,
         createdAt: new Date().toISOString()
       }, null, 2));
+    }
+    
+    // Create appointments.json for pages with appointment system
+    if (pageType === 'serviceProvider' && hasAppointmentsCalendar) {
+      if (!await fs.pathExists(appointmentsFile)) {
+        await fs.writeFile(appointmentsFile, '[]');
+        console.log('✅ Created appointments.json for service provider page');
+      }
     }
     
     console.log('Created data folder for page:', dataDir);
@@ -583,6 +663,25 @@ app.post('/api/create-page', async (req, res) => {
 // This old version is replaced by the newer one below
 
 // Save page content
+// ✅ INJECT PREMIUM STYLES CSS - For all new pages
+function injectPremiumStyles(html) {
+  // Check if already injected
+  if (html.includes('premium-styles.css')) {
+    console.log('⏭️ Premium styles already included');
+    return html;
+  }
+  
+  const premiumStylesLink = '<link rel="stylesheet" href="/premium-styles.css">';
+  
+  // Inject before </head> tag
+  if (html.includes('</head>')) {
+    html = html.replace('</head>', `    ${premiumStylesLink}\n</head>`);
+    console.log('✅ Premium styles injected into <head>');
+  }
+  
+  return html;
+}
+
 // ✅ UNIVERSAL FUNCTION - Inject page data extractor for ALL page types
 function injectPageDataExtractor(html, pageType) {
   console.log(`📊 Injecting universal data extractor for ${pageType} page...`);
@@ -675,8 +774,8 @@ function getLivePageData() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId: window.location.pathname.split('/')[2],
-        pageId: window.location.pathname.split('/')[3],
+        userId: document.querySelector('meta[name="user-id"]')?.getAttribute('content') || window.location.pathname.split('/')[2],
+        pageId: (document.querySelector('meta[name="page-id"]')?.getAttribute('content') || window.location.pathname.split('/')[3])?.replace('_html', ''),
         products: data.products,
         timestamp: new Date().toISOString()
       })
@@ -764,6 +863,320 @@ function extractProductsFromPage() {
   } else {
     console.log('⚠️ No </body> tag found, appending at end');
     html += dataExtractorScript;
+  }
+  
+  return html;
+}
+
+// Function to inject appointment booking scripts for serviceProvider pages
+function injectAppointmentScripts(html) {
+  console.log('📅 Checking if appointment scripts should be injected...');
+  
+  // Check if appointment booking form exists
+  const hasBookingForm = html.includes('id="booking-form"') || html.includes('id="contact-form"');
+  const hasAppointmentKeywords = html.includes('appointment') || html.includes('calendar') || html.includes('selected-date') || html.includes('selected-time');
+  
+  if (!hasBookingForm && !hasAppointmentKeywords) {
+    console.log('⏭️ No appointment form found, skipping injection');
+    return html;
+  }
+  
+  // Check if scripts already exist
+  if (html.includes('Appointment Booking Handler') || html.includes('generateTimeSlots')) {
+    console.log('⏭️ Appointment scripts already exist, skipping injection');
+    return html;
+  }
+  
+  console.log('✅ Injecting appointment scripts...');
+  
+  const appointmentScript = `
+<script>
+console.log('📅 Appointment scripts loaded!');
+
+// ========================================
+// LOAD SERVICES DYNAMICALLY FROM METADATA
+// ========================================
+async function loadServicesFromMetadata() {
+  try {
+    // Get USER_ID and PAGE_ID from constants or meta tags
+    const USER_ID = window.USER_ID || document.querySelector('meta[name="user-id"]')?.getAttribute('content');
+    const PAGE_ID = window.PAGE_ID || document.querySelector('meta[name="page-id"]')?.getAttribute('content');
+    
+    if (!USER_ID || !PAGE_ID) {
+      console.log('⚠️ USER_ID or PAGE_ID not found, cannot load services');
+      return;
+    }
+    
+    // Try multiple possible paths
+    const possiblePaths = [
+      \`/output/\${USER_ID}/\${PAGE_ID}_data/metadata.json\`,
+      \`/output/\${USER_ID}/\${PAGE_ID.replace(/\\.html$/, '')}_data/metadata.json\`,
+      \`/output/\${USER_ID}/\${PAGE_ID}_html_data/metadata.json\`
+    ];
+    
+    let metadata = null;
+    for (const path of possiblePaths) {
+      try {
+        const response = await fetch(path);
+        if (response.ok) {
+          metadata = await response.json();
+          console.log('✅ Loaded metadata from:', path);
+          break;
+        }
+      } catch (err) {
+        console.log('⚠️ Failed to load from', path);
+      }
+    }
+    
+    if (!metadata || !metadata.services || metadata.services.length === 0) {
+      console.log('⚠️ No services found in metadata');
+      return;
+    }
+    
+    // Render services dynamically
+    const servicesGrid = document.querySelector('.services-grid');
+    if (!servicesGrid) {
+      console.log('⚠️ .services-grid not found on page');
+      return;
+    }
+    
+    const icons = ['✂️', '💇', '💅', '🦷', '💆', '🧖', '🎨', '✨'];
+    
+    servicesGrid.innerHTML = metadata.services.map((service, index) => \`
+      <div class="service-item">
+        <div class="service-icon">\${icons[index % icons.length]}</div>
+        <h3>\${service.name}</h3>
+        <div class="service-duration">⏱️ \${service.duration || 30} דקות</div>
+        <div class="service-price">₪\${service.price || 0}</div>
+      </div>
+    \`).join('');
+    
+    console.log(\`✅ Loaded \${metadata.services.length} services dynamically\`);
+    
+  } catch (error) {
+    console.error('❌ Error loading services:', error);
+  }
+}
+
+// ========================================
+// AUTO-SCROLL GALLERY
+// ========================================
+function initAutoScrollGallery() {
+  const gallery = document.getElementById('gallery-grid');
+  if (!gallery) {
+    console.log('⚠️ Gallery grid not found!');
+    return;
+  }
+  
+  console.log('✅ Gallery found, starting auto-scroll...');
+  
+  let scrollDirection = 1;
+  let isHovering = false;
+  
+  gallery.addEventListener('mouseenter', () => { 
+    isHovering = true; 
+    console.log('🛑 Auto-scroll paused (hover)');
+  });
+  gallery.addEventListener('mouseleave', () => { 
+    isHovering = false; 
+    console.log('▶️ Auto-scroll resumed');
+  });
+  
+  setInterval(() => {
+    if (isHovering) return;
+    
+    const maxScroll = gallery.scrollWidth - gallery.clientWidth;
+    const currentScroll = gallery.scrollLeft;
+    
+    if (Math.abs(currentScroll) >= maxScroll - 10) {
+      scrollDirection = -1;
+    } else if (currentScroll >= -10) {
+      scrollDirection = 1;
+    }
+    
+    gallery.scrollLeft += scrollDirection * 1.5;
+  }, 30);
+  
+  console.log('✅ Auto-scroll gallery initialized');
+}
+
+// ========================================
+// GALLERY IMAGE UPLOAD HANDLER
+// ========================================
+function initGalleryUpload() {
+  const uploadInput = document.getElementById('gallery-upload-input');
+  if (!uploadInput) return;
+  
+  uploadInput.addEventListener('change', async function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    const USER_ID = window.USER_ID || document.querySelector('meta[name="user-id"]')?.getAttribute('content');
+    const galleryGrid = document.getElementById('gallery-grid');
+    if (!galleryGrid) return;
+    
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.innerHTML = \`
+          <img src="\${event.target.result}" alt="תמונה חדשה" loading="lazy">
+          <div class="gallery-overlay"><div class="gallery-title">תמונה חדשה</div></div>
+        \`;
+        galleryGrid.appendChild(galleryItem);
+        galleryItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      };
+      reader.readAsDataURL(file);
+      
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('userId', USER_ID);
+        formData.append('category', 'general');
+        
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          console.log('✅ Image uploaded:', result.imageUrl);
+        }
+      } catch (error) {
+        console.error('❌ Error uploading image:', error);
+      }
+    }
+    
+    e.target.value = '';
+    alert(\`✅ הועלו \${files.length} תמונות לגלריה!\`);
+  });
+  
+  console.log('✅ Gallery upload handler initialized');
+}
+
+// 📅 Appointment Booking Handler
+document.addEventListener('DOMContentLoaded', function() {
+  // Load services dynamically
+  loadServicesFromMetadata();
+  
+  // Initialize gallery features
+  initAutoScrollGallery();
+  initGalleryUpload();
+  
+  const bookingForm = document.getElementById('booking-form') || document.getElementById('contact-form');
+  
+  if (bookingForm) {
+    console.log('✅ Booking form found, initializing...');
+    
+    // Handle form submission
+    bookingForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Get form data
+      const formData = new FormData(bookingForm);
+      const appointmentDate = document.getElementById('appointment-date')?.value || document.getElementById('selected-date')?.value;
+      const appointmentTime = document.getElementById('appointment-time')?.value || document.getElementById('selected-time')?.value;
+      
+      // Validate date and time
+      if (!appointmentDate || !appointmentTime) {
+        alert('❌ אנא בחר תאריך ושעה לתור');
+        return;
+      }
+      
+      // Get userId and pageId from meta tags (reliable) or fallback to URL path
+      let userId = document.querySelector('meta[name="user-id"]')?.getAttribute('content');
+      let pageId = document.querySelector('meta[name="page-id"]')?.getAttribute('content');
+      
+      // Fallback to URL path if meta tags not found (for older pages)
+      if (!userId || !pageId) {
+        const pathParts = window.location.pathname.split('/');
+        userId = userId || pathParts[2];
+        pageId = pageId || pathParts[3]?.replace('.html', '').replace('_html', '');
+      }
+      
+      // Clean pageId - remove _html suffix if present
+      if (pageId && pageId.endsWith('_html')) {
+        pageId = pageId.replace('_html', '');
+      }
+      
+      console.log('📍 Page identifiers:', { userId, pageId });
+      
+      // Prepare appointment data
+      const appointmentData = {
+        userId: userId,
+        pageId: pageId,
+        customerName: formData.get('name'),
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email') || '',
+        service: formData.get('service') || '',
+        date: appointmentDate,
+        time: appointmentTime,
+        duration: formData.get('duration') || '',
+        price: formData.get('price') || '',
+        notes: formData.get('notes') || ''
+      };
+      
+      console.log('📅 Sending appointment:', appointmentData);
+      
+      try {
+        // Send to API
+        const response = await fetch('/api/appointments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(appointmentData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Success message
+          alert('✅ התור נקבע בהצלחה!\\n\\n📅 תאריך: ' + appointmentDate + '\\n🕐 שעה: ' + appointmentTime + '\\n\\nנתראה בקרוב! 😊');
+          
+          // Reset form
+          bookingForm.reset();
+          if (document.getElementById('appointment-date')) {
+            document.getElementById('appointment-date').value = '';
+          }
+          if (document.getElementById('appointment-time')) {
+            document.getElementById('appointment-time').value = '';
+          }
+          if (document.getElementById('selected-date')) {
+            document.getElementById('selected-date').value = '';
+          }
+          if (document.getElementById('selected-time')) {
+            document.getElementById('selected-time').value = '';
+          }
+          
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          alert('❌ שגיאה בשמירת התור. אנא נסה שוב.');
+        }
+      } catch (error) {
+        console.error('Error saving appointment:', error);
+        alert('❌ שגיאה בשמירת התור. אנא נסה שוב או צור קשר טלפונית.');
+      }
+    });
+  }
+});
+
+console.log('✅ Appointment booking system ready!');
+</script>
+`;
+
+  // Insert before </body> tag
+  if (html.includes('</body>')) {
+    html = html.replace('</body>', appointmentScript + '</body>');
+    console.log('✅ Appointment scripts injected before </body> tag');
+  } else {
+    // If no </body> tag, append at the end
+    html += appointmentScript;
+    console.log('✅ Appointment scripts appended to end of HTML');
   }
   
   return html;
@@ -1127,8 +1540,21 @@ function fixEventPageWhatsApp(html, pageType) {
             e.stopPropagation();
             console.log('📝 RSVP Form submitted (server-fixed handler)');
                 
-                const eventId = window.location.pathname.split('/').pop().replace('.html', '').replace('_html', '');
-                const userId = window.location.pathname.split('/')[2];
+                let eventId = document.querySelector('meta[name="page-id"]')?.getAttribute('content');
+                let userId = document.querySelector('meta[name="user-id"]')?.getAttribute('content');
+                
+                // Fallback to URL path if meta tags not found
+                if (!eventId || !userId) {
+                  eventId = eventId || window.location.pathname.split('/').pop().replace('.html', '').replace('_html', '');
+                  userId = userId || window.location.pathname.split('/')[2];
+                }
+                
+                // Clean eventId
+                if (eventId && eventId.endsWith('_html')) {
+                  eventId = eventId.replace('_html', '');
+                }
+                
+                console.log('📍 Event identifiers:', { userId, eventId });
                 
                 const name = document.getElementById('rsvp-name').value;
                 const phone = document.getElementById('rsvp-phone').value;
@@ -1702,6 +2128,88 @@ function extractProductsFromHTML(html) {
   return uniqueProducts;
 }
 
+// Extract services from HTML (for service provider pages with appointments)
+function extractServicesFromHTML(html) {
+  const services = [];
+  
+  try {
+    // Strategy 1: Look for service cards/items in services section
+    const serviceItemPattern = /<div[^>]*class="[^"]*service-item[^"]*"[^>]*>([\s\S]{50,1500}?)<\/div>/gi;
+    const serviceMatches = [...html.matchAll(serviceItemPattern)];
+    
+    console.log(`🔍 Found ${serviceMatches.length} service-item elements`);
+    
+    serviceMatches.forEach((match, index) => {
+      const serviceHtml = match[1];
+      
+      // Extract name (usually in h3, h4, or strong)
+      let nameMatch = serviceHtml.match(/<h[34][^>]*>([^<]{3,100})<\/h[34]>/i) ||
+                      serviceHtml.match(/<strong[^>]*>([^<]{3,100})<\/strong>/i) ||
+                      serviceHtml.match(/<[^>]*class="[^"]*service-name[^"]*"[^>]*>([^<]{3,100})<\/[^>]+>/i);
+      
+      if (!nameMatch || !nameMatch[1]) return;
+      
+      const name = nameMatch[1].replace(/<[^>]*>/g, '').trim();
+      
+      // Skip if name contains excluded terms
+      if (name.includes('שירותים') || name.includes('השירותים שלנו') || name.length < 3) return;
+      
+      // Extract duration (in minutes)
+      let duration = 30; // default
+      const durationMatch = serviceHtml.match(/(\d+)\s*(?:דקות|דק'|minutes|min)/i);
+      if (durationMatch) {
+        duration = parseInt(durationMatch[1]);
+      }
+      
+      // Extract price
+      let price = 0;
+      const priceMatch = serviceHtml.match(/₪\s*(\d+(?:[,\s]\d+)*)/) || 
+                        serviceHtml.match(/(\d+(?:[,\s]\d+)*)\s*(?:₪|שקל|ש"ח)/);
+      if (priceMatch) {
+        const priceStr = priceMatch[1].replace(/[,\s]/g, '');
+        price = parseFloat(priceStr);
+      }
+      
+      console.log(`✅ Extracted service ${index + 1}:`, { name, duration, price });
+      services.push({ name, duration, price });
+    });
+    
+    // Strategy 2: If no service-item found, look for services in general text
+    if (services.length === 0) {
+      console.log('🔍 No service-item found, trying general text extraction...');
+      
+      // Look for lines with service name + price pattern
+      const servicePatterns = [
+        /<(?:h[3456]|p|div)[^>]*>([^<]{3,60})[^<]*?[-–—]\s*(?:₪\s*)?(\d+(?:[,\s]\d+)*)\s*₪?[^<]*<\/[^>]+>/gi,
+        /<(?:h[3456]|p|div)[^>]*>([^<]{3,60})[^<]*?(?:₪|שקל)\s*(\d+(?:[,\s]\d+)*)[^<]*<\/[^>]+>/gi
+      ];
+      
+      servicePatterns.forEach(pattern => {
+        const matches = [...html.matchAll(pattern)];
+        matches.forEach(match => {
+          const name = match[1].trim();
+          const priceStr = match[2].replace(/[,\s]/g, '');
+          const price = parseFloat(priceStr);
+          
+          if (name.length >= 3 && price >= 10 && price <= 10000) {
+            // Check if not already added
+            if (!services.some(s => s.name === name)) {
+              console.log(`✅ Extracted service from text:`, { name, duration: 30, price });
+              services.push({ name, duration: 30, price });
+            }
+          }
+        });
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Error extracting services:', error);
+  }
+  
+  console.log(`📊 Total services extracted: ${services.length}`);
+  return services;
+}
+
 app.post('/api/save-page', async (req, res) => {
   try {
     let { userId, fileName, content, pageType, pageName } = req.body;
@@ -1737,10 +2245,28 @@ app.post('/api/save-page', async (req, res) => {
       await fs.ensureDir(metadataDir);
       
       // 🎯 Check if content has appointments calendar
+      // STRONG INDICATORS: Must have actual appointment booking functionality
       const hasAppointmentsCalendar = content.includes('WORKING_DAYS') || 
-                                       content.includes('appointment') ||
+                                       content.includes('/api/appointments') ||
                                        content.includes('fetchAppointments') ||
-                                       content.includes('/api/appointments');
+                                       content.includes('loadAppointments') ||
+                                       content.includes('time-slots-grid') ||
+                                       content.includes('appointment-date') ||
+                                       content.includes('appointment-time') ||
+                                       content.includes('booking-form') ||
+                                       content.includes('date-selector') ||
+                                       (content.includes('appointment') && content.includes('calendar'));
+      
+      // Load existing metadata if it exists to preserve isActive status
+      const metadataPath = path.join(metadataDir, 'metadata.json');
+      let existingMetadata = {};
+      if (await fs.pathExists(metadataPath)) {
+        try {
+          existingMetadata = await fs.readJSON(metadataPath);
+        } catch (error) {
+          console.log('⚠️ Could not read existing metadata, creating new');
+        }
+      }
       
       const metadata = {
         pageType: pageType || 'other',
@@ -1750,6 +2276,8 @@ app.post('/api/save-page', async (req, res) => {
         // 🎯 Add hasAppointments for serviceProvider pages with calendar
         hasAppointments: (pageType === 'serviceProvider' && hasAppointmentsCalendar) ? true : undefined,
         appointments: (pageType === 'serviceProvider' && hasAppointmentsCalendar) ? true : undefined,
+        // 🎯 Set isActive: true by default for new pages, preserve existing value if exists
+        isActive: existingMetadata.isActive !== undefined ? existingMetadata.isActive : true,
         lastUpdated: new Date().toISOString()
       };
       
@@ -1759,12 +2287,15 @@ app.post('/api/save-page', async (req, res) => {
         willSetHasAppointments: pageType === 'serviceProvider' && hasAppointmentsCalendar 
       });
       
-      // For service providers with appointment booking - save workingDays, workingHours, breaks, services
+      // For service providers with appointment booking - save workingDays, workingHours, specialHours, breaks, services
       if (req.body.workingDays) {
         metadata.workingDays = req.body.workingDays;
       }
       if (req.body.workingHours) {
         metadata.workingHours = req.body.workingHours;
+      }
+      if (req.body.specialHours) {
+        metadata.specialHours = req.body.specialHours;
       }
       if (req.body.breaks) {
         metadata.breaks = req.body.breaks;
@@ -1783,6 +2314,15 @@ app.post('/api/save-page', async (req, res) => {
       const metadataPath = path.join(metadataDir, 'metadata.json');
       await fs.writeJSON(metadataPath, metadata, { spaces: 2 });
       console.log('✅ Saved metadata:', metadata);
+      
+      // Create appointments.json for pages with appointment system
+      if (pageType === 'serviceProvider' && hasAppointmentsCalendar) {
+        const appointmentsFile = path.join(metadataDir, 'appointments.json');
+        if (!await fs.pathExists(appointmentsFile)) {
+          await fs.writeFile(appointmentsFile, '[]');
+          console.log('✅ Created appointments.json for service provider page');
+        }
+      }
     }
 
     res.json({ success: true, message: 'Page saved successfully' });
@@ -1804,7 +2344,7 @@ app.put('/api/update-services/:userId/:pageId', async (req, res) => {
     }
     
     // Load existing metadata
-    const metadataDir = path.join('output', userId, `${pageId.replace('.html', '')}_data`);
+    const metadataDir = await findDataFolder(userId, pageId);
     const metadataPath = path.join(metadataDir, 'metadata.json');
     
     if (!await fs.pathExists(metadataPath)) {
@@ -2240,7 +2780,15 @@ app.get('/api/pages/all/marketplace', async (req, res) => {
           continue;
         }
         
-        console.log(`   ✅ Including "${fileName}" - ${includeReason}`);
+        // 🎯 Check if page has active subscription (isActive)
+        // Only pages with isActive === true should appear in marketplace
+        const isActive = metadata.isActive === true;
+        if (!isActive) {
+          console.log(`   ⛔ Skipping "${fileName}" - page is not active (no subscription or isActive !== true)`);
+          continue;
+        }
+        
+        console.log(`   ✅ Including "${fileName}" - ${includeReason} (isActive: ${isActive})`);
         
         // Check if HTML file exists
         const htmlFilePath = path.join(userDirPath, fileName);
@@ -2322,6 +2870,7 @@ app.get('/api/pages/:userId', async (req, res) => {
       // Load metadata if exists
       let pageType = null;
       let expectedGuests = 0;
+      let hasAppointments = false;
       try {
         // Remove both .html and _html suffixes
         const fileNameBase = file.replace('.html', '').replace(/_html$/, '');
@@ -2330,7 +2879,8 @@ app.get('/api/pages/:userId', async (req, res) => {
           const metadata = await fs.readJSON(metadataPath);
           pageType = metadata.pageType;
           expectedGuests = metadata.expectedGuests || 0;
-          console.log(`📋 Loaded metadata for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}`);
+          hasAppointments = metadata.hasAppointments === true || metadata.appointments === true;
+          console.log(`📋 Loaded metadata for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}, hasAppointments=${hasAppointments}`);
         } else {
           // Try alternative path with _html_data
           const altMetadataPath = path.join(userDir, `${file}_data`, 'metadata.json');
@@ -2338,7 +2888,8 @@ app.get('/api/pages/:userId', async (req, res) => {
             const metadata = await fs.readJSON(altMetadataPath);
             pageType = metadata.pageType;
             expectedGuests = metadata.expectedGuests || 0;
-            console.log(`📋 Loaded metadata (alt) for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}`);
+            hasAppointments = metadata.hasAppointments === true || metadata.appointments === true;
+            console.log(`📋 Loaded metadata (alt) for ${file}: pageType=${pageType}, expectedGuests=${expectedGuests}, hasAppointments=${hasAppointments}`);
           } else {
             // If no metadata exists, try to detect from content
             try {
@@ -2418,6 +2969,7 @@ app.get('/api/pages/:userId', async (req, res) => {
         url: `/pages/${userId}/${encodeURIComponent(file)}`,
         pageType: pageType, // Add pageType to response
         expectedGuests: expectedGuests, // Add expected guests for table calculations
+        hasAppointments: hasAppointments, // Add hasAppointments status
         hasHtmlFile: hasHtmlFile, // Indicate if HTML file exists
         isActive: isActive // Add isActive status
       };
@@ -4830,12 +5382,31 @@ app.post('/api/order/:orderId/status', async (req, res) => {
     }
 });
 
+// Helper function to find the correct data folder
+async function findDataFolder(userId, pageId) {
+    const possibleFolders = [
+        path.join('output', userId, pageId + '_data'), // יניב_חן_1762289868910_html_data
+        path.join('output', userId, pageId.replace(/_html$/, '') + '_data'), // יניב_חן_1762289868910_data
+        path.join('output', userId, pageId.replace(/\.html$/, '') + '_data') // without .html extension
+    ];
+    
+    for (const folder of possibleFolders) {
+        if (await fs.pathExists(folder)) {
+            return folder;
+        }
+    }
+    
+    // If none exist, return the first option (most common)
+    return possibleFolders[0];
+}
+
 // Get appointments for a page
 app.get('/api/appointments/:userId/:pageId', async (req, res) => {
     try {
         const { userId, pageId } = req.params;
-        const cleanPageId = pageId.replace(/_html$/, '');
-        const appointmentsFile = path.join('output', userId, cleanPageId + '_data', 'appointments.json');
+        
+        const pageDataDir = await findDataFolder(userId, pageId);
+        const appointmentsFile = path.join(pageDataDir, 'appointments.json');
         
         console.log('📅 Getting appointments from:', appointmentsFile);
         
@@ -4843,6 +5414,11 @@ app.get('/api/appointments/:userId/:pageId', async (req, res) => {
         if (await fs.pathExists(appointmentsFile)) {
             const fileContent = await fs.readFile(appointmentsFile, 'utf8');
             appointments = JSON.parse(fileContent);
+        } else {
+            // Create empty appointments file if it doesn't exist
+            await fs.ensureDir(pageDataDir);
+            await fs.writeFile(appointmentsFile, JSON.stringify([], null, 2));
+            console.log('📝 Created empty appointments file at:', appointmentsFile);
         }
         
         res.json({ appointments });
@@ -4862,8 +5438,7 @@ app.post('/api/appointments', async (req, res) => {
             return res.status(400).json({ error: 'Missing userId or pageId' });
         }
         
-        const cleanPageId = pageId.replace(/_html$/, '');
-        const pageDataDir = path.join('output', userId, cleanPageId + '_data');
+        const pageDataDir = await findDataFolder(userId, pageId);
         const appointmentsFile = path.join(pageDataDir, 'appointments.json');
         
         // Ensure directory exists
@@ -4894,6 +5469,49 @@ app.post('/api/appointments', async (req, res) => {
     } catch (error) {
         console.error('Error creating appointment:', error);
         res.status(500).json({ error: 'Failed to create appointment' });
+    }
+});
+
+// Delete appointment
+app.delete('/api/appointments/:appointmentId', async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+        
+        // Find appointment in all user folders
+        const outputDir = 'output';
+        const userDirs = await fs.readdir(outputDir);
+        
+        for (const userId of userDirs) {
+            const userPath = path.join(outputDir, userId);
+            const stat = await fs.stat(userPath);
+            if (!stat.isDirectory()) continue;
+            
+            const pageDirs = await fs.readdir(userPath);
+            for (const pageDir of pageDirs) {
+                if (!pageDir.endsWith('_data')) continue;
+                
+                const appointmentsFile = path.join(userPath, pageDir, 'appointments.json');
+                if (await fs.pathExists(appointmentsFile)) {
+                    const fileContent = await fs.readFile(appointmentsFile, 'utf8');
+                    let appointments = JSON.parse(fileContent);
+                    
+                    const initialLength = appointments.length;
+                    appointments = appointments.filter(a => a.id !== appointmentId);
+                    
+                    if (appointments.length < initialLength) {
+                        // Appointment found and removed
+                        await fs.writeFile(appointmentsFile, JSON.stringify(appointments, null, 2));
+                        console.log('🗑️ Appointment deleted:', appointmentId);
+                        return res.json({ success: true });
+                    }
+                }
+            }
+        }
+        
+        res.status(404).json({ error: 'Appointment not found' });
+    } catch (error) {
+        console.error('Error deleting appointment:', error);
+        res.status(500).json({ error: 'Failed to delete appointment' });
     }
 });
 
@@ -6894,7 +7512,7 @@ app.post('/api/update-page-metadata/:userId/:fileName', async (req, res) => {
 
 // N8N Webhook Proxy - to fix CORS issues
 const https = require('https');
-const N8N_WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbmreketpg';
+const N8N_WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhfaadsgdrghre546yrthfg12w23';
 
 app.post('/api/n8n-webhook', async (req, res) => {
   try {
@@ -6955,6 +7573,606 @@ app.post('/api/n8n-webhook', async (req, res) => {
 
 // Handle OPTIONS for CORS preflight
 app.options('/api/n8n-webhook', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.status(200).end();
+});
+
+// ========================================
+// 🤖 NEW: Generate content from N8N (text only)
+// ========================================
+app.post('/api/generate-content-from-n8n', async (req, res) => {
+  try {
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📥 /api/generate-content-from-n8n called');
+    console.log('📥 Request method:', req.method);
+    console.log('📥 Request headers:', req.headers);
+    console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
+    console.log('═══════════════════════════════════════════════════════════');
+    
+    const { businessName, serviceType, description, phone, email, address, sections, businessContext, instruction } = req.body;
+    
+    console.log('🤖 Requesting content from N8N:', { businessName, serviceType, phone, email, sections });
+    console.log('🤖 N8N URL:', N8N_WEBHOOK_URL);
+    
+    // Build comprehensive prompt for N8N
+    const n8nPrompt = instruction || `צור מלל מקצועי בעברית עבור העסק הבא:
+עסק: ${businessName}
+סוג שירות: ${serviceType}
+תיאור: ${description || 'שירותים מקצועיים'}
+טלפון: ${phone || ''}
+מייל: ${email || ''}
+כתובת: ${address || ''}
+
+חשוב מאוד: המלל צריך להיות רלוונטי לעסק הזה בלבד (${businessName}), לא לעסקים אחרים.
+כתוב מלל מקצועי, קריאייטיבי ומשכנע שמתאים לעסק הזה.`;
+    
+    // Build masterPrompt that N8N expects
+    // This will be accessed via {{ $json.body.masterPrompt }} in N8N
+    const masterPrompt = `אתה מומחה ביצירת תוכן טקסטואלי מקצועי בעברית לדפי נחיתה.
+
+**המשימה שלך:**
+ליצור מלל קריאייטיבי ומקצועי למקטעים שונים של דף נחיתה, על בסיס המידע שהמשתמש מספק.
+
+**🚨🚨🚨 קרא את הפרטים הבאים לפני שאתה כותב - זה קריטי! 🚨🚨🚨**
+
+**📋 המידע על העסק נמצא כאן למטה - קרא אותו בקפידה!**
+
+**⚠️ הוראה חשובה:**
+המידע על העסק נמצא כאן למטה. קרא את הפרטים הבאים בקפידה והשתמש בהם בלבד - אל תמציא מידע!
+
+**פרטי העסק שלך (השתמש בהם בלבד - אל תמציא מידע!):**
+
+שם העסק: "${businessName}"
+סוג השירות: "${serviceType}"
+תיאור: "${description || 'שירותים מקצועיים'}"
+טלפון: ${phone || ''}
+מייל: ${email || ''}
+כתובת: ${address || ''}
+
+**⚠️⚠️⚠️ זכור - זה המידע שלך:**
+- שם העסק: "${businessName}"
+- סוג השירות: "${serviceType}"
+- תיאור: "${description || 'שירותים מקצועיים'}"
+
+**📌 זכור - זה חשוב מאוד:**
+- שם העסק הוא: "${businessName}"
+- סוג השירות הוא: "${serviceType}"
+- אתה חייב לכתוב על "${serviceType}" בלבד!
+- אם אתה רואה "רפואת שיניים" → כתוב על רפואת שיניים בלבד!
+- אם אתה רואה "מספרה" → כתוב על מספרה בלבד!
+- אם אתה רואה "אינסטלציה" → כתוב על אינסטלציה בלבד!
+
+**⚠️⚠️⚠️ הוראות קריטיות - חובה לקרוא! ⚠️⚠️⚠️**
+
+1. **העסק שלך הוא: "${businessName}"**
+2. **סוג השירות הוא: "${serviceType}"**
+3. **אתה חייב לכתוב מלל שמתאים לעסק הזה בלבד!**
+
+**דוגמאות מפורשות:**
+- אם שם העסק הוא "יניב רופא שיניים" ו-סוג השירות הוא "מרפאת שיניים" או "רפואת שיניים" → כתוב על רפואת שיניים בלבד! לא על מספרה, לא על נדל"ן, לא על אינסטלציה, לא על שום דבר אחר!
+- אם שם העסק הוא "דוד חשמלאי" ו-סוג השירות הוא "חשמלאי" → כתוב על שירותי חשמל בלבד!
+- אם שם העסק הוא "שרה מספרת" ו-סוג השירות הוא "מספרה" → כתוב על מספרה בלבד!
+- אם שם העסק הוא "הצלצול הראשון אינסטלציה" ו-סוג השירות הוא "אינסטלציה" → כתוב על אינסטלציה בלבד!
+
+**⚠️⚠️⚠️ אל תמציא עסקים אחרים! ⚠️⚠️⚠️**
+**⚠️⚠️⚠️ אל תכתוב על נושאים שלא קשורים לעסק הזה! ⚠️⚠️⚠️**
+**⚠️⚠️⚠️ השתמש במידע שהמשתמש נתן לך בלבד! ⚠️⚠️⚠️**
+
+**העסק שלך הוא: "${businessName}"**
+**סוג השירות: "${serviceType}"**
+**כתוב על זה בלבד - לא על דברים אחרים!**
+
+**אם אתה רואה "יניב רופא שיניים" ו-"רפואת שיניים" → כתוב על רפואת שיניים בלבד!**
+**אם אתה רואה "שרה מספרת" ו-"מספרה" → כתוב על מספרה בלבד!**
+**אם אתה רואה "דוד חשמלאי" ו-"חשמלאי" → כתוב על שירותי חשמל בלבד!**
+
+**המקטעים שצריך ליצור (כתוב תוכן רק למקטעים האלה!):**
+${(sections || []).map(s => `- ${s}`).join('\n')}
+
+**⚠️⚠️⚠️ הוראות קריטיות - חובה לקרוא! ⚠️⚠️⚠️**
+
+1. **השתמש במידע שהמשתמש נתן:**
+   - שם העסק: "${businessName}"
+   - סוג השירות: "${serviceType}"
+   - תיאור: "${description || 'שירותים מקצועיים'}"
+
+2. **כתוב תוכן רק למקטעים שצוינו למעלה!**
+   - אם המקטע הוא "heroTitle" → צור כותרת מעוצבת ומקצועית עבור "${businessName}" שהוא "${serviceType}"
+   - אם המקטע הוא "heroSubtitle" → צור תת-כותרת שמסבירה את הערך המוצע של "${businessName}"
+   - אם המקטע הוא "aboutText" → כתוב מלל מפורט על העסק "${businessName}" שהוא "${serviceType}"
+   - אם המקטע הוא "testimonials" → כתוב המלצות מלקוחות על העסק "${businessName}"
+   - אם המקטע הוא "team" → כתוב על הצוות של "${businessName}"
+
+3. **חשוב מאוד:**
+   - אם המשתמש נתן "רופא נשים" → כתוב על רפואת נשים בלבד!
+   - אם המשתמש נתן "רופא שיניים" → כתוב על רפואת שיניים בלבד!
+   - אם המשתמש נתן "מספרה" → כתוב על מספרה בלבד!
+   - **אל תמציא מידע - השתמש רק במידע שהמשתמש נתן!**
+   - **אל תכתוב על נושאים אחרים!**
+
+**פורמט התשובה (JSON בלבד):**
+
+**⚠️⚠️⚠️ חשוב מאוד - החזר את כל המקטעים שצוינו למעלה! ⚠️⚠️⚠️**
+
+אם המקטעים הם: heroTitle, heroSubtitle, aboutText, testimonials, team
+אז אתה **חייב** להחזיר את כל המקטעים האלה:
+
+{
+  "heroTitle": "כותרת מעוצבת ומקצועית עבור ${businessName}",
+  "heroSubtitle": "תת-כותרת שמסבירה את הערך המוצע של ${businessName}",
+  "aboutText": "מלל מפורט על העסק ${businessName} שהוא ${serviceType}. השתמש במידע שהמשתמש נתן!",
+  "testimonials": [
+    {
+      "name": "שם הלקוח",
+      "text": "המלצה מפורטת מהלקוח על ${businessName}",
+      "role": "תפקיד/מקצוע",
+      "rating": 5
+    }
+  ],
+  "team": [
+    {
+      "name": "שם חבר הצוות",
+      "role": "תפקיד",
+      "description": "תיאור"
+    }
+  ]
+}
+
+**⚠️⚠️⚠️ חובה לכלול את כל המקטעים! ⚠️⚠️⚠️**
+- אם המקטע "heroTitle" נמצא ברשימה → אתה **חייב** לכלול אותו!
+- אם המקטע "heroSubtitle" נמצא ברשימה → אתה **חייב** לכלול אותו!
+- אם המקטע "aboutText" נמצא ברשימה → אתה **חייב** לכלול אותו!
+- אם המקטע "testimonials" נמצא ברשימה → אתה **חייב** לכלול אותו!
+- אם המקטע "team" נמצא ברשימה → אתה **חייב** לכלול אותו!
+
+**אם המקטעים כוללים גם אחרים, החזר גם אותם:**
+{
+  "aboutText": "מלל מפורט על העסק...",
+  "testimonials": [...],
+  "team": [...],
+  "heroTitle": "...",
+  "heroSubtitle": "...",
+  "services": [...]
+}
+
+**חשוב מאוד - החזר רק JSON:**
+- החזר רק JSON נקי - ללא הסברים, ללא markdown, רק JSON
+- אין להשתמש ב-\`\`\`json או \`\`\` - רק JSON ישיר
+- אין להוסיף הסברים לפני או אחרי ה-JSON
+- התחל מיד ב-{ וסיים ב-}`;
+    
+    // Prepare data for N8N
+    // Send both masterPrompt and raw data so N8N can access them
+    const n8nData = {
+      // Send masterPrompt for backward compatibility
+      masterPrompt: masterPrompt,
+      // Send raw data so N8N can access directly via {{ $json.body.businessName }} etc.
+      businessName: businessName,
+      serviceType: serviceType,
+      description: description,
+      phone: phone,
+      email: email,
+      address: address,
+      businessContext: businessContext || n8nPrompt,
+      instruction: n8nPrompt,
+      sections: sections || [
+        'heroTitle',
+        'heroSubtitle',
+        'aboutTitle',
+        'aboutText',
+        'services',
+        'testimonials',
+        'whyChooseUs',
+        'process'
+      ],
+      contentOnly: true, // Signal to N8N we only want text content (JSON, not HTML)
+      task: 'generateTextContent' // Tell N8N to generate text content for specified sections
+    };
+    
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📤 Sending to N8N:');
+    console.log('📤 businessName:', businessName);
+    console.log('📤 serviceType:', serviceType);
+    console.log('📤 description:', description);
+    console.log('📤 masterPrompt preview:', masterPrompt.substring(0, 500));
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📤 Full N8N data:', JSON.stringify(n8nData, null, 2));
+    
+    const requestData = JSON.stringify(n8nData);
+    
+    const url = new URL(N8N_WEBHOOK_URL);
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestData)
+      }
+    };
+    
+    console.log('📤 Request options:', {
+      hostname: options.hostname,
+      path: options.path,
+      method: options.method,
+      port: options.port
+    });
+    console.log('📤 Full URL:', `https://${options.hostname}${options.path}`);
+    console.log('📤 About to create https.request...');
+    
+    const proxyReq = https.request(options, (proxyRes) => {
+      console.log('✅ N8N connection established!');
+      console.log('📥 N8N response status:', proxyRes.statusCode);
+      console.log('📥 N8N response headers:', proxyRes.headers);
+      let data = '';
+      proxyRes.on('data', (chunk) => {
+        data += chunk;
+      });
+      proxyRes.on('end', () => {
+        console.log('📥 N8N response received, length:', data.length);
+        console.log('📥 N8N response preview:', data.substring(0, 500));
+        
+        try {
+          let jsonData;
+          let rawData = data;
+          
+          // First, try to parse as JSON
+          try {
+            const parsed = JSON.parse(rawData);
+            
+            // If there's an "output" field, extract it
+            if (parsed.output && typeof parsed.output === 'string') {
+              console.log('📥 Found "output" field (string), extracting...');
+              rawData = parsed.output;
+              // Check if output contains markdown
+              if (rawData.includes('```json')) {
+                console.log('📥 Output contains markdown code block (```json), extracting JSON...');
+                const jsonMatch = rawData.match(/```json\s*([\s\S]*?)\s*```/);
+                if (jsonMatch && jsonMatch[1]) {
+                  rawData = jsonMatch[1].trim();
+                  jsonData = JSON.parse(rawData);
+                }
+              } else if (rawData.includes('```')) {
+                console.log('📥 Output contains code block (```), extracting...');
+                const codeMatch = rawData.match(/```\s*([\s\S]*?)\s*```/);
+                if (codeMatch && codeMatch[1]) {
+                  rawData = codeMatch[1].trim();
+                  jsonData = JSON.parse(rawData);
+                }
+              } else {
+                // Try to parse output as JSON directly
+                jsonData = JSON.parse(rawData);
+              }
+            } else if (parsed.output && typeof parsed.output === 'object') {
+              console.log('📥 Found "output" object, using it directly...');
+              jsonData = parsed.output;
+            } else {
+              jsonData = parsed;
+            }
+          } catch (e) {
+            // Not JSON, continue to check for markdown
+            console.log('📥 Response is not JSON, checking for markdown...');
+          }
+          
+          // If we don't have jsonData yet, check for markdown code block
+          if (!jsonData) {
+            // If data contains markdown code block, extract JSON from it
+            if (rawData.includes('```json')) {
+              console.log('📥 Found markdown code block (```json), extracting JSON...');
+              const jsonMatch = rawData.match(/```json\s*([\s\S]*?)\s*```/);
+              if (jsonMatch && jsonMatch[1]) {
+                rawData = jsonMatch[1].trim();
+                jsonData = JSON.parse(rawData);
+              }
+            } else if (rawData.includes('```')) {
+              console.log('📥 Found code block (```), extracting...');
+              const codeMatch = rawData.match(/```\s*([\s\S]*?)\s*```/);
+              if (codeMatch && codeMatch[1]) {
+                rawData = codeMatch[1].trim();
+                jsonData = JSON.parse(rawData);
+              }
+            } else {
+              // Try to parse as JSON directly
+              try {
+                jsonData = JSON.parse(rawData);
+              } catch (e) {
+                console.error('❌ Failed to parse as JSON:', e.message);
+              }
+            }
+          }
+          if (!jsonData) {
+            console.error('❌ jsonData is null or undefined after parsing!');
+            console.error('❌ rawData:', rawData.substring(0, 500));
+            res.status(500).json({ 
+              success: false, 
+              error: 'Failed to extract JSON from N8N response',
+              rawResponse: rawData.substring(0, 500)
+            });
+            return;
+          }
+          
+          // ⚠️ CRITICAL FIX: Handle array response from N8N
+          let finalContent = jsonData;
+          if (Array.isArray(jsonData) && jsonData.length > 0) {
+            console.log('⚠️ N8N returned an array, extracting first element...');
+            console.log('⚠️ Array length:', jsonData.length);
+            console.log('⚠️ First element:', jsonData[0]);
+            finalContent = jsonData[0];
+          }
+          
+          console.log('✅ Received content from N8N, type:', typeof finalContent);
+          console.log('✅ Received content from N8N, is array?', Array.isArray(finalContent));
+          console.log('✅ Received content from N8N, keys:', Object.keys(finalContent));
+          console.log('✅ N8N content preview:', JSON.stringify(finalContent, null, 2).substring(0, 500));
+          console.log('✅ N8N content heroTitle:', finalContent.heroTitle);
+          console.log('✅ N8N content heroSubtitle:', finalContent.heroSubtitle);
+          console.log('✅ N8N content aboutText:', finalContent.aboutText);
+          console.log('✅ N8N content testimonials:', finalContent.testimonials);
+          
+          // Expected format from N8N:
+          // {
+          //   heroTitle: "...",
+          //   heroSubtitle: "...",
+          //   aboutTitle: "...",
+          //   aboutText: "...",
+          //   services: [{name: "...", description: "...", duration: 30, price: 100}],
+          //   testimonials: [{name: "...", text: "..."}]
+          // }
+          
+          res.json({
+            success: true,
+            content: finalContent
+          });
+        } catch (e) {
+          console.error('❌ N8N response is not JSON:', e.message);
+          console.error('❌ N8N raw response:', data);
+          res.status(500).json({ 
+            success: false, 
+            error: 'N8N returned invalid JSON: ' + e.message,
+            rawResponse: data.substring(0, 500)
+          });
+        }
+      });
+    });
+    
+    proxyReq.on('error', (error) => {
+      console.error('❌ N8N request error:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to connect to N8N: ' + error.message 
+      });
+    });
+    
+    console.log('📤 Writing request data to N8N...');
+    console.log('📤 Request data length:', requestData.length);
+    console.log('📤 Request data preview:', requestData.substring(0, 500));
+    
+    proxyReq.write(requestData);
+    proxyReq.end();
+    
+    console.log('📤 Request sent to N8N, waiting for response...');
+    console.log('📤 N8N webhook URL:', N8N_WEBHOOK_URL);
+    console.log('📤 Full request URL:', `https://${options.hostname}${options.path}`);
+    
+  } catch (error) {
+    console.error('❌ Generate content error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+app.options('/api/generate-content-from-n8n', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.status(200).end();
+});
+
+// ========================================
+// 🚀 CREATE PAGE WITH N8N CONTENT
+// ========================================
+app.post('/api/create-page-with-n8n', async (req, res) => {
+  try {
+    const { userId, businessName, serviceType, description, phone, email } = req.body;
+    
+    console.log('🚀 Creating page with N8N content:', { userId, businessName, serviceType });
+    
+    if (!userId || !businessName || !serviceType) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required fields: userId, businessName, serviceType' 
+      });
+    }
+    
+    // Step 1: Get content from N8N
+    console.log('📡 Requesting content from N8N...');
+    
+    const n8nData = {
+      businessName,
+      serviceType,
+      description: description || '',
+      contentOnly: true
+    };
+    
+    const requestData = JSON.stringify(n8nData);
+    const url = new URL(N8N_WEBHOOK_URL);
+    
+    // Promise wrapper for N8N request
+    const n8nContent = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: url.hostname,
+        port: 443,
+        path: url.pathname + url.search,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(requestData)
+        }
+      };
+      
+      const proxyReq = https.request(options, (proxyRes) => {
+        let data = '';
+        proxyRes.on('data', (chunk) => { data += chunk; });
+        proxyRes.on('end', () => {
+          try {
+            const jsonData = JSON.parse(data);
+            console.log('✅ Received content from N8N');
+            resolve(jsonData);
+          } catch (e) {
+            console.error('❌ N8N returned invalid JSON:', data);
+            reject(new Error('N8N returned invalid JSON'));
+          }
+        });
+      });
+      
+      proxyReq.on('error', (error) => {
+        console.error('❌ N8N request error:', error);
+        reject(error);
+      });
+      
+      proxyReq.write(requestData);
+      proxyReq.end();
+    });
+    
+    // Step 2: Load template
+    console.log('📄 Loading appointment template...');
+    const templatePath = path.join(__dirname, 'page-creator', 'templates', 'appointment-template-v2.html');
+    let html = fs.readFileSync(templatePath, 'utf8');
+    
+    // Step 3: Fill template with N8N content
+    console.log('✍️ Filling template with N8N content...');
+    
+    // Basic info
+    html = html.replace(/{{BUSINESS_NAME}}/g, n8nContent.businessName || businessName);
+    html = html.replace(/{{TAGLINE}}/g, n8nContent.tagline || n8nContent.heroSubtitle || '');
+    html = html.replace(/{{META_DESCRIPTION}}/g, n8nContent.metaDescription || n8nContent.aboutText?.substring(0, 150) || '');
+    html = html.replace(/{{META_KEYWORDS}}/g, n8nContent.metaKeywords || serviceType);
+    html = html.replace(/{{PHONE}}/g, phone || '050-0000000');
+    html = html.replace(/{{EMAIL}}/g, email || 'info@example.com');
+    html = html.replace(/{{CURRENT_YEAR}}/g, new Date().getFullYear().toString());
+    
+    // Hero section
+    html = html.replace(/{{HERO_TITLE}}/g, n8nContent.heroTitle || businessName);
+    html = html.replace(/{{HERO_SUBTITLE}}/g, n8nContent.heroSubtitle || '');
+    html = html.replace(/{{HERO_IMAGE}}/g, n8nContent.heroImage || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1920');
+    
+    // About section
+    html = html.replace(/{{ABOUT_TITLE}}/g, n8nContent.aboutTitle || 'אודותינו');
+    html = html.replace(/{{ABOUT_TEXT}}/g, n8nContent.aboutText || '');
+    
+    // Services section
+    html = html.replace(/{{SERVICES_TITLE}}/g, n8nContent.servicesTitle || 'השירותים שלנו');
+    
+    // Working hours
+    html = html.replace(/{{WORKING_HOURS_TEXT}}/g, n8nContent.workingHours || 'א׳-ה׳: 09:00-18:00');
+    
+    // Design style (placeholder for now)
+    html = html.replace(/{{DESIGN_STYLE}}/g, 'Modern Premium');
+    html = html.replace(/{{DESIGN_STYLE_CSS}}/g, '/* Premium styles loaded from external CSS */');
+    
+    // Step 4: Generate unique page ID
+    const timestamp = Date.now();
+    const sanitizedName = businessName.replace(/[^a-zA-Z0-9א-ת\s]/g, '').replace(/\s+/g, '_');
+    const pageId = `${sanitizedName}__${serviceType}__${timestamp}_html`;
+    const fileName = `${pageId}.html`;
+    
+    // Step 5: Replace USER_ID and PAGE_ID placeholders
+    html = html.replace(/{{USER_ID}}/g, userId);
+    html = html.replace(/{{PAGE_ID}}/g, pageId);
+    html = html.replace(/TEMP_USER_ID/g, userId);
+    html = html.replace(/TEMP_PAGE_ID/g, pageId);
+    
+    // Add meta tags for user and page identification
+    html = html.replace(
+      '<meta name="page-type" content="serviceProvider">',
+      `<meta name="page-type" content="serviceProvider">
+    <meta name="user-id" content="${userId}">
+    <meta name="page-id" content="${pageId}">`
+    );
+    
+    // Step 6: Inject appointment booking calendar data
+    const workingDays = n8nContent.workingDays || [0, 1, 2, 3, 4]; // Sun-Thu
+    const workingHours = n8nContent.workingHoursData || { start: '09:00', end: '18:00' };
+    const services = n8nContent.services || [];
+    
+    html = html.replace(/{{WORKING_DAYS_JSON}}/g, JSON.stringify(workingDays));
+    html = html.replace(/{{WORKING_HOURS_JSON}}/g, JSON.stringify(workingHours));
+    html = html.replace(/{{SPECIAL_HOURS_JSON}}/g, JSON.stringify({}));
+    html = html.replace(/{{BREAKS_JSON}}/g, JSON.stringify([]));
+    html = html.replace(/{{SERVICES_JSON}}/g, JSON.stringify(services));
+    
+    // Step 7: Inject premium features (already done by template)
+    html = injectPremiumStyles(html);
+    html = injectPageDataExtractor(html, 'serviceProvider');
+    html = injectAppointmentScripts(html);
+    
+    // Step 8: Create user directory and save page
+    const userDir = path.join(__dirname, 'output', userId);
+    await fs.ensureDir(userDir);
+    
+    const pagePath = path.join(userDir, fileName);
+    await fs.writeFile(pagePath, html, 'utf8');
+    
+    console.log(`✅ Page saved: ${pagePath}`);
+    
+    // Step 9: Create metadata
+    const dataDir = path.join(userDir, `${pageId}_data`);
+    await fs.ensureDir(dataDir);
+    
+    const metadata = {
+      userId,
+      pageId,
+      title: businessName,
+      pageType: 'serviceProvider',
+      hasAppointments: true,
+      createdAt: new Date().toISOString(),
+      businessName,
+      serviceType,
+      phone: phone || '',
+      email: email || '',
+      services: services,
+      workingDays,
+      workingHours,
+      n8nGenerated: true
+    };
+    
+    const metadataPath = path.join(dataDir, 'metadata.json');
+    await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2), 'utf8');
+    
+    console.log(`✅ Metadata saved: ${metadataPath}`);
+    
+    // Step 10: Create empty appointments.json
+    const appointmentsPath = path.join(dataDir, 'appointments.json');
+    await fs.writeFile(appointmentsPath, JSON.stringify([], null, 2), 'utf8');
+    
+    // Return success
+    res.json({
+      success: true,
+      message: 'Page created successfully with N8N content!',
+      pageUrl: `/output/${userId}/${fileName}`,
+      pageId,
+      fileName,
+      n8nContent
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating page with N8N:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+app.options('/api/create-page-with-n8n', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -7255,6 +8473,26 @@ app.get('/api/stav/status', (req, res) => {
 // DAY SETTINGS API
 // ============================================
 
+// Get day settings for a page
+app.get('/api/day-settings/:userId/:pageId', async (req, res) => {
+  try {
+    const { userId, pageId } = req.params;
+    
+    const settingsDir = await findDataFolder(userId, pageId);
+    const settingsPath = path.join(settingsDir, 'day-settings.json');
+    
+    let settings = {};
+    if (await fs.pathExists(settingsPath)) {
+      settings = await fs.readJSON(settingsPath);
+    }
+    
+    res.json(settings);
+  } catch (error) {
+    console.error('Error getting day settings:', error);
+    res.status(500).json({ error: 'Failed to get day settings' });
+  }
+});
+
 // Manage day settings (close day, block slots, reopen)
 app.post('/api/day-settings', async (req, res) => {
   try {
@@ -7264,7 +8502,7 @@ app.post('/api/day-settings', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const settingsDir = path.join('output', userId, `${pageId.replace('.html', '')}_data`);
+    const settingsDir = await findDataFolder(userId, pageId);
     const settingsPath = path.join(settingsDir, 'day-settings.json');
     
     // Ensure directory exists

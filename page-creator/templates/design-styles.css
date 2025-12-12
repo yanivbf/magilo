@@ -1,0 +1,209 @@
+/* ========================================
+   DESIGN STYLE CSS TEMPLATES
+   These will be injected based on selected style
+   ======================================== */
+
+/* ========================================
+   1. MINIMALIST PRO
+   ======================================== */
+.style-minimalist-pro {
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary-color: #64748b;
+    --accent-color: #0ea5e9;
+    --bg-color: #ffffff;
+    --text-color: #1e293b;
+    --heading-color: #0f172a;
+}
+
+/* ========================================
+   2. MIDNIGHT (DARK)
+   ======================================== */
+.style-midnight {
+    --primary-color: #8b5cf6;
+    --primary-dark: #7c3aed;
+    --secondary-color: #94a3b8;
+    --accent-color: #a78bfa;
+    --bg-color: #1e1b4b;
+    --text-color: #e2e8f0;
+    --heading-color: #f8fafc;
+}
+
+.style-midnight body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+.style-midnight .site-header {
+    background-color: rgba(15, 23, 42, 0.95);
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+.style-midnight .services-section,
+.style-midnight .calendar-section,
+.style-midnight .about-section {
+    background-color: #1e293b;
+}
+
+.style-midnight .service-item,
+.style-midnight .testimonial-card,
+.style-midnight #contact-form {
+    background-color: #1e1b4b;
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* ========================================
+   3. CLAYMORPHISM
+   ======================================== */
+.style-claymorphism {
+    --primary-color: #ec4899;
+    --primary-dark: #db2777;
+    --secondary-color: #6b7280;
+    --accent-color: #f472b6;
+    --bg-color: #f5f5f4;
+    --text-color: #292524;
+    --heading-color: #1c1917;
+}
+
+.style-claymorphism body {
+    background-color: #e7e5e4;
+}
+
+.style-claymorphism .service-item,
+.style-claymorphism .testimonial-card,
+.style-claymorphism #contact-form {
+    background: #f5f5f4;
+    box-shadow: 
+        inset 8px 8px 16px #d1d0cf,
+        inset -8px -8px 16px #ffffff,
+        8px 8px 24px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.style-claymorphism .time-slot {
+    box-shadow: 
+        inset 4px 4px 8px #d1d0cf,
+        inset -4px -4px 8px #ffffff;
+}
+
+.style-claymorphism .btn {
+    box-shadow: 
+        8px 8px 16px #d1d0cf,
+        -8px -8px 16px #ffffff;
+}
+
+/* ========================================
+   4. RETRO MAGAZINE
+   ======================================== */
+.style-retro {
+    --primary-color: #D9534F;
+    --primary-dark: #c94643;
+    --secondary-color: #4A4A4A;
+    --accent-color: #F0AD4E;
+    --bg-color: #FDFDFD;
+    --text-color: #333333;
+    --heading-color: #1A1A1A;
+}
+
+.style-retro body {
+    background-color: #fff8f0;
+}
+
+.style-retro .service-item,
+.style-retro .testimonial-card {
+    border: 2px solid #1A1A1A;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
+}
+
+.style-retro .service-item:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0 rgba(0,0,0,0.15);
+}
+
+.style-retro .btn {
+    border: 2px solid #1A1A1A;
+    box-shadow: 4px 4px 0 #1A1A1A;
+}
+
+.style-retro .btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #1A1A1A;
+}
+
+/* ========================================
+   5. AURORA UI (GRADIENT)
+   ======================================== */
+.style-aurora {
+    --primary-color: #06b6d4;
+    --primary-dark: #0891b2;
+    --secondary-color: #64748b;
+    --accent-color: #22d3ee;
+    --bg-color: #ffffff;
+    --text-color: #1e293b;
+    --heading-color: #0f172a;
+}
+
+.style-aurora body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.style-aurora .site-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+.style-aurora .service-item,
+.style-aurora .testimonial-card,
+.style-aurora #contact-form {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.style-aurora .services-section,
+.style-aurora .calendar-section,
+.style-aurora .about-section {
+    background: transparent;
+}
+
+/* ========================================
+   6. BENTO GRID (MODERN CARDS)
+   ======================================== */
+.style-bento {
+    --primary-color: #10b981;
+    --primary-dark: #059669;
+    --secondary-color: #6b7280;
+    --accent-color: #34d399;
+    --bg-color: #ffffff;
+    --text-color: #1f2937;
+    --heading-color: #111827;
+}
+
+.style-bento body {
+    background-color: #f9fafb;
+}
+
+.style-bento .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.style-bento .service-item {
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 2px solid #e5e7eb;
+}
+
+.style-bento .service-item:hover {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.style-bento .btn {
+    border-radius: 16px;
+}
+
+
+

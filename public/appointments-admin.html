@@ -481,17 +481,40 @@
         // Load Services
         async function loadServices() {
             try {
-                const response = await fetch(`/users/${userId}/${pageId}_data/metadata.json`);
-                if (response.ok) {
-                    const metadata = await response.json();
-                    services = metadata.services || [];
+                // Clean pageId - remove .html extension if present
+                let cleanPageId = pageId.replace(/\.html$/, '');
+                
+                // Try multiple possible paths for metadata
+                const possiblePaths = [
+                    `/output/${userId}/${cleanPageId}_data/metadata.json`,
+                    `/output/${userId}/${cleanPageId}_html_data/metadata.json`,
+                    `/output/${userId}/${pageId}_data/metadata.json`,
+                    `/pages/${userId}/${cleanPageId}_data/metadata.json`
+                ];
+                
+                let metadata = null;
+                for (const path of possiblePaths) {
+                    console.log(`🔍 Trying: ${path}`);
+                    try {
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            metadata = await response.json();
+                            console.log(`✅ Loaded metadata from: ${path}`);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`⚠️ Failed to load from ${path}`);
+                    }
+                }
+                
+                if (metadata) {
+                    services = metadata.services || metadata.products || [];
                     console.log('✅ Loaded services:', services);
-                    renderServices();
                 } else {
                     console.warn('⚠️ No metadata found, using empty services');
                     services = [];
-                    renderServices();
                 }
+                renderServices();
             } catch (error) {
                 console.error('❌ Failed to load services:', error);
                 services = [];
@@ -1484,24 +1507,7 @@
         // SERVICES MANAGEMENT
         // ============================================
         
-        async function loadServices() {
-            try {
-                const response = await fetch(`/output/${userId}/${pageId}_data/metadata.json`);
-                if (response.ok) {
-                    const metadata = await response.json();
-                    services = metadata.services || [];
-                    console.log('✅ Loaded services:', services);
-                    renderServices();
-                } else {
-                    services = [];
-                    renderServices();
-                }
-            } catch (error) {
-                console.error('❌ Failed to load services:', error);
-                services = [];
-                renderServices();
-            }
-        }
+        // This function is a duplicate - removed (using the one above)
         
         function renderServices() {
             const container = document.getElementById('services-list');
@@ -1647,6 +1653,7 @@
 
         // Initialize on load
         loadAppointments();
+        loadServices(); // Load services on page load
     </script>
 </body>
 </html>

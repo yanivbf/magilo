@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת N8N - יצירת תוכן</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+        }
+        
+        .result.active {
+            display: block;
+        }
+        
+        .result h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .result pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .error {
+            background: #fee;
+            border-right-color: #f44;
+        }
+        
+        .success {
+            background: #efe;
+            border-right-color: #4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 בדיקת N8N - יצירת תוכן</h1>
+        <p class="subtitle">בדוק מה N8N מחזיר עבור דף נותן שירות</p>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="businessName">שם העסק:</label>
+                <input type="text" id="businessName" name="businessName" value="ד״ר דוד כהן - מרפאת שיניים" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="serviceType">סוג שירות:</label>
+                <select id="serviceType" name="serviceType" required>
+                    <option value="dentist">רופא שיניים</option>
+                    <option value="hairdresser">מספרה</option>
+                    <option value="beautician">קוסמטיקאית</option>
+                    <option value="lawyer">עורך דין</option>
+                    <option value="accountant">רואה חשבון</option>
+                    <option value="consultant">יועץ</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">תיאור קצר (אופציונלי):</label>
+                <textarea id="description" name="description" placeholder="מידע נוסף על העסק...">מרפאה מודרנית עם ציוד מתקדם, התמחות בטיפולי שורש ושתלים</textarea>
+            </div>
+            
+            <button type="submit">🚀 שלח ל-N8N וקבל תוכן</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>שולח בקשה ל-N8N וממתין לתוכן...</p>
+        </div>
+        
+        <div class="result" id="result">
+            <h2>📄 תוצאה:</h2>
+            <pre id="resultContent"></pre>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('testForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form data
+            const businessName = document.getElementById('businessName').value;
+            const serviceType = document.getElementById('serviceType').value;
+            const description = document.getElementById('description').value;
+            
+            // Show loading
+            loading.classList.add('active');
+            result.classList.remove('active', 'success', 'error');
+            
+            try {
+                console.log('🚀 Sending to N8N:', { businessName, serviceType, description });
+                
+                const response = await fetch('/api/generate-content-from-n8n', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        businessName,
+                        serviceType,
+                        description
+                    })
+                });
+                
+                const data = await response.json();
+                
+                console.log('📥 Received from N8N:', data);
+                
+                // Hide loading
+                loading.classList.remove('active');
+                
+                // Show result
+                result.classList.add('active');
+                
+                if (data.success) {
+                    result.classList.add('success');
+                    resultContent.textContent = JSON.stringify(data.content, null, 2);
+                } else {
+                    result.classList.add('error');
+                    resultContent.textContent = 'ERROR:\n' + JSON.stringify(data, null, 2);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                
+                // Hide loading
+                loading.classList.remove('active');
+                
+                // Show error
+                result.classList.add('active', 'error');
+                resultContent.textContent = 'ERROR:\n' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
+

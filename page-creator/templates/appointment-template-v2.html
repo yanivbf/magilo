@@ -1,0 +1,2702 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta name="page-type" content="serviceProvider">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="business-name" content="{{BUSINESS_NAME}}">
+    <meta name="description" content="{{META_DESCRIPTION}}">
+    <meta name="keywords" content="{{META_KEYWORDS}}">
+    <title>{{BUSINESS_NAME}} - {{TAGLINE}}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 🎨 PREMIUM STYLES - Auto-applied to all pages -->
+    <link rel="stylesheet" href="/premium-styles.css">
+    
+    <style>
+        /* ========================================
+           GLOBAL STYLES & RESET
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            line-height: 1.7;
+            color: #1F2937;
+            background-color: #f9fafb;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Rubik', sans-serif;
+            line-height: 1.3;
+            font-weight: 700;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .section {
+            padding: 80px 24px;
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0 24px;
+        }
+
+        /* ========================================
+           DESIGN STYLE: {{DESIGN_STYLE}}
+           ======================================== */
+        {{DESIGN_STYLE_CSS}}
+
+        /* ========================================
+           HEADER & NAVIGATION
+           ======================================== */
+        .site-header {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0 24px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--heading-color, #1A1A1A);
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-link {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--heading-color, #1A1A1A);
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color, #D9534F);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color, #D9534F);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Mobile menu toggle */
+        .mobile-menu-toggle {
+            display: none;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .nav-menu li {
+                padding: 10px 0;
+            }
+        }
+
+        /* ========================================
+           HERO SECTION
+           ======================================== */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('{{HERO_IMAGE}}') center/cover;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            color: white;
+            max-width: 900px;
+            padding: 0 24px;
+        }
+
+        .hero-content h1 {
+            margin-bottom: 24px;
+            color: white;
+            font-size: clamp(48px, 8vw, 72px);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .hero-content p {
+            font-size: clamp(18px, 3vw, 24px);
+            margin-bottom: 48px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ========================================
+           BUTTONS
+           ======================================== */
+        .btn {
+            display: inline-block;
+            padding: 16px 40px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+            border: none;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark, #c94643);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(217,83,79,0.4);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-color, #D9534F);
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background-color: transparent;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* ========================================
+           SERVICES SECTION
+           ======================================== */
+        .services-section {
+            background-color: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(36px, 6vw, 48px);
+            margin-bottom: 24px;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 56px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .service-item {
+            background-color: var(--bg-color, #FDFDFD);
+            padding: 48px 32px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .service-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        }
+
+        .service-icon {
+            font-size: 56px;
+            margin-bottom: 24px;
+            color: var(--primary-color, #D9534F);
+        }
+
+        .service-item h3 {
+            margin-bottom: 16px;
+            color: var(--heading-color, #1A1A1A);
+            font-size: 24px;
+        }
+
+        .service-duration {
+            font-size: 16px;
+            color: var(--accent-color, #F0AD4E);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .service-price {
+            font-size: 32px;
+            color: var(--primary-color, #D9534F);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .service-description {
+            font-size: 15px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        /* ========================================
+           GALLERY SECTION
+           ======================================== */
+        .gallery-section {
+            background-color: #f3f4f6;
+        }
+
+        .gallery-grid {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            scroll-behavior: auto;
+            padding: 20px 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color, #3b82f6) #e5e7eb;
+        }
+
+        .gallery-grid::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .gallery-grid::-webkit-scrollbar-track {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .gallery-grid::-webkit-scrollbar-thumb {
+            background: var(--primary-color, #3b82f6);
+            border-radius: 10px;
+        }
+
+        .gallery-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark, #2563eb);
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            width: 350px;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none; /* Don't block clicks on the image below */
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+
+        .gallery-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* ========================================
+           TESTIMONIALS SECTION
+           ======================================== */
+        .testimonials-section {
+            background-color: white;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .testimonial-card {
+            background-color: var(--bg-color, #FDFDFD);
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .testimonial-quote {
+            font-size: 48px;
+            color: var(--primary-color, #D9534F);
+            opacity: 0.3;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .testimonial-text {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.8;
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color, #D9534F);
+        }
+
+        .testimonial-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        .testimonial-rating {
+            color: #fbbf24;
+            font-size: 16px;
+        }
+
+        /* ========================================
+           CALENDAR SECTION
+           ======================================== */
+        .calendar-section {
+            background-color: #ffffff;
+        }
+
+        .calendar-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .date-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .date-nav-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--primary-color, #D9534F);
+            background-color: white;
+            color: var(--primary-color, #D9534F);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+
+        .date-nav-btn:hover {
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .current-date-display {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--heading-color, #1A1A1A);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .time-slot {
+            padding: 20px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+
+        .time-slot.available {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .time-slot.available:hover {
+            background-color: #10b981;
+            color: white;
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .time-slot.booked {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+        }
+
+        .time-slot.selected {
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+            border-color: var(--primary-color, #D9534F);
+            box-shadow: 0 4px 16px rgba(217,83,79,0.3);
+        }
+
+        /* ========================================
+           CONTACT FORM
+           ======================================== */
+        #contact-form {
+            background-color: var(--bg-color, #FDFDFD);
+            padding: 48px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 56px auto 0;
+            display: block;
+            border: 1px solid rgba(0,0,0,0.05);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #contact-form h3 {
+            margin-bottom: 32px;
+            text-align: center;
+            font-size: 28px;
+            color: var(--heading-color, #1A1A1A);
+        }
+
+        .service-info {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        #contact-form input,
+        #contact-form textarea,
+        #contact-form select {
+            width: 100%;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color, #333);
+            transition: all 0.3s ease;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        #contact-form input:focus,
+        #contact-form textarea:focus,
+        #contact-form select:focus {
+            outline: none;
+            border-color: var(--primary-color, #D9534F);
+            box-shadow: 0 0 0 4px rgba(217,83,79,0.1);
+        }
+
+        #contact-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        #contact-form button[type="submit"] {
+            width: 100%;
+            padding: 18px 32px;
+            font-size: 18px;
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 6px 20px rgba(217,83,79,0.3);
+            cursor: pointer;
+        }
+
+        #contact-form button[type="submit"]:hover {
+            background-color: var(--primary-dark, #c94643);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(217,83,79,0.4);
+        }
+
+        /* ========================================
+           ABOUT SECTION
+           ======================================== */
+        .about-section {
+            background-color: var(--bg-color, #FDFDFD);
+        }
+
+        .about-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .about-content h2 {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .about-content p {
+            font-size: 18px;
+            color: #4b5563;
+            line-height: 1.9;
+            margin-bottom: 24px;
+        }
+
+        /* ========================================
+           SOCIAL ICONS
+           ======================================== */
+        .social-icons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .social-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color, #D9534F), var(--primary-dark, #c94643));
+            color: white !important;
+            text-decoration: none;
+            font-size: 22px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .social-icon i {
+            color: white !important;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-4px) scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .header-social-icons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-right: 16px;
+        }
+
+        .header-social-icons .social-icon {
+            background: white;
+            color: var(--primary-color, #D9534F) !important;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            border: 2px solid var(--primary-color, #D9534F);
+        }
+
+        .header-social-icons .social-icon i {
+            color: var(--primary-color, #D9534F) !important;
+        }
+
+        .header-social-icons .social-icon:hover {
+            background: var(--primary-color, #D9534F);
+            color: white !important;
+            transform: translateY(-2px) scale(1.1);
+        }
+
+        .header-social-icons .social-icon:hover i {
+            color: white !important;
+        }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+        .site-footer {
+            background-color: #1F2937;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 64px 24px 32px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 48px;
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto 40px;
+            padding: 0 24px;
+        }
+
+        .footer-section h4 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 24px;
+        }
+
+        .footer-section p {
+            font-size: 16px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.8);
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover {
+            background-color: var(--primary-color, #D9534F);
+            transform: scale(1.1);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        /* ========================================
+           FLOATING BUBBLES (WhatsApp + AI Bot)
+           ======================================== */
+        .whatsapp-bubble,
+        .ai-bot-bubble {
+            position: fixed;
+            bottom: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+            border: none;
+            cursor: pointer;
+        }
+
+        .whatsapp-bubble {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            right: 24px;
+        }
+
+        .ai-bot-bubble {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            right: 100px;
+        }
+
+        .whatsapp-bubble:hover,
+        .ai-bot-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .bot-pulse {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+        }
+
+        /* ========================================
+           ADMIN BUTTON
+           ======================================== */
+        #admin-mode-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background-color: var(--primary-color, #D9534F);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(217,83,79,0.4);
+            z-index: 999;
+            display: none;
+            border: none;
+        }
+
+        #admin-mode-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 28px rgba(217,83,79,0.5);
+        }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 768px) {
+            .section {
+                padding: 60px 20px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn {
+                padding: 14px 32px;
+                font-size: 16px;
+            }
+
+            .time-slots-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            #contact-form {
+                padding: 32px 24px;
+            }
+        }
+
+        /* ========================================
+           LOADING STATE
+           ======================================== */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* ========================================
+           PRICING PLANS
+           ======================================== */
+        .pricing-plans {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 0;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 48px 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-color, #D9534F), var(--accent-color, #F0AD4E));
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+
+        .pricing-card.featured {
+            transform: scale(1.08);
+            border: 3px solid var(--primary-color, #D9534F);
+            box-shadow: 0 20px 60px rgba(217, 83, 79, 0.3);
+        }
+
+        .pricing-card.featured:hover {
+            transform: translateY(-12px) scale(1.1);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 50px;
+            transform: rotate(45deg);
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .pricing-header h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--heading-color, #1A1A1A);
+            margin-bottom: 16px;
+        }
+
+        .pricing-icon {
+            font-size: 64px;
+            margin: 16px 0;
+        }
+
+        .pricing-price {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .price-amount {
+            display: block;
+            font-size: 56px;
+            font-weight: 900;
+            color: var(--primary-color, #D9534F);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .price-period {
+            display: block;
+            font-size: 18px;
+            color: var(--text-color, #4A4A4A);
+            font-weight: 500;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .pricing-features li {
+            padding: 14px 0;
+            font-size: 17px;
+            color: var(--text-color, #4A4A4A);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .pricing-features li:hover {
+            padding-right: 12px;
+            color: var(--primary-color, #D9534F);
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card.featured .pricing-btn {
+            background: linear-gradient(135deg, var(--primary-color, #D9534F), var(--primary-dark, #c94643));
+            box-shadow: 0 8px 24px rgba(217, 83, 79, 0.4);
+        }
+
+        .pricing-card.featured .pricing-btn:hover {
+            box-shadow: 0 12px 32px rgba(217, 83, 79, 0.6);
+            transform: translateY(-4px);
+        }
+
+        @media (max-width: 968px) {
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+            
+            .pricing-plans {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ========================================
+           PRICING TABLE (Simple List)
+           ======================================== */
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-row:hover {
+            background: #f9fafb;
+            transform: translateX(-8px);
+        }
+
+        .pricing-row:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-service-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--heading-color, #1A1A1A);
+            flex: 1;
+        }
+
+        .pricing-service-duration {
+            font-size: 16px;
+            color: var(--accent-color, #F0AD4E);
+            font-weight: 600;
+            margin: 0 24px;
+        }
+
+        .pricing-service-price {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--primary-color, #D9534F);
+            min-width: 120px;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .pricing-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 20px;
+            }
+            
+            .pricing-service-duration {
+                margin: 0;
+            }
+            
+            .pricing-service-price {
+                width: 100%;
+                text-align: right;
+            }
+        }
+
+        /* ========================================
+           PRICING PLANS (3 CARDS)
+           ======================================== */
+        .pricing-plans {
+            background: var(--primary-color, #667eea);
+            padding: 80px 20px;
+        }
+
+        .pricing-plans .section-title {
+            color: white;
+        }
+
+        .pricing-plans .section-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 60px auto 0;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        }
+
+        .pricing-card.popular {
+            border: 3px solid var(--accent-color, #fbbf24);
+            transform: scale(1.05);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color, #fbbf24);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+        }
+
+        .pricing-title {
+            font-size: 28px;
+            margin-bottom: 24px;
+            color: #1F2937;
+        }
+
+        .pricing-price {
+            margin-bottom: 32px;
+        }
+
+        .price-currency {
+            font-size: 24px;
+            font-weight: 600;
+            color: #6B7280;
+        }
+
+        .price-amount {
+            font-size: 56px;
+            font-weight: 800;
+            color: var(--primary-color, #667eea);
+            margin: 0 8px;
+        }
+
+        .price-period {
+            font-size: 16px;
+            color: #9CA3AF;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 32px;
+            text-align: right;
+        }
+
+        .pricing-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 16px;
+            color: #4B5563;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-pricing {
+            display: inline-block;
+            padding: 14px 36px;
+            background: var(--primary-color, #667eea);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-pricing:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .btn-pricing.btn-primary {
+            background: var(--accent-color, #fbbf24);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-pricing.btn-primary:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+
+            .pricing-title {
+                font-size: 24px;
+            }
+
+            .price-amount {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body class="layout-{{LAYOUT}}">
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <div class="logo">{{BUSINESS_NAME}}</div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="#hero" class="nav-link">ראשי</a></li>
+                    {{SHOW_SERVICES_NAV}}<li><a href="#services" class="nav-link">שירותים</a></li>{{/SHOW_SERVICES_NAV}}
+                    {{SHOW_GALLERY_NAV}}<li><a href="#gallery" class="nav-link">גלריה</a></li>{{/SHOW_GALLERY_NAV}}
+                    {{SHOW_TESTIMONIALS_NAV}}<li><a href="#testimonials" class="nav-link">המלצות</a></li>{{/SHOW_TESTIMONIALS_NAV}}
+                    {{SHOW_YOUTUBE}}<li><a href="#youtube" class="nav-link">סרטון</a></li>{{/SHOW_YOUTUBE}}
+                    <li><a href="#calendar" class="nav-link">קביעת תור</a></li>
+                    {{SHOW_ABOUT_NAV}}<li><a href="#about" class="nav-link">אודות</a></li>{{/SHOW_ABOUT_NAV}}
+                </ul>
+            </nav>
+            <button id="accessibility-btn" style="background: #4A5568; color: white; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-left: 12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <line x1="12" y1="2" x2="12" y2="4"></line>
+                    <line x1="12" y1="20" x2="12" y2="22"></line>
+                    <line x1="4" y1="12" x2="2" y2="12"></line>
+                    <line x1="22" y1="12" x2="20" y2="12"></line>
+                </svg>
+                <span>נגישות</span>
+            </button>
+            <div class="header-social-icons" style="display: flex; gap: 12px; align-items: center;">
+                {{SOCIAL_LINKS_HTML}}
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h1>{{BUSINESS_NAME}}</h1>
+            <p>{{HERO_TEXT}}</p>
+            <div class="hero-buttons">
+                <a href="#calendar" class="btn btn-primary">קבעו תור עכשיו</a>
+                {{SHOW_ABOUT_BUTTON}}
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section - MOVED HERE (after Hero, before Services) -->
+    <section id="about" class="section about-section" style="display: {{SHOW_ABOUT}};">
+        <div class="container">
+            <div class="about-content">
+                <h2 class="section-title">אודותינו</h2>
+                {{ABOUT_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section - Only shows if explicitly enabled -->
+    <section id="services" class="section services-section" style="display: {{SHOW_SERVICES}};">
+        <div class="container">
+            <h2 class="section-title">השירותים שלנו</h2>
+            <p class="section-subtitle">אנו מציעים מגוון רחב של שירותים מקצועיים ברמה הגבוהה ביותר</p>
+            <div class="services-grid">
+                {{SERVICES_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Plans Section - Only shows if explicitly enabled -->
+    <section id="pricing" class="section pricing-plans" style="display: {{SHOW_PRICING}};">
+        <div class="container">
+            <h2 class="section-title">💰 מחירון</h2>
+            <p class="section-subtitle">בחרו את החבילה המתאימה לכם</p>
+            
+            <div class="pricing-grid">
+                <!-- Basic Plan -->
+                <div class="pricing-card">
+                    <h3 class="pricing-title">חבילה בסיסית</h3>
+                    <div class="pricing-price">
+                        <span class="price-currency">₪</span>
+                        <span class="price-amount">199</span>
+                        <span class="price-period">/ טיפול</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ שירות בסיסי</li>
+                        <li>✅ עד 45 דקות</li>
+                        <li>✅ ייעוץ ראשוני</li>
+                        <li>❌ מוצרים מתקדמים</li>
+                        <li>❌ מעקב אחרי</li>
+                    </ul>
+                    <a href="#calendar" class="btn-pricing">קבעו תור</a>
+                </div>
+
+                <!-- Advanced Plan -->
+                <div class="pricing-card popular">
+                    <div class="popular-badge">מומלץ ביותר</div>
+                    <h3 class="pricing-title">חבילה מתקדמת</h3>
+                    <div class="pricing-price">
+                        <span class="price-currency">₪</span>
+                        <span class="price-amount">349</span>
+                        <span class="price-period">/ טיפול</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ שירות מלא</li>
+                        <li>✅ עד 90 דקות</li>
+                        <li>✅ ייעוץ מקיף</li>
+                        <li>✅ מוצרים מתקדמים</li>
+                        <li>✅ מעקב למשך שבוע</li>
+                    </ul>
+                    <a href="#calendar" class="btn-pricing btn-primary">קבעו תור</a>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="pricing-card">
+                    <h3 class="pricing-title">חבילה פרימיום</h3>
+                    <div class="pricing-price">
+                        <span class="price-currency">₪</span>
+                        <span class="price-amount">599</span>
+                        <span class="price-period">/ טיפול</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ שירות VIP</li>
+                        <li>✅ ללא הגבלת זמן</li>
+                        <li>✅ ייעוץ אישי</li>
+                        <li>✅ מוצרים פרימיום</li>
+                        <li>✅ מעקב למשך חודש</li>
+                    </ul>
+                    <a href="#calendar" class="btn-pricing">קבעו תור</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- YouTube Video Section -->
+    {{SHOW_YOUTUBE}}
+    <section id="youtube" class="section" style="background-color: #f3f4f6;">
+        <div class="container">
+            <h2 class="section-title">סרטון מהעבודות שלנו</h2>
+            <p class="section-subtitle">צפו בעבודות שלנו בפעולה</p>
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+                    <iframe src="{{YOUTUBE_EMBED_URL}}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+    {{/SHOW_YOUTUBE}}
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="section gallery-section" style="display: {{SHOW_GALLERY}};">
+        <div class="container">
+            <h2 class="section-title">גלריית עבודות</h2>
+            <p class="section-subtitle">הציצו בעבודות שלנו ותתרשמו בעצמכם</p>
+            <div class="gallery-grid" id="gallery-grid">
+                {{GALLERY_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="section testimonials-section" style="display: {{SHOW_TESTIMONIALS}};">
+        <div class="container">
+            <h2 class="section-title">מה אומרים עלינו</h2>
+            <p class="section-subtitle">לקוחות מספרים על החוויה שלהם</p>
+            <div class="testimonials-grid" id="testimonials-grid">
+                {{TESTIMONIALS_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="section faq-section" style="display: {{SHOW_FAQ}};">
+        <div class="container">
+            <h2 class="section-title">שאלות ותשובות</h2>
+            <p class="section-subtitle">תשובות לשאלות הנפוצות ביותר</p>
+            <div class="faq-container">
+                {{FAQ_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="section team-section" style="display: {{SHOW_TEAM}};">
+        <div class="container">
+            <h2 class="section-title">הצוות שלנו</h2>
+            <p class="section-subtitle">הכירו את הצוות המקצועי שלנו</p>
+            <div class="team-grid">
+                {{TEAM_HTML}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section id="calendar" class="section calendar-section">
+        <div class="container">
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <h2 class="section-title">קביעת תור</h2>
+                    <p class="section-subtitle">בחרו תאריך ושעה נוחים לכם</p>
+                </div>
+
+                <!-- Date Navigation -->
+                <div class="date-navigation">
+                    <button class="date-nav-btn" id="btn-prev-day">← יום קודם</button>
+                    <button class="date-nav-btn" id="btn-today">היום</button>
+                    <button class="date-nav-btn" id="btn-tomorrow">מחר</button>
+                    <button class="date-nav-btn" id="btn-day-after">מחרתיים</button>
+                    <button class="date-nav-btn" id="btn-next-day">יום הבא →</button>
+                </div>
+
+                <!-- Current Date Display -->
+                <div class="current-date-display" id="current-date-display"></div>
+
+                <!-- Time Slots Grid -->
+                <div class="time-slots-grid" id="time-slots-container">
+                    <!-- Time slots will be dynamically generated here -->
+                </div>
+
+                <!-- Contact Form (Hidden initially) -->
+                <form id="contact-form">
+                    <h3>אישור פרטי התור</h3>
+                    <p class="service-info" id="service-info"></p>
+                    
+                    <label for="service-select" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 15px;">בחר שירות (אופציונלי):</label>
+                    <select id="service-select" name="service">
+                        <option value="">-- בחר שירות (אופציונלי) --</option>
+                    </select>
+
+                    <input type="text" name="name" placeholder="שם מלא *" required>
+                    <input type="tel" name="phone" placeholder="טלפון *" required>
+                    <input type="email" name="email" placeholder="אימייל (אופציונלי)">
+                    <textarea name="notes" placeholder="הערות נוספות (אופציונלי)"></textarea>
+                    <input type="hidden" name="date" id="selected-date">
+                    <input type="hidden" name="time" id="selected-time">
+                    <input type="hidden" name="duration" id="selected-duration">
+                    <input type="hidden" name="price" id="selected-price">
+                    <button type="submit" class="btn btn-primary">✓ אשר תור</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>{{BUSINESS_NAME}}</h4>
+                <p>{{TAGLINE}}</p>
+                <div class="social-icons">
+                    {{SOCIAL_LINKS_HTML}}
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>צור קשר</h4>
+                <p><i class="fas fa-phone"></i> <a href="tel:{{PHONE}}">{{PHONE}}</a></p>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:{{EMAIL}}">{{EMAIL}}</a></p>
+                <p><i class="fas fa-map-marker-alt"></i> {{ADDRESS}}</p>
+            </div>
+            <div class="footer-section">
+                <h4>שעות פעילות</h4>
+                <p>{{WORKING_HOURS_TEXT}}</p>
+            </div>
+        </div>
+        <div class="footer-legal-links" style="text-align: center; padding: 24px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 32px;">
+            <a href="/privacy-policy.html?business={{BUSINESS_NAME}}&email={{EMAIL}}&phone={{PHONE}}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.8)'">מדיניות פרטיות</a>
+            <span style="color: rgba(255, 255, 255, 0.4);">|</span>
+            <a href="/accessibility-statement.html?business={{BUSINESS_NAME}}&email={{EMAIL}}&phone={{PHONE}}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.8)'">הצהרת נגישות</a>
+            <span style="color: rgba(255, 255, 255, 0.4);">|</span>
+            <a href="/terms-of-service.html?business={{BUSINESS_NAME}}&email={{EMAIL}}&phone={{PHONE}}&website={{WEBSITE_URL}}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; margin: 0 15px; font-size: 14px; transition: color 0.3s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.8)'">תנאי שירות</a>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {{CURRENT_YEAR}} {{BUSINESS_NAME}}. כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+
+    <!-- Admin Button -->
+    <button id="admin-mode-btn" onclick="window.location.href='/appointments-admin.html?userId={{USER_ID}}&pageId={{PAGE_ID}}&pageName={{BUSINESS_NAME}}'">
+        📅 ניהול תורים
+    </button>
+
+    <!-- ========================================
+         FLOATING BUBBLES (WhatsApp + AI Bot)
+         ======================================== -->
+    
+    <!-- WhatsApp Bubble -->
+    <a href="https://wa.me/{{PHONE}}" target="_blank" class="whatsapp-bubble" title="שלח הודעה בוואטסאפ">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M27.2 4.7C24.2 1.7 20.2 0 16 0 7.2 0 0 7.2 0 16c0 2.8.7 5.5 2.1 8L0 32l8.2-2.1c2.4 1.3 5.1 2 7.8 2C24.8 32 32 24.8 32 16c0-4.2-1.7-8.2-4.8-11.3zM16 29.3c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-5 1.3 1.3-4.9-.3-.5c-1.3-2.1-2-4.5-2-7.1 0-7.3 6-13.3 13.3-13.3 3.5 0 6.9 1.4 9.4 3.9 2.5 2.5 3.9 5.8 3.9 9.4-.1 7.4-6.1 13.3-13.4 13.3zm7.3-10c-.4-.2-2.4-1.2-2.8-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.3 1.5-.2.3-.5.3-.9.1-.4-.2-1.7-.6-3.2-2-1.2-1.1-2-2.4-2.2-2.8-.2-.4 0-.6.2-.8.2-.2.4-.5.6-.7.2-.2.3-.4.4-.6.1-.3.1-.5 0-.7-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.7c-.3 0-.7.1-1 .5-.4.4-1.4 1.4-1.4 3.3s1.4 3.8 1.6 4.1c.2.3 2.8 4.3 6.8 6 .9.4 1.7.6 2.2.8.9.3 1.8.2 2.4.1.7-.1 2.4-1 2.7-1.9.3-.9.3-1.7.2-1.9-.1-.2-.4-.3-.8-.5z" fill="white"/>
+        </svg>
+    </a>
+
+    <!-- Accessibility Menu -->
+    <div id="accessibility-menu" style="display: none; position: fixed; top: 80px; right: 20px; z-index: 10001; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 20px; min-width: 280px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: bold; color: #2D3748;">נגישות</h3>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #4A5568;">גודל טקסט:</label>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="changeFontSize('decrease')" style="flex: 1; padding: 8px; background: #EDF2F7; border: 1px solid #CBD5E0; border-radius: 6px; cursor: pointer; font-weight: 600;">A-</button>
+                <button onclick="changeFontSize('reset')" style="flex: 1; padding: 8px; background: #EDF2F7; border: 1px solid #CBD5E0; border-radius: 6px; cursor: pointer; font-weight: 600;">A</button>
+                <button onclick="changeFontSize('increase')" style="flex: 1; padding: 8px; background: #EDF2F7; border: 1px solid #CBD5E0; border-radius: 6px; cursor: pointer; font-weight: 600;">A+</button>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">ניגודיות גבוהה</span>
+                <input type="checkbox" id="contrast-toggle" onchange="toggleContrast()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">גופן קריא</span>
+                <input type="checkbox" id="readable-font-toggle" onchange="toggleReadableFont()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">הדגש קישורים</span>
+                <input type="checkbox" id="highlight-links-toggle" onchange="toggleHighlightLinks()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">סמן גדול</span>
+                <input type="checkbox" id="large-cursor-toggle" onchange="toggleLargeCursor()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">ריווח שורות מוגבר</span>
+                <input type="checkbox" id="line-height-toggle" onchange="toggleLineHeight()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span style="font-weight: 600; color: #4A5568;">עצור אנימציות</span>
+                <input type="checkbox" id="pause-animations-toggle" onchange="toggleAnimations()" style="width: 20px; height: 20px; cursor: pointer;">
+            </label>
+        </div>
+        
+        <button onclick="resetAccessibility()" style="width: 100%; padding: 10px; background: #E53E3E; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 10px;">איפוס הגדרות</button>
+    </div>
+
+    <!-- AI Bot "סתיו" Bubble -->
+    <div id="ai-bot-bubble" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999;">
+        <button id="ai-bot-btn" style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; border: none; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); transition: all 0.3s; display: flex; align-items: center; justify-content: center;" aria-label="בוט צ'אט סתיו">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M12 7v4"></path>
+                <line x1="8" y1="16" x2="8" y2="16"></line>
+                <line x1="16" y1="16" x2="16" y2="16"></line>
+            </svg>
+        </button>
+        
+        <div id="ai-chat-window" style="display: none; position: fixed; bottom: 90px; left: 20px; width: 350px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); overflow: hidden; flex-direction: column; z-index: 10000;">
+            <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; position: absolute; top: 0; left: 0; right: 0; z-index: 10001; height: 70px; box-sizing: border-box;">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: bold;">סתיו - עוזרת וירטואלית</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">אני כאן לעזור לך! 😊</p>
+                </div>
+                <button id="ai-close-btn" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 20px; line-height: 1;" aria-label="סגור צ'אט">×</button>
+            </div>
+            
+            <div id="ai-chat-messages" style="position: absolute; top: 70px; left: 0; right: 0; bottom: 72px; overflow-y: auto; padding: 16px; background: #F7FAFC;">
+                <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                    <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+                </div>
+            </div>
+            
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; border-top: 1px solid #E2E8F0; background: white; min-height: 72px; box-sizing: border-box;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="ai-user-input" placeholder="הקלד הודעה..." style="flex: 1; padding: 12px; border: 1px solid #CBD5E0; border-radius: 8px; font-size: 16px; font-weight: 500; box-sizing: border-box;">
+                    <button id="ai-send-btn" style="background: #8B5CF6; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; flex-shrink: 0; box-sizing: border-box;">שלח</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONSTANTS FROM METADATA
+        // ========================================
+        const USER_ID = '{{USER_ID}}';
+        const PAGE_ID = '{{PAGE_ID}}';
+        const WORKING_DAYS = {{WORKING_DAYS_JSON}};
+        const WORKING_HOURS = {{WORKING_HOURS_JSON}};
+        const SPECIAL_HOURS = {{SPECIAL_HOURS_JSON}};
+        const BREAKS = {{BREAKS_JSON}};
+        let SERVICES = {{SERVICES_JSON}};  // Changed to 'let' so we can update it dynamically
+
+        // ========================================
+        // STATE
+        // ========================================
+        let currentDate = new Date();
+        let selectedSlot = null;
+        let appointments = [];
+        let daySettings = {};
+
+        // Check if preview mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPreview = urlParams.get('preview') === 'true';
+
+        // ========================================
+        // MOBILE MENU
+        // ========================================
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.classList.toggle('active');
+        }
+
+        // ========================================
+        // ADMIN MODE
+        // ========================================
+        if (localStorage.getItem('adminMode') === 'true') {
+            document.getElementById('admin-mode-btn').style.display = 'block';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                const password = prompt('הכנס סיסמה:');
+                if (password === 'admin123') {
+                    localStorage.setItem('adminMode', 'true');
+                    document.getElementById('admin-mode-btn').style.display = 'block';
+                    alert('מצב אדמין הופעל!');
+                }
+            }
+        });
+
+        // ========================================
+        // INITIALIZE
+        // ========================================
+        async function initCalendar() {
+            await loadServices();  // Wait for services to load
+            setupEventListeners();
+            if (!isPreview) {
+                await fetchAppointments();  // Wait for appointments to load
+                await fetchDaySettings();   // Wait for day settings to load
+            }
+            renderCalendar();  // Render calendar after appointments are loaded
+        }
+
+        // ========================================
+        // LOAD SERVICES (FROM API - ALWAYS FRESH!)
+        // ========================================
+        async function loadServices() {
+            const serviceSelect = document.getElementById('service-select');
+            const serviceInfo = document.getElementById('service-info');
+            
+            // Fetch latest services from metadata.json
+            try {
+                const metadataUrl = `/output/${USER_ID}/${PAGE_ID}_data/metadata.json`;
+                const response = await fetch(metadataUrl);
+                if (response.ok) {
+                    const metadata = await response.json();
+                    if (metadata.services && Array.isArray(metadata.services)) {
+                        SERVICES = metadata.services;  // Update global SERVICES
+                        console.log('✅ Loaded', SERVICES.length, 'services from metadata.json');
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch services from metadata, using default:', error);
+            }
+            
+            // Clear existing options (except the first "-- בחר שירות --")
+            while (serviceSelect.options.length > 1) {
+                serviceSelect.remove(1);
+            }
+            
+            // Add services to dropdown
+            SERVICES.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.name;
+                option.dataset.duration = service.duration;
+                option.dataset.price = service.price;
+                option.textContent = `${service.name} - ${service.duration} דקות - ₪${service.price}`;
+                serviceSelect.appendChild(option);
+            });
+
+            // Add change listener (only once)
+            if (!serviceSelect.dataset.listenerAdded) {
+                serviceSelect.addEventListener('change', (e) => {
+                    const selected = e.target.selectedOptions[0];
+                    if (selected && selected.value) {
+                        const duration = selected.dataset.duration;
+                        const price = selected.dataset.price;
+                        const slotsNeeded = Math.ceil(duration / 30);
+                        serviceInfo.innerHTML = `⏱️ משך: ${duration} דקות (${slotsNeeded} תאי זמן) | 💰 מחיר: ₪${price}`;
+                        document.getElementById('selected-duration').value = duration;
+                        document.getElementById('selected-price').value = price;
+                    } else {
+                        serviceInfo.innerHTML = '';
+                    }
+                });
+                serviceSelect.dataset.listenerAdded = 'true';
+            }
+        }
+
+        // ========================================
+        // SETUP EVENT LISTENERS
+        // ========================================
+        function setupEventListeners() {
+            document.getElementById('btn-prev-day').addEventListener('click', () => changeDate(-1));
+            document.getElementById('btn-today').addEventListener('click', () => {
+                currentDate = new Date();
+                renderCalendar();
+            });
+            document.getElementById('btn-tomorrow').addEventListener('click', () => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                currentDate = tomorrow;
+                renderCalendar();
+            });
+            document.getElementById('btn-day-after').addEventListener('click', () => {
+                const dayAfter = new Date();
+                dayAfter.setDate(dayAfter.getDate() + 2);
+                currentDate = dayAfter;
+                renderCalendar();
+            });
+            document.getElementById('btn-next-day').addEventListener('click', () => changeDate(1));
+
+            document.getElementById('contact-form').addEventListener('submit', handleFormSubmit);
+        }
+
+        // ========================================
+        // CHANGE DATE
+        // ========================================
+        function changeDate(days) {
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() + days);
+            
+            // Check if new date is in the past
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const newDateOnly = new Date(newDate);
+            newDateOnly.setHours(0, 0, 0, 0);
+            
+            if (newDateOnly.getTime() < today.getTime()) {
+                // Can't go to past dates
+                alert('לא ניתן לבחור תאריך בעבר');
+                return;
+            }
+            
+            currentDate = newDate;
+            renderCalendar();
+        }
+
+        // ========================================
+        // FETCH APPOINTMENTS
+        // ========================================
+        async function fetchAppointments() {
+            try {
+                const response = await fetch(`/api/appointments/${USER_ID}/${PAGE_ID}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Server returns { appointments: [...] }, extract the array
+                    appointments = data.appointments || data || [];
+                    console.log('📅 Loaded', appointments.length, 'appointments');
+                }
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+                appointments = [];
+            }
+        }
+
+        // ========================================
+        // FETCH DAY SETTINGS
+        // ========================================
+        async function fetchDaySettings() {
+            try {
+                const response = await fetch(`/api/day-settings/${USER_ID}/${PAGE_ID}`);
+                if (response.ok) {
+                    const settings = await response.json();
+                    // Check if settings is already an object (not array)
+                    if (Array.isArray(settings)) {
+                        daySettings = {};
+                        settings.forEach(setting => {
+                            daySettings[setting.date] = setting;
+                        });
+                    } else {
+                        // Already an object, use as is
+                        daySettings = settings || {};
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching day settings:', error);
+            }
+        }
+
+        // ========================================
+        // RENDER CALENDAR
+        // ========================================
+        function renderCalendar() {
+            console.log('🗓️ renderCalendar called, currentDate:', currentDate);
+            
+            // Check if date is in the past
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentDateOnly = new Date(currentDate);
+            currentDateOnly.setHours(0, 0, 0, 0);
+            
+            if (currentDateOnly.getTime() < today.getTime()) {
+                // Date is in the past, jump to today
+                currentDate = new Date();
+                const container = document.getElementById('time-slots-container');
+                container.innerHTML = '<p style="text-align: center; color: #ef4444; font-size: 20px; padding: 40px;">לא ניתן לבחור תאריך בעבר</p>';
+                // Re-render with today's date
+                setTimeout(() => renderCalendar(), 100);
+                return;
+            }
+            
+            const dateStr = currentDate.toLocaleDateString('he-IL', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('current-date-display').textContent = dateStr;
+
+            const dayOfWeek = currentDate.getDay();
+            const container = document.getElementById('time-slots-container');
+            
+            console.log('🗓️ dayOfWeek:', dayOfWeek, 'WORKING_DAYS:', WORKING_DAYS);
+
+            // Check if working day
+            if (!WORKING_DAYS.includes(dayOfWeek)) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 20px; padding: 40px;">יום לא עובד</p>';
+                return;
+            }
+
+            // Check if day is closed
+            const dateKey = currentDate.toISOString().split('T')[0];
+            if (daySettings[dateKey] && daySettings[dateKey].closed) {
+                container.innerHTML = '<p style="text-align: center; color: #ef4444; font-size: 20px; padding: 40px;">היום סגור</p>';
+                return;
+            }
+
+            console.log('🗓️ Calling renderTimeSlots...');
+            renderTimeSlots(container, dateKey, dayOfWeek);
+            console.log('🗓️ renderTimeSlots completed');
+        }
+
+        // ========================================
+        // RENDER TIME SLOTS
+        // ========================================
+        function renderTimeSlots(container, dateKey, dayOfWeek) {
+            console.log('⏰ renderTimeSlots START', { dateKey, dayOfWeek, container });
+            console.log('⏰ appointments:', appointments, 'isArray:', Array.isArray(appointments));
+            
+            // Safety check: ensure appointments is an array
+            if (!Array.isArray(appointments)) {
+                console.warn('⚠️ appointments is not an array! Converting to empty array.');
+                appointments = [];
+            }
+            
+            container.innerHTML = '';
+            const now = new Date();
+            let slotsCreated = 0;
+
+            // Check if this day has special hours
+            let workingHoursForDay = WORKING_HOURS;
+            if (SPECIAL_HOURS && SPECIAL_HOURS[dayOfWeek]) {
+                workingHoursForDay = SPECIAL_HOURS[dayOfWeek];
+                console.log(`🕐 Using special hours for day ${dayOfWeek}:`, workingHoursForDay);
+            }
+
+            let [startHour, startMin] = workingHoursForDay.start.split(':').map(Number);
+            let [endHour, endMin] = workingHoursForDay.end.split(':').map(Number);
+
+            let hour = startHour;
+            let min = startMin;
+
+            while (true) {
+                if (hour === endHour && min >= endMin) break;
+
+                const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+                const slotDateTime = new Date(currentDate);
+                slotDateTime.setHours(hour, min, 0, 0);
+
+                const currentTimeMinutes = hour * 60 + min;
+
+                // Check if past - check if date is in the past OR if it's today and time is in the past
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const slotDate = new Date(currentDate);
+                slotDate.setHours(0, 0, 0, 0);
+                // Date is in the past if slotDate is before today, OR if it's today and the time is in the past
+                const isPast = slotDate.getTime() < today.getTime() || (slotDate.getTime() === today.getTime() && slotDateTime < now);
+
+                // Check if in break
+                let isBreak = false;
+                for (const brk of BREAKS) {
+                    const [bStart, bEnd] = [brk.start, brk.end].map(t => {
+                        const [h, m] = t.split(':').map(Number);
+                        return h * 60 + m;
+                    });
+                    if (currentTimeMinutes >= bStart && currentTimeMinutes < bEnd) {
+                        isBreak = true;
+                        break;
+                    }
+                }
+
+                // Check if blocked
+                const blockedSlots = daySettings[dateKey]?.blockedSlots || [];
+                const isBlocked = blockedSlots.includes(timeStr);
+
+                // Check if booked
+                let isBooked = false;
+                let bookedReason = '';
+                for (const apt of appointments) {
+                    if (apt.status === 'cancelled') continue;
+                    if (apt.date !== dateKey) continue;
+
+                    const aptDuration = apt.duration || 30;
+                    const blockedDuration = Math.ceil(aptDuration / 30) * 30;
+                    const [aptHour, aptMin] = apt.time.split(':').map(Number);
+                    const aptStartMinutes = aptHour * 60 + aptMin;
+                    const aptEndMinutes = aptStartMinutes + blockedDuration;
+
+                    if (currentTimeMinutes >= aptStartMinutes && currentTimeMinutes < aptEndMinutes) {
+                        isBooked = true;
+                        if (currentTimeMinutes === aptStartMinutes) {
+                            bookedReason = 'start';
+                        } else {
+                            bookedReason = 'middle';
+                        }
+                        break;
+                    }
+                }
+
+                // Create slot
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = timeStr;
+
+                if (isPast) {
+                    slot.classList.add('booked');
+                    slot.textContent += ' ⚫';
+                } else if (isBreak) {
+                    slot.classList.add('booked');
+                    slot.textContent += ' 🟣';
+                } else if (isBlocked) {
+                    slot.classList.add('booked');
+                    slot.textContent += ' 🔒';
+                } else if (isBooked) {
+                    slot.classList.add('booked');
+                    if (bookedReason === 'start') {
+                        slot.textContent += ' 🔴';
+                    } else {
+                        slot.textContent += ' ⏱️';
+                    }
+                } else {
+                    // Allow selecting time slot even without service - user can select service later
+                    slot.classList.add('available');
+                    slot.textContent += ' ✅';
+                    slot.addEventListener('click', () => {
+                        console.log('⚡ SLOT CLICKED!', timeStr, dateKey);
+                        selectTimeSlot(timeStr, dateKey);
+                    });
+                    console.log('✅ Added click listener to slot:', timeStr);
+                }
+
+                container.appendChild(slot);
+                slotsCreated++;
+
+                // Increment by 30 minutes
+                min += 30;
+                if (min >= 60) {
+                    min = 0;
+                    hour++;
+                }
+
+                if (hour >= 24) break;
+            }
+            
+            console.log('⏰ renderTimeSlots END - Created', slotsCreated, 'slots');
+        }
+
+        // ========================================
+        // SELECT TIME SLOT
+        // ========================================
+        function selectTimeSlot(time, date) {
+            // Allow selecting time slot even without service - user can select service later
+            selectedSlot = { time, date };
+            document.getElementById('selected-date').value = date;
+            document.getElementById('selected-time').value = time;
+
+            // Scroll to form (form is always visible now)
+            const form = document.getElementById('contact-form');
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Update visual selection
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            if (event && event.target) {
+                event.target.classList.add('selected');
+            }
+            
+            // Show reminder to select service if not selected
+            const serviceSelect = document.getElementById('service-select');
+            if (!serviceSelect.value) {
+                // Show gentle reminder in the form area
+                const serviceInfo = document.getElementById('service-info');
+                if (serviceInfo) {
+                    serviceInfo.innerHTML = '⚠️ אנא בחר שירות לפני שליחת הטופס';
+                    serviceInfo.style.color = '#F59E0B';
+                    serviceInfo.style.fontWeight = '600';
+                }
+            }
+        }
+
+        // ========================================
+        // HANDLE FORM SUBMIT
+        // ========================================
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            console.log('📝 Form submitted!');
+            
+            const formData = new FormData(e.target);
+            const appointmentData = {
+                userId: USER_ID,
+                pageId: PAGE_ID,
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                email: formData.get('email'),
+                date: formData.get('date'),
+                time: formData.get('time'),
+                service: formData.get('service'),
+                duration: parseInt(formData.get('duration')),
+                price: parseInt(formData.get('price')),
+                notes: formData.get('notes'),
+                status: 'pending'
+            };
+            
+            console.log('📊 Appointment Data:', appointmentData);
+
+            try {
+                console.log('🚀 Sending POST to /api/appointments...');
+                const response = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appointmentData)
+                });
+
+                console.log('📡 Response status:', response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Appointment created:', result);
+                    alert('✅ התור נקבע בהצלחה!\n\nניצור איתך קשר בהקדם לאישור התור.');
+                    e.target.reset();
+                    await fetchAppointments();
+                    renderCalendar();
+                } else {
+                    const error = await response.text();
+                    console.error('❌ Server error:', error);
+                    alert('❌ אירעה שגיאה. אנא נסה שוב.');
+                }
+            } catch (error) {
+                console.error('❌ Error submitting appointment:', error);
+                alert('❌ אירעה שגיאה. אנא נסה שוב.');
+            }
+        }
+
+        // ========================================
+        // SMOOTH SCROLL FOR NAVIGATION
+        // ========================================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    document.getElementById('nav-menu').classList.remove('active');
+                }
+            });
+        });
+
+        // ========================================
+        // ACCESSIBILITY FUNCTIONS
+        // ========================================
+        let currentFontSize = 100;
+        function changeFontSize(action) {
+            if (action === 'increase') currentFontSize += 10;
+            else if (action === 'decrease') currentFontSize -= 10;
+            else currentFontSize = 100;
+            
+            currentFontSize = Math.max(80, Math.min(140, currentFontSize));
+            document.body.style.fontSize = currentFontSize + '%';
+            localStorage.setItem('fontSize', currentFontSize);
+        }
+
+        function toggleContrast() {
+            const isEnabled = document.getElementById('contrast-toggle').checked;
+            if (isEnabled) {
+                document.body.style.filter = 'contrast(1.5)';
+                document.body.style.background = '#000';
+                document.body.style.color = '#fff';
+            } else {
+                document.body.style.filter = '';
+                document.body.style.background = '';
+                document.body.style.color = '';
+            }
+            localStorage.setItem('highContrast', isEnabled);
+        }
+
+        function toggleReadableFont() {
+            const isEnabled = document.getElementById('readable-font-toggle').checked;
+            document.body.style.fontFamily = isEnabled ? 'Arial, sans-serif' : '';
+            localStorage.setItem('readableFont', isEnabled);
+        }
+
+        function toggleHighlightLinks() {
+            const isEnabled = document.getElementById('highlight-links-toggle').checked;
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                if (isEnabled) {
+                    link.style.textDecoration = 'underline';
+                    link.style.fontWeight = 'bold';
+                    link.style.color = '#0066cc';
+                } else {
+                    link.style.textDecoration = '';
+                    link.style.fontWeight = '';
+                    link.style.color = '';
+                }
+            });
+            localStorage.setItem('highlightLinks', isEnabled);
+        }
+
+        function toggleLargeCursor() {
+            const isEnabled = document.getElementById('large-cursor-toggle').checked;
+            document.body.style.cursor = isEnabled ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Cpath d=\'M0,0 L0,24 L8,18 L12,28 L16,26 L12,16 L20,16 Z\' fill=\'black\' stroke=\'white\' stroke-width=\'2\'/%3E%3C/svg%3E") 0 0, auto' : '';
+            localStorage.setItem('largeCursor', isEnabled);
+        }
+
+        function toggleLineHeight() {
+            const isEnabled = document.getElementById('line-height-toggle').checked;
+            document.body.style.lineHeight = isEnabled ? '1.8' : '';
+            localStorage.setItem('lineHeight', isEnabled);
+        }
+
+        function toggleAnimations() {
+            const isEnabled = document.getElementById('pause-animations-toggle').checked;
+            if (isEnabled) {
+                const style = document.createElement('style');
+                style.id = 'pause-animations-style';
+                style.textContent = '* { animation: none !important; transition: none !important; }';
+                document.head.appendChild(style);
+            } else {
+                const style = document.getElementById('pause-animations-style');
+                if (style) style.remove();
+            }
+            localStorage.setItem('pauseAnimations', isEnabled);
+        }
+
+        function resetAccessibility() {
+            currentFontSize = 100;
+            document.body.style.fontSize = '';
+            document.body.style.filter = '';
+            document.body.style.background = '';
+            document.body.style.color = '';
+            document.body.style.fontFamily = '';
+            document.body.style.cursor = '';
+            document.body.style.lineHeight = '';
+            
+            document.getElementById('contrast-toggle').checked = false;
+            document.getElementById('readable-font-toggle').checked = false;
+            document.getElementById('highlight-links-toggle').checked = false;
+            document.getElementById('large-cursor-toggle').checked = false;
+            document.getElementById('line-height-toggle').checked = false;
+            document.getElementById('pause-animations-toggle').checked = false;
+            
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                link.style.textDecoration = '';
+                link.style.fontWeight = '';
+                link.style.color = '';
+            });
+            
+            const style = document.getElementById('pause-animations-style');
+            if (style) style.remove();
+            
+            localStorage.clear();
+        }
+
+        // ========================================
+        // AI BOT FUNCTIONS
+        // ========================================
+        const WEBHOOK_URL = 'https://n8n-service-how4.onrender.com/webhook/jhfuhgufkhlkuho8erhf757754jhldkbsjkbkfhkfggyt';
+
+        const aiBotBtn = document.getElementById('ai-bot-btn');
+        const aiChatWindow = document.getElementById('ai-chat-window');
+        const aiCloseBtn = document.getElementById('ai-close-btn');
+        const aiSendBtn = document.getElementById('ai-send-btn');
+        const aiUserInput = document.getElementById('ai-user-input');
+        const aiChatMessages = document.getElementById('ai-chat-messages');
+
+        function initAIBot() {
+            if (!aiBotBtn || !aiChatWindow) return;
+
+            aiBotBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isVisible = aiChatWindow.style.display === 'flex';
+                aiChatWindow.style.display = isVisible ? 'none' : 'flex';
+                if (!isVisible) {
+                    aiUserInput.focus();
+                    aiChatMessages.innerHTML = `
+                        <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                            <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+                        </div>
+                    `;
+                    aiUserInput.value = '';
+                }
+            });
+
+            aiCloseBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                aiChatWindow.style.display = 'none';
+                aiChatMessages.innerHTML = `
+                    <div style="background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                        <p style="margin: 0; color: #1F2937; font-size: 15px; line-height: 1.5;">שלום! אני סתיו, העוזרת הוירטואלית שלך. איך אני יכולה לעזור לך היום? 💜</p>
+                    </div>
+                `;
+                aiUserInput.value = '';
+            });
+
+            aiSendBtn.addEventListener('click', sendAiMessage);
+            aiUserInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendAiMessage();
+                }
+            });
+
+            aiBotBtn.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.6)';
+            });
+
+            aiBotBtn.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4)';
+            });
+        }
+
+        function addBotMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `background: ${isUser ? '#8B5CF6' : '#E9D5FF'}; color: ${isUser ? 'white' : '#1F2937'}; padding: 12px; border-radius: 12px; margin-bottom: 12px; font-size: 16px; font-weight: 500; line-height: 1.5;`;
+            messageDiv.innerHTML = `<p style="margin: 0;">${message}</p>`;
+            aiChatMessages.appendChild(messageDiv);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.style.cssText = 'background: #E9D5FF; padding: 12px; border-radius: 12px; margin-bottom: 12px;';
+            typingDiv.innerHTML = '<p style="margin: 0; color: #1F2937;">סתיו מקלידה...</p>';
+            aiChatMessages.appendChild(typingDiv);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingDiv = document.getElementById('typing-indicator');
+            if (typingDiv) typingDiv.remove();
+        }
+
+        async function sendAiMessage() {
+            const message = aiUserInput.value.trim();
+            if (!message) return;
+            
+            addBotMessage(message, true);
+            aiUserInput.value = '';
+            showTypingIndicator();
+            
+            try {
+                const pageContent = {
+                    title: document.querySelector('h1')?.textContent?.trim() || document.title,
+                    businessName: '{{BUSINESS_NAME}}',
+                    phone: '{{PHONE}}',
+                    email: '{{EMAIL}}',
+                    address: '{{ADDRESS}}'
+                };
+
+                const messageData = {
+                    context: pageContent,
+                    user_message: message,
+                    page_type: "serviceProvider",
+                    business_info: {
+                        name: "{{BUSINESS_NAME}}",
+                        phone: "{{PHONE}}",
+                        email: "{{EMAIL}}",
+                        address: "{{ADDRESS}}"
+                    }
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(messageData)
+                });
+
+                let data = await response.json();
+                hideTypingIndicator();
+
+                if (data.action) {
+                    switch(data.action) {
+                        case 'scroll_to_calendar':
+                            document.getElementById('calendar')?.scrollIntoView({ behavior: 'smooth' });
+                            addBotMessage(data.message || 'הנה לוח התורים! 📅');
+                            break;
+                        case 'scroll_to_services':
+                            document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+                            addBotMessage(data.message || 'הנה השירותים שלנו! 💅');
+                            break;
+                        case 'scroll_to_about':
+                            document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                            addBotMessage(data.message || 'הנה קצת עלינו! ✨');
+                            break;
+                        case 'scroll_to_contact':
+                            document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
+                            addBotMessage(data.message || 'נשמח לשמוע ממך! 📞');
+                            break;
+                        default:
+                            addBotMessage(data.message || data.response || 'מצטערת, לא הצלחתי להבין.');
+                    }
+                } else {
+                    addBotMessage(data.message || data.response || 'מצטערת, קרתה שגיאה.');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addBotMessage('מצטערת, קרתה שגיאה. נסי שוב.');
+            }
+        }
+
+        // ========================================
+        // INITIALIZE ON LOAD
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalendar();
+            initAIBot();
+            
+            // Accessibility menu toggle
+            document.getElementById('accessibility-btn').addEventListener('click', function() {
+                const menu = document.getElementById('accessibility-menu');
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Close accessibility menu when clicking outside
+            document.addEventListener('click', function(e) {
+                const btn = document.getElementById('accessibility-btn');
+                const menu = document.getElementById('accessibility-menu');
+                if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
+            
+            // Restore accessibility settings
+            const savedFontSize = localStorage.getItem('fontSize');
+            if (savedFontSize) {
+                currentFontSize = parseInt(savedFontSize);
+                document.body.style.fontSize = currentFontSize + '%';
+            }
+            
+            if (localStorage.getItem('highContrast') === 'true') {
+                document.getElementById('contrast-toggle').checked = true;
+                toggleContrast();
+            }
+            if (localStorage.getItem('readableFont') === 'true') {
+                document.getElementById('readable-font-toggle').checked = true;
+                toggleReadableFont();
+            }
+            if (localStorage.getItem('highlightLinks') === 'true') {
+                document.getElementById('highlight-links-toggle').checked = true;
+                toggleHighlightLinks();
+            }
+            if (localStorage.getItem('largeCursor') === 'true') {
+                document.getElementById('large-cursor-toggle').checked = true;
+                toggleLargeCursor();
+            }
+            if (localStorage.getItem('lineHeight') === 'true') {
+                document.getElementById('line-height-toggle').checked = true;
+                toggleLineHeight();
+            }
+            if (localStorage.getItem('pauseAnimations') === 'true') {
+                document.getElementById('pause-animations-toggle').checked = true;
+                toggleAnimations();
+            }
+            
+            // ========================================
+            // 🎨 PREMIUM FEATURES - Auto-load
+            // ========================================
+            loadServicesFromMetadata();
+            initAutoScrollGallery();
+            initGalleryUpload();
+        });
+
+        // ========================================
+        // LOAD SERVICES DYNAMICALLY FROM METADATA
+        // ========================================
+        async function loadServicesFromMetadata() {
+            try {
+                // Clean pageId - remove .html extension if present
+                let cleanPageId = PAGE_ID.replace(/\.html$/, '');
+                
+                // Try multiple possible paths for metadata
+                const possiblePaths = [
+                    `/output/${USER_ID}/${cleanPageId}_data/metadata.json`,
+                    `/output/${USER_ID}/${cleanPageId}_html_data/metadata.json`,
+                    `/output/${USER_ID}/${PAGE_ID}_data/metadata.json`,
+                    `/pages/${USER_ID}/${cleanPageId}_data/metadata.json`
+                ];
+                
+                let metadata = null;
+                for (const path of possiblePaths) {
+                    console.log(`🔍 Trying: ${path}`);
+                    try {
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            metadata = await response.json();
+                            console.log(`✅ Loaded metadata from: ${path}`);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`⚠️ Failed to load from ${path}`);
+                    }
+                }
+                
+                if (metadata && metadata.services && metadata.services.length > 0) {
+                    SERVICES = metadata.services;
+                    console.log('✅ Loaded services:', SERVICES);
+                    renderServicesGrid();
+                } else {
+                    console.log('⚠️ No services found in metadata');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load services:', error);
+            }
+        }
+
+        function renderServicesGrid() {
+            const servicesGrid = document.querySelector('.services-grid');
+            if (!servicesGrid || SERVICES.length === 0) return;
+
+            const icons = ['✂️', '💇', '💅', '🦷', '💆', '🧖', '🎨', '✨'];
+            
+            servicesGrid.innerHTML = SERVICES.map((service, index) => `
+                <div class="service-item">
+                    <div class="service-icon">${icons[index % icons.length]}</div>
+                    <h3>${service.name}</h3>
+                    <div class="service-duration">⏱️ ${service.duration || 30} דקות</div>
+                    <div class="service-price">₪${service.price || 0}</div>
+                </div>
+            `).join('');
+            
+            console.log(`✅ Rendered ${SERVICES.length} services`);
+        }
+
+        // ========================================
+        // AUTO-SCROLL GALLERY
+        // ========================================
+        function initAutoScrollGallery() {
+            const gallery = document.getElementById('gallery-grid');
+            if (!gallery) {
+                console.log('⚠️ Gallery grid not found!');
+                return;
+            }
+            
+            console.log('✅ Gallery found, starting auto-scroll...');
+            
+            let scrollDirection = 1;
+            let isHovering = false;
+            let isPaused = false;
+            
+            gallery.addEventListener('mouseenter', () => { 
+                isHovering = true; 
+                console.log('🛑 Auto-scroll paused (hover)');
+            });
+            gallery.addEventListener('mouseleave', () => { 
+                isHovering = false; 
+                console.log('▶️ Auto-scroll resumed');
+            });
+            
+            setInterval(() => {
+                if (isHovering || isPaused) return;
+                
+                const maxScroll = gallery.scrollWidth - gallery.clientWidth;
+                const currentScroll = gallery.scrollLeft;
+                
+                if (Math.abs(currentScroll) >= maxScroll - 10) {
+                    scrollDirection = -1;
+                } else if (currentScroll >= -10) {
+                    scrollDirection = 1;
+                }
+                
+                gallery.scrollLeft += scrollDirection * 1.5;
+            }, 30);
+            
+            console.log('✅ Auto-scroll gallery initialized');
+        }
+
+        // ========================================
+        // GALLERY IMAGE UPLOAD HANDLER
+        // ========================================
+        function initGalleryUpload() {
+            const uploadInput = document.getElementById('gallery-upload-input');
+            if (!uploadInput) {
+                console.log('⚠️ Gallery upload input not found');
+                return;
+            }
+            
+            uploadInput.addEventListener('change', async function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                console.log(`📸 Uploading ${files.length} images to gallery...`);
+                
+                const galleryGrid = document.getElementById('gallery-grid');
+                if (!galleryGrid) return;
+                
+                for (const file of files) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const galleryItem = document.createElement('div');
+                        galleryItem.className = 'gallery-item';
+                        galleryItem.innerHTML = `
+                            <img src="${event.target.result}" alt="תמונה חדשה" loading="lazy">
+                            <div class="gallery-overlay">
+                                <div class="gallery-title">תמונה חדשה</div>
+                            </div>
+                        `;
+                        galleryGrid.appendChild(galleryItem);
+                        galleryItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        formData.append('userId', USER_ID);
+                        formData.append('category', 'general');
+                        
+                        const response = await fetch('/api/upload-image', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            console.log('✅ Image uploaded successfully:', result.imageUrl);
+                        } else {
+                            console.error('❌ Failed to upload image');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error uploading image:', error);
+                    }
+                }
+                
+                e.target.value = '';
+                alert(`✅ הועלו ${files.length} תמונות לגלריה!`);
+            });
+            
+            console.log('✅ Gallery upload handler initialized');
+        }
+    </script>
+</body>
+</html>
+

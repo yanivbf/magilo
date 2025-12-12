@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 יצירת דף עם AI - N8N</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 30px 90px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 80px;
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        label .required {
+            color: #e74c3c;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #666;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .success {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        .success.active {
+            display: block;
+        }
+        
+        .success-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+        
+        .success h2 {
+            color: #27ae60;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .success p {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .success-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .success-buttons a,
+        .success-buttons button {
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-dashboard {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-new {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-right: 5px solid #667eea;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .info-box li {
+            color: #666;
+            padding: 8px 0;
+            padding-right: 25px;
+            position: relative;
+        }
+        
+        .info-box li::before {
+            content: '✓';
+            position: absolute;
+            right: 0;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🤖</div>
+            <h1>יצירת דף עם AI</h1>
+            <p class="subtitle">הבוט יכתוב את כל התוכן בשבילך!</p>
+        </div>
+        
+        <div class="info-box">
+            <h3>🎯 מה הבוט יעשה?</h3>
+            <ul>
+                <li>יכתוב כותרות מקצועיות</li>
+                <li>יצור תיאורים מפורטים</li>
+                <li>יבנה רשימת שירותים</li>
+                <li>יוסיף המלצות לקוחות</li>
+                <li>יחיל עיצוב פרמיום</li>
+            </ul>
+        </div>
+        
+        <form id="createForm">
+            <div class="form-group">
+                <label for="businessName">
+                    שם העסק <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="businessName" 
+                    name="businessName" 
+                    placeholder="לדוגמה: ד״ר משה לוי - מרפאת שיניים"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="serviceType">
+                    תחום העיסוק <span class="required">*</span>
+                </label>
+                <select id="serviceType" name="serviceType" required>
+                    <option value="">בחר תחום...</option>
+                    <option value="dentist">🦷 רופא שיניים</option>
+                    <option value="hairdresser">💇 מספרה</option>
+                    <option value="beautician">💅 קוסמטיקאית</option>
+                    <option value="massage">💆 עיסוי</option>
+                    <option value="lawyer">⚖️ עורך דין</option>
+                    <option value="accountant">📊 רואה חשבון</option>
+                    <option value="consultant">💼 יועץ</option>
+                    <option value="therapist">🧘 מטפל</option>
+                    <option value="trainer">🏋️ מאמן כושר</option>
+                    <option value="photographer">📸 צלם</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">
+                    פרטים נוספים (אופציונלי)
+                </label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    placeholder="מידע נוסף שיעזור לבוט לכתוב תוכן טוב יותר...
+לדוגמה: שנות ניסיון, התמחויות, ציוד מיוחד, שעות פעילות וכו'"
+                ></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">
+                    מספר טלפון
+                </label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    placeholder="050-1234567"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="email">
+                    אימייל
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="info@example.com"
+                >
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="window.location.href='/page-creator'">
+                    ← חזור
+                </button>
+                <button type="submit" class="btn-primary">
+                    🚀 צור דף עם AI
+                </button>
+            </div>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="loading-text">הבוט כותב את התוכן שלך...</p>
+            <p style="color: #999; font-size: 14px; margin-top: 10px;">זה עלול לקחת כ-30 שניות</p>
+        </div>
+        
+        <div class="success" id="success">
+            <div class="success-icon">🎉</div>
+            <h2>הדף נוצר בהצלחה!</h2>
+            <p>הבוט סיים לכתוב את כל התוכן</p>
+            <div class="success-buttons">
+                <a href="#" id="viewPageBtn" class="btn-view" target="_blank">
+                    👁️ צפה בדף
+                </a>
+                <a href="/" class="btn-dashboard">
+                    📊 לדשבורד
+                </a>
+                <button class="btn-new" onclick="location.reload()">
+                    ➕ צור דף נוסף
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('createForm');
+        const loading = document.getElementById('loading');
+        const success = document.getElementById('success');
+        const viewPageBtn = document.getElementById('viewPageBtn');
+        
+        // Get or create userId
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('userId', userId);
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = {
+                userId,
+                businessName: document.getElementById('businessName').value.trim(),
+                serviceType: document.getElementById('serviceType').value,
+                description: document.getElementById('description').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                email: document.getElementById('email').value.trim()
+            };
+            
+            console.log('🚀 Creating page with N8N:', formData);
+            
+            // Hide form, show loading
+            form.style.display = 'none';
+            loading.classList.add('active');
+            
+            try {
+                const response = await fetch('/api/create-page-with-n8n', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                console.log('📥 Result:', result);
+                
+                if (result.success) {
+                    // Hide loading, show success
+                    loading.classList.remove('active');
+                    success.classList.add('active');
+                    
+                    // Set view page button URL
+                    viewPageBtn.href = result.pageUrl;
+                    
+                    console.log('✅ Page created successfully!');
+                    console.log('📄 N8N Content:', result.n8nContent);
+                } else {
+                    throw new Error(result.error || 'Failed to create page');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                
+                // Hide loading
+                loading.classList.remove('active');
+                
+                // Show error
+                alert('❌ שגיאה ביצירת הדף:\n' + error.message);
+                
+                // Show form again
+                form.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+

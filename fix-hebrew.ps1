@@ -41,3 +41,5 @@ Write-Host "📊 תווי ׳ שנותרו: $remaining" -ForegroundColor Cyan
 
 
 
+
+

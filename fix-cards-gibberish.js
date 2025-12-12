@@ -46,3 +46,5 @@ console.log(`\nתווי גיבריש שנותרו: ${remaining}`);
 
 
 
+
+

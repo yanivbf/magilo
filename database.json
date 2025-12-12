@@ -34,10 +34,11 @@
         "purchase_1761337362430_mccuz04ul",
         "purchase_1761747464830_u15i0jcol",
         "purchase_1761905515817_f4brd13u9",
-        "purchase_1763206104386_j4dfh8bxd"
+        "purchase_1763206104386_j4dfh8bxd",
+        "purchase_1763483199562_v51zy0qic"
       ],
       "createdAt": "2025-10-10T04:34:55.026Z",
-      "lastActive": "2025-11-15T22:36:25.032Z",
+      "lastActive": "2025-11-18T17:42:19.586Z",
       "avatar": "https://lh3.googleusercontent.com/a/ACg8ocIN4q_CZ8_TOrwIkLLIWgwOHiiS6pD75rPGlOdJ3f7E7aQLRDA=s96-c"
     },
     "3ed25bfd-680d-4c09-a027-1a846170c13e": {
@@ -903,8 +904,9 @@
       "customerEmail": "ehaleiameleh@gmail.com",
       "customerAddress": "בר אילן 70 תל אביב",
       "shipping": false,
-      "status": "processing",
-      "createdAt": "2025-10-31T10:11:55.819Z"
+      "status": "completed",
+      "createdAt": "2025-10-31T10:11:55.819Z",
+      "completedAt": "2025-11-18T16:24:38.140Z"
     },
     "purchase_1763206104386_j4dfh8bxd": {
       "id": "purchase_1763206104386_j4dfh8bxd",
@@ -941,12 +943,34 @@
       "shipping": true,
       "status": "new",
       "createdAt": "2025-11-15T11:28:24.386Z"
+    },
+    "purchase_1763483199562_v51zy0qic": {
+      "id": "purchase_1763483199562_v51zy0qic",
+      "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+      "storeId": "red_1761154714386",
+      "products": [
+        {
+          "id": 1763483174190,
+          "name": "שעון עור קלאסי",
+          "price": 850,
+          "quantity": 1,
+          "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1761422385019-692918545.png"
+        }
+      ],
+      "total": 885,
+      "customerName": "צחי ",
+      "customerPhone": "0505378108",
+      "customerEmail": "britolam1@gmail.com",
+      "customerAddress": "בר אילן 50 תל אביב",
+      "shipping": true,
+      "status": "processing",
+      "createdAt": "2025-11-18T16:26:39.562Z"
     }
   },
   "products": {},
   "stores": {},
   "analytics": {
-    "totalSales": 38228,
+    "totalSales": 39113,
     "totalUsers": 0,
     "totalProducts": 0,
     "dailySales": {
@@ -964,11 +988,12 @@
       "2025-10-24": 2435,
       "2025-10-29": 2585,
       "2025-10-31": 490,
-      "2025-11-15": 412
+      "2025-11-15": 412,
+      "2025-11-18": 885
     },
     "monthlySales": {
       "2025-10": 45914.3,
-      "2025-11": 412
+      "2025-11": 1297
     },
     "topProducts": [
       {
@@ -1006,6 +1031,12 @@
         "name": "טבעת יהלום נוצצת",
         "sales": 2,
         "revenue": 1500
+      },
+      {
+        "id": 1763483174190,
+        "name": "שעון עור קלאסי",
+        "sales": 1,
+        "revenue": 850
       },
       {
         "id": 1761905488401,
@@ -1574,6 +1605,28 @@
     ],
     "recentPurchases": [
       {
+        "id": "purchase_1763483199562_v51zy0qic",
+        "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
+        "storeId": "red_1761154714386",
+        "products": [
+          {
+            "id": 1763483174190,
+            "name": "שעון עור קלאסי",
+            "price": 850,
+            "quantity": 1,
+            "image": "http://localhost:3002/pages/fae06b49-1239-4ba5-93db-244ce2851fb4/images/general/1761422385019-692918545.png"
+          }
+        ],
+        "total": 885,
+        "customerName": "צחי ",
+        "customerPhone": "0505378108",
+        "customerEmail": "britolam1@gmail.com",
+        "customerAddress": "בר אילן 50 תל אביב",
+        "shipping": true,
+        "status": "processing",
+        "createdAt": "2025-11-18T16:26:39.562Z"
+      },
+      {
         "id": "purchase_1763206104386_j4dfh8bxd",
         "userId": "fae06b49-1239-4ba5-93db-244ce2851fb4",
         "storeId": "צעצועים_לתינוקות__1763198050123",
@@ -1628,8 +1681,9 @@
         "customerEmail": "ehaleiameleh@gmail.com",
         "customerAddress": "בר אילן 70 תל אביב",
         "shipping": false,
-        "status": "processing",
-        "createdAt": "2025-10-31T10:11:55.819Z"
+        "status": "completed",
+        "createdAt": "2025-10-31T10:11:55.819Z",
+        "completedAt": "2025-11-18T16:24:38.140Z"
       },
       {
         "id": "purchase_1761747464830_u15i0jcol",

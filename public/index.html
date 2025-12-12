@@ -3823,6 +3823,11 @@
         }
         
         function getManageButtonText(pageType, hasAppointments) {
+            // אם יש יומן תורים - תמיד "ניהול תורים" (לא משנה מה ה-pageType!)
+            if (hasAppointments) {
+                return 'ניהול תורים';
+            }
+            
             switch(pageType) {
                 case 'event': return 'ניהול מוזמנים';
                 case 'store': 
@@ -3830,8 +3835,7 @@
                 case 'course': return 'ניהול קורסים';
                 case 'workshop': return 'ניהול נרשמים';
                 case 'messageInBottle': return 'ניהול הודעות';
-                case 'serviceProvider': 
-                    return hasAppointments ? 'ניהול תורים' : 'ניהול';
+                case 'serviceProvider': return 'ניהול';
                 default: return 'ניהול';
             }
         }
@@ -3918,28 +3922,40 @@
                         const localData = await localResponse.json();
                         
                         if (localData.pages && localData.pages.length > 0) {
-                            // Create a map of fileName -> pageType
+                            // Create maps of fileName -> pageType and fileName -> hasAppointments
                             const pageTypeMap = {};
+                            const appointmentsMap = {};
                             localData.pages.forEach(page => {
                                 if (page.pageType) {
                                     pageTypeMap[page.fileName] = page.pageType;
                                 }
+                                if (page.hasAppointments || page.appointments) {
+                                    appointmentsMap[page.fileName] = true;
+                                }
                             });
                             
-                            // Enrich Supabase projects with pageType
+                            // Enrich Supabase projects with pageType and hasAppointments
                             projects.forEach(project => {
                                 // Try to match by various fields
                                 let matchingPageType = pageTypeMap[project.local_file] || 
                                                       pageTypeMap[project.id];
+                                let matchingHasAppointments = appointmentsMap[project.local_file] || 
+                                                             appointmentsMap[project.id];
                                 
                                 // If no match, try fuzzy matching by name
-                                if (!matchingPageType) {
+                                if (!matchingPageType || !matchingHasAppointments) {
                                     const projectName = (project.name || '').toLowerCase();
                                     for (const [fileName, pageType] of Object.entries(pageTypeMap)) {
                                         const cleanFileName = fileName.replace(/_html$/, '').replace(/\.html$/, '').replace(/_/g, ' ').toLowerCase();
                                         if (projectName.includes(cleanFileName) || cleanFileName.includes(projectName)) {
-                                            matchingPageType = pageType;
-                                            console.log(`🔍 Fuzzy matched: "${projectName}" ↔ "${cleanFileName}" → ${pageType}`);
+                                            if (!matchingPageType) {
+                                                matchingPageType = pageType;
+                                                console.log(`🔍 Fuzzy matched pageType: "${projectName}" ↔ "${cleanFileName}" → ${pageType}`);
+                                            }
+                                            if (!matchingHasAppointments && appointmentsMap[fileName]) {
+                                                matchingHasAppointments = true;
+                                                console.log(`📅 Fuzzy matched appointments: "${projectName}" ↔ "${cleanFileName}"`);
+                                            }
                                             break;
                                         }
                                     }
@@ -3958,6 +3974,10 @@
                                 if (matchingPageType) {
                                     project.pageType = matchingPageType;
                                     console.log(`✅ Enriched project with pageType: ${matchingPageType} for ${project.name}`);
+                                }
+                                if (matchingHasAppointments) {
+                                    project.hasAppointments = true;
+                                    console.log(`✅ Enriched project with hasAppointments for ${project.name}`);
                                 }
                             });
                         }
@@ -4010,10 +4030,18 @@
                             local_url: page.url,
                                 user_id: currentUser.id,
                                 userId: currentUser.id,
-                                pageType: page.pageType // CRITICAL: Pass pageType from server!
+                                pageType: page.pageType, // CRITICAL: Pass pageType from server!
+                                hasAppointments: page.hasAppointments, // CRITICAL: Pass hasAppointments from server!
+                                appointments: page.hasAppointments // For backwards compatibility
                             };
                             
-                            console.log(`✅ Local page loaded with pageType: ${page.pageType} for ${page.fileName}`);
+                            console.log(`✅ Local page loaded:`, {
+                                fileName: page.fileName,
+                                pageType: page.pageType,
+                                hasAppointments: page.hasAppointments,
+                                appointments: page.appointments,
+                                rawPage: page
+                            });
                             
                             return projectObj;
                         });
@@ -4034,13 +4062,53 @@
                 console.log('מציג', projects.length, 'פרויקטים');
                 projectsList.innerHTML = '';
                 
-                projects.forEach((project, index) => {
+                // Process all projects with async operations
+                for (let index = 0; index < projects.length; index++) {
+                    const project = projects[index];
                     console.log(`מציג פרויקט ${index + 1}:`, project.name);
                     
                     // Use pageType from server (already detected and saved)
-                    const pageType = project.pageType || 'other';
-                    const manageButtonText = getManageButtonText(pageType);
-                    console.log(`📋 Page type: ${pageType} → Button text: "${manageButtonText}" for ${project.name}`);
+                    let pageType = project.pageType || 'other';
+                    let hasAppointments = project.hasAppointments || project.appointments || false;
+                    
+                    // 🔥 CRITICAL FIX: If no hasAppointments in metadata, check HTML content NOW!
+                    if (!hasAppointments && project.local_url) {
+                        console.log(`🔍 No hasAppointments in metadata for ${project.name}, checking HTML...`);
+                        try {
+                            const htmlResponse = await fetch(project.local_url);
+                            if (htmlResponse.ok) {
+                                const htmlText = await htmlResponse.text();
+                                const hasCalendar = htmlText.includes('time-slots-grid') || 
+                                                  htmlText.includes('booking-form') || 
+                                                  htmlText.includes('appointment-date') ||
+                                                  htmlText.includes('WORKING_DAYS') ||
+                                                  htmlText.includes('/api/appointments');
+                                
+                                if (hasCalendar) {
+                                    console.log(`✅ Found calendar in HTML! Setting hasAppointments = true for ${project.name}`);
+                                    hasAppointments = true;
+                                    pageType = 'serviceProvider';
+                                    // Update the project object for future use
+                                    project.hasAppointments = true;
+                                    project.pageType = 'serviceProvider';
+                                }
+                            }
+                        } catch (err) {
+                            console.log(`⚠️ Could not check HTML:`, err);
+                        }
+                    }
+                    
+                    const manageButtonText = getManageButtonText(pageType, hasAppointments);
+                    console.log(`📋 BUTTON DECISION:`, {
+                        projectName: project.name,
+                        fileName: project.fileName || project.local_file,
+                        pageType: pageType,
+                        hasAppointments: hasAppointments,
+                        projectHasAppointments: project.hasAppointments,
+                        projectAppointments: project.appointments,
+                        buttonText: manageButtonText,
+                        fullProject: project
+                    });
                     console.log(`🔍 Full project data:`, project);
                     
                     // Special logging for messageInBottle
@@ -4166,14 +4234,6 @@
                                 <span class="manage-button-text">${manageButtonText}</span>
                             </button>` : ''
                         }
-                        ${!project.pageType || project.pageType === 'other' ? 
-                            `<button onclick="autoDetectAndUpdateMessageBottle(${JSON.stringify(project).replace(/"/g, '&quot;')})" class="w-full text-right px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-100">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                🔍 זהה סוג דף
-                            </button>` : ''
-                        }
                         <button onclick="deleteProject('${project.id}')" class="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -4255,7 +4315,7 @@
                     `;
                     console.log(`מוסיף כרטיס ${index + 1} ל-DOM`);
                     projectsList.appendChild(projectCard);
-                });
+                }
                 console.log('סיימתי להוסיף כרטיסים');
                 
                 // עדכן את המודל רק אם המשתמש ביקש זאת במפורש
@@ -4568,23 +4628,48 @@
             let pageType = detectedPageType || project?.pageType;
             let hasAppointments = project?.hasAppointments || false;
             
-            if (!pageType || !hasAppointments) {
+            // 🔥 CRITICAL FIX: Check HTML content for appointments calendar
+            // This is a fallback if metadata doesn't have hasAppointments set correctly
+            if (!hasAppointments && project?.local_url) {
+                console.log('🔍 Checking HTML content for appointments calendar...');
                 try {
-                    const metadataUrl = `/pages/${userId}/${fileName}_data/metadata.json`;
-                    const response = await fetch(metadataUrl);
-                    if (response.ok) {
-                        const metadata = await response.json();
-                        if (!pageType) {
-                            pageType = metadata.pageType;
-                            console.log('📋 Loaded pageType from metadata:', pageType);
+                    const htmlResponse = await fetch(project.local_url);
+                    if (htmlResponse.ok) {
+                        const htmlText = await htmlResponse.text();
+                        // Check for strong indicators of appointments system
+                        const hasCalendar = htmlText.includes('time-slots-grid') || 
+                                          htmlText.includes('booking-form') || 
+                                          htmlText.includes('appointment-date') ||
+                                          htmlText.includes('WORKING_DAYS') ||
+                                          htmlText.includes('/api/appointments');
+                        
+                        if (hasCalendar) {
+                            console.log('✅ Found appointments calendar in HTML! Forcing hasAppointments = true');
+                            hasAppointments = true;
+                            pageType = 'serviceProvider';
                         }
-                        // Check if page has appointments system
-                        hasAppointments = metadata.appointments !== undefined || metadata.hasAppointments === true;
-                        console.log('📅 hasAppointments:', hasAppointments);
                     }
                 } catch (err) {
-                    console.log('⚠️ No metadata, using default');
+                    console.log('⚠️ Could not check HTML content:', err);
                 }
+            }
+            
+            // ALWAYS load metadata to check for appointments (critical fix)
+            try {
+                const metadataUrl = `/pages/${userId}/${fileName}_data/metadata.json`;
+                const response = await fetch(metadataUrl);
+                if (response.ok) {
+                    const metadata = await response.json();
+                    if (!pageType) {
+                        pageType = metadata.pageType;
+                        console.log('📋 Loaded pageType from metadata:', pageType);
+                    }
+                    // Check if page has appointments system - ALWAYS check this
+                    hasAppointments = metadata.appointments !== undefined || metadata.hasAppointments === true;
+                    console.log('📅 hasAppointments from metadata:', hasAppointments);
+                }
+            } catch (err) {
+                console.log('⚠️ No metadata, using default');
             }
             
             // Determine management URL based on pageType
@@ -4604,15 +4689,15 @@
                 // מסר בבקבוק → ניהול הודעות
                 managementUrl = `/messages-management.html?page=${fileName}&userId=${userId}`;
                 console.log('🍾 Opening MESSAGES management for:', fileName);
-            } else if (pageType === 'serviceProvider' && hasAppointments) {
-                // נותן שירות עם תורים → ניהול תורים
+            } else if (hasAppointments) {
+                // יש יומן תורים → ניהול תורים (לא משנה מה ה-pageType!)
                 const pageName = encodeURIComponent(fileName.replace(/_html$/, '').replace(/_/g, ' '));
                 managementUrl = `/appointments-admin.html?userId=${userId}&pageId=${fileName}&pageName=${pageName}`;
-                console.log('📅 Opening APPOINTMENTS management for:', fileName);
+                console.log('📅 Opening APPOINTMENTS management for:', fileName, '(hasAppointments:', hasAppointments, ')');
             } else {
                 // דפים אחרים → ניהול לידים
                 managementUrl = `/leads-admin.html?page=${fileName}&userId=${userId}`;
-                console.log('📋 Opening LEADS management (pageType was:', pageType, ')');
+                console.log('📋 Opening LEADS management (pageType was:', pageType, 'hasAppointments:', hasAppointments, ')');
             }
             
             console.log('🌐 Opening:', managementUrl);
